@@ -1,62 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define MAX_LINE_LEN	1024
-#define MAX_OPERATOR_NAME_LEN	16
-#define MAX_TOKEN_LEN	64
-#define MAX_TOKENS		128
-
-typedef enum	NV_TERM_TYPE	NV_TermType;
-typedef struct	NV_TERM 		NV_Term;
-typedef struct	NV_OPERATOR 	NV_Operator;
-typedef struct	NV_ENV			NV_Env;
-
-enum NV_TERM_TYPE {
-	Root,
-	Unknown,
-	Operator,
-	Imm32s,
-};
-
-struct NV_TERM {
-	NV_TermType type;
-	void *data;
-	NV_Term *before, *next;
-};
-
-struct NV_OPERATOR {
-	char name[MAX_OPERATOR_NAME_LEN];
-	int precedence;
-	NV_Operator *next;
-	NV_Term *(*nativeFunc)(NV_Env *env, NV_Term *thisTerm);
-};
-
-struct NV_ENV {
-	// interpreter params
-	int char0Len;
-	const char *char0List;	// should be terminated with 0
-	int char1Len;
-	const char *char1List;	// should be terminated with 0
-	NV_Operator *opRoot;
-	// parser env
-	char token0[MAX_TOKENS][MAX_TOKEN_LEN];
-	int token0Len;
-	// interpreter env
-	NV_Term termRoot;
-	int changeFlag;
-};
-
-void NV_setDefaultEnv(NV_Env *env);
-NV_Term *NV_allocTerm();
-void NV_initRootTerm(NV_Term *t);
-NV_Operator *NV_allocOperator();
-void NV_removeTerm(NV_Term *t);
-NV_Term *NV_createTerm_Imm32(int imm32);
-NV_Env *NV_allocEnv();
-void NV_addOperator(NV_Env *env, int precedence, const char *name, NV_Term *(*nativeFunc)(NV_Env *env, NV_Term *thisTerm));
-int NV_tokenize(NV_Env *env, const char *s);
-void NV_Evaluate(NV_Env *env);
+#include "nv.h"
 
 int main(int argc, char *argv[])
 {
@@ -71,12 +16,15 @@ int main(int argc, char *argv[])
 			fputs("Bad syntax.\n", stderr);
 		} else{
 			NV_Evaluate(env);
-			fputs("OK.\n", stdout);
 		}
 	}
 
 	return 0;
 }
+
+//
+// Default env params
+//
 
 NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
 {
@@ -143,6 +91,9 @@ void NV_setDefaultEnv(NV_Env *env)
 	NV_addOperator(env, 100,	"/", NV_LANG00_Op_binaryOperator);
 }
 
+//
+// Term
+//
 
 NV_Term *NV_allocTerm()
 {
@@ -168,69 +119,6 @@ void NV_initRootTerm(NV_Term *t)
 	t->data = NULL;
 	t->before = NULL;	
 	t->next = NULL;
-}
-
-NV_Operator *NV_allocOperator()
-{
-	NV_Operator *t;
-
-	t = malloc(sizeof(NV_Operator));
-	if(!t){
-		fputs("malloc error", stderr);
-		exit(EXIT_FAILURE);
-	}
-
-	t->name[0] = 0;
-	t->precedence = 0;
-	t->next = NULL;
-	t->nativeFunc = NULL;
-
-	return t;
-}
-
-NV_Env *NV_allocEnv()
-{
-	NV_Env *t;
-
-	t = malloc(sizeof(NV_Env));
-	if(!t){
-		fputs("malloc error", stderr);
-		exit(EXIT_FAILURE);
-	}
-
-	t->char0Len = 0;
-	t->char0List = "";
-	t->char1Len = 0;
-	t->char1List = "";
-	//
-	t->token0Len = 0;
-	NV_initRootTerm(&t->termRoot);
-	t->opRoot = NULL;
-
-	return t;
-}
-
-void NV_addOperator(NV_Env *env, int precedence, const char *name, NV_Term *(*nativeFunc)(NV_Env *env, NV_Term *thisTerm))
-{
-	NV_Operator *t;
-
-	t = NV_allocOperator();
-	strncpy(t->name, name, sizeof(t->name));
-	t->precedence = precedence;
-	t->next = env->opRoot;
-	env->opRoot = t;
-	t->nativeFunc = nativeFunc;
-}
-
-NV_Operator *NV_isOperator(NV_Env *env, const char *termStr)
-{
-	NV_Operator *op;
-	for(op = env->opRoot; op != NULL; op = op->next){
-		if(strcmp(op->name, termStr) == 0){
-			return op;
-		}
-	}
-	return NULL;
 }
 
 void NV_appendTermRaw(NV_Env *env, NV_Term *new)
@@ -292,16 +180,91 @@ void NV_appendTerm(NV_Env *env, const char *termStr)
 	return;
 }
 
-void NV_printTerms(NV_Env *env)
+void NV_printTerms(NV_Term *root)
 {
 	NV_Term *t;
-	for(t = &env->termRoot; ; t = t->next){
+	for(t = root; ; t = t->next){
 		printf("[%d]", t->type);
 		if(!t->next) break;
 	};
 	putchar('\n');
 	
 }
+
+//
+// Operator
+//
+
+NV_Operator *NV_allocOperator()
+{
+	NV_Operator *t;
+
+	t = malloc(sizeof(NV_Operator));
+	if(!t){
+		fputs("malloc error", stderr);
+		exit(EXIT_FAILURE);
+	}
+
+	t->name[0] = 0;
+	t->precedence = 0;
+	t->next = NULL;
+	t->nativeFunc = NULL;
+
+	return t;
+}
+
+void NV_addOperator(NV_Env *env, int precedence, const char *name, NV_Term *(*nativeFunc)(NV_Env *env, NV_Term *thisTerm))
+{
+	NV_Operator *t;
+
+	t = NV_allocOperator();
+	strncpy(t->name, name, sizeof(t->name));
+	t->precedence = precedence;
+	t->next = env->opRoot;
+	env->opRoot = t;
+	t->nativeFunc = nativeFunc;
+}
+
+NV_Operator *NV_isOperator(NV_Env *env, const char *termStr)
+{
+	NV_Operator *op;
+	for(op = env->opRoot; op != NULL; op = op->next){
+		if(strcmp(op->name, termStr) == 0){
+			return op;
+		}
+	}
+	return NULL;
+}
+
+//
+// Environment
+//
+
+NV_Env *NV_allocEnv()
+{
+	NV_Env *t;
+
+	t = malloc(sizeof(NV_Env));
+	if(!t){
+		fputs("malloc error", stderr);
+		exit(EXIT_FAILURE);
+	}
+
+	t->char0Len = 0;
+	t->char0List = "";
+	t->char1Len = 0;
+	t->char1List = "";
+	//
+	t->token0Len = 0;
+	NV_initRootTerm(&t->termRoot);
+	t->opRoot = NULL;
+
+	return t;
+}
+
+//
+// Tokenize
+//
 
 int NV_getCharType(NV_Env *env, char c)
 {
@@ -346,10 +309,14 @@ int NV_tokenize(NV_Env *env, const char *s)
 	for(i = 0; i < env->token0Len; i++){
 		NV_appendTerm(env, env->token0[i]);
 	}
-	NV_printTerms(env);
+	NV_printTerms(&env->termRoot);
 
 	return 0;
 }
+
+//
+// Evaluate
+//
 
 void NV_Evaluate(NV_Env *env)
 {
@@ -378,7 +345,7 @@ void NV_Evaluate(NV_Env *env)
 					if(!t){
 						break;
 					}
-					NV_printTerms(env);
+					NV_printTerms(&env->termRoot);
 				}
 			}
 		}
@@ -387,4 +354,6 @@ void NV_Evaluate(NV_Env *env)
 	if(t->next == NULL && t->type == Imm32s){
 		printf("= %d\n", *(int *)t->data);
 	}
+	fputs("OK.\n", stdout);
 }
+
