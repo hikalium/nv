@@ -9,7 +9,6 @@ int main(int argc, char *argv[])
 	NV_Env *env = NV_allocEnv();
 	env->langDef = NV_getDefaultLang();
 	
-	
 	while(fgets(line, sizeof(line), stdin) != NULL){
 		fprintf(stderr, "> %s", line);
 		if(NV_tokenize(env, line)){
@@ -36,16 +35,16 @@ NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
 	if(next->type == Imm32s){
 		if(before->type == Unknown){
 			NV_Term *var;
-			var = NV_createTerm_VInt32S(before->data, 0);
+			var = NV_createTerm_Variable(before->data);
 			NV_insertTermAfter(before, var);
 			NV_removeTerm(before);
 			before = var;
 		}
 		if(
-			before->type == VInt32S &&
+			before->type == Variable &&
 			next->type == Imm32s
 		){
-			*((int32_t *)before->data) = *((int32_t *)next->data);
+			NV_assignVariable_Integer(before->data, *((int32_t *)next->data));
 			NV_removeTerm(thisTerm);
 			NV_removeTerm(next);
 			env->changeFlag = 1;
@@ -149,6 +148,50 @@ NV_LangDef *NV_getDefaultLang()
 }
 
 //
+// Varibale
+//
+NV_Variable *NV_allocVariable()
+{
+	NV_Variable *t;
+	//
+	t = malloc(sizeof(NV_Variable));
+	if(!t){
+		fputs("malloc error", stderr);
+		exit(EXIT_FAILURE);
+	}
+	//
+	t->name[0] = 0;
+	t->type = None;
+	t->byteSize = 0;
+	t->data = NULL;
+	//
+	return t;
+}
+
+void NV_resetVariable(NV_Variable *v)
+{
+	// excludes namestr.
+	if(v->type == None) return;
+	v->type = None;
+	v->byteSize = 0;
+	if(v->data) free(v->data);
+	v->data = NULL;
+}
+
+void NV_assignVariable_Integer(NV_Variable *v, int32_t newVal)
+{
+	NV_resetVariable(v);
+	v->type = Integer;
+	v->byteSize = sizeof(int32_t);	// int32s only now.
+	v->data = malloc(v->byteSize);
+	if(!v->data){
+		fputs("malloc error", stderr);
+		exit(EXIT_FAILURE);
+	}
+	*((int32_t *)v->data) = newVal;
+}
+
+//
 // Term
 //
 
@@ -222,19 +265,23 @@ NV_Term *NV_createTerm_Imm32(int imm32)
 	new = NV_allocTerm();
 	new->type = Imm32s;
 	new->data = malloc(sizeof(int));
+	if(!new->data){
+		fputs("malloc error", stderr);
+		exit(EXIT_FAILURE);
+	}
+
 	*((int *)new->data) = imm32;
 	return new;
 }
 
-NV_Term *NV_createTerm_VInt32S(const char *name, int32_t imm32)
+NV_Term *NV_createTerm_Variable(const char *name)
 {
 	NV_Term *new;
-	NV_VInt32S *data;
+	NV_Variable *data;
 	//
 	new = NV_allocTerm();
-	new->type = VInt32S;
-	data = malloc(sizeof(NV_VInt32S));
-	data->v = imm32;
+	new->type = Variable;
+	data = NV_allocVariable(); 
 	strncpy(data->name, name, MAX_TOKEN_LEN);
 	new->data = data;
 	return new;
@@ -285,12 +332,19 @@ void NV_printTerms(NV_Term *root)
 void NV_printVarsInTerms(NV_Term *root)
 {
 	NV_Term *t;
-	NV_VInt32S *vd_i32s;
+	NV_Variable *var;
+	int32_t *tmpint32;
 
 	for(t = root->next; t; t = t->next){
-		if(t->type == VInt32S){
-			vd_i32s = t->data;
-			printf("int32s: %s = %d\n", vd_i32s->name, vd_i32s->v);
+		if(t->type != Variable) continue;
+		var = t->data;
+		if(var->type == Integer){
+			printf("%s Integer(%d):", var->name, var->byteSize);
+			if(var->byteSize == sizeof(int32_t)){
+				tmpint32 = var->data;
+				printf("%d", *tmpint32);
+			}
+			putchar('\n');
 		}
 	};
 }
@@ -322,7 +376,8 @@ void NV_addOperator(NV_LangDef *lang, int precedence, const char *name, NV_Term 
 	NV_Operator *t;
 
 	t = NV_allocOperator();
-	strncpy(t->name, name, sizeof(t->name));
+	strlcpy(t->name, name, sizeof(t->name));
+	t->name[sizeof(t->name) - 1] = 0;
 	t->precedence = precedence;
 	t->next = lang->opRoot;
 	lang->opRoot = t;
@@ -393,6 +448,7 @@ void NV_tokenize0(NV_Env *env, const char *s)
 				exit(EXIT_FAILURE);
 			}
 			strncpy(env->token0[env->token0Len++], p, s + i - p);
+			
 			printf("[%s]", env->token0[env->token0Len - 1]);
 			p = s + i;
 			lastCType = cType;

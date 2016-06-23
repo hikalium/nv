@@ -5,18 +5,28 @@
 #define MAX_TOKENS		128
 
 typedef enum	NV_TERM_TYPE	NV_TermType;
+typedef enum	NV_VAR_TYPE		NV_VarType;
 typedef struct	NV_TERM 		NV_Term;
 typedef struct	NV_OPERATOR 	NV_Operator;
 typedef struct	NV_ENV			NV_Env;
 typedef struct	NV_LANGDEF		NV_LangDef;
-typedef struct	NV_VAR_INT32S	NV_VInt32S;
+typedef struct	NV_VARIABLE		NV_Variable;
 
 enum NV_TERM_TYPE {
 	Root,
 	Unknown,
-	VInt32S,
+	Variable,
 	Operator,
 	Imm32s,
+};
+
+enum NV_VAR_TYPE {
+	None,
+	//Alias
+	Integer,
+	//Real,
+	//String,
+	//Structure
 };
 
 struct NV_TERM {
@@ -52,9 +62,11 @@ struct NV_LANGDEF {
 	NV_Operator *opRoot;
 };
 
-struct NV_VAR_INT32S{
-	int32_t v;
-	char name[MAX_TOKEN_LEN];	
+struct NV_VARIABLE {
+	char name[MAX_TOKEN_LEN];
+	NV_VarType type;
+	int byteSize;
+	void *data;
 };
 
 //
@@ -65,6 +77,10 @@ NV_Term *NV_LANG00_Op_nothingButDisappear(NV_Env *env, NV_Term *thisTerm);
 NV_LangDef *NV_allocLangDef();
 NV_LangDef *NV_getDefaultLang();
 //
+NV_Variable *NV_allocVariable();
+void NV_resetVariable(NV_Variable *v);
+void NV_assignVariable_Integer(NV_Variable *v, int32_t newVal);
+//
 NV_Term *NV_allocTerm();
 void NV_initRootTerm(NV_Term *t);
 void NV_insertTermAfter(NV_Term *base, NV_Term *new);
@@ -72,7 +88,7 @@ void NV_appendTermRaw(NV_Env *env, NV_Term *new);
 void NV_removeTerm(NV_Term *t);
 void NV_removeTermTree(NV_Term *root);
 NV_Term *NV_createTerm_Imm32(int imm32);
-NV_Term *NV_createTerm_VInt32S(const char *name, int32_t imm32);
+NV_Term *NV_createTerm_Variable(const char *name);
 void NV_appendTerm(NV_Env *env, const char *termStr);
 void NV_printTerms(NV_Term *root);
 void NV_printVarsInTerms(NV_Term *root);
