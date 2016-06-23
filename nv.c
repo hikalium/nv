@@ -26,6 +26,35 @@ int main(int argc, char *argv[])
 // Language set
 //
 
+NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
+{
+	NV_Term *before = thisTerm->before;
+	NV_Term *next = thisTerm->next;
+	if(!before || !next){
+		return NULL;
+	}
+	if(next->type == Imm32s){
+		if(before->type == Unknown){
+			NV_Term *var;
+			var = NV_createTerm_VInt32S(before->data, 0);
+			NV_insertTermAfter(before, var);
+			NV_removeTerm(before);
+			before = var;
+		}
+		if(
+			before->type == VInt32S &&
+			next->type == Imm32s
+		){
+			*((int32_t *)before->data) = *((int32_t *)next->data);
+			NV_removeTerm(thisTerm);
+			NV_removeTerm(next);
+			env->changeFlag = 1;
+			return before;	
+		}
+	}
+	return NULL;
+}
+
 NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
 {
 	NV_Term *before = thisTerm->before;
@@ -111,8 +140,9 @@ NV_LangDef *NV_getDefaultLang()
 
 	NV_addOperator(lang, 1024,	" ", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 1024,	"\n", NV_LANG00_Op_nothingButDisappear);
-	NV_addOperator(lang, 50,		"+", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(lang, 50,		"-", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 10,	"=", NV_LANG00_Op_assign);
+	NV_addOperator(lang, 50,	"+", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 50,	"-", NV_LANG00_Op_binaryOperator);
 	NV_addOperator(lang, 100,	"*", NV_LANG00_Op_binaryOperator);
 	NV_addOperator(lang, 100,	"/", NV_LANG00_Op_binaryOperator);
 	return lang;
@@ -148,6 +178,14 @@ void NV_initRootTerm(NV_Term *t)
 	t->next = NULL;
 }
 
+void NV_insertTermAfter(NV_Term *base, NV_Term *new)
+{
+	new->before = base;
+	new->next = base->next;
+	new->next->before = new;
+	new->before->next = new;
+}
+
 void NV_appendTermRaw(NV_Env *env, NV_Term *new)
 {
 	NV_Term *t;
@@ -163,6 +201,10 @@ void NV_removeTerm(NV_Term *t)
 	// don't apply to the root Term.
 	if(t->before)	t->before->next = t->next;
 	if(t->next)		t->next->before = t->before;
+	if(t->data && 
+		(t->type == Imm32s)){
+		free(t->data);
+	}
 	free(t);
 }
 
@@ -181,6 +223,20 @@ NV_Term *NV_createTerm_Imm32(int imm32)
 	new->type = Imm32s;
 	new->data = malloc(sizeof(int));
 	*((int *)new->data) = imm32;
+	return new;
+}
+
+NV_Term *NV_createTerm_VInt32S(const char *name, int32_t imm32)
+{
+	NV_Term *new;
+	NV_VInt32S *data;
+	//
+	new = NV_allocTerm();
+	new->type = VInt32S;
+	data = malloc(sizeof(NV_VInt32S));
+	data->v = imm32;
+	strncpy(data->name, name, MAX_TOKEN_LEN);
+	new->data = data;
 	return new;
 }
 
@@ -217,12 +273,26 @@ void NV_appendTerm(NV_Env *env, const char *termStr)
 void NV_printTerms(NV_Term *root)
 {
 	NV_Term *t;
-	for(t = root; ; t = t->next){
+	if(!root) return;
+	for(t = root->next; ; t = t->next){
 		printf("[%d]", t->type);
 		if(!t->next) break;
 	};
 	putchar('\n');
 	
+}
+
+void NV_printVarsInTerms(NV_Term *root)
+{
+	NV_Term *t;
+	NV_VInt32S *vd_i32s;
+
+	for(t = root->next; t; t = t->next){
+		if(t->type == VInt32S){
+			vd_i32s = t->data;
+			printf("int32s: %s = %d\n", vd_i32s->name, vd_i32s->v);
+		}
+	};
 }
 
 //
@@ -354,10 +424,11 @@ void NV_Evaluate(NV_Env *env)
 	NV_Operator *op;
 	int maxPrecedence;
 
+	if(!env->termRoot.next) return;
+
 	env->changeFlag = 1;
 	while(env->changeFlag){
 		env->changeFlag = 0;
-		t = env->termRoot.next;
 		maxPrecedence = 0;
 		for(t = env->termRoot.next; t; t = t->next){
 			if(t->type == Operator){
@@ -380,10 +451,14 @@ void NV_Evaluate(NV_Env *env)
 			}
 		}
 	}
+	//
 	t = env->termRoot.next;
 	if(t->next == NULL && t->type == Imm32s){
 		printf("= %d\n", *(int *)t->data);
 	}
+	// print variables.
+	NV_printVarsInTerms(&env->termRoot);
+	//
 	fputs("OK.\n", stdout);
 	NV_removeTermTree(&env->termRoot);
 }
