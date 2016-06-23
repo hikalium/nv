@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
 {
 	char line[MAX_LINE_LEN];
 	NV_Env *env = NV_allocEnv();
-	NV_setDefaultEnv(env);
+	env->langDef = NV_getDefaultLang();
 	
 	
 	while(fgets(line, sizeof(line), stdin) != NULL){
@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 }
 
 //
-// Default env params
+// Language set
 //
 
 NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
@@ -74,21 +74,48 @@ NV_Term *NV_LANG00_Op_nothingButDisappear(NV_Env *env, NV_Term *thisTerm)
 	return before;
 }
 
-void NV_setDefaultEnv(NV_Env *env)
+//
+// LangDef
+//
+
+NV_LangDef *NV_allocLangDef()
 {
+	NV_LangDef *t;
+
+	t = malloc(sizeof(NV_LangDef));
+	if(!t){
+		fputs("malloc error", stderr);
+		exit(EXIT_FAILURE);
+	}
+
+	t->char0Len = 0;
+	t->char0List = "";
+	t->char1Len = 0;
+	t->char1List = "";
+	//
+	t->opRoot = NULL;
+
+	return t;
+	
+}
+
+NV_LangDef *NV_getDefaultLang()
+{
+	NV_LangDef *lang = NV_allocLangDef();
 	char *char0 = " ;\n";
 	char *char1 = "+=*/";
-	env->char0Len = strlen(char0);
-	env->char0List = char0;
-	env->char1Len = strlen(char1);
-	env->char1List = char1;
+	lang->char0Len = strlen(char0);
+	lang->char0List = char0;
+	lang->char1Len = strlen(char1);
+	lang->char1List = char1;
 
-	NV_addOperator(env, 1024,	" ", NV_LANG00_Op_nothingButDisappear);
-	NV_addOperator(env, 1024,	"\n", NV_LANG00_Op_nothingButDisappear);
-	NV_addOperator(env, 50,		"+", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(env, 50,		"-", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(env, 100,	"*", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(env, 100,	"/", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 1024,	" ", NV_LANG00_Op_nothingButDisappear);
+	NV_addOperator(lang, 1024,	"\n", NV_LANG00_Op_nothingButDisappear);
+	NV_addOperator(lang, 50,		"+", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 50,		"-", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 100,	"*", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 100,	"/", NV_LANG00_Op_binaryOperator);
+	return lang;
 }
 
 //
@@ -139,6 +166,13 @@ void NV_removeTerm(NV_Term *t)
 	free(t);
 }
 
+void NV_removeTermTree(NV_Term *root)
+{
+	while(root->next != NULL){
+		NV_removeTerm(root->next);
+	}
+}
+
 NV_Term *NV_createTerm_Imm32(int imm32)
 {
 	NV_Term *new;
@@ -158,7 +192,7 @@ void NV_appendTerm(NV_Env *env, const char *termStr)
 	int tmpNum;
 	char *p;
 	//
-	op = NV_isOperator(env, termStr);
+	op = NV_isOperator(env->langDef, termStr);
 	if(op){
 		new = NV_allocTerm();
 		new->type = Operator;
@@ -213,22 +247,22 @@ NV_Operator *NV_allocOperator()
 	return t;
 }
 
-void NV_addOperator(NV_Env *env, int precedence, const char *name, NV_Term *(*nativeFunc)(NV_Env *env, NV_Term *thisTerm))
+void NV_addOperator(NV_LangDef *lang, int precedence, const char *name, NV_Term *(*nativeFunc)(NV_Env *env, NV_Term *thisTerm))
 {
 	NV_Operator *t;
 
 	t = NV_allocOperator();
 	strncpy(t->name, name, sizeof(t->name));
 	t->precedence = precedence;
-	t->next = env->opRoot;
-	env->opRoot = t;
+	t->next = lang->opRoot;
+	lang->opRoot = t;
 	t->nativeFunc = nativeFunc;
 }
 
-NV_Operator *NV_isOperator(NV_Env *env, const char *termStr)
+NV_Operator *NV_isOperator(NV_LangDef *lang, const char *termStr)
 {
 	NV_Operator *op;
-	for(op = env->opRoot; op != NULL; op = op->next){
+	for(op = lang->opRoot; op != NULL; op = op->next){
 		if(strcmp(op->name, termStr) == 0){
 			return op;
 		}
@@ -250,14 +284,10 @@ NV_Env *NV_allocEnv()
 		exit(EXIT_FAILURE);
 	}
 
-	t->char0Len = 0;
-	t->char0List = "";
-	t->char1Len = 0;
-	t->char1List = "";
 	//
+	t->langDef = NULL;
 	t->token0Len = 0;
 	NV_initRootTerm(&t->termRoot);
-	t->opRoot = NULL;
 
 	return t;
 }
@@ -266,12 +296,12 @@ NV_Env *NV_allocEnv()
 // Tokenize
 //
 
-int NV_getCharType(NV_Env *env, char c)
+int NV_getCharType(NV_LangDef *lang, char c)
 {
-	if(strchr(env->char0List, c)){
+	if(strchr(lang->char0List, c)){
 		return 0;
 	}
-	if(strchr(env->char1List, c)){
+	if(strchr(lang->char1List, c)){
 		return 1;
 	}
 	return 2;
@@ -281,11 +311,11 @@ void NV_tokenize0(NV_Env *env, const char *s)
 {
 	const char *p;
 	int i, lastCType, cType;
-	lastCType = NV_getCharType(env, s[0]);
+	lastCType = NV_getCharType(env->langDef, s[0]);
 	p = s;
 	env->token0Len = 0;
 	for(i = 0; ; i++){
-		cType = NV_getCharType(env, s[i]);
+		cType = NV_getCharType(env->langDef, s[i]);
 		if(cType != lastCType){
 			// division between tokens
 			if((p - s + i) > MAX_TOKEN_LEN){
@@ -355,5 +385,6 @@ void NV_Evaluate(NV_Env *env)
 		printf("= %d\n", *(int *)t->data);
 	}
 	fputs("OK.\n", stdout);
+	NV_removeTermTree(&env->termRoot);
 }
 
