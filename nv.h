@@ -88,6 +88,8 @@ NV_LangDef *NV_getDefaultLang();
 NV_Variable *NV_allocVariable(NV_Env *env);
 void NV_resetVariable(NV_Variable *v);
 void NV_assignVariable_Integer(NV_Variable *v, int32_t newVal);
+void NV_tryConvertTermFromVariableToImm(NV_Variable *varList, int varUsed, NV_Term *term);
+void NV_printVarsInVarList(NV_Variable *varList, int varUsed);
 // @nv_term.c
 NV_Term *NV_allocTerm();
 void NV_initRootTerm(NV_Term *t);
@@ -106,7 +108,6 @@ NV_Term *NV_createTerm_Imm32(int imm32);
 NV_Term *NV_createTerm_Variable(NV_Env *env, const char *name);
 NV_Term *NV_createTerm_Sentence();
 void NV_printTerms(NV_Term *root);
-void NV_printVarsInTerms(NV_Term *root);
 //
 NV_Operator *NV_allocOperator();
 void NV_addOperator(NV_LangDef *lang, int precedence, const char *name, NV_Term *(*nativeFunc)(NV_Env *env, NV_Term *thisTerm));

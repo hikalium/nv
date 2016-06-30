@@ -60,6 +60,14 @@ NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
 	if(!before || !next){
 		return NULL;
 	}
+	if(before->type == Unknown){
+		NV_tryConvertTermFromVariableToImm(env->varList, env->varUsed, before);
+		before = thisTerm->before;
+	}
+	if(next->type == Unknown){
+		NV_tryConvertTermFromVariableToImm(env->varList, env->varUsed, next);
+		next = thisTerm->next;
+	}
 	if(before->type == Imm32s && next->type == Imm32s){
 		int resultVal;
 		if(strcmp("+", op->name) == 0){
@@ -87,7 +95,7 @@ NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
 		env->changeFlag = 1;
 		return result;	
 	}
-
+	printf("NV_LANG00_Op_binaryOperator: Bad operand. type %d and %d \n", before->type, next->type);
 	return NULL;
 }
 
@@ -227,6 +235,46 @@ void NV_assignVariable_Integer(NV_Variable *v, int32_t newVal)
 	*((int32_t *)v->data) = newVal;
 }
 
+void NV_tryConvertTermFromVariableToImm(NV_Variable *varList, int varUsed, NV_Term *term)
+{
+	NV_Variable *var;
+	NV_Term *new;
+	int i;
+	if(term->type != Unknown) return;
+	for(i = 0; i < varUsed; i++){
+		var = &varList[i];
+		if(strncmp(term->data, var->name, MAX_TOKEN_LEN) == 0){
+			if(var->type == Integer && var->byteSize == sizeof(int32_t)){
+				new = NV_createTerm_Imm32(*((int32_t *)var->data));
+				NV_overwriteTerm(term, new);
+				//printf("NV_tryConvertTermFromVariableToImm: Convert Success\n");
+				return;
+			}
+		}
+	}
+	printf("NV_tryConvertTermFromVariableToImm: Failed to convert.\n");
+}
+
+void NV_printVarsInVarList(NV_Variable *varList, int varUsed)
+{
+	NV_Variable *var;
+	int32_t *tmpint32;
+	int i;
+
+	printf("Variable Table (%p): %d\n", varList, varUsed);
+	for(i = 0; i < varUsed; i++){
+		var = &varList[i];
+		if(var->type == Integer){
+			printf("%s Integer(%d):", var->name, var->byteSize);
+			if(var->byteSize == sizeof(int32_t)){
+				tmpint32 = var->data;
+				printf("%d", *tmpint32);
+			}
+			putchar('\n');
+		}
+	}
+}
+
 //
 // Operator
 //
@@ -358,6 +406,7 @@ void NV_Evaluate(NV_Env *env)
 	}
 	fputs("OK.\n", stdout);
 	NV_removeTermTree(&env->termRoot);
+	NV_printVarsInVarList(env->varList, env->varUsed);
 }
 
 void NV_EvaluateSentence(NV_Env *env, NV_Term *root)

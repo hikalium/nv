@@ -195,24 +195,3 @@ void NV_printTerms(NV_Term *root)
 	putchar('\n');
 	
 }
-/*
-void NV_printVarsInTerms(NV_Term *root)
-{
-	NV_Term *t;
-	NV_Variable *var;
-	int32_t *tmpint32;
-
-	for(t = root->next; t; t = t->next){
-		if(t->type != Variable) continue;
-		var = t->data;
-		if(var->type == Integer){
-			printf("%s Integer(%d):", var->name, var->byteSize);
-			if(var->byteSize == sizeof(int32_t)){
-				tmpint32 = var->data;
-				printf("%d", *tmpint32);
-			}
-			putchar('\n');
-		}
-	};
-}
-*/
