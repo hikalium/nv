@@ -22,21 +22,89 @@ void NV_initRootTerm(NV_Term *t)
 	t->next = NULL;
 }
 
+void NV_changeRootTerm(NV_Term *oldRoot, NV_Term *newRoot)
+{
+	NV_initRootTerm(newRoot);
+	NV_appendAll(newRoot, oldRoot);
+}
+
 void NV_insertTermAfter(NV_Term *base, NV_Term *new)
 {
 	new->before = base;
 	new->next = base->next;
-	new->next->before = new;
-	new->before->next = new;
+	if(new->next) new->next->before = new;
+	if(new->before) new->before->next = new;
+}
+
+void NV_insertAllTermAfter(NV_Term *base, NV_Term *srcRoot)
+{
+	// src becomes empty
+	NV_Term *next, *new;
+	for(new = srcRoot->next; new; new = next){
+		next = new->next;
+		NV_insertTermAfter(base, new);
+		base = new;
+	}
+	NV_initRootTerm(srcRoot); 
+}
+
+void NV_overwriteTerm(NV_Term *target, NV_Term *new)
+{
+	// target should not be a Root Term.
+	target = target->before;
+	NV_removeTerm(target->next);
+	NV_insertTermAfter(target, new);
+}
+
+void NV_divideTerm(NV_Term *subRoot, NV_Term *subBegin)
+{
+	// It modifies tree which contains subBegin.
+	NV_Term *mainLast = subBegin->before;
+	mainLast->next = NULL;
+	NV_initRootTerm(subRoot);
+	NV_appendTermRaw(subRoot, subBegin);
+}
+
+void NV_appendAll(NV_Term *dstRoot, NV_Term *srcRoot)
+{
+	// src becomes empty
+	// dstRoot can be any Term (not only root).
+	NV_appendTermRaw(dstRoot, srcRoot->next);
+	NV_initRootTerm(srcRoot);
 }
 
 void NV_appendTermRaw(NV_Term *root, NV_Term *new)
 {
 	NV_Term *t;
 	for(t = root; t->next; t = t->next);
-	new->next = NULL;
-	new->before = t;
+	if(new) new->before = t;
 	t->next = new;
+	return;
+}
+
+void NV_appendTerm(NV_LangDef *langDef, NV_Term *termRoot, const char *termStr)
+{
+	// retv: isValid
+	NV_Term *new;
+	int tmpNum;
+	char *p;
+	//
+	new = NV_createTerm_Operator(langDef, termStr);
+	if(new){
+		NV_appendTermRaw(termRoot, new);
+		return;
+	}
+	tmpNum = strtol(termStr, &p, 0);
+	if(termStr != p && *p == 0){
+		new = NV_createTerm_Imm32(tmpNum);
+		NV_appendTermRaw(termRoot, new);
+		return;
+	}
+	//
+	new = NV_allocTerm();
+	new->type = Unknown;
+	new->data = (void *)termStr;
+	NV_appendTermRaw(termRoot, new);
 	return;
 }
 
@@ -57,6 +125,19 @@ void NV_removeTermTree(NV_Term *root)
 	while(root->next != NULL){
 		NV_removeTerm(root->next);
 	}
+}
+
+NV_Term *NV_createTerm_Operator(NV_LangDef *langDef, const char *opName)
+{
+	NV_Operator *op;
+	NV_Term *new;
+
+	op = NV_isOperator(langDef, opName);
+	if(!op) return NULL;
+	new = NV_allocTerm();
+	new->type = Operator;
+	new->data = op;
+	return new;
 }
 
 NV_Term *NV_createTerm_Imm32(int imm32)
@@ -84,48 +165,37 @@ NV_Term *NV_createTerm_Variable(NV_Env *env, const char *name)
 	return new;
 }
 
-void NV_appendTerm(NV_LangDef *langDef, NV_Term *termRoot, const char *termStr)
+NV_Term *NV_createTerm_Sentence()
 {
-	// retv: isValid
 	NV_Term *new;
-	NV_Operator *op;
-	int tmpNum;
-	char *p;
-	//
-	op = NV_isOperator(langDef, termStr);
-	if(op){
-		new = NV_allocTerm();
-		new->type = Operator;
-		new->data = op;
-		NV_appendTermRaw(termRoot, new);
-		return;
-	}
-	tmpNum = strtol(termStr, &p, 0);
-	if(termStr != p && *p == 0){
-		new = NV_createTerm_Imm32(tmpNum);
-		NV_appendTermRaw(termRoot, new);
-		return;
-	}
+	NV_Term *root;
 	//
 	new = NV_allocTerm();
-	new->type = Unknown;
-	new->data = (void *)termStr;
-	NV_appendTermRaw(termRoot, new);
-	return;
+	root = NV_allocTerm();
+	//
+	new->type = Sentence;
+	new->data = root;
+	return new;
 }
 
 void NV_printTerms(NV_Term *root)
 {
 	NV_Term *t;
+	NV_Operator *op;
 	if(!root) return;
 	for(t = root->next; ; t = t->next){
-		printf("[%d]", t->type);
+		if(t->type == Operator){
+			op = t->data;
+			printf("(%s)", op->name);
+		} else{
+			printf("[%d]", t->type);
+		}
 		if(!t->next) break;
 	};
 	putchar('\n');
 	
 }
-
+/*
 void NV_printVarsInTerms(NV_Term *root)
 {
 	NV_Term *t;
@@ -145,3 +215,4 @@ void NV_printVarsInTerms(NV_Term *root)
 		}
 	};
 }
+*/

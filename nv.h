@@ -21,6 +21,7 @@ typedef struct	NV_ENV			NV_Env;
 enum NV_TERM_TYPE {
 	Root,
 	Unknown,
+	Sentence,
 	Variable,
 	Operator,
 	Imm32s,
@@ -46,6 +47,7 @@ struct NV_OPERATOR {
 	int precedence;
 	NV_Operator *next;
 	NV_Term *(*nativeFunc)(NV_Env *env, NV_Term *thisTerm);
+	// retv: Last of Result Term
 };
 
 struct NV_LANGDEF {
@@ -78,6 +80,7 @@ struct NV_ENV {
 NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm);
 NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm);
 NV_Term *NV_LANG00_Op_nothingButDisappear(NV_Env *env, NV_Term *thisTerm);
+NV_Term *NV_LANG00_Op_sentenceSeparator(NV_Env *env, NV_Term *thisTerm);
 //
 NV_LangDef *NV_allocLangDef();
 NV_LangDef *NV_getDefaultLang();
@@ -88,13 +91,20 @@ void NV_assignVariable_Integer(NV_Variable *v, int32_t newVal);
 // @nv_term.c
 NV_Term *NV_allocTerm();
 void NV_initRootTerm(NV_Term *t);
+void NV_changeRootTerm(NV_Term *oldRoot, NV_Term *newRoot);
 void NV_insertTermAfter(NV_Term *base, NV_Term *new);
+void NV_insertAllTermAfter(NV_Term *base, NV_Term *srcRoot);
+void NV_overwriteTerm(NV_Term *target, NV_Term *new);
+void NV_divideTerm(NV_Term *subRoot, NV_Term *subBegin);
+void NV_appendAll(NV_Term *dstRoot, NV_Term *srcRoot);
 void NV_appendTermRaw(NV_Term *root, NV_Term *new);
+void NV_appendTerm(NV_LangDef *langDef, NV_Term *termRoot, const char *termStr);
 void NV_removeTerm(NV_Term *t);
 void NV_removeTermTree(NV_Term *root);
+NV_Term *NV_createTerm_Operator(NV_LangDef *langDef, const char *opName);
 NV_Term *NV_createTerm_Imm32(int imm32);
 NV_Term *NV_createTerm_Variable(NV_Env *env, const char *name);
-void NV_appendTerm(NV_LangDef *langDef, NV_Term *termRoot, const char *termStr);
+NV_Term *NV_createTerm_Sentence();
 void NV_printTerms(NV_Term *root);
 void NV_printVarsInTerms(NV_Term *root);
 //

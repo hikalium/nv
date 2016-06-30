@@ -99,6 +99,50 @@ NV_Term *NV_LANG00_Op_nothingButDisappear(NV_Env *env, NV_Term *thisTerm)
 	return before;
 }
 
+NV_Term *NV_LANG00_Op_sentenceSeparator(NV_Env *env, NV_Term *thisTerm)
+{
+	NV_Term *b = thisTerm->before, *originalTree;
+	NV_Term *sentenceTerm = NV_createTerm_Sentence();
+	NV_Term *sentenceRoot, remRoot;
+
+	sentenceRoot = sentenceTerm->data;
+
+	for(b = thisTerm;  (b->before->type != Root && b->before->type != Sentence && !(b->before->type == Operator && b->before->data == thisTerm->data)); b = b->before){
+		// skip
+	}
+	// now, b->before is ';' or Sentence or Root.
+	if(b->before->type == Operator && b->before->data == thisTerm->data){
+		NV_removeTerm(b->before);
+	}
+	originalTree = b->before;
+	NV_divideTerm(sentenceRoot, b);
+	NV_divideTerm(&remRoot, thisTerm);
+	NV_appendAll(originalTree, &remRoot);
+	NV_overwriteTerm(thisTerm, sentenceTerm);
+	NV_insertTermAfter(thisTerm->before, NV_createTerm_Operator(env->langDef, "builtin_exec"));
+	env->changeFlag = 1;
+	return originalTree;
+}
+
+NV_Term *NV_LANG00_Op_builtin_exec(NV_Env *env, NV_Term *thisTerm)
+{
+	NV_Term *sentenceTerm, *sentenceRoot, *retv;
+	sentenceTerm = thisTerm->next;
+	if(sentenceTerm == NULL || sentenceTerm->type != Sentence){
+		return NULL;
+	}
+	sentenceRoot = sentenceTerm->data;
+
+	NV_EvaluateSentence(env, sentenceRoot);
+
+	retv = thisTerm->next;
+	NV_removeTerm(thisTerm);
+	NV_insertAllTermAfter(retv, sentenceRoot);
+	NV_removeTerm(sentenceTerm);
+	env->changeFlag = 1;
+	return retv;
+}
+
 //
 // LangDef
 //
@@ -123,13 +167,16 @@ NV_LangDef *NV_allocLangDef()
 NV_LangDef *NV_getDefaultLang()
 {
 	NV_LangDef *lang = NV_allocLangDef();
-	char *char0 = " ;\n";
-	char *char1 = "+=*/";
+	char *char0 = " \n";
+	char *char1 = "+=*/;";
+	//
 	lang->char0Len = strlen(char0);
 	lang->char0List = char0;
 	lang->char1Len = strlen(char1);
 	lang->char1List = char1;
-
+	//
+	NV_addOperator(lang, 7010,	";", NV_LANG00_Op_sentenceSeparator);
+	NV_addOperator(lang, 7000,	"builtin_exec", NV_LANG00_Op_builtin_exec);
 	NV_addOperator(lang, 1024,	" ", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 1024,	"\n", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 10,	"=", NV_LANG00_Op_assign);
@@ -301,14 +348,16 @@ int NV_tokenize(NV_Env *env, const char *s)
 //
 void NV_Evaluate(NV_Env *env)
 {
-/*
-	NV_Term tRoot, *t;
-	NV_initRootTerm(&tRoot);
-	for(t = &env->termRoot.next; !t; t = t->next){
-		
-	}
-*/
+	NV_Term *t; 
+	//
 	NV_EvaluateSentence(env, &env->termRoot);
+	//
+	t = env->termRoot.next;
+	if(t->next == NULL && t->type == Imm32s){
+		printf("= %d\n", *(int *)t->data);
+	}
+	fputs("OK.\n", stdout);
+	NV_removeTermTree(&env->termRoot);
 }
 
 void NV_EvaluateSentence(NV_Env *env, NV_Term *root)
@@ -339,20 +388,13 @@ void NV_EvaluateSentence(NV_Env *env, NV_Term *root)
 					if(!t){
 						break;
 					}
-					NV_printTerms(&env->termRoot);
+					NV_printTerms(root);
 				}
 			}
 		}
 	}
 	//
-	t = env->termRoot.next;
-	if(t->next == NULL && t->type == Imm32s){
-		printf("= %d\n", *(int *)t->data);
-	}
 	// print variables.
-	NV_printVarsInTerms(&env->termRoot);
-	//
-	fputs("OK.\n", stdout);
-	NV_removeTermTree(&env->termRoot);
+	//NV_printVarsInTerms(&env->termRoot);
 }
 
