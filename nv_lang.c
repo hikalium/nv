@@ -46,6 +46,20 @@ NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
 			resultVal = *((int *)before->data) * *((int *)next->data);
 		} else if(strcmp("/", op->name) == 0){
 			resultVal = *((int *)before->data) / *((int *)next->data);
+		}
+		// comparison operators
+		else if(strcmp("<", op->name) == 0){
+			resultVal = *((int *)before->data) < *((int *)next->data);
+		} else if(strcmp(">", op->name) == 0){
+			resultVal = *((int *)before->data) > *((int *)next->data);
+		} else if(strcmp("<=", op->name) == 0){
+			resultVal = *((int *)before->data) <= *((int *)next->data);
+		} else if(strcmp(">=", op->name) == 0){
+			resultVal = *((int *)before->data) >= *((int *)next->data);
+		} else if(strcmp("==", op->name) == 0){
+			resultVal = *((int *)before->data) == *((int *)next->data);
+		} else if(strcmp("!=", op->name) == 0){
+			resultVal = *((int *)before->data) != *((int *)next->data);
 		} else{
 			return NULL;
 		}
@@ -100,13 +114,13 @@ NV_Term *NV_LANG00_Op_sentenceSeparator(NV_Env *env, NV_Term *thisTerm)
 	return originalTree;
 }
 
-NV_Term *NV_LANG00_Op_sentenceBlock(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_makeBlock(NV_Env *env, NV_Term *thisTerm, const char *closeStr)
 {
-	// {}
+	// support func
 	NV_Term *t, *sentenceTerm, *sentenceRoot, remRoot, *originalTree;
 	int pairCount = 1;
 	for(t = thisTerm->next; t; t = t->next){
-		if(t->type == Unknown && strcmp("}", t->data) == 0){
+		if(t->type == Unknown && strcmp(closeStr, t->data) == 0){
 			pairCount --;
 			if(pairCount == 0) break;
 		} else if(t->type == Operator && t->data == thisTerm->data){
@@ -123,7 +137,29 @@ NV_Term *NV_LANG00_Op_sentenceBlock(NV_Env *env, NV_Term *thisTerm)
 	NV_removeTerm(t);
 	NV_appendAll(originalTree, &remRoot);
 	NV_overwriteTerm(thisTerm, sentenceTerm);
-	env->changeFlag = 1;
+	return originalTree;
+}
+
+NV_Term *NV_LANG00_Op_sentenceBlock(NV_Env *env, NV_Term *thisTerm)
+{
+	// {}
+	NV_Term *originalTree;
+	//
+	originalTree = NV_LANG00_makeBlock(env, thisTerm, "}");
+	if(originalTree) env->changeFlag = 1;
+	return originalTree;
+}
+
+NV_Term *NV_LANG00_Op_precedentBlock(NV_Env *env, NV_Term *thisTerm)
+{
+	// {}
+	NV_Term *originalTree;
+	//
+	originalTree = NV_LANG00_makeBlock(env, thisTerm, ")");
+	if(originalTree){
+		NV_insertTermAfter(originalTree, NV_createTerm_Operator(env->langDef, "builtin_exec"));
+		env->changeFlag = 1;
+	}
 	return originalTree;
 }
 
@@ -148,7 +184,30 @@ NV_Term *NV_LANG00_Op_builtin_exec(NV_Env *env, NV_Term *thisTerm)
 	env->changeFlag = 1;
 	return retv;
 }
+/*
+NV_Term *NV_LANG00_Op_if(NV_Env *env, NV_Term *thisTerm)
+{
+	// if {cond} {do} 
+	NV_Term *condTerm;
+	sentenceTerm = thisTerm->next;
+	if(sentenceTerm == NULL || sentenceTerm->type != Sentence){
+		return NULL;
+	}
+	sentenceRoot = sentenceTerm->data;
 
+	if(NV_EvaluateSentence(env, sentenceRoot)){
+		NV_printError("NV_LANG00_Op_builtin_exec: Exec failed.\n");
+		return NULL;
+	}
+
+	retv = thisTerm->next;
+	NV_removeTerm(thisTerm);
+	NV_insertAllTermAfter(retv, sentenceRoot);
+	NV_removeTerm(sentenceTerm);
+	env->changeFlag = 1;
+	return retv;
+}
+*/
 NV_Term *NV_LANG00_Op_print(NV_Env *env, NV_Term *thisTerm)
 {
 	NV_Term *target = thisTerm->next;
@@ -194,11 +253,18 @@ NV_LangDef *NV_getDefaultLang()
 	lang->char2Len = strlen(char2);
 	lang->char2List = char2;
 	//
-	NV_addOperator(lang, 7020,	";", NV_LANG00_Op_sentenceSeparator);
-	NV_addOperator(lang, 7010,	"{", NV_LANG00_Op_sentenceBlock);
+	NV_addOperator(lang, 7030,	";", NV_LANG00_Op_sentenceSeparator);
+	NV_addOperator(lang, 7020,	"{", NV_LANG00_Op_sentenceBlock);
+	NV_addOperator(lang, 7010,	"(", NV_LANG00_Op_precedentBlock);
 	NV_addOperator(lang, 7000,	"builtin_exec", NV_LANG00_Op_builtin_exec);
 	NV_addOperator(lang, 1024,	" ", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 1024,	"\n", NV_LANG00_Op_nothingButDisappear);
+	NV_addOperator(lang, 400,	"<", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 400,	">", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 400,	"<=", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 400,	">=", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 400,	"==", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 400,	"!=", NV_LANG00_Op_binaryOperator);
 	NV_addOperator(lang, 300,	"*", NV_LANG00_Op_binaryOperator);
 	NV_addOperator(lang, 300,	"/", NV_LANG00_Op_binaryOperator);
 	NV_addOperator(lang, 200,	"+", NV_LANG00_Op_binaryOperator);
