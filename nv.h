@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdarg.h>
+
+#define DEBUG	0
 
 #define MAX_LINE_LEN	1024
 #define MAX_TOKEN_LEN	64
@@ -82,6 +85,7 @@ NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm);
 NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm);
 NV_Term *NV_LANG00_Op_nothingButDisappear(NV_Env *env, NV_Term *thisTerm);
 NV_Term *NV_LANG00_Op_sentenceSeparator(NV_Env *env, NV_Term *thisTerm);
+NV_Term *NV_LANG00_Op_print(NV_Env *env, NV_Term *thisTerm);
 //
 NV_LangDef *NV_allocLangDef();
 NV_LangDef *NV_getDefaultLang();
@@ -122,7 +126,9 @@ void NV_tokenize0(NV_LangDef *langDef, char (*token0)[MAX_TOKEN_LEN], int token0
 int NV_tokenize(NV_Env *env, const char *s);
 //
 void NV_Evaluate(NV_Env *env);
-void NV_EvaluateSentence(NV_Env *env, NV_Term *root);
+int NV_EvaluateSentence(NV_Env *env, NV_Term *root);
+//
+void NV_printError(const char *format, ...);
 // @nv_fix.c
 char *NV_strncpy(char *dst, const char *src, size_t dst_size, size_t copy_size);
 void *NV_malloc(size_t size);

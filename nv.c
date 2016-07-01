@@ -7,12 +7,8 @@ int main(int argc, char *argv[])
 	env->langDef = NV_getDefaultLang();
 	
 	while(fgets(line, sizeof(line), stdin) != NULL){
-		fprintf(stderr, "> %s", line);
-		if(NV_tokenize(env, line)){
-			fputs("Bad syntax.\n", stderr);
-		} else{
-			NV_Evaluate(env);
-		}
+		NV_tokenize(env, line);
+		NV_Evaluate(env);
 	}
 
 	return 0;
@@ -85,7 +81,7 @@ NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
 		env->changeFlag = 1;
 		return result;	
 	}
-	printf("NV_LANG00_Op_binaryOperator: Bad operand. type %d and %d \n", before->type, next->type);
+	NV_printError("NV_LANG00_Op_binaryOperator: Bad operand. type %d and %d \n", before->type, next->type);
 	return NULL;
 }
 
@@ -131,7 +127,10 @@ NV_Term *NV_LANG00_Op_builtin_exec(NV_Env *env, NV_Term *thisTerm)
 	}
 	sentenceRoot = sentenceTerm->data;
 
-	NV_EvaluateSentence(env, sentenceRoot);
+	if(NV_EvaluateSentence(env, sentenceRoot)){
+		NV_printError("NV_LANG00_Op_builtin_exec: Exec failed.\n");
+		return NULL;
+	}
 
 	retv = thisTerm->next;
 	NV_removeTerm(thisTerm);
@@ -139,6 +138,37 @@ NV_Term *NV_LANG00_Op_builtin_exec(NV_Env *env, NV_Term *thisTerm)
 	NV_removeTerm(sentenceTerm);
 	env->changeFlag = 1;
 	return retv;
+}
+
+NV_Term *NV_LANG00_Op_print(NV_Env *env, NV_Term *thisTerm)
+{
+	NV_Term *target = thisTerm->next;
+	NV_Variable *var;
+	int32_t *tmpint32;
+	//
+	if(!target)return NULL;
+	if(target->type == Unknown)	NV_tryConvertTermFromVariableToImm(env->varList, env->varUsed, &target);
+	if(target->type == Variable){
+		var = target->data;
+		if(var->type == Integer){
+			if(var->byteSize == sizeof(int32_t)){
+				tmpint32 = var->data;
+				printf("%d\n", *tmpint32);
+			} else{
+				return NULL;
+			}
+		} else{
+			return NULL;
+		}
+	} else if(target->type == Imm32s){
+		tmpint32 = target->data;
+		printf("%d\n", *tmpint32);
+	} else{
+		return NULL;
+	}
+	NV_removeTerm(thisTerm);
+	env->changeFlag = 1;
+	return target;
 }
 
 //
@@ -177,11 +207,13 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 7000,	"builtin_exec", NV_LANG00_Op_builtin_exec);
 	NV_addOperator(lang, 1024,	" ", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 1024,	"\n", NV_LANG00_Op_nothingButDisappear);
-	NV_addOperator(lang, 10,	"=", NV_LANG00_Op_assign);
-	NV_addOperator(lang, 50,	"+", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(lang, 50,	"-", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(lang, 100,	"*", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(lang, 100,	"/", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 300,	"*", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 300,	"/", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 200,	"+", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 200,	"-", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 100,	"=", NV_LANG00_Op_assign);
+	NV_addOperator(lang, 10,	"print", NV_LANG00_Op_print);
+	
 	return lang;
 }
 
@@ -193,7 +225,7 @@ NV_Variable *NV_allocVariable(NV_Env *env)
 	NV_Variable *t;
 	//
 	if(env->varUsed >= MAX_VARS){
-		fputs("No more variables.", stderr);
+		NV_printError("No more variables.", stderr);
 		exit(EXIT_FAILURE);
 	}
 	t = &env->varList[env->varUsed++];
@@ -365,13 +397,12 @@ void NV_tokenize0(NV_LangDef *langDef, char (*token0)[MAX_TOKEN_LEN], int token0
 		cType = NV_getCharType(langDef, s[i]);
 		if(cType != lastCType){
 			// division between tokens
-			if((p - s + i) > MAX_TOKEN_LEN){
-				fputs("Too long token.\n", stderr);
+			if((s + i - p) > MAX_TOKEN_LEN){
+				NV_printError("Too long token.\n", stderr);
 				exit(EXIT_FAILURE);
 			}
 			//
 			NV_strncpy(token0[*token0Used], p, MAX_TOKEN_LEN, s + i - p);
-			printf("[%s]", token0[*token0Used]);
 			(*token0Used)++;
 			//
 			p = s + i;
@@ -379,7 +410,6 @@ void NV_tokenize0(NV_LangDef *langDef, char (*token0)[MAX_TOKEN_LEN], int token0
 		}
 		if(!s[i]) break;
 	}
-	putchar('\n');
 }
 
 int NV_tokenize(NV_Env *env, const char *s)
@@ -392,7 +422,7 @@ int NV_tokenize(NV_Env *env, const char *s)
 	for(i = 0; i < token0Len; i++){
 		NV_appendTerm(env->langDef, &env->termRoot, token0[i]);
 	}
-	NV_printTerms(&env->termRoot);
+	//NV_printTerms(&env->termRoot);
 	//
 	return 0;
 }
@@ -402,26 +432,18 @@ int NV_tokenize(NV_Env *env, const char *s)
 //
 void NV_Evaluate(NV_Env *env)
 {
-	NV_Term *t; 
-	//
 	NV_EvaluateSentence(env, &env->termRoot);
-	//
-	t = env->termRoot.next;
-	if(t && t->next == NULL && t->type == Imm32s){
-		printf("= %d\n", *(int *)t->data);
-	}
-	fputs("OK.\n", stdout);
 	NV_removeTermTree(&env->termRoot);
-	NV_printVarsInVarList(env->varList, env->varUsed);
+	//NV_printVarsInVarList(env->varList, env->varUsed);
 }
 
-void NV_EvaluateSentence(NV_Env *env, NV_Term *root)
+int NV_EvaluateSentence(NV_Env *env, NV_Term *root)
 {
 	NV_Term *t;
 	NV_Operator *op;
 	int maxPrecedence;
 
-	if(!root || !root->next) return;
+	if(!root || !root->next) return 1;
 
 	env->changeFlag = 1;
 	while(env->changeFlag){
@@ -441,9 +463,10 @@ void NV_EvaluateSentence(NV_Env *env, NV_Term *root)
 				if(op->precedence == maxPrecedence){
 					t = op->nativeFunc(env, t);
 					if(!t){
-						break;
+						NV_printError("Operator mismatched: %s\n", op->name);
+						return 1;
 					}
-					NV_printTerms(root);
+					//NV_printTerms(root);
 				}
 			}
 		}
@@ -451,5 +474,15 @@ void NV_EvaluateSentence(NV_Env *env, NV_Term *root)
 	//
 	// print variables.
 	//NV_printVarsInTerms(&env->termRoot);
+	return 0;
+}
+
+void NV_printError(const char *format, ...)
+{
+	va_list args;
+	printf("Error: ");
+	va_start(args, format);
+	vprintf(format, args);
+	va_end(args);
 }
 
