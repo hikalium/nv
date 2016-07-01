@@ -189,14 +189,13 @@ void NV_printTerms(NV_Term *root)
 	NV_Term *t;
 	NV_Operator *op;
 	if(!root) return;
-	for(t = root->next; ; t = t->next){
+	for(t = root->next; t; t = t->next){
 		if(t->type == Operator){
 			op = t->data;
 			printf("(%s)", op->name);
 		} else{
 			printf("[%d]", t->type);
 		}
-		if(!t->next) break;
 	};
 	putchar('\n');
 	

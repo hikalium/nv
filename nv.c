@@ -387,12 +387,13 @@ int NV_tokenize(NV_Env *env, const char *s)
 	int i;
 	char token0[MAX_TOKENS][MAX_TOKEN_LEN];
 	int token0Len = 0;
+	//
 	NV_tokenize0(env->langDef, token0, MAX_TOKENS, &token0Len, s);
 	for(i = 0; i < token0Len; i++){
 		NV_appendTerm(env->langDef, &env->termRoot, token0[i]);
 	}
 	NV_printTerms(&env->termRoot);
-
+	//
 	return 0;
 }
 
@@ -406,7 +407,7 @@ void NV_Evaluate(NV_Env *env)
 	NV_EvaluateSentence(env, &env->termRoot);
 	//
 	t = env->termRoot.next;
-	if(t->next == NULL && t->type == Imm32s){
+	if(t && t->next == NULL && t->type == Imm32s){
 		printf("= %d\n", *(int *)t->data);
 	}
 	fputs("OK.\n", stdout);
