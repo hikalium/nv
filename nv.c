@@ -295,6 +295,7 @@ int NV_EvaluateSentence(NV_Env *env, NV_Term *root)
 					t = op->nativeFunc(env, t);
 					if(!t){
 						NV_printError("Operator mismatched: %s\n", op->name);
+						NV_printTerms(root);
 						return 1;
 					}
 					if(NV_isDebugMode) NV_printTerms(root);
