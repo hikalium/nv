@@ -222,7 +222,7 @@ void NV_tokenize0(NV_LangDef *langDef, char (*token0)[MAX_TOKEN_LEN], int token0
 {
 	const char *p;
 	int i, lastCType, cType;
-	lastCType = NV_getCharType(langDef, s[0]);
+	lastCType = 0;
 	p = s;
 	*token0Used = 0;
 	for(i = 0; ; i++){
