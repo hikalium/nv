@@ -24,28 +24,24 @@ int main(int argc, char *argv[])
 
 NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
 {
-	NV_Term *before = thisTerm->before;
-	NV_Term *next = thisTerm->next;
-	if(!before || !next){
-		return NULL;
-	}
-	if(next->type == Imm32s){
-		if(before->type == Unknown){
-			NV_Term *var;
-			var = NV_createTerm_Variable(env, before->data);
-			NV_insertTermAfter(before, var);
-			NV_removeTerm(before);
-			before = var;
-		}
+	NV_Term *left = thisTerm->before;
+	NV_Term *right = thisTerm->next;
+	// type check
+	if(!left || !right) return NULL;
+	if(right->type == Unknown) NV_tryConvertTermFromVariableToImm(env->varList, env->varUsed, &right);
+	// process
+	if(right->type == Imm32s){
+		if(left->type == Unknown) left = NV_overwriteTerm(left, NV_createTerm_Variable(env, left->data));
+		//
 		if(
-			before->type == Variable &&
-			next->type == Imm32s
+			left->type == Variable &&
+			right->type == Imm32s
 		){
-			NV_assignVariable_Integer(before->data, *((int32_t *)next->data));
+			NV_assignVariable_Integer(left->data, *((int32_t *)right->data));
 			NV_removeTerm(thisTerm);
-			NV_removeTerm(next);
+			NV_removeTerm(right);
 			env->changeFlag = 1;
-			return before;	
+			return left;	
 		}
 	}
 	return NULL;
@@ -57,17 +53,11 @@ NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
 	NV_Term *next = thisTerm->next;
 	NV_Term *result;
 	NV_Operator *op = (NV_Operator *)thisTerm->data;
-	if(!before || !next){
-		return NULL;
-	}
-	if(before->type == Unknown){
-		NV_tryConvertTermFromVariableToImm(env->varList, env->varUsed, before);
-		before = thisTerm->before;
-	}
-	if(next->type == Unknown){
-		NV_tryConvertTermFromVariableToImm(env->varList, env->varUsed, next);
-		next = thisTerm->next;
-	}
+	// type check
+	if(!before || !next) return NULL;
+	if(before->type == Unknown)	NV_tryConvertTermFromVariableToImm(env->varList, env->varUsed, &before);
+	if(next->type == Unknown)	NV_tryConvertTermFromVariableToImm(env->varList, env->varUsed, &next);
+	// process
 	if(before->type == Imm32s && next->type == Imm32s){
 		int resultVal;
 		if(strcmp("+", op->name) == 0){
@@ -211,6 +201,7 @@ NV_Variable *NV_allocVariable(NV_Env *env)
 	t->name[0] = 0;
 	t->type = None;
 	t->byteSize = 0;
+	t->revision = 0;
 	t->data = NULL;
 	//
 	return t;
@@ -232,27 +223,39 @@ void NV_assignVariable_Integer(NV_Variable *v, int32_t newVal)
 	v->type = Integer;
 	v->byteSize = sizeof(int32_t);	// int32s only now.
 	v->data = NV_malloc(v->byteSize);
+	v->revision++;
 	*((int32_t *)v->data) = newVal;
 }
 
-void NV_tryConvertTermFromVariableToImm(NV_Variable *varList, int varUsed, NV_Term *term)
+void NV_tryConvertTermFromVariableToImm(NV_Variable *varList, int varUsed, NV_Term **term)
 {
 	NV_Variable *var;
 	NV_Term *new;
-	int i;
-	if(term->type != Unknown) return;
-	for(i = 0; i < varUsed; i++){
-		var = &varList[i];
-		if(strncmp(term->data, var->name, MAX_TOKEN_LEN) == 0){
-			if(var->type == Integer && var->byteSize == sizeof(int32_t)){
-				new = NV_createTerm_Imm32(*((int32_t *)var->data));
-				NV_overwriteTerm(term, new);
-				//printf("NV_tryConvertTermFromVariableToImm: Convert Success\n");
-				return;
-			}
+
+	if((*term)->type != Unknown) return;
+	var = NV_getVariableByName(varList, varUsed, (*term)->data);
+	if(var){
+		if(var->type == Integer && var->byteSize == sizeof(int32_t)){
+			new = NV_createTerm_Imm32(*((int32_t *)var->data));
+			NV_overwriteTerm((*term), new);
+			*term = new;
+			return;
 		}
 	}
-	printf("NV_tryConvertTermFromVariableToImm: Failed to convert.\n");
+}
+
+NV_Variable *NV_getVariableByName(NV_Variable *varList, int varUsed, const char *name)
+{
+	NV_Variable *var;
+	int i;
+	for(i = 0; i < varUsed; i++){
+		var = &varList[i];
+		if(strncmp(var->name, name, MAX_TOKEN_LEN) == 0){
+			return var;
+		}
+	}
+	//printf("NV_getVariableByName: Variable '%s' not found.\n", name);
+	return NULL;
 }
 
 void NV_printVarsInVarList(NV_Variable *varList, int varUsed)
@@ -264,14 +267,16 @@ void NV_printVarsInVarList(NV_Variable *varList, int varUsed)
 	printf("Variable Table (%p): %d\n", varList, varUsed);
 	for(i = 0; i < varUsed; i++){
 		var = &varList[i];
+		printf("%s", var->name);
+		printf("\t rev: %d", var->revision);
 		if(var->type == Integer){
-			printf("%s Integer(%d):", var->name, var->byteSize);
+			printf("\t Integer(%d)", var->byteSize);
 			if(var->byteSize == sizeof(int32_t)){
 				tmpint32 = var->data;
-				printf("%d", *tmpint32);
+				printf("\t = %d", *tmpint32);
 			}
-			putchar('\n');
 		}
+		putchar('\n');
 	}
 }
 

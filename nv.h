@@ -63,6 +63,7 @@ struct NV_VARIABLE {
 	char name[MAX_TOKEN_LEN];
 	NV_VarType type;
 	int byteSize;
+	int revision;
 	void *data;
 };
 
@@ -88,7 +89,8 @@ NV_LangDef *NV_getDefaultLang();
 NV_Variable *NV_allocVariable(NV_Env *env);
 void NV_resetVariable(NV_Variable *v);
 void NV_assignVariable_Integer(NV_Variable *v, int32_t newVal);
-void NV_tryConvertTermFromVariableToImm(NV_Variable *varList, int varUsed, NV_Term *term);
+void NV_tryConvertTermFromVariableToImm(NV_Variable *varList, int varUsed, NV_Term **term);
+NV_Variable *NV_getVariableByName(NV_Variable *varList, int varUsed, const char *name);
 void NV_printVarsInVarList(NV_Variable *varList, int varUsed);
 // @nv_term.c
 NV_Term *NV_allocTerm();
@@ -96,7 +98,7 @@ void NV_initRootTerm(NV_Term *t);
 void NV_changeRootTerm(NV_Term *oldRoot, NV_Term *newRoot);
 void NV_insertTermAfter(NV_Term *base, NV_Term *new);
 void NV_insertAllTermAfter(NV_Term *base, NV_Term *srcRoot);
-void NV_overwriteTerm(NV_Term *target, NV_Term *new);
+NV_Term *NV_overwriteTerm(NV_Term *target, NV_Term *new);
 void NV_divideTerm(NV_Term *subRoot, NV_Term *subBegin);
 void NV_appendAll(NV_Term *dstRoot, NV_Term *srcRoot);
 void NV_appendTermRaw(NV_Term *root, NV_Term *new);

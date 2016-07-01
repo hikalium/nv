@@ -48,12 +48,14 @@ void NV_insertAllTermAfter(NV_Term *base, NV_Term *srcRoot)
 	NV_initRootTerm(srcRoot); 
 }
 
-void NV_overwriteTerm(NV_Term *target, NV_Term *new)
+NV_Term *NV_overwriteTerm(NV_Term *target, NV_Term *new)
 {
 	// target should not be a Root Term.
+	// retv: term in tree.
 	target = target->before;
 	NV_removeTerm(target->next);
 	NV_insertTermAfter(target, new);
+	return new;
 }
 
 void NV_divideTerm(NV_Term *subRoot, NV_Term *subBegin)
@@ -159,8 +161,12 @@ NV_Term *NV_createTerm_Variable(NV_Env *env, const char *name)
 	//
 	new = NV_allocTerm();
 	new->type = Variable;
-	data = NV_allocVariable(env); 
-	strncpy(data->name, name, MAX_TOKEN_LEN);
+	//
+	data = NV_getVariableByName(env->varList, env->varUsed, name);
+	if(!data){
+		data = NV_allocVariable(env); 
+		strncpy(data->name, name, MAX_TOKEN_LEN);
+	}
 	new->data = data;
 	return new;
 }
