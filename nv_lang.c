@@ -100,6 +100,33 @@ NV_Term *NV_LANG00_Op_sentenceSeparator(NV_Env *env, NV_Term *thisTerm)
 	return originalTree;
 }
 
+NV_Term *NV_LANG00_Op_sentenceBlock(NV_Env *env, NV_Term *thisTerm)
+{
+	// {}
+	NV_Term *t, *sentenceTerm, *sentenceRoot, remRoot, *originalTree;
+	int pairCount = 1;
+	for(t = thisTerm->next; t; t = t->next){
+		if(t->type == Unknown && strcmp("}", t->data) == 0){
+			pairCount --;
+			if(pairCount == 0) break;
+		} else if(t->type == Operator && t->data == thisTerm->data){
+			pairCount++;
+		}
+	}
+	if(pairCount != 0) return NULL;
+	//
+	originalTree = thisTerm->before;
+	sentenceTerm = NV_createTerm_Sentence();
+	sentenceRoot = sentenceTerm->data;
+	NV_divideTerm(sentenceRoot, thisTerm->next);
+	NV_divideTerm(&remRoot, t);
+	NV_removeTerm(t);
+	NV_appendAll(originalTree, &remRoot);
+	NV_overwriteTerm(thisTerm, sentenceTerm);
+	env->changeFlag = 1;
+	return originalTree;
+}
+
 NV_Term *NV_LANG00_Op_builtin_exec(NV_Env *env, NV_Term *thisTerm)
 {
 	NV_Term *sentenceTerm, *sentenceRoot, *retv;
@@ -156,15 +183,19 @@ NV_Term *NV_LANG00_Op_print(NV_Env *env, NV_Term *thisTerm)
 NV_LangDef *NV_getDefaultLang()
 {
 	NV_LangDef *lang = NV_allocLangDef();
-	char *char0 = " \n";
-	char *char1 = "+=*/;";
+	char *char0 = " \t\r\n";
+	char *char1 = "!%&-=^~|+*:.<>/";
+	char *char2 = "(){}[],;";
 	//
 	lang->char0Len = strlen(char0);
 	lang->char0List = char0;
 	lang->char1Len = strlen(char1);
 	lang->char1List = char1;
+	lang->char2Len = strlen(char2);
+	lang->char2List = char2;
 	//
-	NV_addOperator(lang, 7010,	";", NV_LANG00_Op_sentenceSeparator);
+	NV_addOperator(lang, 7020,	";", NV_LANG00_Op_sentenceSeparator);
+	NV_addOperator(lang, 7010,	"{", NV_LANG00_Op_sentenceBlock);
 	NV_addOperator(lang, 7000,	"builtin_exec", NV_LANG00_Op_builtin_exec);
 	NV_addOperator(lang, 1024,	" ", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 1024,	"\n", NV_LANG00_Op_nothingButDisappear);

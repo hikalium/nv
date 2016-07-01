@@ -193,6 +193,8 @@ void NV_printTerms(NV_Term *root)
 		if(t->type == Operator){
 			op = t->data;
 			printf("(%s)", op->name);
+		} else if(t->type == Unknown){
+			printf("[%d: %s]", t->type, t->data);
 		} else{
 			printf("[%d]", t->type);
 		}

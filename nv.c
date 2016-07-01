@@ -1,8 +1,14 @@
 #include "nv.h"
 
+int NV_isDebugMode;
 int main(int argc, char *argv[])
 {
+	int i;
 	char line[MAX_LINE_LEN];
+	for(i = 1; i < argc; i++){
+		if(strcmp(argv[i], "-v") == 0) NV_isDebugMode = 1;
+	}
+
 	NV_Env *env = NV_allocEnv();
 	env->langDef = NV_getDefaultLang();
 	
@@ -27,6 +33,8 @@ NV_LangDef *NV_allocLangDef()
 	t->char0List = "";
 	t->char1Len = 0;
 	t->char1List = "";
+	t->char2Len = 0;
+	t->char2List = "";
 	//
 	t->opRoot = NULL;
 
@@ -103,7 +111,7 @@ NV_Variable *NV_getVariableByName(NV_Variable *varList, int varUsed, const char 
 			return var;
 		}
 	}
-	//printf("NV_getVariableByName: Variable '%s' not found.\n", name);
+	if(NV_isDebugMode) printf("NV_getVariableByName: Variable '%s' not found.\n", name);
 	return NULL;
 }
 
@@ -194,13 +202,20 @@ NV_Env *NV_allocEnv()
 
 int NV_getCharType(NV_LangDef *lang, char c)
 {
-	if(strchr(lang->char0List, c)){
+	if(c == '\0'){
+		return -1;
+	} else if(strchr(lang->char0List, c)){
+		// type 0 chars divide tokens but can't be a part of a token.
 		return 0;
-	}
-	if(strchr(lang->char1List, c)){
+	} else if(strchr(lang->char1List, c)){
+		// sequences of type 1 chars make tokens.
 		return 1;
+	} else if(strchr(lang->char2List, c)){
+		// type 2 chars make token separately.
+		return 2;
 	}
-	return 2;
+	// sequences of type 2 chars make tokens.
+	return 3;
 }
 
 void NV_tokenize0(NV_LangDef *langDef, char (*token0)[MAX_TOKEN_LEN], int token0Len, int *token0Used,  const char *s)
@@ -212,19 +227,18 @@ void NV_tokenize0(NV_LangDef *langDef, char (*token0)[MAX_TOKEN_LEN], int token0
 	*token0Used = 0;
 	for(i = 0; ; i++){
 		cType = NV_getCharType(langDef, s[i]);
-		if(cType != lastCType){
-			// division between tokens
-			if((s + i - p) > MAX_TOKEN_LEN){
-				NV_printError("Too long token.\n", stderr);
-				exit(EXIT_FAILURE);
+		if(cType != lastCType || cType == 2 || lastCType == 2){
+			if(lastCType != 0){
+				if((s + i - p) > MAX_TOKEN_LEN){
+					NV_printError("Too long token.\n", stderr);
+					exit(EXIT_FAILURE);
+				}
+				NV_strncpy(token0[*token0Used], p, MAX_TOKEN_LEN, s + i - p);
+				(*token0Used)++;
 			}
-			//
-			NV_strncpy(token0[*token0Used], p, MAX_TOKEN_LEN, s + i - p);
-			(*token0Used)++;
-			//
 			p = s + i;
-			lastCType = cType;
 		}
+		lastCType = cType;
 		if(!s[i]) break;
 	}
 }
@@ -239,7 +253,7 @@ int NV_tokenize(NV_Env *env, const char *s)
 	for(i = 0; i < token0Len; i++){
 		NV_appendTerm(env->langDef, &env->termRoot, token0[i]);
 	}
-	//NV_printTerms(&env->termRoot);
+	if(NV_isDebugMode) NV_printTerms(&env->termRoot);
 	//
 	return 0;
 }
@@ -251,7 +265,7 @@ void NV_Evaluate(NV_Env *env)
 {
 	NV_EvaluateSentence(env, &env->termRoot);
 	NV_removeTermTree(&env->termRoot);
-	//NV_printVarsInVarList(env->varList, env->varUsed);
+	if(NV_isDebugMode) NV_printVarsInVarList(env->varList, env->varUsed);
 }
 
 int NV_EvaluateSentence(NV_Env *env, NV_Term *root)
@@ -283,14 +297,11 @@ int NV_EvaluateSentence(NV_Env *env, NV_Term *root)
 						NV_printError("Operator mismatched: %s\n", op->name);
 						return 1;
 					}
-					NV_printTerms(root);
+					if(NV_isDebugMode) NV_printTerms(root);
 				}
 			}
 		}
 	}
-	//
-	// print variables.
-	//NV_printVarsInTerms(&env->termRoot);
 	return 0;
 }
 

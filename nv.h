@@ -59,6 +59,8 @@ struct NV_LANGDEF {
 	const char *char0List;	// should be terminated with 0
 	int char1Len;
 	const char *char1List;	// should be terminated with 0
+	int char2Len;
+	const char *char2List;	// should be terminated with 0
 	NV_Operator *opRoot;
 };
 
@@ -80,14 +82,11 @@ struct NV_ENV {
 	int varUsed;
 };
 
-//
-NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm);
-NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm);
-NV_Term *NV_LANG00_Op_nothingButDisappear(NV_Env *env, NV_Term *thisTerm);
-NV_Term *NV_LANG00_Op_sentenceSeparator(NV_Env *env, NV_Term *thisTerm);
-NV_Term *NV_LANG00_Op_print(NV_Env *env, NV_Term *thisTerm);
+extern int NV_isDebugMode;
+
 //
 NV_LangDef *NV_allocLangDef();
+// @nv_lang.c
 NV_LangDef *NV_getDefaultLang();
 //
 NV_Variable *NV_allocVariable(NV_Env *env);
