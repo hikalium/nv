@@ -269,6 +269,21 @@ NV_Term *NV_LANG00_Op_print(NV_Env *env, NV_Term *thisTerm)
 	return target;
 }
 
+NV_Term *NV_LANG00_Op_showOpList(NV_Env *env, NV_Term *thisTerm)
+{
+	NV_Term *before = thisTerm->before;
+	//
+	NV_Operator *p;
+	printf("Precedence: [opName]\n");
+	for(p = env->langDef->opRoot; p; p = p->next){
+		printf("%10d: [%s]\n", p->precedence, p->name);
+	}
+	//
+	NV_removeTerm(thisTerm);
+	env->changeFlag = 1;
+	return before;
+}
+
 NV_LangDef *NV_getDefaultLang()
 {
 	NV_LangDef *lang = NV_allocLangDef();
@@ -303,6 +318,7 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 200,	"-", NV_LANG00_Op_binaryOperator);
 	NV_addOperator(lang, 100,	"=", NV_LANG00_Op_assign);
 	NV_addOperator(lang, 10,	"print", NV_LANG00_Op_print);
+	NV_addOperator(lang, 10,	"showop", NV_LANG00_Op_showOpList);
 	
 	return lang;
 }

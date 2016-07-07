@@ -157,15 +157,19 @@ NV_Operator *NV_allocOperator()
 
 void NV_addOperator(NV_LangDef *lang, int precedence, const char *name, NV_Term *(*nativeFunc)(NV_Env *env, NV_Term *thisTerm))
 {
-	NV_Operator *t;
+	NV_Operator *t, **p;
 
 	t = NV_allocOperator();
 	NV_strncpy(t->name, name, sizeof(t->name), strlen(name));
 	t->name[sizeof(t->name) - 1] = 0;
 	t->precedence = precedence;
-	t->next = lang->opRoot;
-	lang->opRoot = t;
 	t->nativeFunc = nativeFunc;
+	// op list is sorted in a descending order of precedence.
+	for(p = &lang->opRoot; *p; p = &(*p)->next){
+		if((*p)->precedence < t->precedence) break;
+	}
+	t->next = *p;
+	*p = t;
 }
 
 NV_Operator *NV_isOperator(NV_LangDef *lang, const char *termStr)

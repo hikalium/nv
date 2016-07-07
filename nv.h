@@ -48,7 +48,7 @@ struct NV_TERM {
 struct NV_OPERATOR {
 	char name[MAX_TOKEN_LEN];
 	int precedence;
-	NV_Operator *next;
+	NV_Operator *next; // sorted in decending order of precedence.
 	NV_Term *(*nativeFunc)(NV_Env *env, NV_Term *thisTerm);
 	// retv: Last of Result Term
 };
