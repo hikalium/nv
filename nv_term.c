@@ -200,5 +200,45 @@ void NV_printTerms(NV_Term *root)
 		}
 	};
 	putchar('\n');
-	
 }
+
+void NV_printLastTermValue(NV_Term *root)
+{
+	NV_Term *t;
+	if(!root || !root->next) return;
+	for(t = root->next; t->next; t = t->next);	// skip
+	if(t->type == Sentence){
+		NV_printLastTermValue(t->data);
+	}
+	NV_printValueOfTerm(t);
+}
+
+void NV_printValueOfTerm(NV_Term *t)
+{
+	NV_Variable *var;
+	int32_t *tmp_sint32;
+	NV_Operator *op;
+
+	if(t->type == Operator){
+		op = t->data;
+		printf("(Operator) %s:%d", op->name, op->precedence);
+	} else if(t->type == Unknown){
+		printf("(Unknown)[%s]", t->data);
+	} else if(t->type == Variable){
+		var = t->data;
+		printf("(Variable)");
+		if(var->type == Integer){
+			if(var->byteSize == sizeof(int32_t)){
+				printf("(Integer %d Byte)", var->byteSize);
+				tmp_sint32 = var->data;
+				printf(" %d", *tmp_sint32);
+			}
+		}
+	} else if(t->type == Imm32s){
+		tmp_sint32 = t->data;
+		printf("%d", *tmp_sint32);
+	} else{
+		printf("[type: %d]", t->type);
+	}	
+}
+

@@ -78,6 +78,7 @@ struct NV_ENV {
 	// interpreter env
 	NV_Term termRoot;
 	int changeFlag;
+	int autoPrintValue;
 	NV_Variable varList[MAX_VARS];
 	int varUsed;
 };
@@ -113,6 +114,8 @@ NV_Term *NV_createTerm_Imm32(int imm32);
 NV_Term *NV_createTerm_Variable(NV_Env *env, const char *name);
 NV_Term *NV_createTerm_Sentence();
 void NV_printTerms(NV_Term *root);
+void NV_printLastTermValue(NV_Term *root);
+void NV_printValueOfTerm(NV_Term *t);
 //
 NV_Operator *NV_allocOperator();
 void NV_addOperator(NV_LangDef *lang, int precedence, const char *name, NV_Term *(*nativeFunc)(NV_Env *env, NV_Term *thisTerm));

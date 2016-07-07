@@ -295,7 +295,18 @@ int NV_tokenize(NV_Env *env, const char *s)
 //
 void NV_Evaluate(NV_Env *env)
 {
-	NV_EvaluateSentence(env, &env->termRoot);
+	env->autoPrintValue = 1;
+	if(NV_EvaluateSentence(env, &env->termRoot)){
+		// Ended with error
+		printf("Bad Syntax\n");
+	} else{
+		// Ended with Success
+		if(env->autoPrintValue){
+			printf("= ");
+			NV_printLastTermValue(&env->termRoot);
+			printf("\n");
+		}
+	}
 	NV_removeTermTree(&env->termRoot);
 	if(NV_isDebugMode) NV_printVarsInVarList(env->varList, env->varUsed);
 }
@@ -342,7 +353,6 @@ int NV_EvaluateSentence(NV_Env *env, NV_Term *root)
 				}
 			}
 		} else{
-			puts("right!");
 			// right-associative
 			for(t = root; t->next; t = t->next); // skip
 			for(; t != root; t = t->before){

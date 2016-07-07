@@ -85,7 +85,7 @@ NV_Term *NV_LANG00_Op_unaryOperator(NV_Env *env, NV_Term *thisTerm)
 	NV_Operator *op = (NV_Operator *)thisTerm->data;
 	// type check
 	if(!next) return NULL;
-	if(before && (before->type != Operator)) return NULL;
+	if(before && (before->type != Operator && before->type != Root)) return NULL;
 	if(next->type == Unknown)	NV_tryConvertTermFromVariableToImm(env->varList, env->varUsed, &next);
 	// process
 	if(next->type == Imm32s){
@@ -99,6 +99,7 @@ NV_Term *NV_LANG00_Op_unaryOperator(NV_Env *env, NV_Term *thisTerm)
 		else if(strcmp("!", op->name) == 0){
 			resultVal = ! *((int *)next->data);
 		} else{
+			if(NV_isDebugMode) NV_printError("NV_LANG00_Op_unaryOperator: Not implemented %s\n", op->name);
 			return NULL;
 		}
 		result = NV_createTerm_Imm32(resultVal);
@@ -109,7 +110,7 @@ NV_Term *NV_LANG00_Op_unaryOperator(NV_Env *env, NV_Term *thisTerm)
 		env->changeFlag = 1;
 		return result;	
 	}
-	// NV_printError("NV_LANG00_Op_unaryOperator: Bad operand. type %d\n", next->type);
+	if(NV_isDebugMode) NV_printError("NV_LANG00_Op_unaryOperator: Bad operand. type %d\n", next->type);
 	return NULL;
 }
 
@@ -160,7 +161,7 @@ NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
 		env->changeFlag = 1;
 		return result;	
 	}
-	NV_printError("NV_LANG00_Op_binaryOperator: Bad operand. type %d and %d \n", before->type, next->type);
+	if(NV_isDebugMode) NV_printError("NV_LANG00_Op_binaryOperator: Bad operand. type %d and %d \n", before->type, next->type);
 	return NULL;
 }
 
@@ -297,6 +298,7 @@ NV_Term *NV_LANG00_Op_print(NV_Env *env, NV_Term *thisTerm)
 	}
 	NV_removeTerm(thisTerm);
 	env->changeFlag = 1;
+	env->autoPrintValue = 0;
 	return target;
 }
 
