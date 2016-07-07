@@ -160,7 +160,7 @@ void NV_addOperator(NV_LangDef *lang, int precedence, const char *name, NV_Term 
 	NV_Operator *t;
 
 	t = NV_allocOperator();
-	strlcpy(t->name, name, sizeof(t->name));
+	NV_strncpy(t->name, name, sizeof(t->name), strlen(name));
 	t->name[sizeof(t->name) - 1] = 0;
 	t->precedence = precedence;
 	t->next = lang->opRoot;
