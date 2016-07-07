@@ -77,6 +77,42 @@ NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
 	return NULL;
 }
 
+NV_Term *NV_LANG00_Op_unaryOperator(NV_Env *env, NV_Term *thisTerm)
+{
+	NV_Term *before = thisTerm->before;
+	NV_Term *next = thisTerm->next;
+	NV_Term *result;
+	NV_Operator *op = (NV_Operator *)thisTerm->data;
+	// type check
+	if(!next) return NULL;
+	if(before && (before->type != Operator)) return NULL;
+	if(next->type == Unknown)	NV_tryConvertTermFromVariableToImm(env->varList, env->varUsed, &next);
+	// process
+	if(next->type == Imm32s){
+		int resultVal;
+		if(strcmp("+", op->name) == 0){
+			resultVal = + *((int *)next->data);
+		} else if(strcmp("-", op->name) == 0){
+			resultVal = - *((int *)next->data);
+		}
+		// comparison operators
+		else if(strcmp("!", op->name) == 0){
+			resultVal = ! *((int *)next->data);
+		} else{
+			return NULL;
+		}
+		result = NV_createTerm_Imm32(resultVal);
+		//
+		NV_removeTerm(next);
+		NV_overwriteTerm(thisTerm, result);
+		//
+		env->changeFlag = 1;
+		return result;	
+	}
+	// NV_printError("NV_LANG00_Op_unaryOperator: Bad operand. type %d\n", next->type);
+	return NULL;
+}
+
 NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
 {
 	NV_Term *before = thisTerm->before;
@@ -116,15 +152,10 @@ NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
 			return NULL;
 		}
 		result = NV_createTerm_Imm32(resultVal);
-		result->before = before->before;
-		result->next = next->next;
 		//
-		NV_removeTerm(thisTerm);		
 		NV_removeTerm(before);
 		NV_removeTerm(next);
-		//
-		if(result->before)	result->before->next = result;
-		if(result->next)	result->next->before = result;
+		NV_overwriteTerm(thisTerm, result);
 		//
 		env->changeFlag = 1;
 		return result;	
@@ -298,15 +329,16 @@ NV_LangDef *NV_getDefaultLang()
 	lang->char2Len = strlen(char2);
 	lang->char2List = char2;
 	//
-	NV_addOperator(lang, 100004,	"{", NV_LANG00_Op_sentenceBlock);
-	NV_addOperator(lang, 100003,	";", NV_LANG00_Op_sentenceSeparator);
-	NV_addOperator(lang, 100002,	"(", NV_LANG00_Op_precedentBlock);
-	NV_addOperator(lang, 100001,	"builtin_exec", NV_LANG00_Op_builtin_exec);
+	NV_addOperator(lang, 100040,	"{", NV_LANG00_Op_sentenceBlock);
+	NV_addOperator(lang, 100030,	";", NV_LANG00_Op_sentenceSeparator);
+	NV_addOperator(lang, 100020,	"(", NV_LANG00_Op_precedentBlock);
+	NV_addOperator(lang, 100010,	"builtin_exec", NV_LANG00_Op_builtin_exec);
 	NV_addOperator(lang, 10000,	";;", NV_LANG00_Op_nothingButDisappear);
-	NV_addOperator(lang, 10000,	" ", NV_LANG00_Op_nothingButDisappear);
-	NV_addOperator(lang, 10000,	"\n", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 1000,  "if", NV_LANG00_Op_if);
-	NV_addOperator(lang, 400,	"<", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 501,	"+", NV_LANG00_Op_unaryOperator);
+	NV_addOperator(lang, 501,	"-", NV_LANG00_Op_unaryOperator);
+	NV_addOperator(lang, 501,	"!", NV_LANG00_Op_unaryOperator);
+	NV_addOperator(lang, 400,	"<", NV_LANG00_Op_binaryOperator);	
 	NV_addOperator(lang, 400,	">", NV_LANG00_Op_binaryOperator);
 	NV_addOperator(lang, 400,	"<=", NV_LANG00_Op_binaryOperator);
 	NV_addOperator(lang, 400,	">=", NV_LANG00_Op_binaryOperator);

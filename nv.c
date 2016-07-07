@@ -183,6 +183,34 @@ NV_Operator *NV_isOperator(NV_LangDef *lang, const char *termStr)
 	return NULL;
 }
 
+NV_Operator *NV_getFallbackOperator(NV_LangDef *lang, NV_Operator *baseOp)
+{
+	NV_Operator *op;
+	for(op = lang->opRoot; op != NULL; op = op->next){
+		if(op == baseOp){
+			op = baseOp->next;
+			break;
+		}
+	}
+	for(; op != NULL; op = op->next){
+		if(strcmp(op->name, baseOp->name) == 0){
+			return op;
+		}
+	}
+	return NULL;
+}
+
+int NV_getOperatorIndex(NV_LangDef *lang, NV_Operator *op)
+{
+	NV_Operator *t;
+	int i = 0;
+	for(t = lang->opRoot; t; t = t->next){
+		if(t == op) return i;
+		i++;
+	}
+	return -1;
+}
+
 //
 // Environment
 //
@@ -275,39 +303,83 @@ void NV_Evaluate(NV_Env *env)
 int NV_EvaluateSentence(NV_Env *env, NV_Term *root)
 {
 	NV_Term *t;
-	NV_Operator *op;
-	int maxPrecedence;
+	NV_Operator *op, *currentOp;
+	int minOpIndex, opIndex;
 
 	if(!root || !root->next) return 1;
 
 	env->changeFlag = 1;
 	while(env->changeFlag){
 		env->changeFlag = 0;
-		maxPrecedence = 0;
+		minOpIndex = -1;
+		currentOp = NULL;
 		for(t = root->next; t; t = t->next){
 			if(t->type == Operator){
 				op = (NV_Operator *)t->data;
-				if(op->precedence > maxPrecedence){
-					maxPrecedence = op->precedence;
+				opIndex = NV_getOperatorIndex(env->langDef, op);
+				if(opIndex == -1){
+					NV_printError("Internal error: Op not found: %s\n", op->name);
+					return 1;
+				}
+				if(minOpIndex == -1 || opIndex < minOpIndex){
+					minOpIndex = opIndex;
+					currentOp = op;
 				}
 			}
 		}
-		for(t = root->next; t; t = t->next){
-			if(t->type == Operator){
-				op = (NV_Operator *)t->data;
-				if(op->precedence == maxPrecedence){
-					t = op->nativeFunc(env, t);
-					if(!t){
-						NV_printError("Operator mismatched: %s\n", op->name);
-						NV_printTerms(root);
-						return 1;
-					}
-					if(NV_isDebugMode) NV_printTerms(root);
+		if(currentOp == NULL){
+			if(NV_isDebugMode) printf("Evaluate end (currentOp is NULL)\n");
+			return 0;
+		}
+		if(NV_isDebugMode) printf("current op: [%s]\n", currentOp->name);
+		if((currentOp->precedence & 1) == 0){
+			// left-associative
+			for(t = root->next; t; t = t->next){
+				t = NV_TryExecOp(env, currentOp, t, root);
+				if(!t){
+					if(NV_isDebugMode) printf("Evaluate end (Operator Mismatched)\n");
+					return 1;
+				}
+			}
+		} else{
+			puts("right!");
+			// right-associative
+			for(t = root; t->next; t = t->next); // skip
+			for(; t != root; t = t->before){
+				// rewind
+				t = NV_TryExecOp(env, currentOp, t, root);
+				if(!t){
+					if(NV_isDebugMode) printf("Evaluate end (Operator Mismatched)\n");
+					return 1;
 				}
 			}
 		}
 	}
+	if(NV_isDebugMode) printf("Evaluate end (changeFlas == 0)\n");
 	return 0;
+}
+
+NV_Term *NV_TryExecOp(NV_Env *env, NV_Operator *currentOp, NV_Term *t, NV_Term *root)
+{
+	NV_Operator *fallbackOp;
+	NV_Term *orgTerm = t;
+	if(t->type == Operator && t->data == currentOp){
+		t = currentOp->nativeFunc(env, t);
+		if(!t){
+			// try fallback
+			fallbackOp = NV_getFallbackOperator(env->langDef, currentOp);
+			if(!fallbackOp){
+				NV_printError("Operator mismatched: %s\n", currentOp->name);
+				NV_printTerms(root);
+				return NULL;
+			}
+			orgTerm->data = fallbackOp;
+			env->changeFlag = 1;
+			t = orgTerm;
+		}
+		if(NV_isDebugMode) NV_printTerms(root);
+	}
+	return t;
 }
 
 void NV_printError(const char *format, ...)

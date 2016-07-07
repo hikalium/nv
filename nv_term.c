@@ -192,7 +192,7 @@ void NV_printTerms(NV_Term *root)
 	for(t = root->next; t; t = t->next){
 		if(t->type == Operator){
 			op = t->data;
-			printf("(%s)", op->name);
+			printf("(%s:%d)", op->name, op->precedence);
 		} else if(t->type == Unknown){
 			printf("[%d: %s]", t->type, t->data);
 		} else{

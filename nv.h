@@ -47,8 +47,8 @@ struct NV_TERM {
 
 struct NV_OPERATOR {
 	char name[MAX_TOKEN_LEN];
-	int precedence;
-	NV_Operator *next; // sorted in decending order of precedence.
+	int precedence;		// do not change after adding.
+	NV_Operator *next;	// sorted in a descending order of precedence.
 	NV_Term *(*nativeFunc)(NV_Env *env, NV_Term *thisTerm);
 	// retv: Last of Result Term
 };
@@ -117,6 +117,8 @@ void NV_printTerms(NV_Term *root);
 NV_Operator *NV_allocOperator();
 void NV_addOperator(NV_LangDef *lang, int precedence, const char *name, NV_Term *(*nativeFunc)(NV_Env *env, NV_Term *thisTerm));
 NV_Operator *NV_isOperator(NV_LangDef *lang, const char *termStr);
+NV_Operator *NV_getFallbackOperator(NV_LangDef *lang, NV_Operator *baseOp);
+int NV_getOperatorIndex(NV_LangDef *lang, NV_Operator *op);
 //
 NV_Env *NV_allocEnv();
 //
@@ -126,6 +128,7 @@ int NV_tokenize(NV_Env *env, const char *s);
 //
 void NV_Evaluate(NV_Env *env);
 int NV_EvaluateSentence(NV_Env *env, NV_Term *root);
+NV_Term *NV_TryExecOp(NV_Env *env, NV_Operator *currentOp, NV_Term *t, NV_Term *root);
 //
 void NV_printError(const char *format, ...);
 // @nv_fix.c
