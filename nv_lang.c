@@ -311,6 +311,7 @@ NV_Term *NV_LANG00_Op_for(NV_Env *env, NV_Term *thisTerm)
 	// for {init block}{conditional block}{update block}{statement}
 	//int cond;
 	NV_Term *t, *initTerm, *condTerm, *updateTerm, *doTerm;
+	NV_Term tmpCondRoot, tmpUpdateRoot, tmpDoRoot;
 	//
 	t = thisTerm;
 	//
@@ -330,14 +331,36 @@ NV_Term *NV_LANG00_Op_for(NV_Env *env, NV_Term *thisTerm)
 	if(t == NULL || t->type != Sentence) return NULL;
 	doTerm = t;
 	//
-	NV_printTerms(initTerm->data);
-	NV_printTerms(condTerm->data);
-	NV_printTerms(updateTerm->data);
-	NV_printTerms(doTerm->data);
-
-	//env->changeFlag = 1;
-	//return thisTerm;
-	return NULL;
+	// do init block
+	if(NV_LANG00_execNextSentence(env, thisTerm) == NULL) return NULL;
+	for(;;){
+		// copy blocks
+		NV_cloneTerm(&tmpCondRoot, condTerm->data);
+		NV_cloneTerm(&tmpUpdateRoot, updateTerm->data);
+		NV_cloneTerm(&tmpDoRoot, doTerm->data);
+		// check cond
+		if(NV_EvaluateSentence(env, &tmpCondRoot)) return NULL;
+		t = NV_getLastTerm(&tmpCondRoot);
+		if(!NV_getValueOfTermAsInt(t)) break;
+		// do
+		if(NV_EvaluateSentence(env, &tmpDoRoot)) return NULL;
+		// update
+		if(NV_EvaluateSentence(env, &tmpUpdateRoot)) return NULL;
+	}
+	// free tmp
+	//NV_removeTermTree(&tmpCondRoot);
+	//NV_removeTermTree(&tmpUpdateRoot);
+	//NV_removeTermTree(&tmpDoRoot);
+	// remove
+	//NV_removeTerm(updateTerm);
+	//NV_removeTerm(condTerm);
+	//NV_removeTerm(updateTerm);
+	//NV_removeTerm(doTerm);
+	t = thisTerm;
+	NV_removeTerm(thisTerm);
+	//
+	env->changeFlag = 1;
+	return t;
 }
 
 NV_Term *NV_LANG00_Op_print(NV_Env *env, NV_Term *thisTerm)

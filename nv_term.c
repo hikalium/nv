@@ -28,6 +28,22 @@ void NV_changeRootTerm(NV_Term *oldRoot, NV_Term *newRoot)
 	NV_appendAll(newRoot, oldRoot);
 }
 
+void NV_cloneTerm(NV_Term *dstRoot, const NV_Term *srcRoot)
+{
+	NV_Term *t, *tNew;
+	//
+	if(!srcRoot || !dstRoot) return;
+	NV_initRootTerm(dstRoot);
+	//
+	for(t = srcRoot->next; t; t = t->next){
+		tNew = NV_allocTerm();
+		*tNew = *t;
+		tNew->before = NULL;
+		tNew->next = NULL;
+		NV_appendTermRaw(dstRoot, tNew);
+	}
+}
+
 void NV_insertTermAfter(NV_Term *base, NV_Term *new)
 {
 	new->before = base;
@@ -117,7 +133,7 @@ void NV_removeTerm(NV_Term *t)
 	if(t->next)		t->next->before = t->before;
 	if(t->data && 
 		(t->type == Imm32s)){
-		free(t->data);
+		//free(t->data);
 	}
 	free(t);
 }
@@ -202,14 +218,21 @@ void NV_printTerms(NV_Term *root)
 	putchar('\n');
 }
 
+NV_Term *NV_getLastTerm(NV_Term *root)
+{
+	NV_Term *t;
+	if(!root || !root->next) return NULL;
+	for(t = root->next; t->next; t = t->next);	// skip
+	if(t->type == Sentence){
+		t = NV_getLastTerm(t->data);
+	}
+	return t;
+}
+
 void NV_printLastTermValue(NV_Term *root)
 {
 	NV_Term *t;
-	if(!root || !root->next) return;
-	for(t = root->next; t->next; t = t->next);	// skip
-	if(t->type == Sentence){
-		NV_printLastTermValue(t->data);
-	}
+	t = NV_getLastTerm(root);
 	NV_printValueOfTerm(t);
 }
 
@@ -240,5 +263,25 @@ void NV_printValueOfTerm(NV_Term *t)
 	} else{
 		printf("[type: %d]", t->type);
 	}	
+}
+
+int NV_getValueOfTermAsInt(NV_Term *t)
+{
+	NV_Variable *var;
+	int32_t *tmp_sint32;
+
+	if(t->type == Variable){
+		var = t->data;
+		if(var->type == Integer){
+			if(var->byteSize == sizeof(int32_t)){
+				tmp_sint32 = var->data;
+				return *tmp_sint32;
+			}
+		}
+	} else if(t->type == Imm32s){
+		tmp_sint32 = t->data;
+		return *tmp_sint32;
+	}
+	return 0;
 }
 

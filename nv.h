@@ -108,6 +108,7 @@ NV_VariableSet *NV_allocVariableSet();
 NV_Term *NV_allocTerm();
 void NV_initRootTerm(NV_Term *t);
 void NV_changeRootTerm(NV_Term *oldRoot, NV_Term *newRoot);
+void NV_cloneTerm(NV_Term *dstRoot, const NV_Term *srcRoot);
 void NV_insertTermAfter(NV_Term *base, NV_Term *new);
 void NV_insertAllTermAfter(NV_Term *base, NV_Term *srcRoot);
 NV_Term *NV_overwriteTerm(NV_Term *target, NV_Term *new);
@@ -122,8 +123,10 @@ NV_Term *NV_createTerm_Imm32(int imm32);
 NV_Term *NV_createTerm_Variable(NV_VariableSet *vs, const char *name);
 NV_Term *NV_createTerm_Sentence();
 void NV_printTerms(NV_Term *root);
+NV_Term *NV_getLastTerm(NV_Term *root);
 void NV_printLastTermValue(NV_Term *root);
 void NV_printValueOfTerm(NV_Term *t);
+int NV_getValueOfTermAsInt(NV_Term *t);
 //
 NV_Operator *NV_allocOperator();
 void NV_addOperator(NV_LangDef *lang, int precedence, const char *name, NV_Term *(*nativeFunc)(NV_Env *env, NV_Term *thisTerm));
