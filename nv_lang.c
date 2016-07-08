@@ -72,7 +72,7 @@ NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
 	return NULL;
 }
 
-NV_Term *NV_LANG00_Op_unaryOperator(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_Op_unaryOperator_prefix(NV_Env *env, NV_Term *thisTerm)
 {
 	NV_Term *before = thisTerm->before;
 	NV_Term *next = thisTerm->next;
@@ -106,6 +106,47 @@ NV_Term *NV_LANG00_Op_unaryOperator(NV_Env *env, NV_Term *thisTerm)
 		return result;	
 	}
 	if(NV_isDebugMode) NV_printError("NV_LANG00_Op_unaryOperator: Bad operand. type %d\n", next->type);
+	return NULL;
+}
+
+NV_Term *NV_LANG00_Op_unaryOperator_suffix_variableOnly(NV_Env *env, NV_Term *thisTerm)
+{
+	NV_Term *before = thisTerm->before;
+	NV_Term *next = thisTerm->next;
+	NV_Operator *op = (NV_Operator *)thisTerm->data;
+	NV_Term *result;
+	NV_Variable *var;
+	// type check
+	if(!before) return NULL;
+	if(next && (next->type != Operator && next->type != Root)) return NULL;
+	if(before->type == Unknown)	NV_tryConvertTermFromUnknownToVariable(env->varSet, &before);
+	// process
+	if(before->type == Variable){
+		var = before->data;
+		if(var->type == Integer){
+			if(var->byteSize == sizeof(int32_t)){
+				result = NV_createTerm_Imm32(*((int32_t *)var->data));
+				if(strcmp("++", op->name) == 0){
+					(*((int32_t *)var->data))++;
+				} else if(strcmp("--", op->name) == 0){
+					(*((int32_t *)var->data))--;
+				} else{
+					return NULL;
+				}
+			} else{
+				return NULL;
+			}
+		} else{
+			return NULL;
+		}
+		//
+		NV_removeTerm(thisTerm);
+		NV_overwriteTerm(before, result);
+		//
+		env->changeFlag = 1;
+		return before;
+	}
+	if(NV_isDebugMode) NV_printError("NV_LANG00_Op_unaryOperator_suffix_variableOnly: Bad operand. type %d\n", before->type);
 	return NULL;
 }
 
@@ -367,9 +408,11 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 10000,	";;", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 1000,  "if", NV_LANG00_Op_if);
 	NV_addOperator(lang, 1000,  "for", NV_LANG00_Op_for);
-	NV_addOperator(lang, 501,	"+", NV_LANG00_Op_unaryOperator);
-	NV_addOperator(lang, 501,	"-", NV_LANG00_Op_unaryOperator);
-	NV_addOperator(lang, 501,	"!", NV_LANG00_Op_unaryOperator);
+	NV_addOperator(lang, 502,	"++", NV_LANG00_Op_unaryOperator_suffix_variableOnly);
+	NV_addOperator(lang, 502,	"--", NV_LANG00_Op_unaryOperator_suffix_variableOnly);
+	NV_addOperator(lang, 501,	"+", NV_LANG00_Op_unaryOperator_prefix);
+	NV_addOperator(lang, 501,	"-", NV_LANG00_Op_unaryOperator_prefix);
+	NV_addOperator(lang, 501,	"!", NV_LANG00_Op_unaryOperator_prefix);
 	NV_addOperator(lang, 400,	"<", NV_LANG00_Op_binaryOperator);	
 	NV_addOperator(lang, 400,	">", NV_LANG00_Op_binaryOperator);
 	NV_addOperator(lang, 400,	"<=", NV_LANG00_Op_binaryOperator);
