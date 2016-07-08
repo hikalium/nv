@@ -58,21 +58,16 @@ NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
 	NV_Term *right = thisTerm->next;
 	// type check
 	if(!left || !right) return NULL;
-	if(right->type == Unknown) NV_tryConvertTermFromVariableToImm(env->varList, env->varUsed, &right);
+	if(right->type == Unknown) NV_tryConvertTermFromUnknownToImm(env->varSet, &right);
+	if(left->type != Variable) NV_tryConvertTermFromUnknownToVariable(env->varSet, &left);
+	if(left->type != Variable) return NULL;
 	// process
 	if(right->type == Imm32s){
-		if(left->type == Unknown) left = NV_overwriteTerm(left, NV_createTerm_Variable(env, left->data));
-		//
-		if(
-			left->type == Variable &&
-			right->type == Imm32s
-		){
-			NV_assignVariable_Integer(left->data, *((int32_t *)right->data));
-			NV_removeTerm(thisTerm);
-			NV_removeTerm(right);
-			env->changeFlag = 1;
-			return left;	
-		}
+		NV_assignVariable_Integer(left->data, *((int32_t *)right->data));
+		NV_removeTerm(thisTerm);
+		NV_removeTerm(right);
+		env->changeFlag = 1;
+		return left;	
 	}
 	return NULL;
 }
@@ -86,7 +81,7 @@ NV_Term *NV_LANG00_Op_unaryOperator(NV_Env *env, NV_Term *thisTerm)
 	// type check
 	if(!next) return NULL;
 	if(before && (before->type != Operator && before->type != Root)) return NULL;
-	if(next->type == Unknown)	NV_tryConvertTermFromVariableToImm(env->varList, env->varUsed, &next);
+	if(next->type == Unknown)	NV_tryConvertTermFromUnknownToImm(env->varSet, &next);
 	// process
 	if(next->type == Imm32s){
 		int resultVal;
@@ -122,8 +117,8 @@ NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
 	NV_Operator *op = (NV_Operator *)thisTerm->data;
 	// type check
 	if(!before || !next) return NULL;
-	if(before->type == Unknown)	NV_tryConvertTermFromVariableToImm(env->varList, env->varUsed, &before);
-	if(next->type == Unknown)	NV_tryConvertTermFromVariableToImm(env->varList, env->varUsed, &next);
+	if(before->type == Unknown)	NV_tryConvertTermFromUnknownToImm(env->varSet, &before);
+	if(next->type == Unknown)	NV_tryConvertTermFromUnknownToImm(env->varSet, &next);
 	// process
 	if(before->type == Imm32s && next->type == Imm32s){
 		int resultVal;
@@ -249,7 +244,7 @@ NV_Term *NV_LANG00_Op_if(NV_Env *env, NV_Term *thisTerm)
 	if(!NV_LANG00_execNextSentence(env, thisTerm)) return NULL;
 	condTerm = thisTerm->next;
 	if(condTerm->next != doTerm) return NULL;
-	if(condTerm->type == Variable) NV_tryConvertTermFromVariableToImm(env->varList, env->varUsed, &condTerm);
+	if(condTerm->type == Variable) NV_tryConvertTermFromUnknownToImm(env->varSet, &condTerm);
 	if(condTerm->type == Imm32s){
 		cond = *((int32_t *)condTerm->data);
 	} else{
@@ -270,6 +265,40 @@ NV_Term *NV_LANG00_Op_if(NV_Env *env, NV_Term *thisTerm)
 	return thisTerm;
 }
 
+NV_Term *NV_LANG00_Op_for(NV_Env *env, NV_Term *thisTerm)
+{
+	// for {init block}{conditional block}{update block}{statement}
+	//int cond;
+	NV_Term *t, *initTerm, *condTerm, *updateTerm, *doTerm;
+	//
+	t = thisTerm;
+	//
+	t = t->next;
+	if(t == NULL || t->type != Sentence) return NULL;
+	initTerm = t;
+	//
+	t = t->next;
+	if(t == NULL || t->type != Sentence) return NULL;
+	condTerm = t;
+	//
+	t = t->next;
+	if(t == NULL || t->type != Sentence) return NULL;
+	updateTerm = t;
+	//
+	t = t->next;
+	if(t == NULL || t->type != Sentence) return NULL;
+	doTerm = t;
+	//
+	NV_printTerms(initTerm->data);
+	NV_printTerms(condTerm->data);
+	NV_printTerms(updateTerm->data);
+	NV_printTerms(doTerm->data);
+
+	//env->changeFlag = 1;
+	//return thisTerm;
+	return NULL;
+}
+
 NV_Term *NV_LANG00_Op_print(NV_Env *env, NV_Term *thisTerm)
 {
 	NV_Term *target = thisTerm->next;
@@ -277,7 +306,7 @@ NV_Term *NV_LANG00_Op_print(NV_Env *env, NV_Term *thisTerm)
 	int32_t *tmpint32;
 	//
 	if(!target)return NULL;
-	if(target->type == Unknown)	NV_tryConvertTermFromVariableToImm(env->varList, env->varUsed, &target);
+	if(target->type == Unknown)	NV_tryConvertTermFromUnknownToImm(env->varSet, &target);
 	if(target->type == Variable){
 		var = target->data;
 		if(var->type == Integer){
@@ -337,6 +366,7 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 100010,	"builtin_exec", NV_LANG00_Op_builtin_exec);
 	NV_addOperator(lang, 10000,	";;", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 1000,  "if", NV_LANG00_Op_if);
+	NV_addOperator(lang, 1000,  "for", NV_LANG00_Op_for);
 	NV_addOperator(lang, 501,	"+", NV_LANG00_Op_unaryOperator);
 	NV_addOperator(lang, 501,	"-", NV_LANG00_Op_unaryOperator);
 	NV_addOperator(lang, 501,	"!", NV_LANG00_Op_unaryOperator);

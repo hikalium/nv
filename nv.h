@@ -19,6 +19,7 @@ typedef struct	NV_TERM 		NV_Term;
 typedef struct	NV_OPERATOR 	NV_Operator;
 typedef struct	NV_LANGDEF		NV_LangDef;
 typedef struct	NV_VARIABLE		NV_Variable;
+typedef struct	NV_VARSET		NV_VariableSet;
 typedef struct	NV_ENV			NV_Env;
 
 enum NV_TERM_TYPE {
@@ -72,6 +73,11 @@ struct NV_VARIABLE {
 	void *data;
 };
 
+struct NV_VARSET {
+	NV_Variable varList[MAX_VARS];
+	int varUsed;
+};
+
 struct NV_ENV {
 	// interpreter params
 	NV_LangDef *langDef;
@@ -79,8 +85,7 @@ struct NV_ENV {
 	NV_Term termRoot;
 	int changeFlag;
 	int autoPrintValue;
-	NV_Variable varList[MAX_VARS];
-	int varUsed;
+	NV_VariableSet *varSet;
 };
 
 extern int NV_isDebugMode;
@@ -90,12 +95,15 @@ NV_LangDef *NV_allocLangDef();
 // @nv_lang.c
 NV_LangDef *NV_getDefaultLang();
 //
-NV_Variable *NV_allocVariable(NV_Env *env);
+NV_Variable *NV_allocVariable(NV_VariableSet *vs);
 void NV_resetVariable(NV_Variable *v);
 void NV_assignVariable_Integer(NV_Variable *v, int32_t newVal);
-void NV_tryConvertTermFromVariableToImm(NV_Variable *varList, int varUsed, NV_Term **term);
-NV_Variable *NV_getVariableByName(NV_Variable *varList, int varUsed, const char *name);
-void NV_printVarsInVarList(NV_Variable *varList, int varUsed);
+void NV_tryConvertTermFromUnknownToImm(NV_VariableSet *vs, NV_Term **term);
+void NV_tryConvertTermFromUnknownToVariable(NV_VariableSet *vs, NV_Term **term); 
+NV_Variable *NV_getVariableByName(NV_VariableSet *vs, const char *name);
+void NV_printVarsInVarList(NV_VariableSet *vs);
+//
+NV_VariableSet *NV_allocVariableSet();
 // @nv_term.c
 NV_Term *NV_allocTerm();
 void NV_initRootTerm(NV_Term *t);
@@ -111,7 +119,7 @@ void NV_removeTerm(NV_Term *t);
 void NV_removeTermTree(NV_Term *root);
 NV_Term *NV_createTerm_Operator(NV_LangDef *langDef, const char *opName);
 NV_Term *NV_createTerm_Imm32(int imm32);
-NV_Term *NV_createTerm_Variable(NV_Env *env, const char *name);
+NV_Term *NV_createTerm_Variable(NV_VariableSet *vs, const char *name);
 NV_Term *NV_createTerm_Sentence();
 void NV_printTerms(NV_Term *root);
 void NV_printLastTermValue(NV_Term *root);

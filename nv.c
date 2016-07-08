@@ -10,6 +10,7 @@ int main(int argc, char *argv[])
 	}
 
 	NV_Env *env = NV_allocEnv();
+	env->varSet = NV_allocVariableSet();
 	env->langDef = NV_getDefaultLang();
 	
 	while(fgets(line, sizeof(line), stdin) != NULL){
@@ -45,15 +46,15 @@ NV_LangDef *NV_allocLangDef()
 //
 // Varibale
 //
-NV_Variable *NV_allocVariable(NV_Env *env)
+NV_Variable *NV_allocVariable(NV_VariableSet *vs)
 {
 	NV_Variable *t;
 	//
-	if(env->varUsed >= MAX_VARS){
+	if(vs->varUsed >= MAX_VARS){
 		NV_printError("No more variables.", stderr);
 		exit(EXIT_FAILURE);
 	}
-	t = &env->varList[env->varUsed++];
+	t = &vs->varList[vs->varUsed++];
 	//
 	t->name[0] = 0;
 	t->type = None;
@@ -84,13 +85,13 @@ void NV_assignVariable_Integer(NV_Variable *v, int32_t newVal)
 	*((int32_t *)v->data) = newVal;
 }
 
-void NV_tryConvertTermFromVariableToImm(NV_Variable *varList, int varUsed, NV_Term **term)
+void NV_tryConvertTermFromUnknownToImm(NV_VariableSet *vs, NV_Term **term)
 {
 	NV_Variable *var;
 	NV_Term *new;
 
 	if((*term)->type != Unknown) return;
-	var = NV_getVariableByName(varList, varUsed, (*term)->data);
+	var = NV_getVariableByName(vs, (*term)->data);
 	if(var){
 		if(var->type == Integer && var->byteSize == sizeof(int32_t)){
 			new = NV_createTerm_Imm32(*((int32_t *)var->data));
@@ -101,12 +102,28 @@ void NV_tryConvertTermFromVariableToImm(NV_Variable *varList, int varUsed, NV_Te
 	}
 }
 
-NV_Variable *NV_getVariableByName(NV_Variable *varList, int varUsed, const char *name)
+void NV_tryConvertTermFromUnknownToVariable(NV_VariableSet *vs, NV_Term **term)
+{
+	NV_Variable *var;
+	NV_Term *new;
+
+	if((*term)->type != Unknown) return;
+	var = NV_getVariableByName(vs, (*term)->data);
+	if(var) new = NV_createTerm_Variable(vs, var->name);
+	else new = NV_createTerm_Variable(vs, (*term)->data);
+	if(new){
+		NV_overwriteTerm((*term), new);
+		*term = new;
+		return;
+	}
+}
+
+NV_Variable *NV_getVariableByName(NV_VariableSet *vs, const char *name)
 {
 	NV_Variable *var;
 	int i;
-	for(i = 0; i < varUsed; i++){
-		var = &varList[i];
+	for(i = 0; i < vs->varUsed; i++){
+		var = &vs->varList[i];
 		if(strncmp(var->name, name, MAX_TOKEN_LEN) == 0){
 			return var;
 		}
@@ -115,15 +132,15 @@ NV_Variable *NV_getVariableByName(NV_Variable *varList, int varUsed, const char 
 	return NULL;
 }
 
-void NV_printVarsInVarList(NV_Variable *varList, int varUsed)
+void NV_printVarsInVarList(NV_VariableSet *vs)
 {
 	NV_Variable *var;
 	int32_t *tmpint32;
 	int i;
 
-	printf("Variable Table (%p): %d\n", varList, varUsed);
-	for(i = 0; i < varUsed; i++){
-		var = &varList[i];
+	printf("Variable Table (%p): %d\n", vs, vs->varUsed);
+	for(i = 0; i < vs->varUsed; i++){
+		var = &vs->varList[i];
 		printf("%s", var->name);
 		printf("\t rev: %d", var->revision);
 		if(var->type == Integer){
@@ -136,6 +153,21 @@ void NV_printVarsInVarList(NV_Variable *varList, int varUsed)
 		putchar('\n');
 	}
 }
+
+//
+// Variable Set
+//
+NV_VariableSet *NV_allocVariableSet()
+{
+	NV_VariableSet *t;
+
+	t = NV_malloc(sizeof(NV_VariableSet));
+	//
+	t->varUsed = 0;
+
+	return t;
+}
+
 
 //
 // Operator
@@ -223,7 +255,6 @@ NV_Env *NV_allocEnv()
 	//
 	t->langDef = NULL;
 	NV_initRootTerm(&t->termRoot);
-	t->varUsed = 0;
 
 	return t;
 }
@@ -308,7 +339,7 @@ void NV_Evaluate(NV_Env *env)
 		}
 	}
 	NV_removeTermTree(&env->termRoot);
-	if(NV_isDebugMode) NV_printVarsInVarList(env->varList, env->varUsed);
+	if(NV_isDebugMode) NV_printVarsInVarList(env->varSet);
 }
 
 int NV_EvaluateSentence(NV_Env *env, NV_Term *root)

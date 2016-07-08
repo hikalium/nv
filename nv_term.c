@@ -154,7 +154,7 @@ NV_Term *NV_createTerm_Imm32(int imm32)
 	return new;
 }
 
-NV_Term *NV_createTerm_Variable(NV_Env *env, const char *name)
+NV_Term *NV_createTerm_Variable(NV_VariableSet *vs, const char *name)
 {
 	NV_Term *new;
 	NV_Variable *data;
@@ -162,9 +162,9 @@ NV_Term *NV_createTerm_Variable(NV_Env *env, const char *name)
 	new = NV_allocTerm();
 	new->type = Variable;
 	//
-	data = NV_getVariableByName(env->varList, env->varUsed, name);
+	data = NV_getVariableByName(vs, name);
 	if(!data){
-		data = NV_allocVariable(env); 
+		data = NV_allocVariable(vs); 
 		strncpy(data->name, name, MAX_TOKEN_LEN);
 	}
 	new->data = data;
