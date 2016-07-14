@@ -191,6 +191,10 @@ NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
 			resultVal = *((int *)before->data) / *((int *)next->data);
 		} else if(strcmp("%", op->name) == 0){
 			resultVal = *((int *)before->data) % *((int *)next->data);
+		} else if(strcmp("||", op->name) == 0){
+			resultVal = *((int *)before->data) || *((int *)next->data);
+		} else if(strcmp("&&", op->name) == 0){
+			resultVal = *((int *)before->data) && *((int *)next->data);
 		}
 		// comparison operators
 		else if(strcmp("<", op->name) == 0){
@@ -466,26 +470,29 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 1000,  "if", NV_LANG00_Op_if);
 	NV_addOperator(lang, 1000,  "for", NV_LANG00_Op_for);
 	//
-	NV_addOperator(lang, 602,	"++", NV_LANG00_Op_unaryOperator_suffix_variableOnly);
-	NV_addOperator(lang, 602,	"--", NV_LANG00_Op_unaryOperator_suffix_variableOnly);
+	NV_addOperator(lang, 702,	"++", NV_LANG00_Op_unaryOperator_suffix_variableOnly);
+	NV_addOperator(lang, 702,	"--", NV_LANG00_Op_unaryOperator_suffix_variableOnly);
 	//
-	NV_addOperator(lang, 601,	"+", NV_LANG00_Op_unaryOperator_prefix);
-	NV_addOperator(lang, 601,	"-", NV_LANG00_Op_unaryOperator_prefix);
-	NV_addOperator(lang, 601,	"!", NV_LANG00_Op_unaryOperator_prefix);
+	NV_addOperator(lang, 701,	"+", NV_LANG00_Op_unaryOperator_prefix);
+	NV_addOperator(lang, 701,	"-", NV_LANG00_Op_unaryOperator_prefix);
+	NV_addOperator(lang, 701,	"!", NV_LANG00_Op_unaryOperator_prefix);
 	//
-	NV_addOperator(lang, 500,	"*", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(lang, 500,	"/", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(lang, 500,	"%", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 600,	"*", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 600,	"/", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 600,	"%", NV_LANG00_Op_binaryOperator);
 	//
-	NV_addOperator(lang, 400,	"+", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(lang, 400,	"-", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 500,	"+", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 500,	"-", NV_LANG00_Op_binaryOperator);
 	//
-	NV_addOperator(lang, 300,	"<", NV_LANG00_Op_binaryOperator);	
-	NV_addOperator(lang, 300,	">", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(lang, 300,	"<=", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(lang, 300,	">=", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(lang, 300,	"==", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(lang, 300,	"!=", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 400,	"<", NV_LANG00_Op_binaryOperator);	
+	NV_addOperator(lang, 400,	">", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 400,	"<=", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 400,	">=", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 400,	"==", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 400,	"!=", NV_LANG00_Op_binaryOperator);
+	//
+	NV_addOperator(lang, 300,	"||", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 300,	"&&", NV_LANG00_Op_binaryOperator);
 	//
 	NV_addOperator(lang, 200,	"+=", NV_LANG00_Op_compoundAssign);
 	NV_addOperator(lang, 200,	"-=", NV_LANG00_Op_compoundAssign);
