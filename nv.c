@@ -396,7 +396,7 @@ int NV_EvaluateSentence(NV_Env *env, NV_Term *root)
 			}
 		}
 	}
-	if(NV_isDebugMode) printf("Evaluate end (changeFlas == 0)\n");
+	if(NV_isDebugMode) printf("Evaluate end (changeFlag == 0)\n");
 	return 0;
 }
 

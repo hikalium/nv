@@ -71,6 +71,25 @@ NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
 	return NULL;
 }
 
+NV_Term *NV_LANG00_Op_compoundAssign(NV_Env *env, NV_Term *thisTerm)
+{
+	NV_Operator *op = (NV_Operator *)thisTerm->data;
+	NV_Term *before = thisTerm->before;
+	char s[2];
+	//
+	if(!before || (before->type != Unknown && before->type != Variable)) return NULL;
+	//
+	s[0] = op->name[0];
+	s[1] = 0;
+	//
+	NV_insertTermAfter(thisTerm, NV_createTerm_Operator(env->langDef, s));
+	NV_insertTermAfter(thisTerm, NV_cloneTerm(before));
+	NV_insertTermAfter(thisTerm, NV_createTerm_Operator(env->langDef, "="));
+	NV_removeTerm(thisTerm);
+	env->changeFlag = 1;
+	return before->next;
+}
+
 NV_Term *NV_LANG00_Op_unaryOperator_prefix(NV_Env *env, NV_Term *thisTerm)
 {
 	NV_Term *before = thisTerm->before;
@@ -170,6 +189,8 @@ NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
 			resultVal = *((int *)before->data) * *((int *)next->data);
 		} else if(strcmp("/", op->name) == 0){
 			resultVal = *((int *)before->data) / *((int *)next->data);
+		} else if(strcmp("%", op->name) == 0){
+			resultVal = *((int *)before->data) % *((int *)next->data);
 		}
 		// comparison operators
 		else if(strcmp("<", op->name) == 0){
@@ -439,25 +460,41 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 100030,	";", NV_LANG00_Op_sentenceSeparator);
 	NV_addOperator(lang, 100020,	"(", NV_LANG00_Op_precedentBlock);
 	NV_addOperator(lang, 100010,	"builtin_exec", NV_LANG00_Op_builtin_exec);
+	//
 	NV_addOperator(lang, 10000,	";;", NV_LANG00_Op_nothingButDisappear);
+	//
 	NV_addOperator(lang, 1000,  "if", NV_LANG00_Op_if);
 	NV_addOperator(lang, 1000,  "for", NV_LANG00_Op_for);
-	NV_addOperator(lang, 502,	"++", NV_LANG00_Op_unaryOperator_suffix_variableOnly);
-	NV_addOperator(lang, 502,	"--", NV_LANG00_Op_unaryOperator_suffix_variableOnly);
-	NV_addOperator(lang, 501,	"+", NV_LANG00_Op_unaryOperator_prefix);
-	NV_addOperator(lang, 501,	"-", NV_LANG00_Op_unaryOperator_prefix);
-	NV_addOperator(lang, 501,	"!", NV_LANG00_Op_unaryOperator_prefix);
-	NV_addOperator(lang, 400,	"<", NV_LANG00_Op_binaryOperator);	
-	NV_addOperator(lang, 400,	">", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(lang, 400,	"<=", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(lang, 400,	">=", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(lang, 400,	"==", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(lang, 400,	"!=", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(lang, 300,	"*", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(lang, 300,	"/", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(lang, 200,	"+", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(lang, 200,	"-", NV_LANG00_Op_binaryOperator);
+	//
+	NV_addOperator(lang, 602,	"++", NV_LANG00_Op_unaryOperator_suffix_variableOnly);
+	NV_addOperator(lang, 602,	"--", NV_LANG00_Op_unaryOperator_suffix_variableOnly);
+	//
+	NV_addOperator(lang, 601,	"+", NV_LANG00_Op_unaryOperator_prefix);
+	NV_addOperator(lang, 601,	"-", NV_LANG00_Op_unaryOperator_prefix);
+	NV_addOperator(lang, 601,	"!", NV_LANG00_Op_unaryOperator_prefix);
+	//
+	NV_addOperator(lang, 500,	"*", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 500,	"/", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 500,	"%", NV_LANG00_Op_binaryOperator);
+	//
+	NV_addOperator(lang, 400,	"+", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 400,	"-", NV_LANG00_Op_binaryOperator);
+	//
+	NV_addOperator(lang, 300,	"<", NV_LANG00_Op_binaryOperator);	
+	NV_addOperator(lang, 300,	">", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 300,	"<=", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 300,	">=", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 300,	"==", NV_LANG00_Op_binaryOperator);
+	NV_addOperator(lang, 300,	"!=", NV_LANG00_Op_binaryOperator);
+	//
+	NV_addOperator(lang, 200,	"+=", NV_LANG00_Op_compoundAssign);
+	NV_addOperator(lang, 200,	"-=", NV_LANG00_Op_compoundAssign);
+	NV_addOperator(lang, 200,	"*=", NV_LANG00_Op_compoundAssign);
+	NV_addOperator(lang, 200,	"/=", NV_LANG00_Op_compoundAssign);
+	NV_addOperator(lang, 200,	"%=", NV_LANG00_Op_compoundAssign);
+	//
 	NV_addOperator(lang, 101,	"=", NV_LANG00_Op_assign);
+	//
 	NV_addOperator(lang, 10,	"print", NV_LANG00_Op_print);
 	NV_addOperator(lang, 10,	"showop", NV_LANG00_Op_showOpList);
 	NV_addOperator(lang, 10,	"mem", NV_LANG00_Op_mem);
