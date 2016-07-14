@@ -43,9 +43,8 @@ NV_Term *NV_LANG00_execNextSentence(NV_Env *env, NV_Term *thisTerm)
 		NV_printError("NV_LANG00_Op_builtin_exec: Exec failed.\n");
 		return NULL;
 	}
-	//
-	NV_removeTerm(sentenceTerm);
 	NV_insertAllTermAfter(thisTerm, sentenceRoot);
+	NV_removeTerm(sentenceTerm);
 	return thisTerm;
 }
 
@@ -332,12 +331,13 @@ NV_Term *NV_LANG00_Op_for(NV_Env *env, NV_Term *thisTerm)
 	doTerm = t;
 	//
 	// do init block
+	// initTerm is removed here.
 	if(NV_LANG00_execNextSentence(env, thisTerm) == NULL) return NULL;
 	for(;;){
 		// copy blocks
-		NV_cloneTerm(&tmpCondRoot, condTerm->data);
-		NV_cloneTerm(&tmpUpdateRoot, updateTerm->data);
-		NV_cloneTerm(&tmpDoRoot, doTerm->data);
+		NV_cloneTermTree(&tmpCondRoot, condTerm->data);
+		NV_cloneTermTree(&tmpUpdateRoot, updateTerm->data);
+		NV_cloneTermTree(&tmpDoRoot, doTerm->data);
 		// check cond
 		if(NV_EvaluateSentence(env, &tmpCondRoot)) return NULL;
 		t = NV_getLastTerm(&tmpCondRoot);
@@ -346,16 +346,20 @@ NV_Term *NV_LANG00_Op_for(NV_Env *env, NV_Term *thisTerm)
 		if(NV_EvaluateSentence(env, &tmpDoRoot)) return NULL;
 		// update
 		if(NV_EvaluateSentence(env, &tmpUpdateRoot)) return NULL;
+		// free tmp
+		NV_removeTermTree(&tmpCondRoot);
+		NV_removeTermTree(&tmpUpdateRoot);
+		NV_removeTermTree(&tmpDoRoot);
 	}
 	// free tmp
-	//NV_removeTermTree(&tmpCondRoot);
-	//NV_removeTermTree(&tmpUpdateRoot);
-	//NV_removeTermTree(&tmpDoRoot);
+	NV_removeTermTree(&tmpCondRoot);
+	NV_removeTermTree(&tmpUpdateRoot);
+	NV_removeTermTree(&tmpDoRoot);
 	// remove
-	//NV_removeTerm(updateTerm);
-	//NV_removeTerm(condTerm);
-	//NV_removeTerm(updateTerm);
-	//NV_removeTerm(doTerm);
+	NV_removeTerm(updateTerm);
+	NV_removeTerm(condTerm);
+	NV_removeTerm(doTerm);
+	//
 	t = thisTerm;
 	NV_removeTerm(thisTerm);
 	//
@@ -410,6 +414,13 @@ NV_Term *NV_LANG00_Op_showOpList(NV_Env *env, NV_Term *thisTerm)
 	return before;
 }
 
+NV_Term *NV_LANG00_Op_mem(NV_Env *env, NV_Term *thisTerm)
+{
+	thisTerm = NV_overwriteTerm(thisTerm, NV_createTerm_Imm32(NV_getMallocCount()));
+	env->changeFlag = 1;
+	return thisTerm;
+}
+
 NV_LangDef *NV_getDefaultLang()
 {
 	NV_LangDef *lang = NV_allocLangDef();
@@ -446,9 +457,10 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 300,	"/", NV_LANG00_Op_binaryOperator);
 	NV_addOperator(lang, 200,	"+", NV_LANG00_Op_binaryOperator);
 	NV_addOperator(lang, 200,	"-", NV_LANG00_Op_binaryOperator);
-	NV_addOperator(lang, 100,	"=", NV_LANG00_Op_assign);
+	NV_addOperator(lang, 101,	"=", NV_LANG00_Op_assign);
 	NV_addOperator(lang, 10,	"print", NV_LANG00_Op_print);
 	NV_addOperator(lang, 10,	"showop", NV_LANG00_Op_showOpList);
+	NV_addOperator(lang, 10,	"mem", NV_LANG00_Op_mem);
 	
 	return lang;
 }

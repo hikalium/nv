@@ -71,7 +71,7 @@ void NV_resetVariable(NV_Variable *v)
 	if(v->type == None) return;
 	v->type = None;
 	v->byteSize = 0;
-	if(v->data) free(v->data);
+	if(v->data) NV_free(v->data);
 	v->data = NULL;
 }
 
@@ -405,7 +405,9 @@ NV_Term *NV_TryExecOp(NV_Env *env, NV_Operator *currentOp, NV_Term *t, NV_Term *
 	NV_Operator *fallbackOp;
 	NV_Term *orgTerm = t;
 	if(t->type == Operator && t->data == currentOp){
+		if(NV_isDebugMode) printf("Begin native op: [%s]\n", currentOp->name);
 		t = currentOp->nativeFunc(env, t);
+		if(NV_isDebugMode) printf("End native op: [%s]\n", currentOp->name);
 		if(!t){
 			// try fallback
 			fallbackOp = NV_getFallbackOperator(env->langDef, currentOp);

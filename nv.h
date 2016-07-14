@@ -24,11 +24,17 @@ typedef struct	NV_ENV			NV_Env;
 
 enum NV_TERM_TYPE {
 	Root,
+	// data -> null
 	Unknown,
+	// data -> termStr (static)
 	Sentence,
+	// data -> NV_Term (malloced)
 	Variable,
+	// data -> NV_Variable (static)
 	Operator,
+	// data -> NV_Operator (static)
 	Imm32s,
+	// data -> int (malloced)
 };
 
 enum NV_VAR_TYPE {
@@ -70,7 +76,7 @@ struct NV_VARIABLE {
 	NV_VarType type;
 	int byteSize;
 	int revision;
-	void *data;
+	void *data;	// malloced addr
 };
 
 struct NV_VARSET {
@@ -108,7 +114,8 @@ NV_VariableSet *NV_allocVariableSet();
 NV_Term *NV_allocTerm();
 void NV_initRootTerm(NV_Term *t);
 void NV_changeRootTerm(NV_Term *oldRoot, NV_Term *newRoot);
-void NV_cloneTerm(NV_Term *dstRoot, const NV_Term *srcRoot);
+void NV_cloneTermTree(NV_Term *dstRoot, const NV_Term *srcRoot);
+NV_Term *NV_cloneTerm(const NV_Term *src);
 void NV_insertTermAfter(NV_Term *base, NV_Term *new);
 void NV_insertAllTermAfter(NV_Term *base, NV_Term *srcRoot);
 NV_Term *NV_overwriteTerm(NV_Term *target, NV_Term *new);
@@ -147,5 +154,7 @@ NV_Term *NV_TryExecOp(NV_Env *env, NV_Operator *currentOp, NV_Term *t, NV_Term *
 void NV_printError(const char *format, ...);
 // @nv_fix.c
 char *NV_strncpy(char *dst, const char *src, size_t dst_size, size_t copy_size);
+int NV_getMallocCount();
 void *NV_malloc(size_t size);
+void NV_free(void *p);
 

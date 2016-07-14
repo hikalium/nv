@@ -8,6 +8,12 @@ char *NV_strncpy(char *dst, const char *src, size_t dst_size, size_t copy_size)
 	return retv;
 }
 
+int mallocCount = 0;
+int NV_getMallocCount()
+{
+	return mallocCount;
+}
+
 void *NV_malloc(size_t size)
 {
 	void *retv = malloc(size);
@@ -15,5 +21,17 @@ void *NV_malloc(size_t size)
 		fputs("NV_malloc: malloc error!\n", stderr);
 		exit(EXIT_FAILURE);
 	}
+	mallocCount++;
 	return retv;
+}
+
+void NV_free(void *p)
+{
+	if(!p){
+		fputs("NV_malloc: free error!\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+	free(p);
+	mallocCount--;
+	return;
 }

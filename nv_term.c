@@ -28,7 +28,7 @@ void NV_changeRootTerm(NV_Term *oldRoot, NV_Term *newRoot)
 	NV_appendAll(newRoot, oldRoot);
 }
 
-void NV_cloneTerm(NV_Term *dstRoot, const NV_Term *srcRoot)
+void NV_cloneTermTree(NV_Term *dstRoot, const NV_Term *srcRoot)
 {
 	NV_Term *t, *tNew;
 	//
@@ -36,12 +36,45 @@ void NV_cloneTerm(NV_Term *dstRoot, const NV_Term *srcRoot)
 	NV_initRootTerm(dstRoot);
 	//
 	for(t = srcRoot->next; t; t = t->next){
-		tNew = NV_allocTerm();
-		*tNew = *t;
+		tNew = NV_cloneTerm(t);
+		//
 		tNew->before = NULL;
 		tNew->next = NULL;
 		NV_appendTermRaw(dstRoot, tNew);
 	}
+}
+
+NV_Term *NV_cloneTerm(const NV_Term *src)
+{
+	NV_Term *new = NULL;
+	switch(src->type){
+		case Unknown:
+		case Variable:
+		case Operator:
+			// data is static so copy address simply.
+			new = NV_allocTerm();
+			*new = *src;
+			break;
+		case Imm32s:
+			new = NV_createTerm_Imm32(*(int32_t *)src->data);
+			break;
+		/*
+		case Sentence:
+			NV_removeTermTree(t->data);
+			NV_free(t->data);
+			break;
+		*/
+		default:
+			fprintf(stderr, "%s: Not implemented for type %d.\n", __func__, src->type);
+			exit(EXIT_FAILURE);
+	}
+	if(!new){
+		fprintf(stderr, "%s: Clone failed for type %d.\n", __func__, src->type);
+		exit(EXIT_FAILURE);
+	}
+	new->next = NULL;
+	new->before = NULL;
+	return new;
 }
 
 void NV_insertTermAfter(NV_Term *base, NV_Term *new)
@@ -131,11 +164,26 @@ void NV_removeTerm(NV_Term *t)
 	// don't apply to the root Term.
 	if(t->before)	t->before->next = t->next;
 	if(t->next)		t->next->before = t->before;
-	if(t->data && 
-		(t->type == Imm32s)){
-		//free(t->data);
+	if(t->data){
+		switch(t->type){
+			case Unknown:
+			case Variable:
+			case Operator:
+				// data is static so do nothing.
+				break;
+			case Imm32s:
+				NV_free(t->data);
+				break;
+			case Sentence:
+				NV_removeTermTree(t->data);
+				NV_free(t->data);
+				break;
+			default:
+				fprintf(stderr, "NV_removeTerm: Not implemented for type %d.\n", t->type);
+				exit(EXIT_FAILURE);
+		}
 	}
-	free(t);
+	NV_free(t);
 }
 
 void NV_removeTermTree(NV_Term *root)
@@ -143,6 +191,7 @@ void NV_removeTermTree(NV_Term *root)
 	while(root->next != NULL){
 		NV_removeTerm(root->next);
 	}
+	root->next = 0;
 }
 
 NV_Term *NV_createTerm_Operator(NV_LangDef *langDef, const char *opName)
