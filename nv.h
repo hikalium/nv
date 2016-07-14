@@ -13,6 +13,8 @@
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
+#define NV_Error()
+
 typedef enum	NV_TERM_TYPE	NV_TermType;
 typedef enum	NV_VAR_TYPE		NV_VarType;
 typedef struct	NV_TERM 		NV_Term;
@@ -35,6 +37,7 @@ enum NV_TERM_TYPE {
 	// data -> NV_Operator (static)
 	Imm32s,
 	// data -> int (malloced)
+	String,
 };
 
 enum NV_VAR_TYPE {
@@ -127,6 +130,7 @@ void NV_removeTerm(NV_Term *t);
 void NV_removeTermTree(NV_Term *root);
 NV_Term *NV_createTerm_Operator(NV_LangDef *langDef, const char *opName);
 NV_Term *NV_createTerm_Imm32(int imm32);
+NV_Term *NV_createTerm_String(const char *s);
 NV_Term *NV_createTerm_Variable(NV_VariableSet *vs, const char *name);
 NV_Term *NV_createTerm_Sentence();
 void NV_printTerms(NV_Term *root);

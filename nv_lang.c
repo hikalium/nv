@@ -264,6 +264,59 @@ NV_Term *NV_LANG00_Op_sentenceSeparator(NV_Env *env, NV_Term *thisTerm)
 	return b;
 }
 
+NV_Term *NV_LANG00_Op_stringLiteral(NV_Env *env, NV_Term *thisTerm)
+{
+	// "string literal"
+	int len = 0, sp;
+	NV_Term *t, *endTerm;
+	NV_Operator *op;
+	char *s, *st;
+	for(t = thisTerm->next;;t = t->next){
+		if(!t) return NULL;
+		if(t->type == Operator && ((NV_Operator *)t->data)->nativeFunc == NV_LANG00_Op_stringLiteral){
+			endTerm = t;
+			break;
+		}
+		switch(t->type){
+			case Operator:
+				op = t->data;
+				len += strlen(op->name);
+				break;
+			case Unknown:
+				len += strlen((const char *)t->data);
+				break;
+			default:
+				return NULL;
+		}
+	}
+	s = NV_malloc(len + 1);
+	sp = 0;
+	for(t = thisTerm->next; t != endTerm;){
+		switch(t->type){
+			case Operator:
+				op = t->data;
+				st = op->name;
+				break;
+			case Unknown:
+				st = t->data;
+				break;
+			default:
+				return NULL;
+		}
+		strcpy(&s[sp], st);
+		sp += strlen(st);
+		t = t->next;
+		NV_removeTerm(t->before);
+	}
+	s[len] = 0;
+	NV_removeTerm(endTerm);
+	t = NV_createTerm_String(s);
+	NV_free(s);
+	NV_overwriteTerm(thisTerm, t);
+	env->changeFlag = 1;
+	return t;
+}
+
 NV_Term *NV_LANG00_Op_sentenceBlock(NV_Env *env, NV_Term *thisTerm)
 {
 	// {}
@@ -446,6 +499,8 @@ NV_Term *NV_LANG00_Op_print(NV_Env *env, NV_Term *thisTerm)
 	} else if(target->type == Imm32s){
 		tmpint32 = target->data;
 		printf("%d\n", *tmpint32);
+	} else if(target->type == String){
+		printf("%s\n", target->data);
 	} else{
 		return NULL;
 	}
@@ -482,7 +537,7 @@ NV_LangDef *NV_getDefaultLang()
 	NV_LangDef *lang = NV_allocLangDef();
 	char *char0 = " \t\r\n";
 	char *char1 = "!%&-=^~|+*:.<>/";
-	char *char2 = "(){}[],;";
+	char *char2 = "(){}[],;\"";
 	//
 	lang->char0Len = strlen(char0);
 	lang->char0List = char0;
@@ -490,7 +545,9 @@ NV_LangDef *NV_getDefaultLang()
 	lang->char1List = char1;
 	lang->char2Len = strlen(char2);
 	lang->char2List = char2;
+	// based on http://www.tutorialspoint.com/cprogramming/c_operators.htm
 	//
+	NV_addOperator(lang, 200000,	"\"", NV_LANG00_Op_stringLiteral);
 	NV_addOperator(lang, 100040,	"{", NV_LANG00_Op_sentenceBlock);
 	NV_addOperator(lang, 100030,	";", NV_LANG00_Op_sentenceSeparator);
 	NV_addOperator(lang, 100020,	"(", NV_LANG00_Op_precedentBlock);

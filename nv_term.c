@@ -58,6 +58,9 @@ NV_Term *NV_cloneTerm(const NV_Term *src)
 		case Imm32s:
 			new = NV_createTerm_Imm32(*(int32_t *)src->data);
 			break;
+		case String:
+			new = NV_createTerm_String((const char *)src->data);
+			break;
 		/*
 		case Sentence:
 			NV_removeTermTree(t->data);
@@ -171,6 +174,7 @@ void NV_removeTerm(NV_Term *t)
 			case Operator:
 				// data is static so do nothing.
 				break;
+			case String:
 			case Imm32s:
 				NV_free(t->data);
 				break;
@@ -216,6 +220,17 @@ NV_Term *NV_createTerm_Imm32(int imm32)
 	new->data = NV_malloc(sizeof(int));
 
 	*((int *)new->data) = imm32;
+	return new;
+}
+
+NV_Term *NV_createTerm_String(const char *s)
+{
+	NV_Term *new;
+	//
+	new = NV_allocTerm();
+	new->type = String;
+	new->data = NV_malloc(strlen(s) + 1);
+	strcpy(new->data, s);
 	return new;
 }
 
@@ -296,6 +311,8 @@ void NV_printValueOfTerm(NV_Term *t)
 		printf("(Operator) %s:%d", op->name, op->precedence);
 	} else if(t->type == Unknown){
 		printf("(Unknown)[%s]", t->data);
+	} else if(t->type == String){
+		printf("(String)\"%s\"", t->data);
 	} else if(t->type == Variable){
 		var = t->data;
 		printf("(Variable)");
