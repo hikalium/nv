@@ -31,7 +31,10 @@ NV_Term *NV_LANG00_makeBlock(NV_Env *env, NV_Term *thisTerm, const char *closeSt
 
 NV_Term *NV_LANG00_execNextSentence(NV_Env *env, NV_Term *thisTerm)
 {
-	NV_Term *sentenceTerm, *sentenceRoot;
+	// eval next sentence of thisTerm
+	// and replace [thisTerm, nextSentence] with return tree of nextSentence.
+	// retv is last term of return tree.
+	NV_Term *sentenceTerm, *sentenceRoot, *lastTerm;
 	//
 	sentenceTerm = thisTerm->next;
 	if(sentenceTerm == NULL || sentenceTerm->type != Sentence){
@@ -43,9 +46,11 @@ NV_Term *NV_LANG00_execNextSentence(NV_Env *env, NV_Term *thisTerm)
 		NV_printError("NV_LANG00_Op_builtin_exec: Exec failed.\n");
 		return NULL;
 	}
+	lastTerm = NV_getLastTerm(sentenceRoot);
+	lastTerm = NV_getLastTerm(sentenceRoot);
 	NV_insertAllTermAfter(thisTerm, sentenceRoot);
 	NV_removeTerm(sentenceTerm);
-	return thisTerm;
+	return lastTerm;
 }
 
 //
@@ -297,34 +302,60 @@ NV_Term *NV_LANG00_Op_builtin_exec(NV_Env *env, NV_Term *thisTerm)
 
 NV_Term *NV_LANG00_Op_if(NV_Env *env, NV_Term *thisTerm)
 {
-	// if {cond} {do} 
+	// if {cond} {do} [{cond} {do}] [{else}]
 	int cond;
-	NV_Term *condTerm, *doTerm;
+	NV_Term *condTerm, *doTerm, *t, *next;
 	//
-	condTerm = thisTerm->next;
-	if(condTerm == NULL || condTerm->type != Sentence) return NULL;
-	doTerm = condTerm->next;
-	if(doTerm == NULL || doTerm->type != Sentence) return NULL;
-	// evaluate cond
-	if(!NV_LANG00_execNextSentence(env, thisTerm)) return NULL;
-	condTerm = thisTerm->next;
-	if(condTerm->next != doTerm) return NULL;
-	if(condTerm->type == Variable) NV_tryConvertTermFromUnknownToImm(env->varSet, &condTerm);
-	if(condTerm->type == Imm32s){
-		cond = *((int32_t *)condTerm->data);
-	} else{
-		return NULL;
+	t = thisTerm;
+	//
+	t = t->next; if(t == NULL || t->type != Sentence) return NULL;
+	condTerm = t;
+	t = t->next; if(t == NULL || t->type != Sentence) return NULL;
+	doTerm = t;
+	for(;;){
+		// evaluate cond
+		if(!NV_LANG00_execNextSentence(env, thisTerm)) return NULL;
+		condTerm = thisTerm->next;
+		if(condTerm->next != doTerm) return NULL;
+		if(condTerm->type == Variable) NV_tryConvertTermFromUnknownToImm(env->varSet, &condTerm);
+		if(condTerm->type == Imm32s){
+			cond = *((int32_t *)condTerm->data);
+		} else{
+			return NULL;
+		}
+		NV_removeTerm(condTerm);
+		// evaluate do
+		if(cond){
+			// cond is true.
+			t = NV_LANG00_execNextSentence(env, thisTerm);
+			if(!t) return NULL;
+			// remove rest of sentence blocks.
+			for(t = t->next; t; t = next){
+				if(t->type != Sentence) break;
+				next = t->next;
+				NV_removeTerm(t);
+			}
+			break;
+		} else{
+			NV_removeTerm(doTerm);
+		}
+		// cond is false. check next cond.
+		t = thisTerm;
+		//
+		t = t->next; if(t == NULL || t->type != Sentence) return NULL;
+		condTerm = t;
+		t = t->next; if(t == NULL || t->type != Sentence){
+			// next term is else block.
+			t = NV_LANG00_execNextSentence(env, thisTerm);
+			if(!t) return NULL;
+			break;
+		};
+		doTerm = t;
+		// continue checking.
 	}
-	NV_removeTerm(condTerm);
-	//
+	// remove 'if' term.
 	thisTerm = thisTerm->before;
 	NV_removeTerm(thisTerm->next);
-	// evaluate do
-	if(cond){
-		if(!NV_LANG00_execNextSentence(env, thisTerm)) return NULL;
-	} else{
-		NV_removeTerm(doTerm);
-	}
 	//
 	env->changeFlag = 1;
 	return thisTerm;
@@ -466,6 +497,8 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 100010,	"builtin_exec", NV_LANG00_Op_builtin_exec);
 	//
 	NV_addOperator(lang, 10000,	";;", NV_LANG00_Op_nothingButDisappear);
+	NV_addOperator(lang, 10000,	"else", NV_LANG00_Op_nothingButDisappear);
+	NV_addOperator(lang, 10000,	"elseif", NV_LANG00_Op_nothingButDisappear);
 	//
 	NV_addOperator(lang, 1000,  "if", NV_LANG00_Op_if);
 	NV_addOperator(lang, 1000,  "for", NV_LANG00_Op_for);
