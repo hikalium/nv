@@ -268,7 +268,7 @@ int NV_getCharType(NV_LangDef *lang, char c)
 	if(c == '\0'){
 		return -1;
 	} else if(strchr(lang->char0List, c)){
-		// type 0 chars divide tokens but can't be a part of a token.
+		// type 0 chars divide tokens but can't be a part of a token. (only to disappear)
 		return 0;
 	} else if(strchr(lang->char1List, c)){
 		// sequences of type 1 chars make tokens.
@@ -290,8 +290,8 @@ void NV_tokenize0(NV_LangDef *langDef, char (*token0)[MAX_TOKEN_LEN], int token0
 	*token0Used = 0;
 	for(i = 0; ; i++){
 		cType = NV_getCharType(langDef, s[i]);
-		if(cType != lastCType || cType == 2 || lastCType == 2){
-			if(lastCType != 0){
+		if(cType != lastCType || cType == 2 || lastCType == 2 || cType == 0 || lastCType == 0){
+			if(s + i - p != 0){
 				if((s + i - p) > MAX_TOKEN_LEN){
 					NV_printError("Too long token.\n", stderr);
 					exit(EXIT_FAILURE);
@@ -332,7 +332,7 @@ void NV_Evaluate(NV_Env *env)
 		printf("Bad Syntax\n");
 	} else{
 		// Ended with Success
-		if(env->autoPrintValue){
+		if(env->autoPrintValue && NV_getLastTerm(&env->termRoot)){
 			printf("= ");
 			NV_printLastTermValue(&env->termRoot);
 			printf("\n");

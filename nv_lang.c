@@ -553,6 +553,10 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 100020,	"(", NV_LANG00_Op_precedentBlock);
 	NV_addOperator(lang, 100010,	"builtin_exec", NV_LANG00_Op_builtin_exec);
 	//
+	NV_addOperator(lang, 10000,	" ", NV_LANG00_Op_nothingButDisappear);
+	NV_addOperator(lang, 10000,	"\t", NV_LANG00_Op_nothingButDisappear);
+	NV_addOperator(lang, 10000,	"\r", NV_LANG00_Op_nothingButDisappear);	
+	NV_addOperator(lang, 10000,	"\n", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 10000,	";;", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 10000,	"else", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 10000,	"elseif", NV_LANG00_Op_nothingButDisappear);

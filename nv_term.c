@@ -306,6 +306,8 @@ void NV_printValueOfTerm(NV_Term *t)
 	int32_t *tmp_sint32;
 	NV_Operator *op;
 
+	if(!t) return;
+
 	if(t->type == Operator){
 		op = t->data;
 		printf("(Operator) %s:%d", op->name, op->precedence);
