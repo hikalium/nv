@@ -266,6 +266,12 @@ NV_Term *NV_createTerm_Sentence()
 
 void NV_printTerms(NV_Term *root)
 {
+	NV_printTerms_noNewLine(root);
+	putchar('\n');
+}
+
+void NV_printTerms_noNewLine(NV_Term *root)
+{
 	NV_Term *t;
 	NV_Operator *op;
 	if(!root) return;
@@ -279,7 +285,6 @@ void NV_printTerms(NV_Term *root)
 			printf("[%d]", t->type);
 		}
 	};
-	putchar('\n');
 }
 
 NV_Term *NV_getLastTerm(NV_Term *root)

@@ -5,7 +5,7 @@ NV_Variable *NV_allocVariable(NV_VariableSet *vs)
 	NV_Variable *t;
 	//
 	if(vs->varUsed >= MAX_VARS){
-		NV_printError("No more variables.", stderr);
+		NV_Error("No more variables. %d\n", MAX_VARS);
 		exit(EXIT_FAILURE);
 	}
 	t = &vs->varList[vs->varUsed++];
@@ -27,6 +27,7 @@ void NV_resetVariable(NV_Variable *v)
 	v->byteSize = 0;
 	if(v->data) NV_free(v->data);
 	v->data = NULL;
+	v->revision++;
 }
 
 void NV_assignVariable_Variable(NV_Variable *dst, const NV_Variable *src)
@@ -37,7 +38,12 @@ void NV_assignVariable_Variable(NV_Variable *dst, const NV_Variable *src)
 	dst->byteSize = src->byteSize;
 	dst->revision = src->revision + 1;
 	dst->data = NV_malloc(src->byteSize);
-	memcpy(dst->data, src->data, src->byteSize);
+	if(src->type == VInteger || src->type == VString){
+		memcpy(dst->data, src->data, src->byteSize);
+	} else{
+		NV_Error("Not implemented. type %d\n", src->type);
+		exit(EXIT_FAILURE);
+	}
 	return;
 }
 
@@ -60,6 +66,18 @@ void NV_assignVariable_String(NV_Variable *dst, const char *src)
 	dst->revision++;
 	dst->data = NV_malloc(dst->byteSize);
 	NV_strncpy(dst->data, src, dst->byteSize, dst->byteSize);
+	return;
+}
+
+void NV_assignVariable_Structure(NV_Variable *dst, const NV_Term *srcRoot)
+{
+	NV_resetVariable(dst);
+	//
+	dst->type = VStructure;
+	dst->byteSize = sizeof(NV_Term);
+	dst->revision++;
+	dst->data = NV_malloc(dst->byteSize);
+	NV_cloneTermTree(dst->data, srcRoot);
 	return;
 }
 
@@ -107,9 +125,17 @@ NV_Variable *NV_getVariableByName(NV_VariableSet *vs, const char *name)
 			return var;
 		}
 	}
-	if(NV_isDebugMode) printf("NV_getVariableByName: Variable '%s' not found.\n", name);
+	if(NV_isDebugMode) NV_Error("Variable '%s' not found.\n", name);
 	return NULL;
 }
+
+#define NUM_OF_VTYPES	4
+char *VTypeNameList[NUM_OF_VTYPES] = {
+	"None",
+	"Integer",
+	"String",
+	"Structure"
+};
 
 void NV_printVariable(NV_Variable *var, int verbose)
 {
@@ -119,16 +145,19 @@ void NV_printVariable(NV_Variable *var, int verbose)
 	if(verbose >= 2){
 		printf("%s\trev:%d\t", var->name, var->revision);
 	}
+	if(verbose >= 1) printf("(%s(%d)) ", VTypeNameList[var->type], var->byteSize);
 	if(var->type == VInteger){
 		if(var->byteSize == sizeof(int32_t)){
-			if(verbose >= 1) printf("(Integer(%d)) ", var->byteSize);
 			printf("%d", *(int32_t *)var->data);
+		} else{
+			NV_Error("(Not implemented size: %d)", var->byteSize);
 		}
 	} else if(var->type == VString){
-		if(verbose >= 1) printf("(String(%d)) ", var->byteSize);
 		printf("%s", var->data);
+	} else if(var->type == VStructure){
+		NV_printTerms_noNewLine(var->data);
 	} else{
-		printf("(Not implemented type: %d)", var->type);
+		NV_Error("(Not implemented type: %d)", var->type);
 	}
 }
 

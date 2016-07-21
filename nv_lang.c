@@ -72,6 +72,8 @@ NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
 		NV_assignVariable_String(left->data, right->data);
 	} else if(right->type == Variable){
 		NV_assignVariable_Variable(left->data, right->data);
+	} else if(right->type == Sentence){
+		NV_assignVariable_Structure(left->data, right->data);
 	} else{
 		return NULL;
 	}

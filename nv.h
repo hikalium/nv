@@ -13,7 +13,7 @@
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
-#define NV_Error()
+#define NV_Error(fmt, ...)	NV_printError("%s: %d: " fmt, __FUNCTION__, __LINE__, __VA_ARGS__)
 
 typedef enum	NV_TERM_TYPE	NV_TermType;
 typedef enum	NV_VAR_TYPE		NV_VarType;
@@ -46,7 +46,7 @@ enum NV_VAR_TYPE {
 	VInteger,
 	//Real,
 	VString,
-	//Structure
+	VStructure
 };
 
 struct NV_TERM {
@@ -155,6 +155,7 @@ NV_Term *NV_createTerm_String(const char *s);
 NV_Term *NV_createTerm_Variable(NV_VariableSet *vs, const char *name);
 NV_Term *NV_createTerm_Sentence();
 void NV_printTerms(NV_Term *root);
+void NV_printTerms_noNewLine(NV_Term *root);
 NV_Term *NV_getLastTerm(NV_Term *root);
 void NV_printLastTermValue(NV_Term *root);
 void NV_printValueOfTerm(NV_Term *t);
@@ -166,6 +167,7 @@ void NV_resetVariable(NV_Variable *v);
 void NV_assignVariable_Variable(NV_Variable *dst, const NV_Variable *src);
 void NV_assignVariable_Integer(NV_Variable *v, int32_t newVal);
 void NV_assignVariable_String(NV_Variable *v, const char *src);
+void NV_assignVariable_Structure(NV_Variable *dst, const NV_Term *srcRoot);
 void NV_tryConvertTermFromUnknownToVariable(NV_VariableSet *vs, NV_Term **term, int allowCreateNewVar); 
 void NV_tryConvertTermFromUnknownToImm(NV_VariableSet *vs, NV_Term **term);
 NV_Variable *NV_getVariableByName(NV_VariableSet *vs, const char *name);
