@@ -62,24 +62,23 @@ NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
 	NV_Term *right = thisTerm->next;
 	// type check
 	if(!left || !right) return NULL;
-	if(right->type == Unknown) NV_tryConvertTermFromUnknownToVariable(env->varSet, &right);
-	if(left->type != Variable) NV_tryConvertTermFromUnknownToVariable(env->varSet, &left);
+	if(right->type == Unknown) NV_tryConvertTermFromUnknownToVariable(env->varSet, &right, 0);
+	if(left->type != Variable) NV_tryConvertTermFromUnknownToVariable(env->varSet, &left, 1);
 	if(left->type != Variable) return NULL;
 	// process
 	if(right->type == Imm32s){
 		NV_assignVariable_Integer(left->data, *((int32_t *)right->data));
-		NV_removeTerm(thisTerm);
-		NV_removeTerm(right);
-		env->changeFlag = 1;
-		return left;	
+	} else if(right->type == String){
+		NV_assignVariable_String(left->data, right->data);
 	} else if(right->type == Variable){
 		NV_assignVariable_Variable(left->data, right->data);
-		NV_removeTerm(thisTerm);
-		NV_removeTerm(right);
-		env->changeFlag = 1;
-		return left;
+	} else{
+		return NULL;
 	}
-	return NULL;
+	NV_removeTerm(thisTerm);
+	NV_removeTerm(right);
+	env->changeFlag = 1;
+	return left;
 }
 
 NV_Term *NV_LANG00_Op_compoundAssign(NV_Env *env, NV_Term *thisTerm)
@@ -148,11 +147,11 @@ NV_Term *NV_LANG00_Op_unaryOperator_suffix_variableOnly(NV_Env *env, NV_Term *th
 	// type check
 	if(!before) return NULL;
 	if(next && (next->type != Operator && next->type != Root)) return NULL;
-	if(before->type == Unknown)	NV_tryConvertTermFromUnknownToVariable(env->varSet, &before);
+	if(before->type == Unknown)	NV_tryConvertTermFromUnknownToVariable(env->varSet, &before, 1);
 	// process
 	if(before->type == Variable){
 		var = before->data;
-		if(var->type == Integer){
+		if(var->type == VInteger){
 			if(var->byteSize == sizeof(int32_t)){
 				result = NV_createTerm_Imm32(*((int32_t *)var->data));
 				if(strcmp("++", op->name) == 0){
@@ -485,23 +484,13 @@ NV_Term *NV_LANG00_Op_for(NV_Env *env, NV_Term *thisTerm)
 NV_Term *NV_LANG00_Op_print(NV_Env *env, NV_Term *thisTerm)
 {
 	NV_Term *target = thisTerm->next;
-	NV_Variable *var;
 	int32_t *tmpint32;
 	//
 	if(!target)return NULL;
-	if(target->type == Unknown)	NV_tryConvertTermFromUnknownToImm(env->varSet, &target);
+	if(target->type == Unknown)	NV_tryConvertTermFromUnknownToVariable(env->varSet, &target, 0);
 	if(target->type == Variable){
-		var = target->data;
-		if(var->type == Integer){
-			if(var->byteSize == sizeof(int32_t)){
-				tmpint32 = var->data;
-				printf("%d\n", *tmpint32);
-			} else{
-				return NULL;
-			}
-		} else{
-			return NULL;
-		}
+		NV_printVariable(target->data, 0);
+		putchar('\n');
 	} else if(target->type == Imm32s){
 		tmpint32 = target->data;
 		printf("%d\n", *tmpint32);

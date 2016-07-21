@@ -41,11 +41,11 @@ enum NV_TERM_TYPE {
 };
 
 enum NV_VAR_TYPE {
-	None,
+	VNone,
 	//Alias
-	Integer,
+	VInteger,
 	//Real,
-	//String,
+	VString,
 	//Structure
 };
 
@@ -163,11 +163,13 @@ int NV_getValueOfTermAsInt(NV_Term *t);
 // @nv_var.c
 NV_Variable *NV_allocVariable(NV_VariableSet *vs);
 void NV_resetVariable(NV_Variable *v);
-void NV_assignVariable_Integer(NV_Variable *v, int32_t newVal);
 void NV_assignVariable_Variable(NV_Variable *dst, const NV_Variable *src);
-void NV_tryConvertTermFromUnknownToVariable(NV_VariableSet *vs, NV_Term **term); 
+void NV_assignVariable_Integer(NV_Variable *v, int32_t newVal);
+void NV_assignVariable_String(NV_Variable *v, const char *src);
+void NV_tryConvertTermFromUnknownToVariable(NV_VariableSet *vs, NV_Term **term, int allowCreateNewVar); 
 void NV_tryConvertTermFromUnknownToImm(NV_VariableSet *vs, NV_Term **term);
 NV_Variable *NV_getVariableByName(NV_VariableSet *vs, const char *name);
+void NV_printVariable(NV_Variable *var, int verbose);
 
 // @nv_varset.c
 NV_VariableSet *NV_allocVariableSet();

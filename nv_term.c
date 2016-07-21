@@ -302,7 +302,6 @@ void NV_printLastTermValue(NV_Term *root)
 
 void NV_printValueOfTerm(NV_Term *t)
 {
-	NV_Variable *var;
 	int32_t *tmp_sint32;
 	NV_Operator *op;
 
@@ -316,15 +315,8 @@ void NV_printValueOfTerm(NV_Term *t)
 	} else if(t->type == String){
 		printf("(String)\"%s\"", t->data);
 	} else if(t->type == Variable){
-		var = t->data;
 		printf("(Variable)");
-		if(var->type == Integer){
-			if(var->byteSize == sizeof(int32_t)){
-				printf("(Integer %d Byte)", var->byteSize);
-				tmp_sint32 = var->data;
-				printf(" %d", *tmp_sint32);
-			}
-		}
+		NV_printVariable(t->data, 1);
 	} else if(t->type == Imm32s){
 		tmp_sint32 = t->data;
 		printf("%d", *tmp_sint32);
@@ -340,7 +332,7 @@ int NV_getValueOfTermAsInt(NV_Term *t)
 
 	if(t->type == Variable){
 		var = t->data;
-		if(var->type == Integer){
+		if(var->type == VInteger){
 			if(var->byteSize == sizeof(int32_t)){
 				tmp_sint32 = var->data;
 				return *tmp_sint32;

@@ -13,22 +13,10 @@ NV_VariableSet *NV_allocVariableSet()
 
 void NV_printVarsInVarSet(NV_VariableSet *vs)
 {
-	NV_Variable *var;
-	int32_t *tmpint32;
 	int i;
-
 	printf("Variable Table (%p): %d\n", vs, vs->varUsed);
 	for(i = 0; i < vs->varUsed; i++){
-		var = &vs->varList[i];
-		printf("%s", var->name);
-		printf("\t rev: %d", var->revision);
-		if(var->type == Integer){
-			printf("\t Integer(%d)", var->byteSize);
-			if(var->byteSize == sizeof(int32_t)){
-				tmpint32 = var->data;
-				printf("\t = %d", *tmpint32);
-			}
-		}
+		NV_printVariable(&vs->varList[i], 2);
 		putchar('\n');
 	}
 }
