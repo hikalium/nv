@@ -1,0 +1,4 @@
+mem_begin = mem;
+for {i = 1; sum = 0}{i <= 100}{i++}{sum += i}
+mem_end = mem;
+if {sum == 5050 && mem_end - mem_begin == 3}{print "OK"}{print "BAD"}

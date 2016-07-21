@@ -44,132 +44,6 @@ NV_LangDef *NV_allocLangDef()
 }
 
 //
-// Varibale
-//
-NV_Variable *NV_allocVariable(NV_VariableSet *vs)
-{
-	NV_Variable *t;
-	//
-	if(vs->varUsed >= MAX_VARS){
-		NV_printError("No more variables.", stderr);
-		exit(EXIT_FAILURE);
-	}
-	t = &vs->varList[vs->varUsed++];
-	//
-	t->name[0] = 0;
-	t->type = None;
-	t->byteSize = 0;
-	t->revision = 0;
-	t->data = NULL;
-	//
-	return t;
-}
-
-void NV_resetVariable(NV_Variable *v)
-{
-	// excludes namestr.
-	if(v->type == None) return;
-	v->type = None;
-	v->byteSize = 0;
-	if(v->data) NV_free(v->data);
-	v->data = NULL;
-}
-
-void NV_assignVariable_Integer(NV_Variable *v, int32_t newVal)
-{
-	NV_resetVariable(v);
-	v->type = Integer;
-	v->byteSize = sizeof(int32_t);	// int32s only now.
-	v->data = NV_malloc(v->byteSize);
-	v->revision++;
-	*((int32_t *)v->data) = newVal;
-}
-
-void NV_tryConvertTermFromUnknownToImm(NV_VariableSet *vs, NV_Term **term)
-{
-	NV_Variable *var;
-	NV_Term *new;
-
-	if((*term)->type != Unknown) return;
-	var = NV_getVariableByName(vs, (*term)->data);
-	if(var){
-		if(var->type == Integer && var->byteSize == sizeof(int32_t)){
-			new = NV_createTerm_Imm32(*((int32_t *)var->data));
-			NV_overwriteTerm((*term), new);
-			*term = new;
-			return;
-		}
-	}
-}
-
-void NV_tryConvertTermFromUnknownToVariable(NV_VariableSet *vs, NV_Term **term)
-{
-	NV_Variable *var;
-	NV_Term *new;
-
-	if((*term)->type != Unknown) return;
-	var = NV_getVariableByName(vs, (*term)->data);
-	if(var) new = NV_createTerm_Variable(vs, var->name);
-	else new = NV_createTerm_Variable(vs, (*term)->data);
-	if(new){
-		NV_overwriteTerm((*term), new);
-		*term = new;
-		return;
-	}
-}
-
-NV_Variable *NV_getVariableByName(NV_VariableSet *vs, const char *name)
-{
-	NV_Variable *var;
-	int i;
-	for(i = 0; i < vs->varUsed; i++){
-		var = &vs->varList[i];
-		if(strncmp(var->name, name, MAX_TOKEN_LEN) == 0){
-			return var;
-		}
-	}
-	if(NV_isDebugMode) printf("NV_getVariableByName: Variable '%s' not found.\n", name);
-	return NULL;
-}
-
-void NV_printVarsInVarList(NV_VariableSet *vs)
-{
-	NV_Variable *var;
-	int32_t *tmpint32;
-	int i;
-
-	printf("Variable Table (%p): %d\n", vs, vs->varUsed);
-	for(i = 0; i < vs->varUsed; i++){
-		var = &vs->varList[i];
-		printf("%s", var->name);
-		printf("\t rev: %d", var->revision);
-		if(var->type == Integer){
-			printf("\t Integer(%d)", var->byteSize);
-			if(var->byteSize == sizeof(int32_t)){
-				tmpint32 = var->data;
-				printf("\t = %d", *tmpint32);
-			}
-		}
-		putchar('\n');
-	}
-}
-
-//
-// Variable Set
-//
-NV_VariableSet *NV_allocVariableSet()
-{
-	NV_VariableSet *t;
-
-	t = NV_malloc(sizeof(NV_VariableSet));
-	//
-	t->varUsed = 0;
-
-	return t;
-}
-
-
-//
 // Operator
 //
 
@@ -339,7 +213,7 @@ void NV_Evaluate(NV_Env *env)
 		}
 	}
 	NV_removeTermTree(&env->termRoot);
-	if(NV_isDebugMode) NV_printVarsInVarList(env->varSet);
+	if(NV_isDebugMode) NV_printVarsInVarSet(env->varSet);
 }
 
 int NV_EvaluateSentence(NV_Env *env, NV_Term *root)

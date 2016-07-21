@@ -99,20 +99,41 @@ struct NV_ENV {
 
 extern int NV_isDebugMode;
 
-//
+
+// @nv.c
 NV_LangDef *NV_allocLangDef();
+//
+NV_Operator *NV_allocOperator();
+void NV_addOperator(NV_LangDef *lang, int precedence, const char *name, NV_Term *(*nativeFunc)(NV_Env *env, NV_Term *thisTerm));
+NV_Operator *NV_isOperator(NV_LangDef *lang, const char *termStr);
+NV_Operator *NV_getFallbackOperator(NV_LangDef *lang, NV_Operator *baseOp);
+int NV_getOperatorIndex(NV_LangDef *lang, NV_Operator *op);
+//
+NV_Env *NV_allocEnv();
+//
+int NV_getCharType(NV_LangDef *lang, char c);
+void NV_tokenize0(NV_LangDef *langDef, char (*token0)[MAX_TOKEN_LEN], int token0Len, int *token0Used,  const char *s);
+int NV_tokenize(NV_Env *env, const char *s);
+//
+void NV_Evaluate(NV_Env *env);
+int NV_EvaluateSentence(NV_Env *env, NV_Term *root);
+NV_Term *NV_TryExecOp(NV_Env *env, NV_Operator *currentOp, NV_Term *t, NV_Term *root);
+//
+void NV_printError(const char *format, ...);
+
+// @nv_envdep.c
+char *NV_gets(char *str, int size);
+void NV_printf(const char *format, ...);
+
+// @nv_fix.c
+char *NV_strncpy(char *dst, const char *src, size_t dst_size, size_t copy_size);
+int NV_getMallocCount();
+void *NV_malloc(size_t size);
+void NV_free(void *p);
+
 // @nv_lang.c
 NV_LangDef *NV_getDefaultLang();
-//
-NV_Variable *NV_allocVariable(NV_VariableSet *vs);
-void NV_resetVariable(NV_Variable *v);
-void NV_assignVariable_Integer(NV_Variable *v, int32_t newVal);
-void NV_tryConvertTermFromUnknownToImm(NV_VariableSet *vs, NV_Term **term);
-void NV_tryConvertTermFromUnknownToVariable(NV_VariableSet *vs, NV_Term **term); 
-NV_Variable *NV_getVariableByName(NV_VariableSet *vs, const char *name);
-void NV_printVarsInVarList(NV_VariableSet *vs);
-//
-NV_VariableSet *NV_allocVariableSet();
+
 // @nv_term.c
 NV_Term *NV_allocTerm();
 void NV_initRootTerm(NV_Term *t);
@@ -138,29 +159,17 @@ NV_Term *NV_getLastTerm(NV_Term *root);
 void NV_printLastTermValue(NV_Term *root);
 void NV_printValueOfTerm(NV_Term *t);
 int NV_getValueOfTermAsInt(NV_Term *t);
-//
-NV_Operator *NV_allocOperator();
-void NV_addOperator(NV_LangDef *lang, int precedence, const char *name, NV_Term *(*nativeFunc)(NV_Env *env, NV_Term *thisTerm));
-NV_Operator *NV_isOperator(NV_LangDef *lang, const char *termStr);
-NV_Operator *NV_getFallbackOperator(NV_LangDef *lang, NV_Operator *baseOp);
-int NV_getOperatorIndex(NV_LangDef *lang, NV_Operator *op);
-//
-NV_Env *NV_allocEnv();
-//
-int NV_getCharType(NV_LangDef *lang, char c);
-void NV_tokenize0(NV_LangDef *langDef, char (*token0)[MAX_TOKEN_LEN], int token0Len, int *token0Used,  const char *s);
-int NV_tokenize(NV_Env *env, const char *s);
-//
-void NV_Evaluate(NV_Env *env);
-int NV_EvaluateSentence(NV_Env *env, NV_Term *root);
-NV_Term *NV_TryExecOp(NV_Env *env, NV_Operator *currentOp, NV_Term *t, NV_Term *root);
-//
-void NV_printError(const char *format, ...);
-// @nv_fix.c
-char *NV_strncpy(char *dst, const char *src, size_t dst_size, size_t copy_size);
-int NV_getMallocCount();
-void *NV_malloc(size_t size);
-void NV_free(void *p);
-// @nv_envdep.c
-char *NV_gets(char *str, int size);
-void NV_printf(const char *format, ...);
+
+// @nv_var.c
+NV_Variable *NV_allocVariable(NV_VariableSet *vs);
+void NV_resetVariable(NV_Variable *v);
+void NV_assignVariable_Integer(NV_Variable *v, int32_t newVal);
+void NV_assignVariable_Variable(NV_Variable *dst, const NV_Variable *src);
+void NV_tryConvertTermFromUnknownToVariable(NV_VariableSet *vs, NV_Term **term); 
+void NV_tryConvertTermFromUnknownToImm(NV_VariableSet *vs, NV_Term **term);
+NV_Variable *NV_getVariableByName(NV_VariableSet *vs, const char *name);
+
+// @nv_varset.c
+NV_VariableSet *NV_allocVariableSet();
+void NV_printVarsInVarSet(NV_VariableSet *vs);
+

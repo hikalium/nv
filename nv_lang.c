@@ -62,7 +62,7 @@ NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
 	NV_Term *right = thisTerm->next;
 	// type check
 	if(!left || !right) return NULL;
-	if(right->type == Unknown) NV_tryConvertTermFromUnknownToImm(env->varSet, &right);
+	if(right->type == Unknown) NV_tryConvertTermFromUnknownToVariable(env->varSet, &right);
 	if(left->type != Variable) NV_tryConvertTermFromUnknownToVariable(env->varSet, &left);
 	if(left->type != Variable) return NULL;
 	// process
@@ -72,6 +72,12 @@ NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
 		NV_removeTerm(right);
 		env->changeFlag = 1;
 		return left;	
+	} else if(right->type == Variable){
+		NV_assignVariable_Variable(left->data, right->data);
+		NV_removeTerm(thisTerm);
+		NV_removeTerm(right);
+		env->changeFlag = 1;
+		return left;
 	}
 	return NULL;
 }
@@ -553,6 +559,8 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 100020,	"(", NV_LANG00_Op_precedentBlock);
 	NV_addOperator(lang, 100010,	"builtin_exec", NV_LANG00_Op_builtin_exec);
 	//
+	NV_addOperator(lang, 100000,	"mem", NV_LANG00_Op_mem);
+	//
 	NV_addOperator(lang, 10000,	" ", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 10000,	"\t", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 10000,	"\r", NV_LANG00_Op_nothingButDisappear);	
@@ -598,7 +606,6 @@ NV_LangDef *NV_getDefaultLang()
 	//
 	NV_addOperator(lang, 10,	"print", NV_LANG00_Op_print);
 	NV_addOperator(lang, 10,	"showop", NV_LANG00_Op_showOpList);
-	NV_addOperator(lang, 10,	"mem", NV_LANG00_Op_mem);
 	
 	return lang;
 }
