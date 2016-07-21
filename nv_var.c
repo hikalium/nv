@@ -23,11 +23,11 @@ void NV_resetVariable(NV_Variable *v)
 {
 	// excludes namestr.
 	if(v->type == VNone) return;
-	v->type = VNone;
 	v->byteSize = 0;
-	if(v->data) NV_free(v->data);
+	if(v->data && v->type != VAlias) NV_free(v->data);
 	v->data = NULL;
 	v->revision++;
+	v->type = VNone;
 }
 
 void NV_assignVariable_Variable(NV_Variable *dst, const NV_Variable *src)
@@ -129,12 +129,25 @@ NV_Variable *NV_getVariableByName(NV_VariableSet *vs, const char *name)
 	return NULL;
 }
 
-#define NUM_OF_VTYPES	4
+NV_Term *NV_getItemFromStructureByIndex(NV_Variable *v, int index)
+{
+	NV_Term *t = v->data;
+	if(v->type != VStructure) return NULL;
+	for(t = t->next; t; t = t->next){
+		if(t->type != Imm32s) continue;
+		if(index == 0) break;
+		index--;
+	}
+	return t;
+}
+
+#define NUM_OF_VTYPES	5
 char *VTypeNameList[NUM_OF_VTYPES] = {
 	"None",
+	"Alias",
 	"Integer",
 	"String",
-	"Structure"
+	"Structure",
 };
 
 void NV_printVariable(NV_Variable *var, int verbose)
@@ -156,6 +169,8 @@ void NV_printVariable(NV_Variable *var, int verbose)
 		printf("%s", var->data);
 	} else if(var->type == VStructure){
 		NV_printTerms_noNewLine(var->data);
+	} else if(var->type == VNone){
+		printf("(No data)");
 	} else{
 		NV_Error("(Not implemented type: %d)", var->type);
 	}

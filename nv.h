@@ -42,11 +42,12 @@ enum NV_TERM_TYPE {
 
 enum NV_VAR_TYPE {
 	VNone,
-	//Alias
+	VAlias,
 	VInteger,
 	//Real,
 	VString,
-	VStructure
+	VStructure,
+	//VStructureItem,
 };
 
 struct NV_TERM {
@@ -171,6 +172,7 @@ void NV_assignVariable_Structure(NV_Variable *dst, const NV_Term *srcRoot);
 void NV_tryConvertTermFromUnknownToVariable(NV_VariableSet *vs, NV_Term **term, int allowCreateNewVar); 
 void NV_tryConvertTermFromUnknownToImm(NV_VariableSet *vs, NV_Term **term);
 NV_Variable *NV_getVariableByName(NV_VariableSet *vs, const char *name);
+NV_Term *NV_getItemFromStructureByIndex(NV_Variable *v, int index);
 void NV_printVariable(NV_Variable *var, int verbose);
 
 // @nv_varset.c

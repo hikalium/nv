@@ -347,6 +347,35 @@ NV_Term *NV_LANG00_Op_precedentBlock(NV_Env *env, NV_Term *thisTerm)
 	return originalTree;
 }
 
+NV_Term *NV_LANG00_Op_structureAccessor(NV_Env *env, NV_Term *thisTerm)
+{
+	// []
+	NV_Term *structTerm, *indexTerm, *t;
+	int index;
+	//
+	t = thisTerm->before;
+	if(!t) return NULL;
+	if(t->type != Variable) NV_tryConvertTermFromUnknownToVariable(env->varSet, &t, 1);
+	if(t->type != Variable) return NULL;
+	structTerm = t;
+	//
+	t = thisTerm->next;
+	if(!t) return NULL;
+	if(t->type != Imm32s) return NULL;
+	if(!t->next || t->next->type != Operator || strcmp("]", ((NV_Operator *)t->next->data)->name) != 0) return NULL;
+	indexTerm = t;
+	//
+	index = *(int32_t *)indexTerm->data;
+	t = NV_getItemFromStructureByIndex(structTerm->data, index);
+	if(!t) return NULL;
+	NV_removeTerm(indexTerm->next);
+	NV_removeTerm(indexTerm->before);
+	NV_removeTerm(indexTerm);
+	t = NV_createTerm_Imm32(*(int32_t *)t->data);
+	NV_overwriteTerm(structTerm, t);
+	return t;
+}
+
 NV_Term *NV_LANG00_Op_builtin_exec(NV_Env *env, NV_Term *thisTerm)
 {
 	//
@@ -545,10 +574,10 @@ NV_LangDef *NV_getDefaultLang()
 	// based on http://www.tutorialspoint.com/cprogramming/c_operators.htm
 	//
 	NV_addOperator(lang, 200000,	"\"", NV_LANG00_Op_stringLiteral);
-	NV_addOperator(lang, 100040,	"{", NV_LANG00_Op_sentenceBlock);
-	NV_addOperator(lang, 100030,	";", NV_LANG00_Op_sentenceSeparator);
-	NV_addOperator(lang, 100020,	"(", NV_LANG00_Op_precedentBlock);
-	NV_addOperator(lang, 100010,	"builtin_exec", NV_LANG00_Op_builtin_exec);
+	NV_addOperator(lang, 100050,	"{", NV_LANG00_Op_sentenceBlock);
+	NV_addOperator(lang, 100040,	";", NV_LANG00_Op_sentenceSeparator);
+	NV_addOperator(lang, 100030,	"(", NV_LANG00_Op_precedentBlock);
+	NV_addOperator(lang, 100020,	"builtin_exec", NV_LANG00_Op_builtin_exec);
 	//
 	NV_addOperator(lang, 100000,	"mem", NV_LANG00_Op_mem);
 	//
@@ -559,6 +588,9 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 10000,	";;", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 10000,	"else", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 10000,	"elseif", NV_LANG00_Op_nothingButDisappear);
+	//
+	NV_addOperator(lang, 2010,	"[", NV_LANG00_Op_structureAccessor);	
+	NV_addOperator(lang, 2000,	"]", NV_LANG00_Op_nothingButDisappear);
 	//
 	NV_addOperator(lang, 1000,  "if", NV_LANG00_Op_if);
 	NV_addOperator(lang, 1000,  "for", NV_LANG00_Op_for);
