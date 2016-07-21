@@ -6,7 +6,7 @@
 
 #define DEBUG	0
 
-#define MAX_LINE_LEN	1024
+#define MAX_INPUT_LEN	1024
 #define MAX_TOKEN_LEN	64
 #define MAX_TOKENS		128
 #define MAX_VARS		32
@@ -161,4 +161,6 @@ char *NV_strncpy(char *dst, const char *src, size_t dst_size, size_t copy_size);
 int NV_getMallocCount();
 void *NV_malloc(size_t size);
 void NV_free(void *p);
-
+// @nv_envdep.c
+char *NV_gets(char *str, int size);
+void NV_printf(const char *format, ...);

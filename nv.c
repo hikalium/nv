@@ -3,8 +3,9 @@
 int NV_isDebugMode;
 int main(int argc, char *argv[])
 {
+	
 	int i;
-	char line[MAX_LINE_LEN];
+	char line[MAX_INPUT_LEN];
 	for(i = 1; i < argc; i++){
 		if(strcmp(argv[i], "-v") == 0) NV_isDebugMode = 1;
 	}
@@ -13,11 +14,10 @@ int main(int argc, char *argv[])
 	env->varSet = NV_allocVariableSet();
 	env->langDef = NV_getDefaultLang();
 	
-	while(fgets(line, sizeof(line), stdin) != NULL){
+	while(NV_gets(line, sizeof(line)) != NULL){
 		NV_tokenize(env, line);
 		NV_Evaluate(env);
 	}
-
 	return 0;
 }
 
