@@ -118,10 +118,14 @@ NV_Term *NV_createTerm_Sentence()
 
 void NV_printValueOfTerm(NV_Term *t)
 {
-	int32_t *tmp_sint32;
 	NV_Operator *op;
 
 	if(!t) return;
+
+	if(NV_canTermReadAsInt(t)){
+		printf("%d", NV_getValueOfTermAsInt(t));
+		return;
+	}
 
 	if(t->type == Operator){
 		op = t->data;
@@ -133,9 +137,6 @@ void NV_printValueOfTerm(NV_Term *t)
 	} else if(t->type == Variable){
 		printf("(Variable)");
 		NV_printVariable(t->data, 1);
-	} else if(t->type == Imm32s){
-		tmp_sint32 = t->data;
-		printf("%d", *tmp_sint32);
 	} else{
 		printf("[type: %d]", t->type);
 	}	
@@ -154,6 +155,8 @@ int NV_canTermReadAsInt(NV_Term *t)
 			if(var->byteSize == sizeof(int32_t)){
 				return 1;
 			}
+		} else if(var->type == VStructureItem){
+			return NV_canTermReadAsInt(var->data);
 		}
 	} else if(t->type == Imm32s){
 		return 1;
@@ -173,6 +176,8 @@ int NV_getValueOfTermAsInt(NV_Term *t)
 				tmp_sint32 = var->data;
 				return *tmp_sint32;
 			}
+		} else if(var->type == VStructureItem){
+			return NV_getValueOfTermAsInt(var->data);
 		}
 	} else if(t->type == Imm32s){
 		tmp_sint32 = t->data;

@@ -58,6 +58,7 @@ NV_Term *NV_LANG00_execNextSentence(NV_Env *env, NV_Term *thisTerm)
 //
 NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
 {
+	int32_t tmp;
 	NV_Term *left = thisTerm->before;
 	NV_Term *right = thisTerm->next;
 	// type check
@@ -66,8 +67,9 @@ NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
 	if(left->type != Variable) NV_tryConvertTermFromUnknownToVariable(env->varSet, &left, 1);
 	if(left->type != Variable) return NULL;
 	// process
-	if(right->type == Imm32s){
-		NV_assignVariable_Integer(left->data, *((int32_t *)right->data));
+	if(NV_canTermReadAsInt(right)){
+		tmp = NV_getValueOfTermAsInt(right);
+		NV_assignVariable_Integer(left->data, tmp);
 	} else if(right->type == String){
 		NV_assignVariable_String(left->data, right->data);
 	} else if(right->type == Variable){
@@ -182,59 +184,58 @@ NV_Term *NV_LANG00_Op_unaryOperator_suffix_variableOnly(NV_Env *env, NV_Term *th
 
 NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
 {
-	NV_Term *before = thisTerm->before;
+	// for Integer values only.
+	NV_Term *prev = thisTerm->before;
 	NV_Term *next = thisTerm->next;
 	NV_Term *result;
 	NV_Operator *op = (NV_Operator *)thisTerm->data;
+	int vL, vR;
+	int resultVal;
 	// type check
-	if(!before || !next) return NULL;
-	if(before->type == Unknown)	NV_tryConvertTermFromUnknownToImm(env->varSet, &before);
-	if(next->type == Unknown)	NV_tryConvertTermFromUnknownToImm(env->varSet, &next);
+	if(!prev || !next) return NULL;
+	if(!NV_canTermReadAsInt(prev) || !NV_canTermReadAsInt(next)) return NULL;
+	vL = NV_getValueOfTermAsInt(prev);
+	vR = NV_getValueOfTermAsInt(next);
 	// process
-	if(before->type == Imm32s && next->type == Imm32s){
-		int resultVal;
-		if(strcmp("+", op->name) == 0){
-			resultVal = *((int *)before->data) + *((int *)next->data);
-		} else if(strcmp("-", op->name) == 0){
-			resultVal = *((int *)before->data) - *((int *)next->data);
-		} else if(strcmp("*", op->name) == 0){
-			resultVal = *((int *)before->data) * *((int *)next->data);
-		} else if(strcmp("/", op->name) == 0){
-			resultVal = *((int *)before->data) / *((int *)next->data);
-		} else if(strcmp("%", op->name) == 0){
-			resultVal = *((int *)before->data) % *((int *)next->data);
-		} else if(strcmp("||", op->name) == 0){
-			resultVal = *((int *)before->data) || *((int *)next->data);
-		} else if(strcmp("&&", op->name) == 0){
-			resultVal = *((int *)before->data) && *((int *)next->data);
-		}
-		// comparison operators
-		else if(strcmp("<", op->name) == 0){
-			resultVal = *((int *)before->data) < *((int *)next->data);
-		} else if(strcmp(">", op->name) == 0){
-			resultVal = *((int *)before->data) > *((int *)next->data);
-		} else if(strcmp("<=", op->name) == 0){
-			resultVal = *((int *)before->data) <= *((int *)next->data);
-		} else if(strcmp(">=", op->name) == 0){
-			resultVal = *((int *)before->data) >= *((int *)next->data);
-		} else if(strcmp("==", op->name) == 0){
-			resultVal = *((int *)before->data) == *((int *)next->data);
-		} else if(strcmp("!=", op->name) == 0){
-			resultVal = *((int *)before->data) != *((int *)next->data);
-		} else{
-			return NULL;
-		}
-		result = NV_createTerm_Imm32(resultVal);
-		//
-		NV_removeTerm(before);
-		NV_removeTerm(next);
-		NV_overwriteTerm(thisTerm, result);
-		//
-		env->changeFlag = 1;
-		return result;	
+	if(strcmp("+", op->name) == 0){
+		resultVal = vL + vR;
+	} else if(strcmp("-", op->name) == 0){
+		resultVal = vL - vR;
+	} else if(strcmp("*", op->name) == 0){
+		resultVal = vL * vR;
+	} else if(strcmp("/", op->name) == 0){
+		resultVal = vL / vR;
+	} else if(strcmp("%", op->name) == 0){
+		resultVal = vL % vR;
+	} else if(strcmp("||", op->name) == 0){
+		resultVal = vL || vR;
+	} else if(strcmp("&&", op->name) == 0){
+		resultVal = vL && vR;
 	}
-	if(NV_isDebugMode) NV_printError("NV_LANG00_Op_binaryOperator: Bad operand. type %d and %d \n", before->type, next->type);
-	return NULL;
+	// comparison operators
+	else if(strcmp("<", op->name) == 0){
+		resultVal = vL < vR;
+	} else if(strcmp(">", op->name) == 0){
+		resultVal = vL > vR;
+	} else if(strcmp("<=", op->name) == 0){
+		resultVal = vL <= vR;
+	} else if(strcmp(">=", op->name) == 0){
+		resultVal = vL >= vR;
+	} else if(strcmp("==", op->name) == 0){
+		resultVal = vL == vR;
+	} else if(strcmp("!=", op->name) == 0){
+		resultVal = vL != vR;
+	} else{
+		return NULL;
+	}
+	result = NV_createTerm_Imm32(resultVal);
+	//
+	NV_removeTerm(prev);
+	NV_removeTerm(next);
+	NV_overwriteTerm(thisTerm, result);
+	//
+	env->changeFlag = 1;
+	return result;	
 }
 
 NV_Term *NV_LANG00_Op_nothingButDisappear(NV_Env *env, NV_Term *thisTerm)
@@ -377,6 +378,8 @@ NV_Term *NV_LANG00_Op_structureAccessor(NV_Env *env, NV_Term *thisTerm)
 	v = NV_createTerm_Variable(env->varSet, s);
 	NV_assignVariable_StructureItem(v->data, t);
 	NV_overwriteTerm(structTerm, v);
+	//
+	env->changeFlag = 1;
 	return v;
 }
 
