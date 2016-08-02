@@ -350,8 +350,9 @@ NV_Term *NV_LANG00_Op_precedentBlock(NV_Env *env, NV_Term *thisTerm)
 NV_Term *NV_LANG00_Op_structureAccessor(NV_Env *env, NV_Term *thisTerm)
 {
 	// []
-	NV_Term *structTerm, *indexTerm, *t;
+	NV_Term *structTerm, *indexTerm, *t, *v;
 	int index;
+	char s[32];
 	//
 	t = thisTerm->before;
 	if(!t) return NULL;
@@ -365,15 +366,18 @@ NV_Term *NV_LANG00_Op_structureAccessor(NV_Env *env, NV_Term *thisTerm)
 	if(!t->next || t->next->type != Operator || strcmp("]", ((NV_Operator *)t->next->data)->name) != 0) return NULL;
 	indexTerm = t;
 	//
-	index = *(int32_t *)indexTerm->data;
+	if(!NV_canTermReadAsInt(indexTerm)) return NULL;
+	index = NV_getValueOfTermAsInt(indexTerm);
 	t = NV_getItemFromStructureByIndex(structTerm->data, index);
 	if(!t) return NULL;
 	NV_removeTerm(indexTerm->next);
 	NV_removeTerm(indexTerm->before);
 	NV_removeTerm(indexTerm);
-	t = NV_createTerm_Imm32(*(int32_t *)t->data);
-	NV_overwriteTerm(structTerm, t);
-	return t;
+	snprintf(s, sizeof(s) - 1, "%d", rand());
+	v = NV_createTerm_Variable(env->varSet, s);
+	NV_assignVariable_StructureItem(v->data, t);
+	NV_overwriteTerm(structTerm, v);
+	return v;
 }
 
 NV_Term *NV_LANG00_Op_builtin_exec(NV_Env *env, NV_Term *thisTerm)

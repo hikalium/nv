@@ -47,7 +47,8 @@ enum NV_VAR_TYPE {
 	//Real,
 	VString,
 	VStructure,
-	//VStructureItem,
+	VStructureItem,
+	// data -> NV_term (do not free this pointer) 
 };
 
 struct NV_TERM {
@@ -137,10 +138,20 @@ NV_LangDef *NV_getDefaultLang();
 
 // @nv_term.c
 NV_Term *NV_allocTerm();
+NV_Term *NV_cloneTerm(const NV_Term *src);
+NV_Term *NV_createTerm_Operator(NV_LangDef *langDef, const char *opName);
+NV_Term *NV_createTerm_Imm32(int imm32);
+NV_Term *NV_createTerm_String(const char *s);
+NV_Term *NV_createTerm_Variable(NV_VariableSet *vs, const char *name);
+NV_Term *NV_createTerm_Sentence();
+void NV_printValueOfTerm(NV_Term *t);
+int NV_canTermReadAsInt(NV_Term *t);
+int NV_getValueOfTermAsInt(NV_Term *t);
+
+// @nv_termlist.c
 void NV_initRootTerm(NV_Term *t);
 void NV_changeRootTerm(NV_Term *oldRoot, NV_Term *newRoot);
 void NV_cloneTermTree(NV_Term *dstRoot, const NV_Term *srcRoot);
-NV_Term *NV_cloneTerm(const NV_Term *src);
 void NV_insertTermAfter(NV_Term *base, NV_Term *new);
 void NV_insertAllTermAfter(NV_Term *base, NV_Term *srcRoot);
 NV_Term *NV_overwriteTerm(NV_Term *target, NV_Term *new);
@@ -150,17 +161,11 @@ void NV_appendTermRaw(NV_Term *root, NV_Term *new);
 void NV_appendTerm(NV_LangDef *langDef, NV_Term *termRoot, const char *termStr);
 void NV_removeTerm(NV_Term *t);
 void NV_removeTermTree(NV_Term *root);
-NV_Term *NV_createTerm_Operator(NV_LangDef *langDef, const char *opName);
-NV_Term *NV_createTerm_Imm32(int imm32);
-NV_Term *NV_createTerm_String(const char *s);
-NV_Term *NV_createTerm_Variable(NV_VariableSet *vs, const char *name);
-NV_Term *NV_createTerm_Sentence();
 void NV_printTerms(NV_Term *root);
 void NV_printTerms_noNewLine(NV_Term *root);
+NV_Term *NV_getTermByIndex(NV_Term *root, int index);
 NV_Term *NV_getLastTerm(NV_Term *root);
 void NV_printLastTermValue(NV_Term *root);
-void NV_printValueOfTerm(NV_Term *t);
-int NV_getValueOfTermAsInt(NV_Term *t);
 
 // @nv_var.c
 NV_Variable *NV_allocVariable(NV_VariableSet *vs);
@@ -169,6 +174,7 @@ void NV_assignVariable_Variable(NV_Variable *dst, const NV_Variable *src);
 void NV_assignVariable_Integer(NV_Variable *v, int32_t newVal);
 void NV_assignVariable_String(NV_Variable *v, const char *src);
 void NV_assignVariable_Structure(NV_Variable *dst, const NV_Term *srcRoot);
+void NV_assignVariable_StructureItem(NV_Variable *dst, NV_Term *term);
 void NV_tryConvertTermFromUnknownToVariable(NV_VariableSet *vs, NV_Term **term, int allowCreateNewVar); 
 void NV_tryConvertTermFromUnknownToImm(NV_VariableSet *vs, NV_Term **term);
 NV_Variable *NV_getVariableByName(NV_VariableSet *vs, const char *name);

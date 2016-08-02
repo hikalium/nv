@@ -81,6 +81,17 @@ void NV_assignVariable_Structure(NV_Variable *dst, const NV_Term *srcRoot)
 	return;
 }
 
+void NV_assignVariable_StructureItem(NV_Variable *dst, NV_Term *term)
+{
+	NV_resetVariable(dst);
+	//
+	dst->type = VStructureItem;
+	dst->byteSize = 0;
+	dst->revision++;
+	dst->data = term;
+	return;
+}
+
 void NV_tryConvertTermFromUnknownToVariable(NV_VariableSet *vs, NV_Term **term, int allowCreateNewVar)
 {
 	NV_Variable *var;
@@ -133,21 +144,17 @@ NV_Term *NV_getItemFromStructureByIndex(NV_Variable *v, int index)
 {
 	NV_Term *t = v->data;
 	if(v->type != VStructure) return NULL;
-	for(t = t->next; t; t = t->next){
-		if(t->type != Imm32s) continue;
-		if(index == 0) break;
-		index--;
-	}
-	return t;
+	return NV_getTermByIndex(t, index);
 }
 
-#define NUM_OF_VTYPES	5
+#define NUM_OF_VTYPES	6
 char *VTypeNameList[NUM_OF_VTYPES] = {
 	"None",
 	"Alias",
 	"Integer",
 	"String",
 	"Structure",
+	"StructureItem",
 };
 
 void NV_printVariable(NV_Variable *var, int verbose)
@@ -169,6 +176,10 @@ void NV_printVariable(NV_Variable *var, int verbose)
 		printf("%s", var->data);
 	} else if(var->type == VStructure){
 		NV_printTerms_noNewLine(var->data);
+	} else if(var->type == VStructureItem){
+		printf("[");
+		NV_printValueOfTerm(var->data);
+		printf("]");
 	} else if(var->type == VNone){
 		printf("(No data)");
 	} else{
