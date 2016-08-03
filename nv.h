@@ -94,8 +94,8 @@ struct NV_ENV {
 	NV_LangDef *langDef;
 	// interpreter env
 	NV_Term termRoot;
-	int changeFlag;
 	int autoPrintValue;
+	int endFlag;
 	NV_VariableSet *varSet;
 };
 
@@ -143,7 +143,7 @@ NV_Term *NV_createTerm_Operator(NV_LangDef *langDef, const char *opName);
 NV_Term *NV_createTerm_Imm32(int imm32);
 NV_Term *NV_createTerm_String(const char *s);
 NV_Term *NV_createTerm_Variable(NV_VariableSet *vs, const char *name);
-NV_Term *NV_createTerm_Sentence();
+NV_Term *NV_createTerm_Sentence(NV_Term *baseTree);
 void NV_printValueOfTerm(NV_Term *t, NV_VariableSet *vs);
 int NV_canReadTermAsInt(NV_Term *t);
 int NV_getValueOfTermAsInt(NV_Term *t);

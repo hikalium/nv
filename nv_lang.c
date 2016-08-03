@@ -20,7 +20,7 @@ NV_Term *NV_LANG00_makeBlock(NV_Env *env, NV_Term *thisTerm, const char *closeSt
 	if(pairCount != 0) return NULL;
 	//
 	originalTree = thisTerm->before;
-	sentenceTerm = NV_createTerm_Sentence();
+	sentenceTerm = NV_createTerm_Sentence(NULL);
 	sentenceRoot = sentenceTerm->data;
 	NV_divideTerm(sentenceRoot, thisTerm->next);
 	NV_divideTerm(&remRoot, t);
@@ -34,7 +34,6 @@ NV_Term *NV_LANG00_execSentence(NV_Env *env, NV_Term *sentenceTerm)
 {
 	// eval next sentence of thisTerm
 	// and replace [thisTerm, nextSentence] with return tree of nextSentence.
-	// retv is last term of return tree.
 	NV_Term sentenceRoot, *lastTerm;
 	//
 	if(sentenceTerm == NULL || !NV_canReadTermAsSentence(sentenceTerm)){
@@ -47,6 +46,7 @@ NV_Term *NV_LANG00_execSentence(NV_Env *env, NV_Term *sentenceTerm)
 		return NULL;
 	}
 	lastTerm = NV_getLastTerm(&sentenceRoot);
+	
 	NV_insertAllTermAfter(sentenceTerm, &sentenceRoot);
 	NV_removeTerm(sentenceTerm);
 	return lastTerm;
@@ -70,7 +70,6 @@ NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
 	}
 	NV_removeTerm(thisTerm);
 	NV_removeTerm(right);
-	env->changeFlag = 1;
 	return left;
 }
 
@@ -89,7 +88,6 @@ NV_Term *NV_LANG00_Op_compoundAssign(NV_Env *env, NV_Term *thisTerm)
 	NV_insertTermAfter(thisTerm, NV_cloneTerm(before));
 	NV_insertTermAfter(thisTerm, NV_createTerm_Operator(env->langDef, "="));
 	NV_removeTerm(thisTerm);
-	env->changeFlag = 1;
 	return before->next;
 }
 
@@ -123,7 +121,6 @@ NV_Term *NV_LANG00_Op_unaryOperator_prefix(NV_Env *env, NV_Term *thisTerm)
 		NV_removeTerm(next);
 		NV_overwriteTerm(thisTerm, result);
 		//
-		env->changeFlag = 1;
 		return result;	
 	}
 	if(NV_isDebugMode) NV_printError("NV_LANG00_Op_unaryOperator: Bad operand. type %d\n", next->type);
@@ -164,7 +161,6 @@ NV_Term *NV_LANG00_Op_unaryOperator_suffix_variableOnly(NV_Env *env, NV_Term *th
 		NV_removeTerm(thisTerm);
 		NV_overwriteTerm(before, result);
 		//
-		env->changeFlag = 1;
 		return before;
 	}
 	if(NV_isDebugMode) NV_printError("NV_LANG00_Op_unaryOperator_suffix_variableOnly: Bad operand. type %d\n", before->type);
@@ -227,7 +223,6 @@ NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
 	NV_removeTerm(next);
 	NV_overwriteTerm(thisTerm, result);
 	//
-	env->changeFlag = 1;
 	return result;	
 }
 
@@ -235,14 +230,13 @@ NV_Term *NV_LANG00_Op_nothingButDisappear(NV_Env *env, NV_Term *thisTerm)
 {
 	NV_Term *before = thisTerm->before;
 	NV_removeTerm(thisTerm);
-	env->changeFlag = 1;
 	return before;
 }
 
 NV_Term *NV_LANG00_Op_sentenceSeparator(NV_Env *env, NV_Term *thisTerm)
 {
 	NV_Term *b;
-	NV_Term *sentenceTerm = NV_createTerm_Sentence();
+	NV_Term *sentenceTerm = NV_createTerm_Sentence(NULL);
 	NV_Term *sentenceRoot, remRoot;
 
 	sentenceRoot = sentenceTerm->data;
@@ -261,7 +255,6 @@ NV_Term *NV_LANG00_Op_sentenceSeparator(NV_Env *env, NV_Term *thisTerm)
 	NV_overwriteTerm(thisTerm, sentenceTerm);
 	NV_insertTermAfter(b, NV_createTerm_Operator(env->langDef, "builtin_exec"));
 	NV_insertTermAfter(b, NV_createTerm_Operator(env->langDef, ";;"));
-	env->changeFlag = 1;
 	return b;
 }
 
@@ -314,7 +307,6 @@ NV_Term *NV_LANG00_Op_stringLiteral(NV_Env *env, NV_Term *thisTerm)
 	t = NV_createTerm_String(s);
 	NV_free(s);
 	NV_overwriteTerm(thisTerm, t);
-	env->changeFlag = 1;
 	return t;
 }
 
@@ -324,13 +316,14 @@ NV_Term *NV_LANG00_Op_sentenceBlock(NV_Env *env, NV_Term *thisTerm)
 	NV_Term *originalTree;
 	//
 	originalTree = NV_LANG00_makeBlock(env, thisTerm, "}");
-	if(originalTree) env->changeFlag = 1;
+	if(!originalTree) return NULL;
 	return originalTree;
 }
 
 NV_Term *NV_LANG00_Op_precedentBlock(NV_Env *env, NV_Term *thisTerm)
 {
 	// ()
+	// if prev term is sentence object, perform function call. 
 	NV_Term *originalTree;
 	NV_Term *prev;
 	//
@@ -341,11 +334,9 @@ NV_Term *NV_LANG00_Op_precedentBlock(NV_Env *env, NV_Term *thisTerm)
 		NV_removeTerm(originalTree->next);
 		prev = originalTree->before;
 		NV_LANG00_execSentence(env, originalTree);
-		env->changeFlag = 1;
 		return prev;
 	}
 	NV_insertTermAfter(originalTree, NV_createTerm_Operator(env->langDef, "builtin_exec"));
-	env->changeFlag = 1;
 	return originalTree;
 }
 
@@ -379,8 +370,6 @@ NV_Term *NV_LANG00_Op_structureAccessor(NV_Env *env, NV_Term *thisTerm)
 	v = NV_createTerm_Variable(env->varSet, s);
 	NV_Variable_assignStructureItem(v->data, t);
 	NV_overwriteTerm(structTerm, v);
-	//
-	env->changeFlag = 1;
 	return v;
 }
 
@@ -393,7 +382,6 @@ NV_Term *NV_LANG00_Op_builtin_exec(NV_Env *env, NV_Term *thisTerm)
 	thisTerm = thisTerm->before;
 	NV_removeTerm(thisTerm->next);
 	//
-	env->changeFlag = 1;
 	return thisTerm;
 }
 
@@ -454,7 +442,6 @@ NV_Term *NV_LANG00_Op_if(NV_Env *env, NV_Term *thisTerm)
 	thisTerm = thisTerm->before;
 	NV_removeTerm(thisTerm->next);
 	//
-	env->changeFlag = 1;
 	return thisTerm;
 }
 
@@ -516,7 +503,6 @@ NV_Term *NV_LANG00_Op_for(NV_Env *env, NV_Term *thisTerm)
 	t = thisTerm;
 	NV_removeTerm(thisTerm);
 	//
-	env->changeFlag = 1;
 	return t;
 }
 
@@ -539,7 +525,6 @@ NV_Term *NV_LANG00_Op_print(NV_Env *env, NV_Term *thisTerm)
 		return NULL;
 	}
 	NV_removeTerm(thisTerm);
-	env->changeFlag = 1;
 	env->autoPrintValue = 0;
 	return target;
 }
@@ -555,14 +540,18 @@ NV_Term *NV_LANG00_Op_showOpList(NV_Env *env, NV_Term *thisTerm)
 	}
 	//
 	NV_removeTerm(thisTerm);
-	env->changeFlag = 1;
 	return before;
 }
 
 NV_Term *NV_LANG00_Op_mem(NV_Env *env, NV_Term *thisTerm)
 {
 	thisTerm = NV_overwriteTerm(thisTerm, NV_createTerm_Imm32(NV_getMallocCount()));
-	env->changeFlag = 1;
+	return thisTerm;
+}
+
+NV_Term *NV_LANG00_Op_exit(NV_Env *env, NV_Term *thisTerm)
+{
+	env->endFlag = 1;
 	return thisTerm;
 }
 
@@ -637,6 +626,7 @@ NV_LangDef *NV_getDefaultLang()
 	//
 	NV_addOperator(lang, 10,	"print", NV_LANG00_Op_print);
 	NV_addOperator(lang, 10,	"showop", NV_LANG00_Op_showOpList);
+	NV_addOperator(lang, 10,	"exit", NV_LANG00_Op_exit);
 	
 	return lang;
 }

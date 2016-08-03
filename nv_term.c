@@ -31,12 +31,9 @@ NV_Term *NV_cloneTerm(const NV_Term *src)
 		case String:
 			new = NV_createTerm_String((const char *)src->data);
 			break;
-		/*
 		case Sentence:
-			NV_removeTermTree(t->data);
-			NV_free(t->data);
+			new = NV_createTerm_Sentence(src->data);
 			break;
-		*/
 		default:
 			fprintf(stderr, "%s: Not implemented for type %d.\n", __func__, src->type);
 			exit(EXIT_FAILURE);
@@ -103,7 +100,7 @@ NV_Term *NV_createTerm_Variable(NV_VariableSet *vs, const char *name)
 	return new;
 }
 
-NV_Term *NV_createTerm_Sentence()
+NV_Term *NV_createTerm_Sentence(NV_Term *baseTree)
 {
 	NV_Term *new;
 	NV_Term *root;
@@ -113,6 +110,9 @@ NV_Term *NV_createTerm_Sentence()
 	//
 	new->type = Sentence;
 	new->data = root;
+	if(baseTree){
+		NV_cloneTermTree(root, baseTree);
+	}
 	return new;
 }
 

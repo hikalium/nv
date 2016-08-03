@@ -17,6 +17,7 @@ int main(int argc, char *argv[])
 	while(NV_gets(line, sizeof(line)) != NULL){
 		NV_tokenize(env, line);
 		NV_Evaluate(env);
+		if(env->endFlag) break;
 	}
 	return 0;
 }
@@ -225,9 +226,8 @@ int NV_EvaluateSentence(NV_Env *env, NV_Term *root)
 	if(!root) return 1;
 	if(!root->next) return 0;	// empty input
 
-	env->changeFlag = 1;
-	while(env->changeFlag){
-		env->changeFlag = 0;
+	env->endFlag = 0;
+	while(!env->endFlag){
 		minOpIndex = -1;
 		currentOp = NULL;
 		for(t = root->next; t; t = t->next){
@@ -270,8 +270,11 @@ int NV_EvaluateSentence(NV_Env *env, NV_Term *root)
 				}
 			}
 		}
+		if(env->endFlag){
+			if(NV_isDebugMode) printf("Evaluate end (End flag)\n");
+			return 0;
+		}
 	}
-	if(NV_isDebugMode) printf("Evaluate end (changeFlag == 0)\n");
 	return 0;
 }
 
@@ -292,7 +295,6 @@ NV_Term *NV_TryExecOp(NV_Env *env, NV_Operator *currentOp, NV_Term *t, NV_Term *
 				return NULL;
 			}
 			orgTerm->data = fallbackOp;
-			env->changeFlag = 1;
 			t = orgTerm;
 		}
 		if(NV_isDebugMode) NV_printTerms(root);
