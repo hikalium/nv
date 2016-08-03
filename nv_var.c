@@ -30,7 +30,34 @@ void NV_resetVariable(NV_Variable *v)
 	v->type = VNone;
 }
 
-void NV_assignVariable_Variable(NV_Variable *dst, const NV_Variable *src)
+//
+// assign to Variable
+//
+
+int NV_Variable_assignTermValue(NV_Variable *v, NV_Term *src)
+{
+	// retv: assigned?
+	int32_t tmp;
+	if(v->type == VStructureItem){
+		NV_Variable_assignStructureItem(v, src);
+		return 1;
+	}
+	if(NV_canReadTermAsInt(src)){
+		tmp = NV_getValueOfTermAsInt(src);
+		NV_Variable_assignInteger(v, tmp);
+	} else if(src->type == String){
+		NV_Variable_assignString(v, src->data);
+	} else if(src->type == Variable){
+		NV_Variable_assignVariable(v, src->data);
+	} else if(src->type == Sentence){
+		NV_Variable_assignStructure(v, src->data);
+	} else{
+		return 0;
+	}
+	return 1;
+}
+
+void NV_Variable_assignVariable(NV_Variable *dst, const NV_Variable *src)
 {
 	NV_resetVariable(dst);
 	//
@@ -47,7 +74,7 @@ void NV_assignVariable_Variable(NV_Variable *dst, const NV_Variable *src)
 	return;
 }
 
-void NV_assignVariable_Integer(NV_Variable *v, int32_t newVal)
+void NV_Variable_assignInteger(NV_Variable *v, int32_t newVal)
 {
 	NV_resetVariable(v);
 	v->type = VInteger;
@@ -57,7 +84,7 @@ void NV_assignVariable_Integer(NV_Variable *v, int32_t newVal)
 	*((int32_t *)v->data) = newVal;
 }
 
-void NV_assignVariable_String(NV_Variable *dst, const char *src)
+void NV_Variable_assignString(NV_Variable *dst, const char *src)
 {
 	NV_resetVariable(dst);
 	//
@@ -69,7 +96,7 @@ void NV_assignVariable_String(NV_Variable *dst, const char *src)
 	return;
 }
 
-void NV_assignVariable_Structure(NV_Variable *dst, const NV_Term *srcRoot)
+void NV_Variable_assignStructure(NV_Variable *dst, const NV_Term *srcRoot)
 {
 	NV_resetVariable(dst);
 	//
@@ -81,16 +108,30 @@ void NV_assignVariable_Structure(NV_Variable *dst, const NV_Term *srcRoot)
 	return;
 }
 
-void NV_assignVariable_StructureItem(NV_Variable *dst, NV_Term *term)
+void NV_Variable_assignStructureItem(NV_Variable *dst, NV_Term *term)
 {
-	NV_resetVariable(dst);
-	//
-	dst->type = VStructureItem;
-	dst->byteSize = 0;
-	dst->revision++;
-	dst->data = term;
+	NV_Term *t;
+	t = NV_cloneTerm(term);
+	if(dst->type == VStructureItem){
+		if(dst->data != NULL){
+			NV_overwriteTerm(dst->data, t);
+		}
+		dst->data = t;
+		dst->revision++;
+	} else{
+		NV_resetVariable(dst);
+		//
+		dst->type = VStructureItem;
+		dst->byteSize = 0;
+		dst->data = term;
+		dst->revision++;
+	}
 	return;
 }
+
+//
+// Conversion
+//
 
 void NV_tryConvertTermFromUnknownToVariable(NV_VariableSet *vs, NV_Term **term, int allowCreateNewVar)
 {
@@ -126,6 +167,10 @@ void NV_tryConvertTermFromUnknownToImm(NV_VariableSet *vs, NV_Term **term)
 	}
 }
 
+//
+// Lookup variable
+//
+
 NV_Variable *NV_getVariableByName(NV_VariableSet *vs, const char *name)
 {
 	NV_Variable *var;
@@ -146,6 +191,10 @@ NV_Term *NV_getItemFromStructureByIndex(NV_Variable *v, int index)
 	if(v->type != VStructure) return NULL;
 	return NV_getTermByIndex(t, index);
 }
+
+//
+// Print variable
+//
 
 #define NUM_OF_VTYPES	6
 char *VTypeNameList[NUM_OF_VTYPES] = {
@@ -178,7 +227,7 @@ void NV_printVariable(NV_Variable *var, int verbose)
 		NV_printTerms_noNewLine(var->data);
 	} else if(var->type == VStructureItem){
 		printf("[");
-		NV_printValueOfTerm(var->data);
+		NV_printValueOfTerm(var->data, NULL);
 		printf("]");
 	} else if(var->type == VNone){
 		printf("(No data)");

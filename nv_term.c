@@ -116,11 +116,15 @@ NV_Term *NV_createTerm_Sentence()
 	return new;
 }
 
-void NV_printValueOfTerm(NV_Term *t)
+void NV_printValueOfTerm(NV_Term *t, NV_VariableSet *vs)
 {
 	NV_Operator *op;
 
 	if(!t) return;
+	
+	if(vs && t->type == Unknown){
+		NV_tryConvertTermFromUnknownToVariable(vs, &t, 0);
+	}
 
 	if(NV_canReadTermAsInt(t)){
 		printf("%d", NV_getValueOfTermAsInt(t));

@@ -58,7 +58,6 @@ NV_Term *NV_LANG00_execNextSentence(NV_Env *env, NV_Term *thisTerm)
 //
 NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
 {
-	int32_t tmp;
 	NV_Term *left = thisTerm->before;
 	NV_Term *right = thisTerm->next;
 	// type check
@@ -67,16 +66,7 @@ NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
 	if(left->type != Variable) NV_tryConvertTermFromUnknownToVariable(env->varSet, &left, 1);
 	if(left->type != Variable) return NULL;
 	// process
-	if(NV_canReadTermAsInt(right)){
-		tmp = NV_getValueOfTermAsInt(right);
-		NV_assignVariable_Integer(left->data, tmp);
-	} else if(right->type == String){
-		NV_assignVariable_String(left->data, right->data);
-	} else if(right->type == Variable){
-		NV_assignVariable_Variable(left->data, right->data);
-	} else if(right->type == Sentence){
-		NV_assignVariable_Structure(left->data, right->data);
-	} else{
+	if(!NV_Variable_assignTermValue(left->data, right)){
 		return NULL;
 	}
 	NV_removeTerm(thisTerm);
@@ -380,7 +370,7 @@ NV_Term *NV_LANG00_Op_structureAccessor(NV_Env *env, NV_Term *thisTerm)
 	NV_removeTerm(indexTerm);
 	snprintf(s, sizeof(s) - 1, "%d", rand());
 	v = NV_createTerm_Variable(env->varSet, s);
-	NV_assignVariable_StructureItem(v->data, t);
+	NV_Variable_assignStructureItem(v->data, t);
 	NV_overwriteTerm(structTerm, v);
 	//
 	env->changeFlag = 1;

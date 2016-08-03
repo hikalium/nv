@@ -92,19 +92,20 @@ void NV_appendTerm(NV_LangDef *langDef, NV_Term *termRoot, const char *termStr)
 	NV_Term *new;
 	int tmpNum;
 	char *p;
-	//
+	// check operator
 	new = NV_createTerm_Operator(langDef, termStr);
 	if(new){
 		NV_appendTermRaw(termRoot, new);
 		return;
 	}
+	// check Integer
 	tmpNum = strtol(termStr, &p, 0);
 	if(termStr != p && *p == 0){
 		new = NV_createTerm_Imm32(tmpNum);
 		NV_appendTermRaw(termRoot, new);
 		return;
 	}
-	//
+	// unknown
 	new = NV_allocTerm();
 	new->type = Unknown;
 	new->data = (void *)termStr;
@@ -160,13 +161,18 @@ void NV_printTerms_noNewLine(NV_Term *root)
 	NV_Operator *op;
 	if(!root) return;
 	for(t = root->next; t; t = t->next){
-		if(t->type == Operator){
+		if(NV_canReadTermAsInt(t)){
+			printf("%d", NV_getValueOfTermAsInt(t));
+		} else if(t->type == Operator){
 			op = t->data;
-			printf("(%s:%d)", op->name, op->precedence);
+			printf("op(%s:%d)", op->name, op->precedence);
 		} else if(t->type == Unknown){
-			printf("[%d: %s]", t->type, t->data);
+			printf("[Unknown: %s]", t->data);
 		} else{
-			printf("[%d]", t->type);
+			printf("[type %d]", t->type);
+		}
+		if(t->next){
+			putchar(',');
 		}
 	};
 }
@@ -193,10 +199,10 @@ NV_Term *NV_getLastTerm(NV_Term *root)
 	return t;
 }
 
-void NV_printLastTermValue(NV_Term *root)
+void NV_printLastTermValue(NV_Term *root, NV_VariableSet *vs)
 {
 	NV_Term *t;
 	t = NV_getLastTerm(root);
-	NV_printValueOfTerm(t);
+	NV_printValueOfTerm(t, vs);
 }
 

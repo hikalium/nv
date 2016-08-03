@@ -208,7 +208,7 @@ void NV_Evaluate(NV_Env *env)
 		// Ended with Success
 		if(env->autoPrintValue && NV_getLastTerm(&env->termRoot)){
 			printf("= ");
-			NV_printLastTermValue(&env->termRoot);
+			NV_printLastTermValue(&env->termRoot, env->varSet);
 			printf("\n");
 		}
 	}
