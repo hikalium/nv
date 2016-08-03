@@ -172,7 +172,7 @@ void NV_printTerms_noNewLine(NV_Term *root)
 			printf("[type %d]", t->type);
 		}
 		if(t->next){
-			putchar(',');
+			printf(", ");
 		}
 	};
 }

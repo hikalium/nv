@@ -147,6 +147,9 @@ NV_Term *NV_createTerm_Sentence();
 void NV_printValueOfTerm(NV_Term *t, NV_VariableSet *vs);
 int NV_canReadTermAsInt(NV_Term *t);
 int NV_getValueOfTermAsInt(NV_Term *t);
+int NV_canReadTermAsSentence(NV_Term *t);
+void NV_getValueOfTermAsSentence(NV_Term *t, NV_Term *dstRoot);
+
 
 // @nv_termlist.c
 void NV_initRootTerm(NV_Term *t);

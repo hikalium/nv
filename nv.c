@@ -222,7 +222,8 @@ int NV_EvaluateSentence(NV_Env *env, NV_Term *root)
 	NV_Operator *op, *currentOp;
 	int minOpIndex, opIndex;
 
-	if(!root || !root->next) return 1;
+	if(!root) return 1;
+	if(!root->next) return 0;	// empty input
 
 	env->changeFlag = 1;
 	while(env->changeFlag){

@@ -6,6 +6,7 @@
 NV_Term *NV_LANG00_makeBlock(NV_Env *env, NV_Term *thisTerm, const char *closeStr)
 {
 	// support func
+	// retv is prev term of thisTerm.
 	NV_Term *t, *sentenceTerm, *sentenceRoot, remRoot, *originalTree;
 	int pairCount = 1;
 	for(t = thisTerm->next; t; t = t->next){
@@ -29,26 +30,24 @@ NV_Term *NV_LANG00_makeBlock(NV_Env *env, NV_Term *thisTerm, const char *closeSt
 	return originalTree;
 }
 
-NV_Term *NV_LANG00_execNextSentence(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_execSentence(NV_Env *env, NV_Term *sentenceTerm)
 {
 	// eval next sentence of thisTerm
 	// and replace [thisTerm, nextSentence] with return tree of nextSentence.
 	// retv is last term of return tree.
-	NV_Term *sentenceTerm, *sentenceRoot, *lastTerm;
+	NV_Term sentenceRoot, *lastTerm;
 	//
-	sentenceTerm = thisTerm->next;
-	if(sentenceTerm == NULL || sentenceTerm->type != Sentence){
+	if(sentenceTerm == NULL || !NV_canReadTermAsSentence(sentenceTerm)){
 		return NULL;
 	}
-	sentenceRoot = sentenceTerm->data;
+	NV_getValueOfTermAsSentence(sentenceTerm, &sentenceRoot);
 	//
-	if(NV_EvaluateSentence(env, sentenceRoot)){
+	if(NV_EvaluateSentence(env, &sentenceRoot)){
 		NV_printError("NV_LANG00_Op_builtin_exec: Exec failed.\n");
 		return NULL;
 	}
-	lastTerm = NV_getLastTerm(sentenceRoot);
-	lastTerm = NV_getLastTerm(sentenceRoot);
-	NV_insertAllTermAfter(thisTerm, sentenceRoot);
+	lastTerm = NV_getLastTerm(&sentenceRoot);
+	NV_insertAllTermAfter(sentenceTerm, &sentenceRoot);
 	NV_removeTerm(sentenceTerm);
 	return lastTerm;
 }
@@ -331,14 +330,22 @@ NV_Term *NV_LANG00_Op_sentenceBlock(NV_Env *env, NV_Term *thisTerm)
 
 NV_Term *NV_LANG00_Op_precedentBlock(NV_Env *env, NV_Term *thisTerm)
 {
-	// {}
+	// ()
 	NV_Term *originalTree;
+	NV_Term *prev;
 	//
 	originalTree = NV_LANG00_makeBlock(env, thisTerm, ")");
-	if(originalTree){
-		NV_insertTermAfter(originalTree, NV_createTerm_Operator(env->langDef, "builtin_exec"));
+	if(!originalTree) return NULL;
+	if(originalTree->type == Unknown) NV_tryConvertTermFromUnknownToVariable(env->varSet, &originalTree, 0);
+	if(NV_canReadTermAsSentence(originalTree)){
+		NV_removeTerm(originalTree->next);
+		prev = originalTree->before;
+		NV_LANG00_execSentence(env, originalTree);
 		env->changeFlag = 1;
+		return prev;
 	}
+	NV_insertTermAfter(originalTree, NV_createTerm_Operator(env->langDef, "builtin_exec"));
+	env->changeFlag = 1;
 	return originalTree;
 }
 
@@ -380,7 +387,7 @@ NV_Term *NV_LANG00_Op_structureAccessor(NV_Env *env, NV_Term *thisTerm)
 NV_Term *NV_LANG00_Op_builtin_exec(NV_Env *env, NV_Term *thisTerm)
 {
 	//
-	if(!NV_LANG00_execNextSentence(env, thisTerm)){
+	if(!NV_LANG00_execSentence(env, thisTerm->next)){
 		return NULL;
 	}
 	thisTerm = thisTerm->before;
@@ -404,7 +411,7 @@ NV_Term *NV_LANG00_Op_if(NV_Env *env, NV_Term *thisTerm)
 	doTerm = t;
 	for(;;){
 		// evaluate cond
-		if(!NV_LANG00_execNextSentence(env, thisTerm)) return NULL;
+		if(!NV_LANG00_execSentence(env, thisTerm->next)) return NULL;
 		condTerm = thisTerm->next;
 		if(condTerm->next != doTerm) return NULL;
 		if(condTerm->type == Variable) NV_tryConvertTermFromUnknownToImm(env->varSet, &condTerm);
@@ -417,7 +424,7 @@ NV_Term *NV_LANG00_Op_if(NV_Env *env, NV_Term *thisTerm)
 		// evaluate do
 		if(cond){
 			// cond is true.
-			t = NV_LANG00_execNextSentence(env, thisTerm);
+			t = NV_LANG00_execSentence(env, thisTerm->next);
 			if(!t) return NULL;
 			// remove rest of sentence blocks.
 			for(t = t->next; t; t = next){
@@ -436,7 +443,7 @@ NV_Term *NV_LANG00_Op_if(NV_Env *env, NV_Term *thisTerm)
 		condTerm = t;
 		t = t->next; if(t == NULL || t->type != Sentence){
 			// next term is else block.
-			t = NV_LANG00_execNextSentence(env, thisTerm);
+			t = NV_LANG00_execSentence(env, thisTerm->next);
 			if(!t) return NULL;
 			break;
 		};
@@ -478,7 +485,7 @@ NV_Term *NV_LANG00_Op_for(NV_Env *env, NV_Term *thisTerm)
 	//
 	// do init block
 	// initTerm is removed here.
-	if(NV_LANG00_execNextSentence(env, thisTerm) == NULL) return NULL;
+	if(NV_LANG00_execSentence(env, thisTerm->next) == NULL) return NULL;
 	for(;;){
 		// copy blocks
 		NV_cloneTermTree(&tmpCondRoot, condTerm->data);

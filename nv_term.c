@@ -190,10 +190,33 @@ int NV_getValueOfTermAsInt(NV_Term *t)
 	return 0;
 }
 
-int NV_canAssignToTerm(NV_Term *t){
+int NV_canReadTermAsSentence(NV_Term *t)
+{
+	NV_Variable *var;
+	if(!t) return 0;
 	if(t->type == Variable){
+		var = t->data;
+		if(var->type == VStructure){
+			return 1;
+		}
+	} else if(t->type == Sentence){
 		return 1;
 	}
 	return 0;
 }
 
+void NV_getValueOfTermAsSentence(NV_Term *t, NV_Term *dstRoot)
+{
+	NV_Variable *var;
+	if(!t || !dstRoot) return;
+	if(t->type == Variable){
+		var = t->data;
+		if(var->type == VStructure){
+			NV_cloneTermTree(dstRoot, var->data);
+		}
+	} else if(t->type == Sentence){
+		NV_cloneTermTree(dstRoot, t->data);
+		return;
+	}
+	return;
+}
