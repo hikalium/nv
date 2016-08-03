@@ -122,7 +122,7 @@ void NV_printValueOfTerm(NV_Term *t)
 
 	if(!t) return;
 
-	if(NV_canTermReadAsInt(t)){
+	if(NV_canReadTermAsInt(t)){
 		printf("%d", NV_getValueOfTermAsInt(t));
 		return;
 	}
@@ -146,7 +146,7 @@ void NV_printValueOfTerm(NV_Term *t)
 // Evaluate term
 //
 
-int NV_canTermReadAsInt(NV_Term *t)
+int NV_canReadTermAsInt(NV_Term *t)
 {
 	NV_Variable *var;
 	if(t->type == Variable){
@@ -156,7 +156,7 @@ int NV_canTermReadAsInt(NV_Term *t)
 				return 1;
 			}
 		} else if(var->type == VStructureItem){
-			return NV_canTermReadAsInt(var->data);
+			return NV_canReadTermAsInt(var->data);
 		}
 	} else if(t->type == Imm32s){
 		return 1;
@@ -182,6 +182,13 @@ int NV_getValueOfTermAsInt(NV_Term *t)
 	} else if(t->type == Imm32s){
 		tmp_sint32 = t->data;
 		return *tmp_sint32;
+	}
+	return 0;
+}
+
+int NV_canAssignToTerm(NV_Term *t){
+	if(t->type == Variable){
+		return 1;
 	}
 	return 0;
 }

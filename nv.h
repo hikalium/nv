@@ -145,7 +145,7 @@ NV_Term *NV_createTerm_String(const char *s);
 NV_Term *NV_createTerm_Variable(NV_VariableSet *vs, const char *name);
 NV_Term *NV_createTerm_Sentence();
 void NV_printValueOfTerm(NV_Term *t);
-int NV_canTermReadAsInt(NV_Term *t);
+int NV_canReadTermAsInt(NV_Term *t);
 int NV_getValueOfTermAsInt(NV_Term *t);
 
 // @nv_termlist.c

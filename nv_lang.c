@@ -67,7 +67,7 @@ NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
 	if(left->type != Variable) NV_tryConvertTermFromUnknownToVariable(env->varSet, &left, 1);
 	if(left->type != Variable) return NULL;
 	// process
-	if(NV_canTermReadAsInt(right)){
+	if(NV_canReadTermAsInt(right)){
 		tmp = NV_getValueOfTermAsInt(right);
 		NV_assignVariable_Integer(left->data, tmp);
 	} else if(right->type == String){
@@ -193,7 +193,11 @@ NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
 	int resultVal;
 	// type check
 	if(!prev || !next) return NULL;
-	if(!NV_canTermReadAsInt(prev) || !NV_canTermReadAsInt(next)) return NULL;
+	// try variable conversion
+	NV_tryConvertTermFromUnknownToVariable(env->varSet, &prev, 0);
+	NV_tryConvertTermFromUnknownToVariable(env->varSet, &next, 0);
+	// check type
+	if(!NV_canReadTermAsInt(prev) || !NV_canReadTermAsInt(next)) return NULL;
 	vL = NV_getValueOfTermAsInt(prev);
 	vR = NV_getValueOfTermAsInt(next);
 	// process
@@ -367,7 +371,7 @@ NV_Term *NV_LANG00_Op_structureAccessor(NV_Env *env, NV_Term *thisTerm)
 	if(!t->next || t->next->type != Operator || strcmp("]", ((NV_Operator *)t->next->data)->name) != 0) return NULL;
 	indexTerm = t;
 	//
-	if(!NV_canTermReadAsInt(indexTerm)) return NULL;
+	if(!NV_canReadTermAsInt(indexTerm)) return NULL;
 	index = NV_getValueOfTermAsInt(indexTerm);
 	t = NV_getItemFromStructureByIndex(structTerm->data, index);
 	if(!t) return NULL;
