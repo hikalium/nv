@@ -19,7 +19,7 @@ NV_Term *NV_LANG00_makeBlock(NV_Env *env, NV_Term *thisTerm, const char *closeSt
 	}
 	if(pairCount != 0) return NULL;
 	//
-	originalTree = thisTerm->before;
+	originalTree = thisTerm->prev;
 	sentenceTerm = NV_createTerm_Sentence(NULL);
 	sentenceRoot = sentenceTerm->data;
 	NV_divideTerm(sentenceRoot, thisTerm->next);
@@ -34,9 +34,9 @@ NV_Term *NV_LANG00_execSentence(NV_Env *env, NV_Term *sentenceTerm)
 {
 	// eval next sentence of thisTerm
 	// and replace [thisTerm, nextSentence] with return tree of nextSentence.
-	NV_Term sentenceRoot, *lastTerm;
+	NV_Term sentenceRoot, *retvTerm;
 	//
-	if(sentenceTerm == NULL || !NV_canReadTermAsSentence(sentenceTerm)){
+	if(!NV_canReadTermAsSentence(sentenceTerm)){
 		return NULL;
 	}
 	NV_getValueOfTermAsSentence(sentenceTerm, &sentenceRoot);
@@ -45,11 +45,10 @@ NV_Term *NV_LANG00_execSentence(NV_Env *env, NV_Term *sentenceTerm)
 		NV_printError("NV_LANG00_Op_builtin_exec: Exec failed.\n");
 		return NULL;
 	}
-	lastTerm = NV_getLastTerm(&sentenceRoot);
-	
-	NV_insertAllTermAfter(sentenceTerm, &sentenceRoot);
-	NV_removeTerm(sentenceTerm);
-	return lastTerm;
+	retvTerm = NV_createTerm_Sentence(&sentenceRoot);
+	NV_overwriteTerm(sentenceTerm, retvTerm);
+	NV_removeTermTree(&sentenceRoot);
+	return retvTerm;
 }
 
 //
@@ -57,7 +56,7 @@ NV_Term *NV_LANG00_execSentence(NV_Env *env, NV_Term *sentenceTerm)
 //
 NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
 {
-	NV_Term *left = thisTerm->before;
+	NV_Term *left = thisTerm->prev;
 	NV_Term *right = thisTerm->next;
 	// type check
 	if(!left || !right) return NULL;
@@ -76,30 +75,30 @@ NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
 NV_Term *NV_LANG00_Op_compoundAssign(NV_Env *env, NV_Term *thisTerm)
 {
 	NV_Operator *op = (NV_Operator *)thisTerm->data;
-	NV_Term *before = thisTerm->before;
+	NV_Term *prev = thisTerm->prev;
 	char s[2];
 	//
-	if(!before || (before->type != Unknown && before->type != Variable)) return NULL;
+	if(!prev || (prev->type != Unknown && prev->type != Variable)) return NULL;
 	//
 	s[0] = op->name[0];
 	s[1] = 0;
 	//
 	NV_insertTermAfter(thisTerm, NV_createTerm_Operator(env->langDef, s));
-	NV_insertTermAfter(thisTerm, NV_cloneTerm(before));
+	NV_insertTermAfter(thisTerm, NV_cloneTerm(prev));
 	NV_insertTermAfter(thisTerm, NV_createTerm_Operator(env->langDef, "="));
 	NV_removeTerm(thisTerm);
-	return before->next;
+	return prev->next;
 }
 
 NV_Term *NV_LANG00_Op_unaryOperator_prefix(NV_Env *env, NV_Term *thisTerm)
 {
-	NV_Term *before = thisTerm->before;
+	NV_Term *prev = thisTerm->prev;
 	NV_Term *next = thisTerm->next;
 	NV_Term *result;
 	NV_Operator *op = (NV_Operator *)thisTerm->data;
 	// type check
 	if(!next) return NULL;
-	if(before && (before->type != Operator && before->type != Root)) return NULL;
+	if(prev && (prev->type != Operator && prev->type != Root)) return NULL;
 	if(next->type == Unknown)	NV_tryConvertTermFromUnknownToImm(env->varSet, &next);
 	// process
 	if(next->type == Imm32s){
@@ -129,18 +128,18 @@ NV_Term *NV_LANG00_Op_unaryOperator_prefix(NV_Env *env, NV_Term *thisTerm)
 
 NV_Term *NV_LANG00_Op_unaryOperator_suffix_variableOnly(NV_Env *env, NV_Term *thisTerm)
 {
-	NV_Term *before = thisTerm->before;
+	NV_Term *prev = thisTerm->prev;
 	NV_Term *next = thisTerm->next;
 	NV_Operator *op = (NV_Operator *)thisTerm->data;
 	NV_Term *result;
 	NV_Variable *var;
 	// type check
-	if(!before) return NULL;
+	if(!prev) return NULL;
 	if(next && (next->type != Operator && next->type != Root)) return NULL;
-	if(before->type == Unknown)	NV_tryConvertTermFromUnknownToVariable(env->varSet, &before, 1);
+	if(prev->type == Unknown)	NV_tryConvertTermFromUnknownToVariable(env->varSet, &prev, 1);
 	// process
-	if(before->type == Variable){
-		var = before->data;
+	if(prev->type == Variable){
+		var = prev->data;
 		if(var->type == VInteger){
 			if(var->byteSize == sizeof(int32_t)){
 				result = NV_createTerm_Imm32(*((int32_t *)var->data));
@@ -159,18 +158,18 @@ NV_Term *NV_LANG00_Op_unaryOperator_suffix_variableOnly(NV_Env *env, NV_Term *th
 		}
 		//
 		NV_removeTerm(thisTerm);
-		NV_overwriteTerm(before, result);
+		NV_overwriteTerm(prev, result);
 		//
-		return before;
+		return prev;
 	}
-	if(NV_isDebugMode) NV_printError("NV_LANG00_Op_unaryOperator_suffix_variableOnly: Bad operand. type %d\n", before->type);
+	if(NV_isDebugMode) NV_printError("NV_LANG00_Op_unaryOperator_suffix_variableOnly: Bad operand. type %d\n", prev->type);
 	return NULL;
 }
 
 NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
 {
 	// for Integer values only.
-	NV_Term *prev = thisTerm->before;
+	NV_Term *prev = thisTerm->prev;
 	NV_Term *next = thisTerm->next;
 	NV_Term *result;
 	NV_Operator *op = (NV_Operator *)thisTerm->data;
@@ -228,9 +227,9 @@ NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
 
 NV_Term *NV_LANG00_Op_nothingButDisappear(NV_Env *env, NV_Term *thisTerm)
 {
-	NV_Term *before = thisTerm->before;
+	NV_Term *prev = thisTerm->prev;
 	NV_removeTerm(thisTerm);
-	return before;
+	return prev;
 }
 
 NV_Term *NV_LANG00_Op_sentenceSeparator(NV_Env *env, NV_Term *thisTerm)
@@ -241,10 +240,10 @@ NV_Term *NV_LANG00_Op_sentenceSeparator(NV_Env *env, NV_Term *thisTerm)
 
 	sentenceRoot = sentenceTerm->data;
 
-	for(b = thisTerm->before; b; b = b->before){
+	for(b = thisTerm->prev; b; b = b->prev){
 		if(b->type == Root) break;
 		if(b->type == Operator && strcmp(";;", ((NV_Operator *)b->data)->name) == 0){
-			b = b->before;
+			b = b->prev;
 			NV_removeTerm(b->next);
 			break;
 		}
@@ -300,7 +299,7 @@ NV_Term *NV_LANG00_Op_stringLiteral(NV_Env *env, NV_Term *thisTerm)
 		strcpy(&s[sp], st);
 		sp += strlen(st);
 		t = t->next;
-		NV_removeTerm(t->before);
+		NV_removeTerm(t->prev);
 	}
 	s[len] = 0;
 	NV_removeTerm(endTerm);
@@ -332,7 +331,7 @@ NV_Term *NV_LANG00_Op_precedentBlock(NV_Env *env, NV_Term *thisTerm)
 	if(originalTree->type == Unknown) NV_tryConvertTermFromUnknownToVariable(env->varSet, &originalTree, 0);
 	if(NV_canReadTermAsSentence(originalTree)){
 		NV_removeTerm(originalTree->next);
-		prev = originalTree->before;
+		prev = originalTree->prev;
 		NV_LANG00_execSentence(env, originalTree);
 		return prev;
 	}
@@ -347,7 +346,7 @@ NV_Term *NV_LANG00_Op_structureAccessor(NV_Env *env, NV_Term *thisTerm)
 	int index;
 	char s[32];
 	//
-	t = thisTerm->before;
+	t = thisTerm->prev;
 	if(!t) return NULL;
 	if(t->type != Variable) NV_tryConvertTermFromUnknownToVariable(env->varSet, &t, 1);
 	if(t->type != Variable) return NULL;
@@ -364,7 +363,7 @@ NV_Term *NV_LANG00_Op_structureAccessor(NV_Env *env, NV_Term *thisTerm)
 	t = NV_getItemFromStructureByIndex(structTerm->data, index);
 	if(!t) return NULL;
 	NV_removeTerm(indexTerm->next);
-	NV_removeTerm(indexTerm->before);
+	NV_removeTerm(indexTerm->prev);
 	NV_removeTerm(indexTerm);
 	snprintf(s, sizeof(s) - 1, "%d", rand());
 	v = NV_createTerm_Variable(env->varSet, s);
@@ -379,7 +378,7 @@ NV_Term *NV_LANG00_Op_builtin_exec(NV_Env *env, NV_Term *thisTerm)
 	if(!NV_LANG00_execSentence(env, thisTerm->next)){
 		return NULL;
 	}
-	thisTerm = thisTerm->before;
+	thisTerm = thisTerm->prev;
 	NV_removeTerm(thisTerm->next);
 	//
 	return thisTerm;
@@ -393,9 +392,9 @@ NV_Term *NV_LANG00_Op_if(NV_Env *env, NV_Term *thisTerm)
 	//
 	t = thisTerm;
 	//
-	t = t->next; if(t == NULL || t->type != Sentence) return NULL;
+	t = t->next; if(NV_canReadTermAsSentence(t)) return NULL;
 	condTerm = t;
-	t = t->next; if(t == NULL || t->type != Sentence) return NULL;
+	t = t->next; if(NV_canReadTermAsSentence(t)) return NULL;
 	doTerm = t;
 	for(;;){
 		// evaluate cond
@@ -439,7 +438,7 @@ NV_Term *NV_LANG00_Op_if(NV_Env *env, NV_Term *thisTerm)
 		// continue checking.
 	}
 	// remove 'if' term.
-	thisTerm = thisTerm->before;
+	thisTerm = thisTerm->prev;
 	NV_removeTerm(thisTerm->next);
 	//
 	return thisTerm;
@@ -531,7 +530,7 @@ NV_Term *NV_LANG00_Op_print(NV_Env *env, NV_Term *thisTerm)
 
 NV_Term *NV_LANG00_Op_showOpList(NV_Env *env, NV_Term *thisTerm)
 {
-	NV_Term *before = thisTerm->before;
+	NV_Term *prev = thisTerm->prev;
 	//
 	NV_Operator *p;
 	printf("Precedence: [opName]\n");
@@ -540,7 +539,7 @@ NV_Term *NV_LANG00_Op_showOpList(NV_Env *env, NV_Term *thisTerm)
 	}
 	//
 	NV_removeTerm(thisTerm);
-	return before;
+	return prev;
 }
 
 NV_Term *NV_LANG00_Op_mem(NV_Env *env, NV_Term *thisTerm)

@@ -8,7 +8,7 @@ NV_Term *NV_allocTerm()
 
 	t->type = Unknown;
 	t->data = NULL;
-	t->before = NULL;
+	t->prev = NULL;
 	t->next = NULL;
 
 	return t;
@@ -43,7 +43,7 @@ NV_Term *NV_cloneTerm(const NV_Term *src)
 		exit(EXIT_FAILURE);
 	}
 	new->next = NULL;
-	new->before = NULL;
+	new->prev = NULL;
 	return new;
 }
 
@@ -198,6 +198,8 @@ int NV_canReadTermAsSentence(NV_Term *t)
 		var = t->data;
 		if(var->type == VStructure){
 			return 1;
+		} else if(var->type == VStructureItem){
+			return NV_canReadTermAsSentence(var->data);
 		}
 	} else if(t->type == Sentence){
 		return 1;
@@ -213,6 +215,8 @@ void NV_getValueOfTermAsSentence(NV_Term *t, NV_Term *dstRoot)
 		var = t->data;
 		if(var->type == VStructure){
 			NV_cloneTermTree(dstRoot, var->data);
+		} else if(var->type == VStructureItem){
+			return NV_getValueOfTermAsSentence(var->data, dstRoot);
 		}
 	} else if(t->type == Sentence){
 		NV_cloneTermTree(dstRoot, t->data);

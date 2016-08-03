@@ -37,22 +37,25 @@ void NV_resetVariable(NV_Variable *v)
 int NV_Variable_assignTermValue(NV_Variable *v, NV_Term *src)
 {
 	// retv: assigned?
-	int32_t tmp;
 	if(v->type == VStructureItem){
 		NV_Variable_assignStructureItem(v, src);
-		return 1;
-	}
-	if(NV_canReadTermAsInt(src)){
-		tmp = NV_getValueOfTermAsInt(src);
-		NV_Variable_assignInteger(v, tmp);
-	} else if(src->type == String){
-		NV_Variable_assignString(v, src->data);
-	} else if(src->type == Variable){
-		NV_Variable_assignVariable(v, src->data);
-	} else if(src->type == Sentence){
-		NV_Variable_assignStructure(v, src->data);
 	} else{
-		return 0;
+		switch(src->type){
+			case Variable:
+				NV_Variable_assignVariable(v, src->data);
+				break;
+			case String:
+				NV_Variable_assignString(v, src->data);
+				break;
+			case Sentence:
+				NV_Variable_assignStructure(v, src->data);
+				break;
+			case Imm32s:
+				NV_Variable_assignInteger(v, NV_getValueOfTermAsInt(src));
+				break;
+			default:
+				return 0;
+		}
 	}
 	return 1;
 }

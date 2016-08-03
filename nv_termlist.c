@@ -4,7 +4,7 @@ void NV_initRootTerm(NV_Term *t)
 {
 	t->type = Root;
 	t->data = NULL;
-	t->before = NULL;	
+	t->prev = NULL;	
 	t->next = NULL;
 }
 
@@ -24,7 +24,7 @@ void NV_cloneTermTree(NV_Term *dstRoot, const NV_Term *srcRoot)
 	for(t = srcRoot->next; t; t = t->next){
 		tNew = NV_cloneTerm(t);
 		//
-		tNew->before = NULL;
+		tNew->prev = NULL;
 		tNew->next = NULL;
 		NV_appendTermRaw(dstRoot, tNew);
 	}
@@ -32,10 +32,10 @@ void NV_cloneTermTree(NV_Term *dstRoot, const NV_Term *srcRoot)
 
 void NV_insertTermAfter(NV_Term *base, NV_Term *new)
 {
-	new->before = base;
+	new->prev = base;
 	new->next = base->next;
-	if(new->next) new->next->before = new;
-	if(new->before) new->before->next = new;
+	if(new->next) new->next->prev = new;
+	if(new->prev) new->prev->next = new;
 }
 
 void NV_insertAllTermAfter(NV_Term *base, NV_Term *srcRoot)
@@ -54,7 +54,7 @@ NV_Term *NV_overwriteTerm(NV_Term *target, NV_Term *new)
 {
 	// target should not be a Root Term.
 	// retv: term in tree.
-	target = target->before;
+	target = target->prev;
 	NV_removeTerm(target->next);
 	NV_insertTermAfter(target, new);
 	return new;
@@ -63,7 +63,7 @@ NV_Term *NV_overwriteTerm(NV_Term *target, NV_Term *new)
 void NV_divideTerm(NV_Term *subRoot, NV_Term *subBegin)
 {
 	// It modifies tree which contains subBegin.
-	NV_Term *mainLast = subBegin->before;
+	NV_Term *mainLast = subBegin->prev;
 	mainLast->next = NULL;
 	NV_initRootTerm(subRoot);
 	NV_appendTermRaw(subRoot, subBegin);
@@ -81,7 +81,7 @@ void NV_appendTermRaw(NV_Term *root, NV_Term *new)
 {
 	NV_Term *t;
 	for(t = root; t->next; t = t->next);
-	if(new) new->before = t;
+	if(new) new->prev = t;
 	t->next = new;
 	return;
 }
@@ -116,8 +116,8 @@ void NV_appendTerm(NV_LangDef *langDef, NV_Term *termRoot, const char *termStr)
 void NV_removeTerm(NV_Term *t)
 {
 	// don't apply to the root Term.
-	if(t->before)	t->before->next = t->next;
-	if(t->next)		t->next->before = t->before;
+	if(t->prev)	t->prev->next = t->next;
+	if(t->next)		t->next->prev = t->prev;
 	if(t->data){
 		switch(t->type){
 			case Unknown:

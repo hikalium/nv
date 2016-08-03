@@ -3,14 +3,15 @@
 int NV_isDebugMode;
 int main(int argc, char *argv[])
 {
-	
 	int i;
 	char line[MAX_INPUT_LEN];
+	NV_Env *env;
+
 	for(i = 1; i < argc; i++){
 		if(strcmp(argv[i], "-v") == 0) NV_isDebugMode = 1;
 	}
 
-	NV_Env *env = NV_allocEnv();
+	env = NV_allocEnv();
 	env->varSet = NV_allocVariableSet();
 	env->langDef = NV_getDefaultLang();
 	
@@ -25,6 +26,7 @@ int main(int argc, char *argv[])
 //
 // LangDef
 //
+
 NV_LangDef *NV_allocLangDef()
 {
 	NV_LangDef *t;
@@ -199,6 +201,7 @@ int NV_tokenize(NV_Env *env, const char *s)
 //
 // Evaluate
 //
+
 void NV_Evaluate(NV_Env *env)
 {
 	env->autoPrintValue = 1;
@@ -261,7 +264,7 @@ int NV_EvaluateSentence(NV_Env *env, NV_Term *root)
 		} else{
 			// right-associative
 			for(t = root; t->next; t = t->next); // skip
-			for(; t != root; t = t->before){
+			for(; t != root; t = t->prev){
 				// rewind
 				t = NV_TryExecOp(env, currentOp, t, root);
 				if(!t){

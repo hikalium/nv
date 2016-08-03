@@ -54,7 +54,7 @@ enum NV_VAR_TYPE {
 struct NV_TERM {
 	NV_TermType type;
 	void *data;
-	NV_Term *before, *next;
+	NV_Term *prev, *next;
 };
 
 struct NV_OPERATOR {

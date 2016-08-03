@@ -4,3 +4,7 @@ HEADERS=nv.h
 
 nv : $(SRCS) $(HEADERS) Makefile
 	cc -Wall -lncurses -o nv  $(SRCS)
+
+clean:
+	-rm nv
+
