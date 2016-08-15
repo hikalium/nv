@@ -230,7 +230,7 @@ void NV_printVariable(NV_Variable *var, int verbose)
 		NV_printTerms_noNewLine(var->data);
 	} else if(var->type == VStructureItem){
 		printf("[");
-		NV_printValueOfTerm(var->data, NULL);
+		NV_printRealTermValue(var->data, NULL);
 		printf("]");
 	} else if(var->type == VNone){
 		printf("(No data)");

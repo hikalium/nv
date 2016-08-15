@@ -3,7 +3,7 @@
 //
 // Support functions
 //
-NV_Term *NV_LANG00_makeBlock(NV_Env *env, NV_Term *thisTerm, const char *closeStr)
+NV_Term *NV_LANG00_makeBlock(NV_Pointer env, NV_Term *thisTerm, const char *closeStr)
 {
 	// support func
 	// retv is prev term of thisTerm.
@@ -30,7 +30,7 @@ NV_Term *NV_LANG00_makeBlock(NV_Env *env, NV_Term *thisTerm, const char *closeSt
 	return originalTree;
 }
 
-NV_Term *NV_LANG00_execSentence(NV_Env *env, NV_Term *sentenceTerm)
+NV_Term *NV_LANG00_execSentence(NV_Pointer env, NV_Term *sentenceTerm)
 {
 	// eval next sentence of thisTerm
 	// and replace [thisTerm, nextSentence] with return tree of nextSentence.
@@ -54,14 +54,16 @@ NV_Term *NV_LANG00_execSentence(NV_Env *env, NV_Term *sentenceTerm)
 //
 // Native Functions
 //
-NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_Op_assign(NV_Pointer env, NV_Term *thisTerm)
 {
 	NV_Term *left = thisTerm->prev;
 	NV_Term *right = thisTerm->next;
 	// type check
 	if(!left || !right) return NULL;
-	if(right->type == Unknown) NV_tryConvertTermFromUnknownToVariable(env->varSet, &right, 0);
-	if(left->type != Variable) NV_tryConvertTermFromUnknownToVariable(env->varSet, &left, 1);
+	if(right->type == Unknown)
+		NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &right, 0);
+	if(left->type != Variable)
+		NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &left, 1);
 	if(left->type != Variable) return NULL;
 	// process
 	if(!NV_Variable_assignTermValue(left->data, right)){
@@ -72,7 +74,7 @@ NV_Term *NV_LANG00_Op_assign(NV_Env *env, NV_Term *thisTerm)
 	return left;
 }
 
-NV_Term *NV_LANG00_Op_compoundAssign(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_Op_compoundAssign(NV_Pointer env, NV_Term *thisTerm)
 {
 	NV_Operator *op = (NV_Operator *)thisTerm->data;
 	NV_Term *prev = thisTerm->prev;
@@ -83,14 +85,14 @@ NV_Term *NV_LANG00_Op_compoundAssign(NV_Env *env, NV_Term *thisTerm)
 	s[0] = op->name[0];
 	s[1] = 0;
 	//
-	NV_insertTermAfter(thisTerm, NV_createTerm_Operator(env->langDef, s));
+	NV_insertTermAfter(thisTerm, NV_createTerm_Operator(NV_Env_getLangDef(env), s));
 	NV_insertTermAfter(thisTerm, NV_cloneTerm(prev));
-	NV_insertTermAfter(thisTerm, NV_createTerm_Operator(env->langDef, "="));
+	NV_insertTermAfter(thisTerm, NV_createTerm_Operator(NV_Env_getLangDef(env), "="));
 	NV_removeTerm(thisTerm);
 	return prev->next;
 }
 
-NV_Term *NV_LANG00_Op_unaryOperator_prefix(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_Op_unaryOperator_prefix(NV_Pointer env, NV_Term *thisTerm)
 {
 	NV_Term *prev = thisTerm->prev;
 	NV_Term *next = thisTerm->next;
@@ -99,7 +101,8 @@ NV_Term *NV_LANG00_Op_unaryOperator_prefix(NV_Env *env, NV_Term *thisTerm)
 	// type check
 	if(!next) return NULL;
 	if(prev && (prev->type != Operator && prev->type != Root)) return NULL;
-	if(next->type == Unknown)	NV_tryConvertTermFromUnknownToImm(env->varSet, &next);
+	if(next->type == Unknown)
+		NV_tryConvertTermFromUnknownToImm(NV_Env_getVarSet(env), &next);
 	// process
 	if(next->type == Imm32s){
 		int resultVal;
@@ -126,7 +129,7 @@ NV_Term *NV_LANG00_Op_unaryOperator_prefix(NV_Env *env, NV_Term *thisTerm)
 	return NULL;
 }
 
-NV_Term *NV_LANG00_Op_unaryOperator_suffix_variableOnly(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_Op_unaryOperator_suffix_variableOnly(NV_Pointer env, NV_Term *thisTerm)
 {
 	NV_Term *prev = thisTerm->prev;
 	NV_Term *next = thisTerm->next;
@@ -136,7 +139,8 @@ NV_Term *NV_LANG00_Op_unaryOperator_suffix_variableOnly(NV_Env *env, NV_Term *th
 	// type check
 	if(!prev) return NULL;
 	if(next && (next->type != Operator && next->type != Root)) return NULL;
-	if(prev->type == Unknown)	NV_tryConvertTermFromUnknownToVariable(env->varSet, &prev, 1);
+	if(prev->type == Unknown)
+		NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &prev, 1);
 	// process
 	if(prev->type == Variable){
 		var = prev->data;
@@ -166,7 +170,7 @@ NV_Term *NV_LANG00_Op_unaryOperator_suffix_variableOnly(NV_Env *env, NV_Term *th
 	return NULL;
 }
 
-NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Term *thisTerm)
 {
 	// for Integer values only.
 	NV_Term *prev = thisTerm->prev;
@@ -178,8 +182,8 @@ NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
 	// type check
 	if(!prev || !next) return NULL;
 	// try variable conversion
-	NV_tryConvertTermFromUnknownToVariable(env->varSet, &prev, 0);
-	NV_tryConvertTermFromUnknownToVariable(env->varSet, &next, 0);
+	NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &prev, 0);
+	NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &next, 0);
 	// check type
 	if(!NV_canReadTermAsInt(prev) || !NV_canReadTermAsInt(next)) return NULL;
 	vL = NV_getValueOfTermAsInt(prev);
@@ -225,14 +229,14 @@ NV_Term *NV_LANG00_Op_binaryOperator(NV_Env *env, NV_Term *thisTerm)
 	return result;	
 }
 
-NV_Term *NV_LANG00_Op_nothingButDisappear(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_Op_nothingButDisappear(NV_Pointer env, NV_Term *thisTerm)
 {
 	NV_Term *prev = thisTerm->prev;
 	NV_removeTerm(thisTerm);
 	return prev;
 }
 
-NV_Term *NV_LANG00_Op_sentenceSeparator(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_Op_sentenceSeparator(NV_Pointer env, NV_Term *thisTerm)
 {
 	NV_Term *b;
 	NV_Term *sentenceTerm = NV_createTerm_Sentence(NULL);
@@ -252,12 +256,12 @@ NV_Term *NV_LANG00_Op_sentenceSeparator(NV_Env *env, NV_Term *thisTerm)
 	NV_divideTerm(&remRoot, thisTerm);
 	NV_appendAll(b, &remRoot);
 	NV_overwriteTerm(thisTerm, sentenceTerm);
-	NV_insertTermAfter(b, NV_createTerm_Operator(env->langDef, "builtin_exec"));
-	NV_insertTermAfter(b, NV_createTerm_Operator(env->langDef, ";;"));
+	NV_insertTermAfter(b, NV_createTerm_Operator(NV_Env_getLangDef(env), "builtin_exec"));
+	NV_insertTermAfter(b, NV_createTerm_Operator(NV_Env_getLangDef(env), ";;"));
 	return b;
 }
 
-NV_Term *NV_LANG00_Op_stringLiteral(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_Op_stringLiteral(NV_Pointer env, NV_Term *thisTerm)
 {
 	// "string literal"
 	int len = 0, sp;
@@ -309,7 +313,7 @@ NV_Term *NV_LANG00_Op_stringLiteral(NV_Env *env, NV_Term *thisTerm)
 	return t;
 }
 
-NV_Term *NV_LANG00_Op_sentenceBlock(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_Op_sentenceBlock(NV_Pointer env, NV_Term *thisTerm)
 {
 	// {}
 	NV_Term *originalTree;
@@ -319,7 +323,7 @@ NV_Term *NV_LANG00_Op_sentenceBlock(NV_Env *env, NV_Term *thisTerm)
 	return originalTree;
 }
 
-NV_Term *NV_LANG00_Op_precedentBlock(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_Op_precedentBlock(NV_Pointer env, NV_Term *thisTerm)
 {
 	// ()
 	// if prev term is sentence object, perform function call. 
@@ -328,18 +332,18 @@ NV_Term *NV_LANG00_Op_precedentBlock(NV_Env *env, NV_Term *thisTerm)
 	//
 	originalTree = NV_LANG00_makeBlock(env, thisTerm, ")");
 	if(!originalTree) return NULL;
-	if(originalTree->type == Unknown) NV_tryConvertTermFromUnknownToVariable(env->varSet, &originalTree, 0);
+	if(originalTree->type == Unknown) NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &originalTree, 0);
 	if(NV_canReadTermAsSentence(originalTree)){
 		NV_removeTerm(originalTree->next);
 		prev = originalTree->prev;
 		NV_LANG00_execSentence(env, originalTree);
 		return prev;
 	}
-	NV_insertTermAfter(originalTree, NV_createTerm_Operator(env->langDef, "builtin_exec"));
+	NV_insertTermAfter(originalTree, NV_createTerm_Operator(NV_Env_getLangDef(env), "builtin_exec"));
 	return originalTree;
 }
 
-NV_Term *NV_LANG00_Op_structureAccessor(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_Op_structureAccessor(NV_Pointer env, NV_Term *thisTerm)
 {
 	// []
 	NV_Term *structTerm, *indexTerm, *t, *v;
@@ -348,7 +352,7 @@ NV_Term *NV_LANG00_Op_structureAccessor(NV_Env *env, NV_Term *thisTerm)
 	//
 	t = thisTerm->prev;
 	if(!t) return NULL;
-	if(t->type != Variable) NV_tryConvertTermFromUnknownToVariable(env->varSet, &t, 1);
+	if(t->type != Variable) NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &t, 1);
 	if(t->type != Variable) return NULL;
 	structTerm = t;
 	//
@@ -366,13 +370,13 @@ NV_Term *NV_LANG00_Op_structureAccessor(NV_Env *env, NV_Term *thisTerm)
 	NV_removeTerm(indexTerm->prev);
 	NV_removeTerm(indexTerm);
 	snprintf(s, sizeof(s) - 1, "%d", rand());
-	v = NV_createTerm_Variable(env->varSet, s);
+	v = NV_createTerm_Variable(NV_Env_getVarSet(env), s);
 	NV_Variable_assignStructureItem(v->data, t);
 	NV_overwriteTerm(structTerm, v);
 	return v;
 }
 
-NV_Term *NV_LANG00_Op_builtin_exec(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_Op_builtin_exec(NV_Pointer env, NV_Term *thisTerm)
 {
 	//
 	if(!NV_LANG00_execSentence(env, thisTerm->next)){
@@ -384,7 +388,7 @@ NV_Term *NV_LANG00_Op_builtin_exec(NV_Env *env, NV_Term *thisTerm)
 	return thisTerm;
 }
 
-NV_Term *NV_LANG00_Op_if(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_Op_if(NV_Pointer env, NV_Term *thisTerm)
 {
 	// if {cond} {do} [{cond} {do}] [{else}]
 	int cond;
@@ -401,7 +405,7 @@ NV_Term *NV_LANG00_Op_if(NV_Env *env, NV_Term *thisTerm)
 		if(!NV_LANG00_execSentence(env, thisTerm->next)) return NULL;
 		condTerm = thisTerm->next;
 		if(condTerm->next != doTerm) return NULL;
-		if(condTerm->type == Variable) NV_tryConvertTermFromUnknownToImm(env->varSet, &condTerm);
+		if(condTerm->type == Variable) NV_tryConvertTermFromUnknownToImm(NV_Env_getVarSet(env), &condTerm);
 		if(condTerm->type == Imm32s){
 			cond = *((int32_t *)condTerm->data);
 		} else{
@@ -444,7 +448,7 @@ NV_Term *NV_LANG00_Op_if(NV_Env *env, NV_Term *thisTerm)
 	return thisTerm;
 }
 
-NV_Term *NV_LANG00_Op_for(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_Op_for(NV_Pointer env, NV_Term *thisTerm)
 {
 	// for {init block}{conditional block}{update block}{statement}
 	//int cond;
@@ -505,13 +509,13 @@ NV_Term *NV_LANG00_Op_for(NV_Env *env, NV_Term *thisTerm)
 	return t;
 }
 
-NV_Term *NV_LANG00_Op_print(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_Op_print(NV_Pointer env, NV_Term *thisTerm)
 {
 	NV_Term *target = thisTerm->next;
 	int32_t *tmpint32;
 	//
 	if(!target)return NULL;
-	if(target->type == Unknown)	NV_tryConvertTermFromUnknownToVariable(env->varSet, &target, 0);
+	if(target->type == Unknown)	NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &target, 0);
 	if(target->type == Variable){
 		NV_printVariable(target->data, 0);
 		putchar('\n');
@@ -524,17 +528,17 @@ NV_Term *NV_LANG00_Op_print(NV_Env *env, NV_Term *thisTerm)
 		return NULL;
 	}
 	NV_removeTerm(thisTerm);
-	env->autoPrintValue = 0;
+	NV_Env_setAutoPrintValueEnabled(env, 0);
 	return target;
 }
 
-NV_Term *NV_LANG00_Op_showOpList(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_Op_showOpList(NV_Pointer env, NV_Term *thisTerm)
 {
 	NV_Term *prev = thisTerm->prev;
 	//
 	NV_Operator *p;
 	printf("Precedence: [opName]\n");
-	for(p = env->langDef->opRoot; p; p = p->next){
+	for(p = NV_Env_getLangDef(env)->opRoot; p; p = p->next){
 		printf("%10d: [%s]\n", p->precedence, p->name);
 	}
 	//
@@ -542,15 +546,16 @@ NV_Term *NV_LANG00_Op_showOpList(NV_Env *env, NV_Term *thisTerm)
 	return prev;
 }
 
-NV_Term *NV_LANG00_Op_mem(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_Op_mem(NV_Pointer env, NV_Term *thisTerm)
 {
 	thisTerm = NV_overwriteTerm(thisTerm, NV_createTerm_Imm32(NV_getMallocCount()));
 	return thisTerm;
 }
 
-NV_Term *NV_LANG00_Op_exit(NV_Env *env, NV_Term *thisTerm)
+NV_Term *NV_LANG00_Op_exit(NV_Pointer env, NV_Term *thisTerm)
 {
-	env->endFlag = 1;
+	NV_Env_setEndFlag(env, 1);
+	NV_Env_setAutoPrintValueEnabled(env, 0);
 	return thisTerm;
 }
 

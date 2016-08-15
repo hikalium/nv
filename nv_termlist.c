@@ -203,6 +203,6 @@ void NV_printLastTermValue(NV_Term *root, NV_VariableSet *vs)
 {
 	NV_Term *t;
 	t = NV_getLastTerm(root);
-	NV_printValueOfTerm(t, vs);
+	NV_printRealTermValue(t, vs);
 }
 

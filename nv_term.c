@@ -116,7 +116,7 @@ NV_Term *NV_createTerm_Sentence(NV_Term *baseTree)
 	return new;
 }
 
-void NV_printValueOfTerm(NV_Term *t, NV_VariableSet *vs)
+void NV_printRealTermValue(NV_Term *t, NV_VariableSet *vs)
 {
 	NV_Operator *op;
 
