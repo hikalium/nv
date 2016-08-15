@@ -16,7 +16,7 @@ void NV_printVarsInVarSet(NV_VariableSet *vs)
 	int i;
 	printf("Variable Table (%p): %d\n", vs, vs->varUsed);
 	for(i = 0; i < vs->varUsed; i++){
-		NV_printVariable(&vs->varList[i], 2);
+		NV_printElement(vs->varList[i]);
 		putchar('\n');
 	}
 }

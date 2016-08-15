@@ -1,40 +1,33 @@
 #include "nv.h"
 
-NV_Variable *NV_allocVariable(NV_VariableSet *vs)
+NV_Variable *NV_allocVariable()
 {
 	NV_Variable *t;
 	//
-	if(vs->varUsed >= MAX_VARS){
-		NV_Error("No more variables. %d\n", MAX_VARS);
-		exit(EXIT_FAILURE);
-	}
-	t = &vs->varList[vs->varUsed++];
-	//
+	t = NV_malloc(sizeof(NV_Variable));
 	t->name[0] = 0;
-	t->type = VNone;
-	t->byteSize = 0;
 	t->revision = 0;
-	t->data = NULL;
+	t->data = NV_NullPointer;
 	//
 	return t;
 }
 
-void NV_resetVariable(NV_Variable *v)
+int NV_resetVariable(NV_Pointer v)
 {
+	// retv: failed?
 	// excludes namestr.
-	if(v->type == VNone) return;
-	v->byteSize = 0;
-	if(v->data && v->type != VAlias) NV_free(v->data);
-	v->data = NULL;
-	v->revision++;
-	v->type = VNone;
+	NV_Variable *pv = NV_E_getRawPointer(v, EVariable);
+	if(!pv) return 1;
+	NV_E_free(&pv->data);
+	pv->revision++;
+	return 0;
 }
 
 //
 // assign to Variable
 //
-
-int NV_Variable_assignTermValue(NV_Variable *v, NV_Term *src)
+/*
+int NV_Variable_assignTermValue(NV_Pointer v, NV_Pointer src)
 {
 	// retv: assigned?
 	if(v->type == VStructureItem){
@@ -59,24 +52,20 @@ int NV_Variable_assignTermValue(NV_Variable *v, NV_Term *src)
 	}
 	return 1;
 }
+*/
 
-void NV_Variable_assignVariable(NV_Variable *dst, const NV_Variable *src)
+void NV_Variable_assignVariable(NV_Pointer dst, NV_Pointer src)
 {
+	NV_Variable *dstp, *srcp;
+	if(!NV_E_isType(dst, EVariable) || !NV_E_isType(src, EVariable)) return;
 	NV_resetVariable(dst);
-	//
-	dst->type = src->type;
-	dst->byteSize = src->byteSize;
-	dst->revision = src->revision + 1;
-	dst->data = NV_malloc(src->byteSize);
-	if(src->type == VInteger || src->type == VString){
-		memcpy(dst->data, src->data, src->byteSize);
-	} else{
-		NV_Error("Not implemented. type %d\n", src->type);
-		exit(EXIT_FAILURE);
-	}
+	dstp = NV_E_getRawPointer(dst, EVariable);
+	srcp = NV_E_getRawPointer(src, EVariable);
+	dstp->data = srcp->data;
+	dstp->revision++;
 	return;
 }
-
+/*
 void NV_Variable_assignInteger(NV_Variable *v, int32_t newVal)
 {
 	NV_resetVariable(v);
@@ -131,11 +120,11 @@ void NV_Variable_assignStructureItem(NV_Variable *dst, NV_Term *term)
 	}
 	return;
 }
-
+*/
 //
 // Conversion
 //
-
+/*
 void NV_tryConvertTermFromUnknownToVariable(NV_VariableSet *vs, NV_Term **term, int allowCreateNewVar)
 {
 	NV_Variable *var;
@@ -169,19 +158,19 @@ void NV_tryConvertTermFromUnknownToImm(NV_VariableSet *vs, NV_Term **term)
 		}
 	}
 }
-
+*/
 //
 // Lookup variable
 //
-
-NV_Variable *NV_getVariableByName(NV_VariableSet *vs, const char *name)
+/*
+NV_Pointer NV_getVariableByName(NV_VariableSet *vs, const char *name)
 {
-	NV_Variable *var;
+	NV_Variable *v;
 	int i;
 	for(i = 0; i < vs->varUsed; i++){
-		var = &vs->varList[i];
-		if(strncmp(var->name, name, MAX_TOKEN_LEN) == 0){
-			return var;
+		v = NV_E_getRawPointer(vs->varList[i], EVariable);
+		if(strncmp(v->name, name, MAX_TOKEN_LEN) == 0){
+			return vs->varList[i];
 		}
 	}
 	if(NV_isDebugMode) NV_Error("Variable '%s' not found.\n", name);
@@ -194,11 +183,11 @@ NV_Term *NV_getItemFromStructureByIndex(NV_Variable *v, int index)
 	if(v->type != VStructure) return NULL;
 	return NV_getTermByIndex(t, index);
 }
-
+*/
 //
 // Print variable
 //
-
+/*
 #define NUM_OF_VTYPES	6
 char *VTypeNameList[NUM_OF_VTYPES] = {
 	"None",
@@ -238,4 +227,4 @@ void NV_printVariable(NV_Variable *var, int verbose)
 		NV_Error("(Not implemented type: %d)", var->type);
 	}
 }
-
+*/

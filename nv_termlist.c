@@ -1,11 +1,15 @@
 #include "nv.h"
 
-void NV_initRootTerm(NV_Term *t)
+int NV_initRootTerm(NV_Pointer t)
 {
-	t->type = Root;
-	t->data = NULL;
-	t->prev = NULL;	
-	t->next = NULL;
+	NV_Term *tp = NV_E_getRawPointer(t, ETerm);
+	if(!tp) return 1;
+	//
+	tp->type = Root;
+	tp->data = NULL;
+	tp->prev = NULL;	
+	tp->next = NULL;
+	return 0;
 }
 
 void NV_changeRootTerm(NV_Term *oldRoot, NV_Term *newRoot)
@@ -69,7 +73,7 @@ void NV_divideTerm(NV_Term *subRoot, NV_Term *subBegin)
 	NV_appendTermRaw(subRoot, subBegin);
 }
 
-void NV_appendAll(NV_Term *dstRoot, NV_Term *srcRoot)
+void NV_appendAll(NV_Pointer *dstRoot, NV_Term *srcRoot)
 {
 	// src becomes empty
 	// dstRoot can be any Term (not only root).
@@ -155,27 +159,6 @@ void NV_printTerms(NV_Term *root)
 	putchar('\n');
 }
 
-void NV_printTerms_noNewLine(NV_Term *root)
-{
-	NV_Term *t;
-	NV_Operator *op;
-	if(!root) return;
-	for(t = root->next; t; t = t->next){
-		if(NV_canReadTermAsInt(t)){
-			printf("%d", NV_getValueOfTermAsInt(t));
-		} else if(t->type == Operator){
-			op = t->data;
-			printf("op(%s:%d)", op->name, op->precedence);
-		} else if(t->type == Unknown){
-			printf("[Unknown: %s]", t->data);
-		} else{
-			printf("[type %d]", t->type);
-		}
-		if(t->next){
-			printf(", ");
-		}
-	};
-}
 
 NV_Term *NV_getTermByIndex(NV_Term *root, int index)
 {

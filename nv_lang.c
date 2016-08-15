@@ -3,13 +3,16 @@
 //
 // Support functions
 //
-NV_Term *NV_LANG00_makeBlock(NV_Pointer env, NV_Term *thisTerm, const char *closeStr)
+/*
+NV_Pointer NV_LANG00_makeBlock(NV_Pointer env, NV_Pointer thisTerm, const char *closeStr)
 {
 	// support func
 	// retv is prev term of thisTerm.
-	NV_Term *t, *sentenceTerm, *sentenceRoot, remRoot, *originalTree;
+	NV_Pointer t, *sentenceTerm, *sentenceRoot, remRoot, *originalTree;
 	int pairCount = 1;
-	for(t = thisTerm->next; t; t = t->next){
+	t = NV_List_getNextItem(t);
+	for(; !NV_E_isNullPointer(t); t = NV_List_getNextItem(t)){
+		if(NV_E_isType(t, EString)){}
 		if(t->type == Unknown && strcmp(closeStr, t->data) == 0){
 			pairCount --;
 			if(pairCount == 0) break;
@@ -30,7 +33,7 @@ NV_Term *NV_LANG00_makeBlock(NV_Pointer env, NV_Term *thisTerm, const char *clos
 	return originalTree;
 }
 
-NV_Term *NV_LANG00_execSentence(NV_Pointer env, NV_Term *sentenceTerm)
+NV_Pointer NV_LANG00_execSentence(NV_Pointer env, NV_Pointer sentenceTerm)
 {
 	// eval next sentence of thisTerm
 	// and replace [thisTerm, nextSentence] with return tree of nextSentence.
@@ -54,10 +57,10 @@ NV_Term *NV_LANG00_execSentence(NV_Pointer env, NV_Term *sentenceTerm)
 //
 // Native Functions
 //
-NV_Term *NV_LANG00_Op_assign(NV_Pointer env, NV_Term *thisTerm)
+NV_Pointer NV_LANG00_Op_assign(NV_Pointer env, NV_Pointer thisTerm)
 {
-	NV_Term *left = thisTerm->prev;
-	NV_Term *right = thisTerm->next;
+	NV_Pointer left = thisTerm->prev;
+	NV_Pointer right = thisTerm->next;
 	// type check
 	if(!left || !right) return NULL;
 	if(right->type == Unknown)
@@ -74,10 +77,10 @@ NV_Term *NV_LANG00_Op_assign(NV_Pointer env, NV_Term *thisTerm)
 	return left;
 }
 
-NV_Term *NV_LANG00_Op_compoundAssign(NV_Pointer env, NV_Term *thisTerm)
+NV_Pointer NV_LANG00_Op_compoundAssign(NV_Pointer env, NV_Pointer thisTerm)
 {
 	NV_Operator *op = (NV_Operator *)thisTerm->data;
-	NV_Term *prev = thisTerm->prev;
+	NV_Pointer prev = thisTerm->prev;
 	char s[2];
 	//
 	if(!prev || (prev->type != Unknown && prev->type != Variable)) return NULL;
@@ -92,11 +95,11 @@ NV_Term *NV_LANG00_Op_compoundAssign(NV_Pointer env, NV_Term *thisTerm)
 	return prev->next;
 }
 
-NV_Term *NV_LANG00_Op_unaryOperator_prefix(NV_Pointer env, NV_Term *thisTerm)
+NV_Pointer NV_LANG00_Op_unaryOperator_prefix(NV_Pointer env, NV_Pointer thisTerm)
 {
-	NV_Term *prev = thisTerm->prev;
-	NV_Term *next = thisTerm->next;
-	NV_Term *result;
+	NV_Pointer prev = thisTerm->prev;
+	NV_Pointer next = thisTerm->next;
+	NV_Pointer result;
 	NV_Operator *op = (NV_Operator *)thisTerm->data;
 	// type check
 	if(!next) return NULL;
@@ -129,12 +132,12 @@ NV_Term *NV_LANG00_Op_unaryOperator_prefix(NV_Pointer env, NV_Term *thisTerm)
 	return NULL;
 }
 
-NV_Term *NV_LANG00_Op_unaryOperator_suffix_variableOnly(NV_Pointer env, NV_Term *thisTerm)
+NV_Pointer NV_LANG00_Op_unaryOperator_suffix_variableOnly(NV_Pointer env, NV_Pointer thisTerm)
 {
-	NV_Term *prev = thisTerm->prev;
-	NV_Term *next = thisTerm->next;
+	NV_Pointer prev = thisTerm->prev;
+	NV_Pointer next = thisTerm->next;
 	NV_Operator *op = (NV_Operator *)thisTerm->data;
-	NV_Term *result;
+	NV_Pointer result;
 	NV_Variable *var;
 	// type check
 	if(!prev) return NULL;
@@ -170,12 +173,12 @@ NV_Term *NV_LANG00_Op_unaryOperator_suffix_variableOnly(NV_Pointer env, NV_Term 
 	return NULL;
 }
 
-NV_Term *NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Term *thisTerm)
+NV_Pointer NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Pointer thisTerm)
 {
 	// for Integer values only.
-	NV_Term *prev = thisTerm->prev;
-	NV_Term *next = thisTerm->next;
-	NV_Term *result;
+	NV_Pointer prev = thisTerm->prev;
+	NV_Pointer next = thisTerm->next;
+	NV_Pointer result;
 	NV_Operator *op = (NV_Operator *)thisTerm->data;
 	int vL, vR;
 	int resultVal;
@@ -229,18 +232,18 @@ NV_Term *NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Term *thisTerm)
 	return result;	
 }
 
-NV_Term *NV_LANG00_Op_nothingButDisappear(NV_Pointer env, NV_Term *thisTerm)
+NV_Pointer NV_LANG00_Op_nothingButDisappear(NV_Pointer env, NV_Pointer thisTerm)
 {
-	NV_Term *prev = thisTerm->prev;
+	NV_Pointer prev = thisTerm->prev;
 	NV_removeTerm(thisTerm);
 	return prev;
 }
 
-NV_Term *NV_LANG00_Op_sentenceSeparator(NV_Pointer env, NV_Term *thisTerm)
+NV_Pointer NV_LANG00_Op_sentenceSeparator(NV_Pointer env, NV_Pointer thisTerm)
 {
-	NV_Term *b;
-	NV_Term *sentenceTerm = NV_createTerm_Sentence(NULL);
-	NV_Term *sentenceRoot, remRoot;
+	NV_Pointer b;
+	NV_Pointer sentenceTerm = NV_createTerm_Sentence(NULL);
+	NV_Pointer sentenceRoot, remRoot;
 
 	sentenceRoot = sentenceTerm->data;
 
@@ -261,11 +264,11 @@ NV_Term *NV_LANG00_Op_sentenceSeparator(NV_Pointer env, NV_Term *thisTerm)
 	return b;
 }
 
-NV_Term *NV_LANG00_Op_stringLiteral(NV_Pointer env, NV_Term *thisTerm)
+NV_Pointer NV_LANG00_Op_stringLiteral(NV_Pointer env, NV_Pointer thisTerm)
 {
 	// "string literal"
 	int len = 0, sp;
-	NV_Term *t, *endTerm;
+	NV_Pointer t, *endTerm;
 	NV_Operator *op;
 	char *s, *st;
 	for(t = thisTerm->next;;t = t->next){
@@ -313,22 +316,22 @@ NV_Term *NV_LANG00_Op_stringLiteral(NV_Pointer env, NV_Term *thisTerm)
 	return t;
 }
 
-NV_Term *NV_LANG00_Op_sentenceBlock(NV_Pointer env, NV_Term *thisTerm)
+NV_Pointer NV_LANG00_Op_sentenceBlock(NV_Pointer env, NV_Pointer thisTerm)
 {
 	// {}
-	NV_Term *originalTree;
+	NV_Pointer originalTree;
 	//
 	originalTree = NV_LANG00_makeBlock(env, thisTerm, "}");
 	if(!originalTree) return NULL;
 	return originalTree;
 }
 
-NV_Term *NV_LANG00_Op_precedentBlock(NV_Pointer env, NV_Term *thisTerm)
+NV_Pointer NV_LANG00_Op_precedentBlock(NV_Pointer env, NV_Pointer thisTerm)
 {
 	// ()
 	// if prev term is sentence object, perform function call. 
-	NV_Term *originalTree;
-	NV_Term *prev;
+	NV_Pointer originalTree;
+	NV_Pointer prev;
 	//
 	originalTree = NV_LANG00_makeBlock(env, thisTerm, ")");
 	if(!originalTree) return NULL;
@@ -343,10 +346,10 @@ NV_Term *NV_LANG00_Op_precedentBlock(NV_Pointer env, NV_Term *thisTerm)
 	return originalTree;
 }
 
-NV_Term *NV_LANG00_Op_structureAccessor(NV_Pointer env, NV_Term *thisTerm)
+NV_Pointer NV_LANG00_Op_structureAccessor(NV_Pointer env, NV_Pointer thisTerm)
 {
 	// []
-	NV_Term *structTerm, *indexTerm, *t, *v;
+	NV_Pointer structTerm, *indexTerm, *t, *v;
 	int index;
 	char s[32];
 	//
@@ -376,7 +379,7 @@ NV_Term *NV_LANG00_Op_structureAccessor(NV_Pointer env, NV_Term *thisTerm)
 	return v;
 }
 
-NV_Term *NV_LANG00_Op_builtin_exec(NV_Pointer env, NV_Term *thisTerm)
+NV_Pointer NV_LANG00_Op_builtin_exec(NV_Pointer env, NV_Pointer thisTerm)
 {
 	//
 	if(!NV_LANG00_execSentence(env, thisTerm->next)){
@@ -388,11 +391,11 @@ NV_Term *NV_LANG00_Op_builtin_exec(NV_Pointer env, NV_Term *thisTerm)
 	return thisTerm;
 }
 
-NV_Term *NV_LANG00_Op_if(NV_Pointer env, NV_Term *thisTerm)
+NV_Pointer NV_LANG00_Op_if(NV_Pointer env, NV_Pointer thisTerm)
 {
 	// if {cond} {do} [{cond} {do}] [{else}]
 	int cond;
-	NV_Term *condTerm, *doTerm, *t, *next;
+	NV_Pointer condTerm, *doTerm, *t, *next;
 	//
 	t = thisTerm;
 	//
@@ -447,11 +450,11 @@ NV_Term *NV_LANG00_Op_if(NV_Pointer env, NV_Term *thisTerm)
 	return thisTerm;
 }
 
-NV_Term *NV_LANG00_Op_for(NV_Pointer env, NV_Term *thisTerm)
+NV_Pointer NV_LANG00_Op_for(NV_Pointer env, NV_Pointer thisTerm)
 {
 	// for {init block}{conditional block}{update block}{statement}
 	//int cond;
-	NV_Term *t, *initTerm, *condTerm, *updateTerm, *doTerm;
+	NV_Pointer t, *initTerm, *condTerm, *updateTerm, *doTerm;
 	NV_Term tmpCondRoot, tmpUpdateRoot, tmpDoRoot;
 	//
 	t = thisTerm;
@@ -508,9 +511,9 @@ NV_Term *NV_LANG00_Op_for(NV_Pointer env, NV_Term *thisTerm)
 	return t;
 }
 
-NV_Term *NV_LANG00_Op_print(NV_Pointer env, NV_Term *thisTerm)
+NV_Pointer NV_LANG00_Op_print(NV_Pointer env, NV_Pointer thisTerm)
 {
-	NV_Term *target = thisTerm->next;
+	NV_Pointer target = thisTerm->next;
 	int32_t *tmpint32;
 	//
 	if(!target)return NULL;
@@ -531,9 +534,9 @@ NV_Term *NV_LANG00_Op_print(NV_Pointer env, NV_Term *thisTerm)
 	return target;
 }
 
-NV_Term *NV_LANG00_Op_showOpList(NV_Pointer env, NV_Term *thisTerm)
+NV_Pointer NV_LANG00_Op_showOpList(NV_Pointer env, NV_Pointer thisTerm)
 {
-	NV_Term *prev = thisTerm->prev;
+	NV_Pointer prev = thisTerm->prev;
 	//
 	NV_Operator *p;
 	printf("Precedence: [opName]\n");
@@ -545,13 +548,13 @@ NV_Term *NV_LANG00_Op_showOpList(NV_Pointer env, NV_Term *thisTerm)
 	return prev;
 }
 
-NV_Term *NV_LANG00_Op_mem(NV_Pointer env, NV_Term *thisTerm)
+NV_Pointer NV_LANG00_Op_mem(NV_Pointer env, NV_Pointer thisTerm)
 {
 	thisTerm = NV_overwriteTerm(thisTerm, NV_createTerm_Imm32(NV_getMallocCount()));
 	return thisTerm;
 }
-
-NV_Term *NV_LANG00_Op_exit(NV_Pointer env, NV_Term *thisTerm)
+*/
+NV_Pointer NV_LANG00_Op_exit(NV_Pointer env, NV_Pointer thisTerm)
 {
 	NV_Env_setEndFlag(env, 1);
 	NV_Env_setAutoPrintValueEnabled(env, 0);
@@ -573,6 +576,7 @@ NV_LangDef *NV_getDefaultLang()
 	lang->char2List = char2;
 	// based on http://www.tutorialspoint.com/cprogramming/c_operators.htm
 	//
+	/*
 	NV_addOperator(lang, 200000,	"\"", NV_LANG00_Op_stringLiteral);
 	NV_addOperator(lang, 100050,	"{", NV_LANG00_Op_sentenceBlock);
 	NV_addOperator(lang, 100040,	";", NV_LANG00_Op_sentenceSeparator);
@@ -629,6 +633,7 @@ NV_LangDef *NV_getDefaultLang()
 	//
 	NV_addOperator(lang, 10,	"print", NV_LANG00_Op_print);
 	NV_addOperator(lang, 10,	"showop", NV_LANG00_Op_showOpList);
+	*/
 	NV_addOperator(lang, 10,	"exit", NV_LANG00_Op_exit);
 	
 	return lang;

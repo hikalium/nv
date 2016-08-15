@@ -1,5 +1,5 @@
 #include "nv.h"
-
+/*
 NV_Term *NV_allocTerm()
 {
 	NV_Term *t;
@@ -228,3 +228,4 @@ void NV_getValueOfTermAsSentence(NV_Term *t, NV_Term *dstRoot)
 	}
 	return;
 }
+*/

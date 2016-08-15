@@ -1,10 +1,13 @@
 
-SRCS=nv.c nv_element.c nv_env.c nv_envdep.c nv_fix.c nv_lang.c nv_term.c nv_termlist.c nv_var.c nv_varset.c
+SRCS=nv.c nv_element.c nv_env.c nv_envdep.c nv_fix.c nv_integer.c nv_lang.c nv_list.c nv_operator.c nv_term.c nv_var.c nv_varset.c
 HEADERS=nv.h
 
 nv : $(SRCS) $(HEADERS) Makefile
-	cc -Wall -lncurses -o nv  $(SRCS)
+	cc -Wall -lncurses -ferror-limit=5 -o nv  $(SRCS)
 
 clean:
 	-rm nv
+
+log:
+	git log --pretty=format:" - %s %n   http://github.com/hikalium/nv/commit/%H" --since=10hour
 
