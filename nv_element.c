@@ -6,7 +6,7 @@ struct NV_ELEMENT {
     void *data;
 };
 
-NV_Pointer NV_E_malloc_internal(NV_ElementType type, int size);
+NV_Pointer NV_E_malloc_internal(NV_ElementType type, void *data);
 
 NV_Element *freeRoot = NULL;
 
@@ -15,18 +15,13 @@ NV_Pointer NV_E_malloc_type(NV_ElementType type)
 	NV_Pointer p;
 	switch(type){
 		case EEnv:
-			return NV_E_malloc_internal(EEnv, sizeof(NV_Env));
+			return NV_E_malloc_internal(EEnv, NV_allocEnv());
 		default:
 			NV_Error("Unknown element type %d\n", type);
 			p.data = NULL;
 			p.token = rand();
 	}
 	return p;
-}
-
-NV_Pointer NV_E_malloc_size(int size)
-{
-	return NV_E_malloc_internal(ERawData, size);
 }
 
 void NV_E_free(NV_Pointer p)
@@ -72,7 +67,7 @@ void *NV_E_getRawPointer(NV_Pointer p, NV_ElementType et)
 // internal function
 //
 
-NV_Pointer NV_E_malloc_internal(NV_ElementType type, int size)
+NV_Pointer NV_E_malloc_internal(NV_ElementType type, void *data)
 {
 	NV_Element *e;
 	NV_Pointer p;
@@ -85,7 +80,7 @@ NV_Pointer NV_E_malloc_internal(NV_ElementType type, int size)
 	}
 	e->type = type;
 	e->token = rand();
-	e->data = NV_malloc(size);
+	e->data = data;
 	//
 	p.token = e->token;
 	p.data = e;

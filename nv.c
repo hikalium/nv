@@ -6,7 +6,6 @@ int main(int argc, char *argv[])
 	int i;
 	char line[MAX_INPUT_LEN];
 	NV_Pointer env;
-	NV_Env *envp; 
 
 	for(i = 1; i < argc; i++){
 		if(strcmp(argv[i], "-v") == 0) NV_isDebugMode = 1;
@@ -15,13 +14,11 @@ int main(int argc, char *argv[])
 	env = NV_E_malloc_type(EEnv);
 	NV_Env_setVarSet(env, NV_allocVariableSet());
 	NV_Env_setLangDef(env, NV_getDefaultLang());
-	//
-	envp = NV_E_getRawPointer(env, EEnv); 
 	
 	while(NV_gets(line, sizeof(line)) != NULL){
 		NV_tokenize(env, line);
 		NV_Evaluate(env);
-		if(envp->endFlag) break;
+		if(NV_Env_getEndFlag(env)) break;
 	}
 	return 0;
 }
@@ -172,17 +169,18 @@ void NV_tokenize0(NV_LangDef *langDef, char (*token0)[MAX_TOKEN_LEN], int token0
 
 int NV_tokenize(NV_Pointer env, const char *s)
 {
-	NV_Env *envp = NV_E_getRawPointer(env, EEnv);
+	NV_Term *termRoot = NV_Env_getTermRoot(env);
+	NV_LangDef *langDef = NV_Env_getLangDef(env);
 	// 
 	int i;
 	char token0[MAX_TOKENS][MAX_TOKEN_LEN];
 	int token0Len = 0;
 	//
-	NV_tokenize0(envp->langDef, token0, MAX_TOKENS, &token0Len, s);
+	NV_tokenize0(langDef, token0, MAX_TOKENS, &token0Len, s);
 	for(i = 0; i < token0Len; i++){
-		NV_appendTerm(envp->langDef, &envp->termRoot, token0[i]);
+		NV_appendTerm(langDef, termRoot, token0[i]);
 	}
-	if(NV_isDebugMode) NV_printTerms(&envp->termRoot);
+	if(NV_isDebugMode) NV_printTerms(termRoot);
 	//
 	return 0;
 }
@@ -193,28 +191,26 @@ int NV_tokenize(NV_Pointer env, const char *s)
 
 void NV_Evaluate(NV_Pointer env)
 {
-	NV_Env *envp = NV_E_getRawPointer(env, EEnv); 
+	NV_Term *termRoot = NV_Env_getTermRoot(env);
 	//
-	envp->autoPrintValue = 1;
-	if(NV_EvaluateSentence(env, &envp->termRoot)){
+	NV_Env_setAutoPrintValueEnabled(env, 1);
+	if(NV_EvaluateSentence(env, termRoot)){
 		// Ended with error
 		printf("Bad Syntax\n");
 	} else{
 		// Ended with Success
-		if(envp->autoPrintValue && NV_getLastTerm(&envp->termRoot)){
+		if(NV_Env_getAutoPrintValueEnabled(env) && NV_getLastTerm(termRoot)){
 			printf("= ");
-			NV_printLastTermValue(&envp->termRoot, envp->varSet);
+			NV_printLastTermValue(termRoot, NV_Env_getVarSet(env));
 			printf("\n");
 		}
 	}
-	NV_removeTermTree(&envp->termRoot);
-	if(NV_isDebugMode) NV_printVarsInVarSet(envp->varSet);
+	NV_removeTermTree(termRoot);
+	if(NV_isDebugMode) NV_printVarsInVarSet(NV_Env_getVarSet(env));
 }
 
 int NV_EvaluateSentence(NV_Pointer env, NV_Term *root)
 {
-	NV_Env *envp = NV_E_getRawPointer(env, EEnv); 
-	//
 	NV_Term *t;
 	NV_Operator *op, *currentOp;
 	int minOpIndex, opIndex;
@@ -222,14 +218,14 @@ int NV_EvaluateSentence(NV_Pointer env, NV_Term *root)
 	if(!root) return 1;
 	if(!root->next) return 0;	// empty input
 
-	envp->endFlag = 0;
-	while(!envp->endFlag){
+	NV_Env_setEndFlag(env, 0);
+	while(!NV_Env_getEndFlag(env)){
 		minOpIndex = -1;
 		currentOp = NULL;
 		for(t = root->next; t; t = t->next){
 			if(t->type == Operator){
 				op = (NV_Operator *)t->data;
-				opIndex = NV_getOperatorIndex(envp->langDef, op);
+				opIndex = NV_getOperatorIndex(NV_Env_getLangDef(env), op);
 				if(opIndex == -1){
 					NV_printError("Internal error: Op not found: %s\n", op->name);
 					return 1;
@@ -266,7 +262,7 @@ int NV_EvaluateSentence(NV_Pointer env, NV_Term *root)
 				}
 			}
 		}
-		if(envp->endFlag){
+		if(NV_Env_getEndFlag(env)){
 			if(NV_isDebugMode) printf("Evaluate end (End flag)\n");
 			return 0;
 		}
@@ -276,8 +272,6 @@ int NV_EvaluateSentence(NV_Pointer env, NV_Term *root)
 
 NV_Term *NV_TryExecOp(NV_Pointer env, NV_Operator *currentOp, NV_Term *t, NV_Term *root)
 {
-	NV_Env *envp = NV_E_getRawPointer(env, EEnv); 
-	//
 	NV_Operator *fallbackOp;
 	NV_Term *orgTerm = t;
 	//
@@ -287,7 +281,7 @@ NV_Term *NV_TryExecOp(NV_Pointer env, NV_Operator *currentOp, NV_Term *t, NV_Ter
 		if(NV_isDebugMode) printf("End native op: [%s]\n", currentOp->name);
 		if(!t){
 			// try fallback
-			fallbackOp = NV_getFallbackOperator(envp->langDef, currentOp);
+			fallbackOp = NV_getFallbackOperator(NV_Env_getLangDef(env), currentOp);
 			if(!fallbackOp){
 				NV_printError("Operator mismatched: %s\n", currentOp->name);
 				NV_printTerms(root);

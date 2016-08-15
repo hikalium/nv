@@ -112,16 +112,7 @@ struct NV_VARSET {
 	int varUsed;
 };
 
-struct NV_ENV {
-	// interpreter params
-	NV_LangDef *langDef;
-	// interpreter env
-	NV_Term termRoot;
-	int autoPrintValue;
-	int endFlag;
-	NV_VariableSet *varSet;
-};
-
+struct NV_ENV;
 extern int NV_isDebugMode;
 
 // @nv.c
@@ -145,7 +136,6 @@ void NV_printError(const char *format, ...);
 
 // @nv_element.c
 NV_Pointer NV_E_malloc_type(NV_ElementType type);
-NV_Pointer NV_E_malloc_size(int size);
 void NV_E_free(NV_Pointer p);
 int NV_E_isValidPointer(NV_Pointer p);
 int NV_E_isType(NV_Pointer p, NV_ElementType et);
@@ -158,7 +148,10 @@ NV_VariableSet *NV_Env_getVarSet(NV_Pointer env);
 int NV_Env_setLangDef(NV_Pointer env, NV_LangDef *ld);
 NV_LangDef *NV_Env_getLangDef(NV_Pointer env);
 int NV_Env_setAutoPrintValueEnabled(NV_Pointer env, int b);
+int NV_Env_getAutoPrintValueEnabled(NV_Pointer env);
 int NV_Env_setEndFlag(NV_Pointer env, int b);
+int NV_Env_getEndFlag(NV_Pointer env);
+NV_Term *NV_Env_getTermRoot(NV_Pointer env);
 
 // @nv_envdep.c
 char *NV_gets(char *str, int size);
