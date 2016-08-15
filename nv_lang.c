@@ -396,21 +396,20 @@ NV_Term *NV_LANG00_Op_if(NV_Pointer env, NV_Term *thisTerm)
 	//
 	t = thisTerm;
 	//
-	t = t->next; if(NV_canReadTermAsSentence(t)) return NULL;
+	t = t->next; if(!NV_canReadTermAsSentence(t)) return NULL;
 	condTerm = t;
-	t = t->next; if(NV_canReadTermAsSentence(t)) return NULL;
+	t = t->next; if(!NV_canReadTermAsSentence(t)) return NULL;
 	doTerm = t;
 	for(;;){
 		// evaluate cond
-		if(!NV_LANG00_execSentence(env, thisTerm->next)) return NULL;
-		condTerm = thisTerm->next;
-		if(condTerm->next != doTerm) return NULL;
-		if(condTerm->type == Variable) NV_tryConvertTermFromUnknownToImm(NV_Env_getVarSet(env), &condTerm);
-		if(condTerm->type == Imm32s){
-			cond = *((int32_t *)condTerm->data);
-		} else{
+		if(!NV_LANG00_execSentence(env, thisTerm->next))
 			return NULL;
-		}
+		condTerm = thisTerm->next;
+		if(condTerm->next != doTerm)
+			return NULL;
+		// get cond value
+		if(!NV_canReadTermAsInt(condTerm)) return NULL;
+		cond = NV_getValueOfTermAsInt(condTerm);
 		NV_removeTerm(condTerm);
 		// evaluate do
 		if(cond){

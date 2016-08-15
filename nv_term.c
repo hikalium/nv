@@ -164,6 +164,8 @@ int NV_canReadTermAsInt(NV_Term *t)
 		}
 	} else if(t->type == Imm32s){
 		return 1;
+	} else if(t->type == Sentence){
+		return NV_canReadTermAsInt(NV_getLastTerm(t->data));
 	}
 	return 0;
 }
@@ -186,6 +188,8 @@ int NV_getValueOfTermAsInt(NV_Term *t)
 	} else if(t->type == Imm32s){
 		tmp_sint32 = t->data;
 		return *tmp_sint32;
+	} else if(t->type == Sentence){
+		return NV_getValueOfTermAsInt(NV_getLastTerm(t->data));
 	}
 	return 0;
 }
