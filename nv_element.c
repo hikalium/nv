@@ -19,15 +19,17 @@ NV_Pointer NV_E_malloc_type(NV_ElementType type)
 	NV_Pointer p;
 	switch(type){
 		case EList:
-			return NV_E_malloc_internal(EList,		NV_allocList());
+			return NV_E_malloc_internal(EList,		NV_allocListItem());
+		case EListItem:
+			return NV_E_malloc_internal(EListItem,	NV_allocListItem());
 		case EEnv:
 			return NV_E_malloc_internal(EEnv,		NV_allocEnv());
 		case EOperator:
 			return NV_E_malloc_internal(EOperator,	NV_allocOperator());
 		case EInteger:
 			return NV_E_malloc_internal(EInteger, 	NV_allocInteger());
-		//case EString:
-			//return NV_E_malloc_internal(EString, 	NV_allocString());
+		case EString:
+			return NV_E_malloc_internal(EString, 	NV_allocString());
 		case EVariable:
 			return NV_E_malloc_internal(EVariable, 	NV_allocVariable());
 		default:
@@ -80,7 +82,10 @@ int NV_E_isType(NV_Pointer p, NV_ElementType et)
 
 void *NV_E_getRawPointer(NV_Pointer p, NV_ElementType et)
 {
-	if(!NV_E_isType(p, et)) return NULL;
+	if(!NV_E_isType(p, et)){
+		NV_Error("Attempting to get raw pointer for wrong type (type: %d)\n", et);
+		return NULL;
+	}
 	return p.data->data;
 }
 
@@ -89,9 +94,19 @@ void NV_printElement(NV_Pointer p)
 	if(NV_E_isValidPointer(p)){
 		if(NV_E_isType(p, EInteger)){
 			NV_Integer_print(p);		
+		} else if(NV_E_isType(p, EOperator)){
+			NV_Operator_print(p);		
+		} else if(NV_E_isType(p, EString)){
+			NV_String_print(p);		
+		} else{
+			printf("(type: %d)", p.data->type);
 		}
 	} else{
-		printf("(Invalid) %p ", p.data);
+		if(p.data){
+			printf("(Invalid) %p ", p.data);
+		} else{
+			printf("(null)");
+		}
 	}
 }
 

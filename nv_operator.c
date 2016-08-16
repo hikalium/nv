@@ -13,25 +13,38 @@ NV_Operator *NV_allocOperator()
 	return t;
 }
 
+void NV_Operator_print(NV_Pointer t)
+{
+	NV_Operator *op;
+	op = NV_E_getRawPointer(t, EOperator);
+	if(op){
+		printf("Op %s : %d @ %p", op->name, op->precedence, op->nativeFunc);
+	}
+}
+
 void NV_addOperator(NV_LangDef *lang, int precedence, const char *name, NV_Pointer (*nativeFunc)(NV_Pointer env, NV_Pointer thisTerm))
 {
-	NV_Pointer t;
-	NV_Operator *rawData;
+	NV_Pointer opData, tOpItem;
+	NV_Operator *opRawData, *tOpRawData;
+	
 
-	t = NV_E_malloc_type(EOperator);
-	rawData = NV_E_getRawPointer(t, EOperator);
+	opData = NV_E_malloc_type(EOperator);
+	opRawData = NV_E_getRawPointer(opData, EOperator);
 	//
-	NV_strncpy(rawData->name, name, sizeof(rawData->name), strlen(name));
-	rawData->precedence = precedence;
-	rawData->nativeFunc = nativeFunc;
+	NV_strncpy(opRawData->name, name, sizeof(opRawData->name), strlen(name));
+	opRawData->precedence = precedence;
+	opRawData->nativeFunc = nativeFunc;
 	// op list is sorted in a descending order of precedence.
-/*
-	for(p = &lang->opRoot; *p; p = &(*p)->next){
-		if((*p)->precedence < t->precedence) break;
+	tOpItem = NV_List_getNextItem(lang->opRoot);
+	for(; !NV_E_isNullPointer(tOpItem); tOpItem = NV_List_getNextItem(tOpItem)){
+		tOpRawData = NV_List_getItemRawData(tOpItem, EOperator);
+		if(tOpRawData->precedence < opRawData->precedence) break;
 	}
-*/
-	//t->next = *p;
-	//*p = t;
+	if(NV_E_isNullPointer(tOpItem)){
+		NV_List_push(lang->opRoot, opData);
+	} else{
+		NV_List_insertDataBeforeItem(tOpItem, opData);
+	}
 }
 /*
 NV_Pointer NV_getOperatorFromString(NV_LangDef *lang, const char *termStr)

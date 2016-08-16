@@ -510,32 +510,16 @@ NV_Pointer NV_LANG00_Op_for(NV_Pointer env, NV_Pointer thisTerm)
 	//
 	return t;
 }
-
+*/
 NV_Pointer NV_LANG00_Op_print(NV_Pointer env, NV_Pointer thisTerm)
 {
-	NV_Pointer target = thisTerm->next;
-	int32_t *tmpint32;
-	//
-	if(!target)return NULL;
-	if(target->type == Unknown)	NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &target, 0);
-	if(target->type == Variable){
-		NV_printVariable(target->data, 0);
-		putchar('\n');
-	} else if(target->type == Imm32s){
-		tmpint32 = target->data;
-		printf("%d\n", *tmpint32);
-	} else if(target->type == String){
-		printf("%s\n", target->data);
-	} else{
-		return NULL;
-	}
-	NV_removeTerm(thisTerm);
 	NV_Env_setAutoPrintValueEnabled(env, 0);
-	return target;
+	return NV_NullPointer;
 }
-
+/*
 NV_Pointer NV_LANG00_Op_showOpList(NV_Pointer env, NV_Pointer thisTerm)
 {
+
 	NV_Pointer prev = thisTerm->prev;
 	//
 	NV_Operator *p;
@@ -545,12 +529,14 @@ NV_Pointer NV_LANG00_Op_showOpList(NV_Pointer env, NV_Pointer thisTerm)
 	}
 	//
 	NV_removeTerm(thisTerm);
-	return prev;
-}
 
+	return NV_NullPointer;
+}
+*/
+/*
 NV_Pointer NV_LANG00_Op_mem(NV_Pointer env, NV_Pointer thisTerm)
 {
-	thisTerm = NV_overwriteTerm(thisTerm, NV_createTerm_Imm32(NV_getMallocCount()));
+	//thisTerm = NV_overwriteTerm(thisTerm, NV_createTerm_Imm32(NV_getMallocCount()));
 	return thisTerm;
 }
 */
@@ -630,11 +616,13 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 200,	"%=", NV_LANG00_Op_compoundAssign);
 	//
 	NV_addOperator(lang, 101,	"=", NV_LANG00_Op_assign);
+	*/
 	//
 	NV_addOperator(lang, 10,	"print", NV_LANG00_Op_print);
-	NV_addOperator(lang, 10,	"showop", NV_LANG00_Op_showOpList);
-	*/
+	//NV_addOperator(lang, 12,	"showop", NV_LANG00_Op_showOpList);
 	NV_addOperator(lang, 10,	"exit", NV_LANG00_Op_exit);
+
+	NV_List_printAll(lang->opRoot, ",\n");
 	
 	return lang;
 }

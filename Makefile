@@ -1,5 +1,5 @@
 
-SRCS=nv.c nv_element.c nv_env.c nv_envdep.c nv_fix.c nv_integer.c nv_lang.c nv_list.c nv_operator.c nv_term.c nv_var.c nv_varset.c
+SRCS=nv.c nv_element.c nv_env.c nv_envdep.c nv_fix.c nv_integer.c nv_lang.c nv_list.c nv_operator.c nv_string.c nv_term.c nv_var.c nv_varset.c
 HEADERS=nv.h
 
 nv : $(SRCS) $(HEADERS) Makefile

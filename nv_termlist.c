@@ -90,33 +90,6 @@ void NV_appendTermRaw(NV_Term *root, NV_Term *new)
 	return;
 }
 
-void NV_appendTerm(NV_LangDef *langDef, NV_Term *termRoot, const char *termStr)
-{
-	// retv: isValid
-	NV_Term *new;
-	int tmpNum;
-	char *p;
-	// check operator
-	new = NV_createTerm_Operator(langDef, termStr);
-	if(new){
-		NV_appendTermRaw(termRoot, new);
-		return;
-	}
-	// check Integer
-	tmpNum = strtol(termStr, &p, 0);
-	if(termStr != p && *p == 0){
-		new = NV_createTerm_Imm32(tmpNum);
-		NV_appendTermRaw(termRoot, new);
-		return;
-	}
-	// unknown
-	new = NV_allocTerm();
-	new->type = Unknown;
-	new->data = (void *)termStr;
-	NV_appendTermRaw(termRoot, new);
-	return;
-}
-
 void NV_removeTerm(NV_Term *t)
 {
 	// don't apply to the root Term.
