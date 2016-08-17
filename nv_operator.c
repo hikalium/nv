@@ -46,15 +46,16 @@ void NV_addOperator(NV_LangDef *lang, int precedence, const char *name, NV_Point
 		NV_List_insertDataBeforeItem(tOpItem, opData);
 	}
 }
-/*
+
 NV_Pointer NV_getOperatorFromString(NV_LangDef *lang, const char *termStr)
 {
 	NV_Pointer p;
 	NV_Operator *op;
-	for(p = lang->opRoot; !NV_E_isNullPointer(p); p = NV_List_getNextItem(p)){
-		op = NV_E_getRawPointer(p, EOperator);
+	p = NV_List_getNextItem(lang->opRoot);
+	for(; !NV_E_isNullPointer(p); p = NV_List_getNextItem(p)){
+		op = NV_List_getItemRawData(p, EOperator);
 		if(strcmp(op->name, termStr) == 0){
-			return p;
+			return NV_List_getItemData(p);
 		}
 	}
 	return NV_NullPointer;
@@ -84,14 +85,20 @@ NV_Pointer NV_getFallbackOperator(NV_LangDef *lang, NV_Pointer baseP)
 
 int NV_getOperatorIndex(NV_LangDef *lang, NV_Pointer op)
 {
-	NV_Pointer p;
-	int i = 0;
-	if(NV_E_isValidPointer(op)){
-		for(p = lang->opRoot; !NV_E_isNullPointer(p); p = NV_List_getNextItem(p)){
-			if(NV_E_isValidPointer(p) && op.data == p.data) return i;
-			i++;
-		}
-	}
-	return -1;
+	return NV_List_indexOfData(lang->opRoot, op);
 }
-*/
+
+int NV_Operator_isLeftAssociative(NV_Pointer op)
+{
+	NV_Operator *opData;
+	opData = NV_E_getRawPointer(op, EOperator);
+	return !(opData && (opData->precedence & 1));
+}
+
+NV_Pointer NV_Operator_exec(NV_Pointer op, NV_Pointer env, NV_Pointer thisTerm)
+{
+	NV_Operator *opData;
+	opData = NV_E_getRawPointer(op, EOperator);
+	if(opData) return opData->nativeFunc(env, thisTerm);
+	return NV_NullPointer;
+}

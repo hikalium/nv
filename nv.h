@@ -12,7 +12,9 @@
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
-#define NV_Error(fmt, ...)	NV_printError("%s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
+#define NV_Error(fmt, ...)	printf("Error: %s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
+#define NV_DbgInfo(fmt, ...) \
+	if(NV_isDebugMode) printf("Info : %s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
 
 typedef enum	NV_ELEMENT_TYPE NV_ElementType;
 
@@ -88,9 +90,7 @@ void NV_tokenizeItem(NV_LangDef *langDef, NV_Pointer termRoot, const char *termS
 //
 void NV_Evaluate(NV_Pointer env);
 int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root);
-NV_Pointer NV_TryExecOp(NV_Pointer env, NV_Operator *currentOp, NV_Pointer t, NV_Pointer root);
-//
-void NV_printError(const char *format, ...);
+NV_Pointer NV_TryExecOp(NV_Pointer env, NV_Pointer currentOp, NV_Pointer t, NV_Pointer root);
 
 // @nv_element.c
 extern const NV_Pointer NV_NullPointer;
@@ -138,11 +138,13 @@ NV_Pointer NV_List_allocRoot();
 NV_Pointer NV_List_getNextItem(NV_Pointer item);
 NV_Pointer NV_List_getPrevItem(NV_Pointer item);
 NV_Pointer NV_List_lastItem(NV_Pointer root);
+NV_Pointer NV_List_removeItem(NV_Pointer item);
 NV_Pointer NV_List_removeItemByIndex(NV_Pointer rootItem, int i);
 void NV_List_insertItemAfter(NV_Pointer prevItem, NV_Pointer newItem);
 void NV_List_insertAllAfter(NV_Pointer prevItem, NV_Pointer rootItem);
 void NV_List_insertAllAfterIndex(NV_Pointer dstRoot, int index, NV_Pointer rootItem);
 NV_Pointer NV_List_getItemByIndex(NV_Pointer rootItem, int i);
+int NV_List_getItemIndex(NV_Pointer item);
 //
 void NV_List_push(NV_Pointer rootItem, NV_Pointer newData);
 NV_Pointer NV_List_pop(NV_Pointer pRoot);
@@ -156,6 +158,7 @@ NV_Pointer NV_List_getDataByIndex(NV_Pointer rootItem, int i);
 void *NV_List_getItemRawData(NV_Pointer item, NV_ElementType et);
 NV_Pointer NV_List_setItemData(NV_Pointer item, NV_Pointer newData);
 int NV_List_isItemType(NV_Pointer item, NV_ElementType et);
+int NV_List_indexOfData(NV_Pointer root, NV_Pointer data);
 //
 void NV_List_printAll(NV_Pointer root, const char *delimiter);
 
@@ -163,9 +166,11 @@ void NV_List_printAll(NV_Pointer root, const char *delimiter);
 NV_Operator *NV_allocOperator();
 void NV_Operator_print(NV_Pointer t);
 void NV_addOperator(NV_LangDef *lang, int precedence, const char *name, NV_Pointer(*nativeFunc)(NV_Pointer env, NV_Pointer thisTerm));
-//NV_Operator *NV_isOperator(NV_LangDef *lang, const char *termStr);
-//NV_Pointer NV_getFallbackOperator(NV_LangDef *lang, NV_Pointer baseP);
-//int NV_getOperatorIndex(NV_LangDef *lang, NV_Pointer op);
+NV_Pointer NV_getOperatorFromString(NV_LangDef *lang, const char *termStr);
+NV_Pointer NV_getFallbackOperator(NV_LangDef *lang, NV_Pointer baseP);
+int NV_getOperatorIndex(NV_LangDef *lang, NV_Pointer op);
+int NV_Operator_isLeftAssociative(NV_Pointer op);
+NV_Pointer NV_Operator_exec(NV_Pointer op, NV_Pointer env, NV_Pointer thisTerm);
 
 // @nv_string.c
 NV_String *NV_allocString();

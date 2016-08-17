@@ -66,30 +66,34 @@ NV_Pointer NV_List_lastItem(NV_Pointer root)
 	return lastItem;
 }
 
+NV_Pointer NV_List_removeItem(NV_Pointer item)
+{
+	// retv: data of item removed.
+	// note: this func does not free data of the item.
+	// you should free data manually
+	NV_Pointer tData;
+	NV_Pointer prevItem, nextItem;
+	//
+	if(NV_E_isNullPointer(item)) return NV_NullPointer;
+	//
+	tData = NV_List_getItemData(item);
+	prevItem = NV_List_getPrevItem(item);
+	nextItem = NV_List_getNextItem(item);
+	NV_List_setNextItem(prevItem, nextItem);
+	NV_List_setPrevItem(nextItem, prevItem);
+	return tData;
+}
+
 NV_Pointer NV_List_removeItemByIndex(NV_Pointer rootItem, int i)
 {
 	// retv: data of item removed.
 	// note: this func does not free data of the item.
-	// you should free data manually.o
-	NV_Pointer tItem, tData, prevItem, nextItem;
+	// you should free data manually
+	NV_Pointer tItem;
 	//
 	if(!NV_E_isValidPointer(rootItem)) return NV_NullPointer;
-	//
-	tItem = NV_List_getNextItem(rootItem);
-	do {
-		if(i == 0) break;
-		i--;
-		tItem = NV_List_getNextItem(tItem);
-	} while(!NV_E_isNullPointer(tItem));
-	//
-	if(NV_E_isNullPointer(tItem)) return NV_NullPointer;
-	//
-	tData = NV_List_getItemData(tItem);
-	prevItem = NV_List_getPrevItem(tItem);
-	nextItem = NV_List_getNextItem(tItem);
-	NV_List_setNextItem(prevItem, nextItem);
-	NV_List_setPrevItem(nextItem, prevItem);
-	return tData;
+	tItem = NV_List_getItemByIndex(rootItem, i);
+	return NV_List_removeItem(tItem);
 }
 
 void NV_List_insertItemAfter(NV_Pointer prevItem, NV_Pointer newItem)
@@ -105,7 +109,7 @@ void NV_List_insertAllAfter(NV_Pointer prevItem, NV_Pointer rootItem)
 {
 	NV_Pointer data;
 	if(NV_E_isNullPointer(prevItem)){
-		NV_Error("prevItem is NULL\n", "");
+		NV_Error("%s", "prevItem is NULL");
 		return;
 	}
 	while(!NV_E_isNullPointer(NV_List_getNextItem(rootItem))){
@@ -227,6 +231,19 @@ int NV_List_isItemType(NV_Pointer item, NV_ElementType et)
 {
 	return NV_E_isType(NV_List_getItemData(item), et);
 }
+
+int NV_List_indexOfData(NV_Pointer root, NV_Pointer data)
+{
+	int i = 0;
+	NV_Pointer li;
+	for(li = NV_List_getNextItem(root); !NV_E_isNullPointer(li); i++){
+		if(NV_List_getItemData(li).data == data.data) break;
+		li = NV_List_getNextItem(li);
+	}
+	if(NV_E_isNullPointer(li)) return -1;
+	return i;
+}
+
 
 //
 // Print

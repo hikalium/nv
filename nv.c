@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 
 	while(NV_gets(line, sizeof(line)) != NULL){
 		NV_tokenize(NV_Env_getLangDef(env), NV_Env_getTermRoot(env), line);
-		//NV_Evaluate(env);
+		NV_Evaluate(env);
 		if(NV_Env_getEndFlag(env)) break;
 	}
 	return 0;
@@ -108,7 +108,7 @@ void NV_tokenize(NV_LangDef *langDef, NV_Pointer termRoot, const char *input)
 			cType == 2 || lastCType == 2 || cType == 0 || lastCType == 0){
 			if(input + i - p != 0){
 				if((input + i - p) > MAX_TOKEN_LEN){
-					NV_printError("Too long token.\n", stderr);
+					NV_Error("%s", "Too long token.");
 					exit(EXIT_FAILURE);
 				}
 				NV_strncpy(buf, p, MAX_TOKEN_LEN, input + i - p);
@@ -125,21 +125,22 @@ void NV_tokenize(NV_LangDef *langDef, NV_Pointer termRoot, const char *input)
 void NV_tokenizeItem(NV_LangDef *langDef, NV_Pointer termRoot, const char *termStr)
 {
 	NV_Pointer t;
-	/*
-	// check operator
-	new = NV_createTerm_Operator(langDef, termStr);
-	if(new){
-		NV_appendTermRaw(termRoot, new);
+	int32_t tmpNum;
+	char *p;
+	
+	t = NV_getOperatorFromString(langDef, termStr);
+	if(!NV_E_isNullPointer(t)){
+		NV_List_push(termRoot, t);
 		return;
 	}
 	// check Integer
 	tmpNum = strtol(termStr, &p, 0);
 	if(termStr != p && *p == 0){
-		new = NV_createTerm_Imm32(tmpNum);
-		NV_appendTermRaw(termRoot, new);
+		t = NV_E_malloc_type(EInteger);
+		NV_Integer_setImm32(t, tmpNum);
+		NV_List_push(termRoot, t);
 		return;
 	}
-	*/
 	// unknown -> string
 	t = NV_E_malloc_type(EString);
 	NV_String_setString(t, termStr);
@@ -148,25 +149,42 @@ void NV_tokenizeItem(NV_LangDef *langDef, NV_Pointer termRoot, const char *termS
 //
 // Evaluate
 //
-/*
+
+void NV_resetEvalTree(NV_Pointer root)
+{
+	NV_Pointer item, data;
+	for(;;){
+		item = NV_List_getItemByIndex(root, 0);
+		if(NV_E_isNullPointer(item)) break;
+		data = NV_List_removeItem(item);
+		if(NV_E_isType(data, EString) || NV_E_isType(data, EInteger)){
+			NV_E_free(&data);
+		}
+	}
+}
+
 void NV_Evaluate(NV_Pointer env)
 {
 	NV_Pointer termRoot = NV_Env_getTermRoot(env);
+	NV_Pointer lastTerm;
 	//
 	NV_Env_setAutoPrintValueEnabled(env, 1);
 	if(NV_EvaluateSentence(env, termRoot)){
 		// Ended with error
-		printf("Bad Syntax\n");
+		NV_Error("%s\n", "Bad Syntax");
 	} else{
 		// Ended with Success
-		if(NV_Env_getAutoPrintValueEnabled(env) && NV_getLastTerm(termRoot)){
-			printf("= ");
-			NV_printLastTermValue(termRoot, NV_Env_getVarSet(env));
-			printf("\n");
+		if(NV_Env_getAutoPrintValueEnabled(env)){
+			lastTerm = NV_List_getItemData(NV_List_lastItem(termRoot));
+			if(!NV_E_isNullPointer(lastTerm)){
+				printf("= ");
+				NV_printElement(lastTerm);
+				printf("\n");
+			}
 		}
 	}
-	NV_removeTermTree(termRoot);
-	if(NV_isDebugMode) NV_printVarsInVarSet(NV_Env_getVarSet(env));
+	NV_resetEvalTree(termRoot);
+	//if(NV_isDebugMode) NV_printVarsInVarSet(NV_Env_getVarSet(env));
 }
 
 int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root)
@@ -179,15 +197,16 @@ int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root)
 
 	NV_Env_setEndFlag(env, 0);
 	while(!NV_Env_getEndFlag(env)){
+		// find op
 		minOpIndex = -1;
 		currentOp = NV_NullPointer;
-		t = NV_List_getNextItem(t);
+		t = NV_List_getNextItem(root);
 		for(; !NV_E_isNullPointer(t); t = NV_List_getNextItem(t)){
-			if(NV_E_isItemType(t, EOperator)){
+			if(NV_List_isItemType(t, EOperator)){
 				op = NV_List_getItemData(t);
 				opIndex = NV_getOperatorIndex(NV_Env_getLangDef(env), op);
 				if(opIndex == -1){
-					NV_printError("Internal error: Op not found:\n", "");
+					NV_Error("%s", "Internal error: Op not found");
 					return 1;
 				}
 				if(minOpIndex == -1 || opIndex < minOpIndex){
@@ -197,70 +216,70 @@ int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root)
 			}
 		}
 		if(NV_E_isNullPointer(currentOp)){
-			if(NV_isDebugMode) printf("Evaluate end (currentOp is NULL)\n");
+			NV_DbgInfo("%s", "Evaluate end (currentOp is NULL)");
 			return 0;
 		}
 		//if(NV_isDebugMode) printf("current op: [%s]\n", currentOp->name);
-		if((currentOp->precedence & 1) == 0){
+		if(NV_Operator_isLeftAssociative(currentOp)){
 			// left-associative
-			for(t = root->next; t; t = t->next){
+			t = NV_List_getNextItem(root);
+			for(; !NV_E_isNullPointer(t); t = NV_List_getNextItem(t)){
 				t = NV_TryExecOp(env, currentOp, t, root);
-				if(!t){
-					if(NV_isDebugMode) printf("Evaluate end (Operator Mismatched)\n");
+				if(NV_E_isNullPointer(t)){
+					NV_DbgInfo("%s", "Evaluate end (Op Mismatched)");
 					return 1;
 				}
 			}
 		} else{
 			// right-associative
-			for(t = root; t->next; t = t->next); // skip
-			for(; t != root; t = t->prev){
+			t = NV_List_lastItem(root);
+			for(; !NV_E_isNullPointer(t); t = NV_List_getPrevItem(t)){
 				// rewind
 				t = NV_TryExecOp(env, currentOp, t, root);
-				if(!t){
-					if(NV_isDebugMode) printf("Evaluate end (Operator Mismatched)\n");
+				if(NV_E_isNullPointer(t)){
+					NV_DbgInfo("%s", "Evaluate end (Op Mismatched)");
 					return 1;
 				}
 			}
 		}
 		if(NV_Env_getEndFlag(env)){
-			if(NV_isDebugMode) printf("Evaluate end (End flag)\n");
+			NV_DbgInfo("%s", "Evaluate end (End flag)");
 			return 0;
 		}
 	}
 	return 0;
 }
 
-NV_Term *NV_TryExecOp(NV_Pointer env, NV_Operator *currentOp, NV_Term *t, NV_Term *root)
+NV_Pointer NV_TryExecOp(NV_Pointer env, NV_Pointer currentOp, NV_Pointer thisTerm, NV_Pointer root)
 {
-	NV_Operator *fallbackOp;
-	NV_Term *orgTerm = t;
+	NV_Pointer fallbackOp;
+	NV_Pointer orgTerm = thisTerm;
 	//
-	if(t->type == Operator && t->data == currentOp){
-		if(NV_isDebugMode) printf("Begin native op: [%s]\n", currentOp->name);
-		t = currentOp->nativeFunc(env, t);
-		if(NV_isDebugMode) printf("End native op: [%s]\n", currentOp->name);
-		if(!t){
+	if(NV_List_isItemType(thisTerm, EOperator) && 
+		NV_List_getItemData(thisTerm).data == currentOp.data){
+		if(NV_isDebugMode){	
+			NV_DbgInfo("%s", "Begin native op: ");
+			NV_Operator_print(currentOp); putchar('\n');
+		}
+		thisTerm = NV_Operator_exec(currentOp, env, thisTerm);
+		if(NV_isDebugMode){
+			NV_DbgInfo("%s", "End native op:");
+			NV_Operator_print(currentOp); putchar('\n');
+		}
+		if(NV_E_isNullPointer(thisTerm)){
 			// try fallback
 			fallbackOp = NV_getFallbackOperator(NV_Env_getLangDef(env), currentOp);
-			if(!fallbackOp){
-				NV_printError("Operator mismatched: %s\n", currentOp->name);
-				NV_printTerms(root);
-				return NULL;
+			if(NV_E_isNullPointer(fallbackOp)){
+				NV_Error("%s", "Operator mismatched: ");
+				NV_Operator_print(currentOp); putchar('\n');
+				NV_List_printAll(root, ", ");
+				return NV_NullPointer;
 			}
-			orgTerm->data = fallbackOp;
-			t = orgTerm;
+			NV_List_setItemData(orgTerm, fallbackOp);
+			thisTerm = orgTerm;
 		}
-		if(NV_isDebugMode) NV_printTerms(root);
+		if(NV_isDebugMode) NV_List_printAll(root, ", ");
 	}
-	return t;
-}
-*/
-void NV_printError(const char *format, ...)
-{
-	va_list args;
-	printf("Error: ");
-	va_start(args, format);
-	vprintf(format, args);
-	va_end(args);
+	return thisTerm;
 }
 

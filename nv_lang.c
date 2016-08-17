@@ -231,14 +231,14 @@ NV_Pointer NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Pointer thisTerm)
 	//
 	return result;	
 }
-
+*/
 NV_Pointer NV_LANG00_Op_nothingButDisappear(NV_Pointer env, NV_Pointer thisTerm)
 {
-	NV_Pointer prev = thisTerm->prev;
-	NV_removeTerm(thisTerm);
+	NV_Pointer prev = NV_List_getPrevItem(thisTerm);
+	NV_List_removeItem(thisTerm);
 	return prev;
 }
-
+/*
 NV_Pointer NV_LANG00_Op_sentenceSeparator(NV_Pointer env, NV_Pointer thisTerm)
 {
 	NV_Pointer b;
@@ -571,6 +571,7 @@ NV_LangDef *NV_getDefaultLang()
 	//
 	NV_addOperator(lang, 100000,	"mem", NV_LANG00_Op_mem);
 	//
+*/
 	NV_addOperator(lang, 10000,	" ", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 10000,	"\t", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 10000,	"\r", NV_LANG00_Op_nothingButDisappear);	
@@ -578,6 +579,7 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 10000,	";;", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 10000,	"else", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 10000,	"elseif", NV_LANG00_Op_nothingButDisappear);
+/*
 	//
 	NV_addOperator(lang, 2010,	"[", NV_LANG00_Op_structureAccessor);	
 	NV_addOperator(lang, 2000,	"]", NV_LANG00_Op_nothingButDisappear);
@@ -622,7 +624,7 @@ NV_LangDef *NV_getDefaultLang()
 	//NV_addOperator(lang, 12,	"showop", NV_LANG00_Op_showOpList);
 	NV_addOperator(lang, 10,	"exit", NV_LANG00_Op_exit);
 
-	NV_List_printAll(lang->opRoot, ",\n");
+	if(NV_isDebugMode) NV_List_printAll(lang->opRoot, ",\n");
 	
 	return lang;
 }

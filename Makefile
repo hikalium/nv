@@ -3,7 +3,7 @@ SRCS=nv.c nv_element.c nv_env.c nv_envdep.c nv_fix.c nv_integer.c nv_lang.c nv_l
 HEADERS=nv.h
 
 nv : $(SRCS) $(HEADERS) Makefile
-	cc -Wall -lncurses -ferror-limit=5 -o nv  $(SRCS)
+	cc -Wall -lncurses -Wunused-function -ferror-limit=5 -o nv  $(SRCS)
 
 clean:
 	-rm nv
