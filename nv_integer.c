@@ -42,6 +42,9 @@ NV_Pointer NV_Integer_evalBinOp(NV_Pointer vL, NV_Pointer vR, NV_BinOpType type)
 	NV_Pointer result;
 	int32_t rv, ivL, ivR;
 	//
+	vL = NV_E_getPrimitive(vL);
+	vR = NV_E_getPrimitive(vR);
+	//
 	if(!NV_E_isType(vL, EInteger) || !NV_E_isType(vR, EInteger))
 		return NV_NullPointer;
 	//

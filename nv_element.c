@@ -30,8 +30,6 @@ NV_Pointer NV_E_malloc_type(NV_ElementType type)
 			return NV_E_malloc_internal(EInteger, 	NV_allocInteger());
 		case EString:
 			return NV_E_malloc_internal(EString, 	NV_allocString());
-		case EVariable:
-			return NV_E_malloc_internal(EVariable, 	NV_allocVariable());
 		default:
 			NV_Error("Unknown element type %d\n", type);
 			p = NV_NullPointer;
@@ -92,6 +90,16 @@ void *NV_E_getRawPointer(NV_Pointer p, NV_ElementType et)
 		return NULL;
 	}
 	return p.data->data;
+}
+
+NV_Pointer NV_E_getPrimitive(NV_Pointer maybeComplexItem)
+{
+	if(NV_E_isType(maybeComplexItem, EList)){
+		return NV_E_getPrimitive(NV_List_lastItem(maybeComplexItem));
+	} else if(NV_E_isType(maybeComplexItem, EListItem)){
+		return NV_E_getPrimitive(NV_List_getItemData(maybeComplexItem));
+	}
+	return maybeComplexItem;
 }
 
 void NV_printElement(NV_Pointer p)

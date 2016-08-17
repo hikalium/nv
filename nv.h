@@ -34,13 +34,12 @@ typedef struct	NV_VARIABLE		NV_Variable;
 
 enum NV_ELEMENT_TYPE {
 	ENone,
-	EList,
-	EListItem,
+	EList,		// complex
+	EListItem,	// complex
 	EEnv,
-	EOperator,
-	EInteger,
-	EString,
-	EVariable,
+	EOperator,	// primitive
+	EInteger,	// primitive
+	EString,	// primitive
 };
 
 enum NV_BIN_OP_TYPE {
@@ -121,12 +120,12 @@ int NV_E_isValidPointer(NV_Pointer p);
 int NV_E_isType(NV_Pointer p, NV_ElementType et);
 int NV_E_isSamePointer(NV_Pointer p, NV_Pointer q);
 void *NV_E_getRawPointer(NV_Pointer p, NV_ElementType et);
+NV_Pointer NV_E_getPrimitive(NV_Pointer maybeComplexItem);
 void NV_printElement(NV_Pointer p);
 
 // @nv_env.c
 NV_Env *NV_allocEnv();
-int NV_Env_setVarSet(NV_Pointer env, NV_VariableSet *vs);
-NV_VariableSet *NV_Env_getVarSet(NV_Pointer env);
+NV_Pointer NV_Env_getVarRoot(NV_Pointer env);
 int NV_Env_setLangDef(NV_Pointer env, NV_LangDef *ld);
 NV_LangDef *NV_Env_getLangDef(NV_Pointer env);
 int NV_Env_setAutoPrintValueEnabled(NV_Pointer env, int b);
@@ -239,6 +238,7 @@ void NV_printLastTermValue(NV_Pointerroot, NV_VariableSet *vs);
 */
 
 // @nv_var.c
+/*
 NV_Variable *NV_allocVariable();
 int NV_resetVariable(NV_Pointer v);
 int NV_Variable_assignTermValue(NV_Variable *v, NV_Pointer src);
@@ -252,8 +252,9 @@ void NV_tryConvertTermFromUnknownToImm(NV_VariableSet *vs, NV_Pointer *term);
 NV_Pointer NV_getVariableByName(NV_VariableSet *vs, const char *name);
 NV_Pointer NV_getItemFromStructureByIndex(NV_Variable *v, int index);
 void NV_printVariable(NV_Variable *var, int verbose);
-
+*/
 // @nv_varset.c
+/*
 NV_VariableSet *NV_allocVariableSet();
 void NV_printVarsInVarSet(NV_VariableSet *vs);
-
+*/

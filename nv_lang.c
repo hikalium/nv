@@ -32,28 +32,21 @@ NV_Pointer NV_LANG00_makeBlock(NV_Pointer env, NV_Pointer thisItem, const char *
 	NV_E_free(&data);	// free closeStr instance 
 	return prevItem;
 }
-/*
-NV_Pointer NV_LANG00_execSentence(NV_Pointer env, NV_Pointer sentenceTerm)
+
+NV_Pointer NV_LANG00_execSentence(NV_Pointer env, NV_Pointer sentenceRootItem)
 {
-	// eval next sentence of thisTerm
-	// and replace [thisTerm, nextSentence] with return tree of nextSentence.
-	NV_Term sentenceRoot, *retvTerm;
+	// eval sentence
+	NV_Pointer sentenceRoot;
 	//
-	if(!NV_canReadTermAsSentence(sentenceTerm)){
-		return NULL;
-	}
-	NV_getValueOfTermAsSentence(sentenceTerm, &sentenceRoot);
+	if(!NV_List_isItemType(sentenceRootItem, EList)) return NV_NullPointer;
+	sentenceRoot = NV_List_getItemData(sentenceRootItem);
 	//
-	if(NV_EvaluateSentence(env, &sentenceRoot)){
-		NV_printError("NV_LANG00_Op_builtin_exec: Exec failed.\n");
-		return NULL;
+	if(NV_EvaluateSentence(env, sentenceRoot)){
+		NV_Error("%s", "Exec failed.");
+		return NV_NullPointer;
 	}
-	retvTerm = NV_createTerm_Sentence(&sentenceRoot);
-	NV_overwriteTerm(sentenceTerm, retvTerm);
-	NV_removeTermTree(&sentenceRoot);
-	return retvTerm;
+	return sentenceRootItem;
 }
-*/
 
 NV_BinOpType NV_LANG00_getBinOpTypeFromString(const char *s)
 {
@@ -314,16 +307,17 @@ NV_Pointer NV_LANG00_Op_sentenceBlock(NV_Pointer env, NV_Pointer thisTerm)
 {
 	return NV_LANG00_makeBlock(env, thisTerm, "}");
 }
-/*
-NV_Pointer NV_LANG00_Op_precedentBlock(NV_Pointer env, NV_Pointer thisTerm)
+
+NV_Pointer NV_LANG00_Op_precedentBlock(NV_Pointer env, NV_Pointer thisItem)
 {
 	// ()
-	// if prev term is sentence object, perform function call. 
-	NV_Pointer originalTree;
-	NV_Pointer prev;
+	NV_Pointer itemBeforeBlock;
+	// NV_Pointer prev;
 	//
-	originalTree = NV_LANG00_makeBlock(env, thisTerm, ")");
-	if(!originalTree) return NULL;
+	itemBeforeBlock = NV_LANG00_makeBlock(env, thisItem, ")");
+	if(NV_E_isNullPointer(itemBeforeBlock)) return NV_NullPointer;
+/*
+	// if prev term is sentence object, perform function call. 
 	if(originalTree->type == Unknown) NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &originalTree, 0);
 	if(NV_canReadTermAsSentence(originalTree)){
 		NV_removeTerm(originalTree->next);
@@ -331,10 +325,13 @@ NV_Pointer NV_LANG00_Op_precedentBlock(NV_Pointer env, NV_Pointer thisTerm)
 		NV_LANG00_execSentence(env, originalTree);
 		return prev;
 	}
-	NV_insertTermAfter(originalTree, NV_createTerm_Operator(NV_Env_getLangDef(env), "builtin_exec"));
-	return originalTree;
+*/
+	NV_List_insertDataAfterItem(
+		itemBeforeBlock,
+		NV_getOperatorFromString(NV_Env_getLangDef(env), "builtin_exec"));
+	return itemBeforeBlock;
 }
-
+/*
 NV_Pointer NV_LANG00_Op_structureAccessor(NV_Pointer env, NV_Pointer thisTerm)
 {
 	// []
@@ -367,19 +364,19 @@ NV_Pointer NV_LANG00_Op_structureAccessor(NV_Pointer env, NV_Pointer thisTerm)
 	NV_overwriteTerm(structTerm, v);
 	return v;
 }
-
-NV_Pointer NV_LANG00_Op_builtin_exec(NV_Pointer env, NV_Pointer thisTerm)
+*/
+NV_Pointer NV_LANG00_Op_builtin_exec(NV_Pointer env, NV_Pointer thisItem)
 {
+	NV_Pointer prevItem, nextItem;
+	prevItem = NV_List_getPrevItem(thisItem);
+	nextItem = NV_List_getNextItem(thisItem);
+	if(NV_E_isNullPointer(NV_LANG00_execSentence(env, nextItem)))
+		return NV_NullPointer;
+	NV_List_removeItem(thisItem);
 	//
-	if(!NV_LANG00_execSentence(env, thisTerm->next)){
-		return NULL;
-	}
-	thisTerm = thisTerm->prev;
-	NV_removeTerm(thisTerm->next);
-	//
-	return thisTerm;
+	return prevItem;
 }
-
+/*
 NV_Pointer NV_LANG00_Op_if(NV_Pointer env, NV_Pointer thisTerm)
 {
 	// if {cond} {do} [{cond} {do}] [{else}]
@@ -555,13 +552,12 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 200000,	"\"", NV_LANG00_Op_stringLiteral);
 */
 	NV_addOperator(lang, 100050,	"{", NV_LANG00_Op_sentenceBlock);
-/*	NV_addOperator(lang, 100040,	";", NV_LANG00_Op_sentenceSeparator);
+//	NV_addOperator(lang, 100040,	";", NV_LANG00_Op_sentenceSeparator);
 	NV_addOperator(lang, 100030,	"(", NV_LANG00_Op_precedentBlock);
 	NV_addOperator(lang, 100020,	"builtin_exec", NV_LANG00_Op_builtin_exec);
 	//
-	NV_addOperator(lang, 100000,	"mem", NV_LANG00_Op_mem);
+//	NV_addOperator(lang, 100000,	"mem", NV_LANG00_Op_mem);
 	//
-*/
 	NV_addOperator(lang, 10000,	" ", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 10000,	"\t", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 10000,	"\r", NV_LANG00_Op_nothingButDisappear);	

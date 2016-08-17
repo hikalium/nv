@@ -12,7 +12,6 @@ int main(int argc, char *argv[])
 	}
 
 	env = NV_E_malloc_type(EEnv);
-	NV_Env_setVarSet(env, NV_allocVariableSet());
 	NV_Env_setLangDef(env, NV_getDefaultLang());
 
 	while(NV_gets(line, sizeof(line)) != NULL){

@@ -3,7 +3,7 @@
 
 struct NV_ENV {
 	NV_LangDef *langDef;
-	NV_VariableSet *varSet;
+	NV_Pointer varRoot;
 	NV_Pointer termRoot;
 	int autoPrintValue;
 	int endFlag;
@@ -16,24 +16,17 @@ NV_Env *NV_allocEnv()
 	t = NV_malloc(sizeof(NV_Env));
 	//
 	t->langDef = NULL;
+	t->varRoot = NV_List_allocRoot();
 	t->termRoot = NV_List_allocRoot();
 
 	return t;
 }
 
-int NV_Env_setVarSet(NV_Pointer env, NV_VariableSet *vs)
+NV_Pointer NV_Env_getVarRoot(NV_Pointer env)
 {
 	NV_Env *envp = NV_E_getRawPointer(env, EEnv);
-	if(!envp) return 1;
-	envp->varSet = vs;
-	return 0;
-}
-
-NV_VariableSet *NV_Env_getVarSet(NV_Pointer env)
-{
-	NV_Env *envp = NV_E_getRawPointer(env, EEnv);
-	if(!envp) return NULL;
-	return envp->varSet;
+	if(!envp) return NV_NullPointer;
+	return envp->varRoot;
 }
 
 int NV_Env_setLangDef(NV_Pointer env, NV_LangDef *ld)

@@ -98,6 +98,10 @@ NV_Pointer NV_List_removeItemByIndex(NV_Pointer rootItem, int i)
 
 void NV_List_insertItemAfter(NV_Pointer prevItem, NV_Pointer newItem)
 {
+	if(NV_E_isNullPointer(newItem)){
+		NV_Error("%s", "newItem is NULL!!!!");
+		return;
+	}
 	NV_Pointer nextItem = NV_List_getNextItem(prevItem);
 	NV_List_setNextItem(prevItem, newItem);
 	NV_List_setPrevItem(newItem, prevItem);
@@ -205,6 +209,11 @@ void NV_List_unshift(NV_Pointer rootItem, NV_Pointer newData)
 void NV_List_insertDataAfterItem(NV_Pointer itemInList, NV_Pointer newData)
 {
 	NV_Pointer newItem;
+	//
+	if(NV_E_isNullPointer(newData)){
+		NV_Error("%s", "newData is NULL!!!!!");
+		return;
+	}
 	newItem = NV_E_malloc_type(EListItem);
 	NV_List_setData(newItem, newData);
 	NV_List_insertItemAfter(itemInList, newItem);
