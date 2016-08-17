@@ -30,6 +30,7 @@ NV_Pointer NV_List_allocRoot()
 
 NV_Pointer NV_List_getNextItem(NV_Pointer item)
 {
+	// item: EList, EListItem
 	NV_Pointer retv;
 	NV_ListItem *li;
 	if(NV_E_isType(item, EListItem)) li = NV_E_getRawPointer(item, EListItem);
@@ -43,6 +44,7 @@ NV_Pointer NV_List_getNextItem(NV_Pointer item)
 
 NV_Pointer NV_List_getPrevItem(NV_Pointer item)
 {
+	// item: EList, EListItem
 	NV_Pointer retv;
 	NV_ListItem *li;
 	if(NV_E_isType(item, EListItem)) li = NV_E_getRawPointer(item, EListItem);
@@ -56,7 +58,9 @@ NV_Pointer NV_List_getPrevItem(NV_Pointer item)
 
 NV_Pointer NV_List_lastItem(NV_Pointer root)
 {
-	if(!NV_E_isType(root, EList) && !NV_E_isType(root, EListItem)) return NV_NullPointer;
+	// root: EList
+	if(!NV_E_isType(root, EList)/* && !NV_E_isType(root, EListItem)*/)
+		return NV_NullPointer;
 	//
 	NV_Pointer lastItem;
 	lastItem = NV_List_getNextItem(root);

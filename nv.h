@@ -86,7 +86,6 @@ struct NV_LANGDEF {
 };
 
 struct NV_VARIABLE {
-	char name[MAX_TOKEN_LEN];
 	int revision;
 	NV_Pointer data;
 };
@@ -109,7 +108,7 @@ void NV_tokenizeItem(NV_LangDef *langDef, NV_Pointer termRoot, const char *termS
 //
 void NV_Evaluate(NV_Pointer env);
 int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root);
-NV_Pointer NV_TryExecOp(NV_Pointer env, NV_Pointer currentOp, NV_Pointer t, NV_Pointer root);
+NV_Pointer NV_TryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer t, NV_Pointer root);
 
 // @nv_element.c
 extern const NV_Pointer NV_NullPointer;
@@ -193,8 +192,7 @@ void NV_Operator_print(NV_Pointer t);
 void NV_addOperator(NV_LangDef *lang, int precedence, const char *name, NV_Pointer(*nativeFunc)(NV_Pointer env, NV_Pointer thisTerm));
 NV_Pointer NV_getOperatorFromString(NV_LangDef *lang, const char *termStr);
 NV_Pointer NV_getFallbackOperator(NV_LangDef *lang, NV_Pointer baseP);
-int NV_getOperatorIndex(NV_LangDef *lang, NV_Pointer op);
-int NV_Operator_isLeftAssociative(NV_Pointer op);
+int NV_getOperatorPrecedence(NV_Pointer op);
 NV_Pointer NV_Operator_exec(NV_Pointer op, NV_Pointer env, NV_Pointer thisTerm);
 
 // @nv_string.c

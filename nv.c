@@ -189,41 +189,39 @@ void NV_Evaluate(NV_Pointer env)
 int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root)
 {
 	NV_Pointer t;
-	NV_Pointer op, currentOp;
-	int minOpIndex, opIndex;
+	NV_Pointer op;
+	int targetOpPrec, opPrec;
 
 	if(!NV_E_isType(root, EList)) return 1;
 
 	NV_Env_setEndFlag(env, 0);
 	while(!NV_Env_getEndFlag(env)){
 		// find op
-		minOpIndex = -1;
-		currentOp = NV_NullPointer;
+		targetOpPrec = -1;
 		t = NV_List_getNextItem(root);
 		for(; !NV_E_isNullPointer(t); t = NV_List_getNextItem(t)){
 			if(NV_List_isItemType(t, EOperator)){
 				op = NV_List_getItemData(t);
-				opIndex = NV_getOperatorIndex(NV_Env_getLangDef(env), op);
-				if(opIndex == -1){
+				opPrec = NV_getOperatorPrecedence(op);
+				if(opPrec == -1){
 					NV_Error("%s", "Internal error: Op not found");
 					return 1;
 				}
-				if(minOpIndex == -1 || opIndex < minOpIndex){
-					minOpIndex = opIndex;
-					currentOp = op;
+				if(targetOpPrec == -1 || opPrec > targetOpPrec){
+					// select max precedence of operator in eval tree
+					targetOpPrec = opPrec;
 				}
 			}
 		}
-		if(NV_E_isNullPointer(currentOp)){
-			NV_DbgInfo("%s", "Evaluate end (currentOp is NULL)");
+		if(targetOpPrec == -1){
+			NV_DbgInfo("%s", "Evaluate end (no more op)");
 			return 0;
 		}
-		//if(NV_isDebugMode) printf("current op: [%s]\n", currentOp->name);
-		if(NV_Operator_isLeftAssociative(currentOp)){
+		if((targetOpPrec & 1) == 0){
 			// left-associative
 			t = NV_List_getNextItem(root);
 			for(; !NV_E_isNullPointer(t); t = NV_List_getNextItem(t)){
-				t = NV_TryExecOp(env, currentOp, t, root);
+				t = NV_TryExecOp(env, targetOpPrec, t, root);
 				if(NV_E_isNullPointer(t)){
 					NV_DbgInfo("%s", "Evaluate end (Op Mismatched)");
 					return 1;
@@ -234,7 +232,7 @@ int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root)
 			t = NV_List_lastItem(root);
 			for(; !NV_E_isNullPointer(t); t = NV_List_getPrevItem(t)){
 				// rewind
-				t = NV_TryExecOp(env, currentOp, t, root);
+				t = NV_TryExecOp(env, targetOpPrec, t, root);
 				if(NV_E_isNullPointer(t)){
 					NV_DbgInfo("%s", "Evaluate end (Op Mismatched)");
 					return 1;
@@ -249,28 +247,30 @@ int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root)
 	return 0;
 }
 
-NV_Pointer NV_TryExecOp(NV_Pointer env, NV_Pointer currentOp, NV_Pointer thisTerm, NV_Pointer root)
+NV_Pointer NV_TryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer thisTerm, NV_Pointer root)
 {
-	NV_Pointer fallbackOp;
+	NV_Pointer fallbackOp, op;
 	NV_Pointer orgTerm = thisTerm;
 	//
-	if(NV_List_isItemType(thisTerm, EOperator) && 
-		NV_List_getItemData(thisTerm).data == currentOp.data){
-		if(NV_isDebugMode){	
+	op = NV_List_getItemData(thisTerm);
+	if(NV_E_isType(op, EOperator) && 
+		NV_getOperatorPrecedence(op) == currentOpPrec){
+		if(NV_isDebugMode){
 			NV_DbgInfo("%s", "Begin native op: ");
-			NV_Operator_print(currentOp); putchar('\n');
+			NV_Operator_print(op); putchar('\n');
 		}
-		thisTerm = NV_Operator_exec(currentOp, env, thisTerm);
+		thisTerm = NV_Operator_exec(op, env, thisTerm);
 		if(NV_isDebugMode){
 			NV_DbgInfo("%s", "End native op:");
-			NV_Operator_print(currentOp); putchar('\n');
+			NV_Operator_print(op); putchar('\n');
 		}
 		if(NV_E_isNullPointer(thisTerm)){
 			// try fallback
-			fallbackOp = NV_getFallbackOperator(NV_Env_getLangDef(env), currentOp);
+			fallbackOp = 
+				NV_getFallbackOperator(NV_Env_getLangDef(env), op);
 			if(NV_E_isNullPointer(fallbackOp)){
 				NV_Error("%s", "Operator mismatched: ");
-				NV_Operator_print(currentOp); putchar('\n');
+				NV_Operator_print(op); putchar('\n');
 				NV_List_printAll(root, NULL, NULL, "]\n");
 				return NV_NullPointer;
 			}

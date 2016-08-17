@@ -18,7 +18,8 @@ void NV_Operator_print(NV_Pointer t)
 	NV_Operator *op;
 	op = NV_E_getRawPointer(t, EOperator);
 	if(op){
-		printf("Op %s : %d @ %p", op->name, op->precedence, op->nativeFunc);
+		//printf("Op %s : %d @ %p", op->name, op->precedence, op->nativeFunc);
+		printf("(%s/%d)", op->name, op->precedence);
 	}
 }
 
@@ -83,16 +84,12 @@ NV_Pointer NV_getFallbackOperator(NV_LangDef *lang, NV_Pointer baseP)
 	return NV_NullPointer;
 }
 
-int NV_getOperatorIndex(NV_LangDef *lang, NV_Pointer op)
-{
-	return NV_List_indexOfData(lang->opRoot, op);
-}
-
-int NV_Operator_isLeftAssociative(NV_Pointer op)
+int NV_getOperatorPrecedence(NV_Pointer op)
 {
 	NV_Operator *opData;
 	opData = NV_E_getRawPointer(op, EOperator);
-	return !(opData && (opData->precedence & 1));
+	if(!opData) return -1;
+	return opData->precedence;
 }
 
 NV_Pointer NV_Operator_exec(NV_Pointer op, NV_Pointer env, NV_Pointer thisTerm)
