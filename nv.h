@@ -23,14 +23,12 @@ typedef struct	NV_ELEMENT		NV_Element;
 typedef struct	NV_POINTER		NV_Pointer;
 
 typedef struct	NV_LANGDEF		NV_LangDef;
-typedef struct	NV_VARSET		NV_VariableSet;
 
 typedef struct	NV_LIST_ITEM	NV_ListItem;
 typedef struct	NV_ENV			NV_Env;
 typedef struct	NV_OPERATOR 	NV_Operator;
 typedef struct	NV_INTEGER		NV_Integer;
 typedef struct	NV_STRING		NV_String;
-typedef struct	NV_VARIABLE		NV_Variable;
 
 enum NV_ELEMENT_TYPE {
 	ENone,
@@ -83,16 +81,6 @@ struct NV_LANGDEF {
 	int char2Len;
 	const char *char2List;	// should be terminated with 0
 	NV_Pointer opRoot;
-};
-
-struct NV_VARIABLE {
-	int revision;
-	NV_Pointer data;
-};
-
-struct NV_VARSET {
-	NV_Pointer varList[MAX_VARS];
-	int varUsed;
 };
 
 extern int NV_isDebugMode;
@@ -201,58 +189,3 @@ void NV_String_setString(NV_Pointer t, const char *s);
 int NV_String_isEqualToCStr(NV_Pointer str, const char *cstr);
 void NV_String_print(NV_Pointer t);
 
-// @nv_term.c
-NV_Pointer NV_allocTerm();
-NV_Pointer NV_cloneTerm(const NV_Pointer src);
-NV_Pointer NV_createTerm_Operator(NV_LangDef *langDef, const char *opName);
-NV_Pointer NV_createTerm_Imm32(int imm32);
-NV_Pointer NV_createTerm_String(const char *s);
-NV_Pointer NV_createTerm_Variable(NV_VariableSet *vs, const char *name);
-NV_Pointer NV_createTerm_Sentence(NV_Pointer baseTree);
-void NV_printRealTermValue(NV_Pointer t, NV_VariableSet *vs);
-int NV_canReadTermAsInt(NV_Pointer t);
-int NV_getValueOfTermAsInt(NV_Pointer t);
-int NV_canReadTermAsSentence(NV_Pointer t);
-void NV_getValueOfTermAsSentence(NV_Pointer t, NV_Pointer dstRoot);
-
-
-// @nv_termlist.c
-/*
-int NV_initRootTerm(NV_Pointer t);
-void NV_changeRootTerm(NV_PointeroldRoot, NV_PointernewRoot);
-void NV_cloneTermTree(NV_PointerdstRoot, const NV_PointersrcRoot);
-void NV_insertTermAfter(NV_Pointerbase, NV_Pointernew);
-void NV_insertAllTermAfter(NV_Pointerbase, NV_PointersrcRoot);
-NV_PointerNV_overwriteTerm(NV_Pointertarget, NV_Pointernew);
-void NV_divideTerm(NV_PointersubRoot, NV_PointersubBegin);
-void NV_appendAll(NV_PointerdstRoot, NV_PointersrcRoot);
-//
-void NV_removeTerm(NV_Pointert);
-void NV_removeTermTree(NV_Pointerroot);
-void NV_printTerms(NV_Pointerroot);
-NV_PointerNV_getTermByIndex(NV_Pointerroot, int index);
-NV_PointerNV_getLastTerm(NV_Pointerroot);
-void NV_printLastTermValue(NV_Pointerroot, NV_VariableSet *vs);
-*/
-
-// @nv_var.c
-/*
-NV_Variable *NV_allocVariable();
-int NV_resetVariable(NV_Pointer v);
-int NV_Variable_assignTermValue(NV_Variable *v, NV_Pointer src);
-void NV_Variable_assignVariable(NV_Pointer dst, NV_Pointer src);
-void NV_Variable_assignInteger(NV_Variable *v, int32_t newVal);
-void NV_Variable_assignString(NV_Variable *v, const char *src);
-void NV_Variable_assignStructure(NV_Variable *dst, const NV_Pointer srcRoot);
-void NV_Variable_assignStructureItem(NV_Variable *dst, NV_Pointer term);
-void NV_tryConvertTermFromUnknownToVariable(NV_VariableSet *vs, NV_Pointer *term, int allowCreateNewVar); 
-void NV_tryConvertTermFromUnknownToImm(NV_VariableSet *vs, NV_Pointer *term);
-NV_Pointer NV_getVariableByName(NV_VariableSet *vs, const char *name);
-NV_Pointer NV_getItemFromStructureByIndex(NV_Variable *v, int index);
-void NV_printVariable(NV_Variable *var, int verbose);
-*/
-// @nv_varset.c
-/*
-NV_VariableSet *NV_allocVariableSet();
-void NV_printVarsInVarSet(NV_VariableSet *vs);
-*/
