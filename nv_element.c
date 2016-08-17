@@ -83,6 +83,19 @@ int NV_E_isSamePointer(NV_Pointer p, NV_Pointer q)
 	return (p.data == q.data && p.token == q.token);
 }
 
+int NV_E_isEqual(NV_Pointer p, NV_Pointer q)
+{
+	if(NV_E_isType(p, EInteger) && NV_E_isType(q, EInteger)){
+		// Integer vs Integer
+		return (NV_Integer_getImm32(p) == NV_Integer_getImm32(q));
+	}
+	NV_Error("%s", 
+		"Equality comparison between following two elements are not implemented.");
+	NV_printElement(p);
+	NV_printElement(q);
+	return 0;
+}
+
 void *NV_E_getRawPointer(NV_Pointer p, NV_ElementType et)
 {
 	if(!NV_E_isType(p, et)){

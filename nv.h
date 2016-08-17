@@ -25,6 +25,7 @@ typedef struct	NV_POINTER		NV_Pointer;
 typedef struct	NV_LANGDEF		NV_LangDef;
 
 typedef struct	NV_LIST_ITEM	NV_ListItem;
+typedef struct	NV_DICT_ITEM	NV_DictItem;
 typedef struct	NV_ENV			NV_Env;
 typedef struct	NV_OPERATOR 	NV_Operator;
 typedef struct	NV_INTEGER		NV_Integer;
@@ -34,6 +35,8 @@ enum NV_ELEMENT_TYPE {
 	ENone,
 	EList,		// complex
 	EListItem,	// complex
+	EDict,		// complex
+	EDictItem,	// complex
 	EEnv,
 	EOperator,	// primitive
 	EInteger,	// primitive
@@ -98,6 +101,19 @@ void NV_Evaluate(NV_Pointer env);
 int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root);
 NV_Pointer NV_TryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer t, NV_Pointer root);
 
+// @nv_dict.c
+NV_DictItem *NV_allocDictItem();
+NV_Pointer NV_Dict_allocRoot();
+//
+int NV_Dict_add(NV_Pointer dict, NV_Pointer key, NV_Pointer val);
+NV_Pointer NV_Dict_getItemByKey(NV_Pointer dict, NV_Pointer key);
+NV_Pointer NV_Dict_getValByKey(NV_Pointer dict, NV_Pointer key);
+//NV_Pointer NV_Dict_getKeys(NV_Pointer dict, NV_Pointer val);
+//
+NV_Pointer NV_DictItem_getKey(NV_Pointer item);
+NV_Pointer NV_DictItem_getVal(NV_Pointer item);
+//
+
 // @nv_element.c
 extern const NV_Pointer NV_NullPointer;
 NV_Pointer NV_E_malloc_type(NV_ElementType type);
@@ -106,6 +122,7 @@ void NV_E_free(NV_Pointer *p);
 int NV_E_isValidPointer(NV_Pointer p);
 int NV_E_isType(NV_Pointer p, NV_ElementType et);
 int NV_E_isSamePointer(NV_Pointer p, NV_Pointer q);
+int NV_E_isEqual(NV_Pointer p, NV_Pointer q);
 void *NV_E_getRawPointer(NV_Pointer p, NV_ElementType et);
 NV_Pointer NV_E_getPrimitive(NV_Pointer maybeComplexItem);
 void NV_printElement(NV_Pointer p);
@@ -144,32 +161,39 @@ NV_LangDef *NV_getDefaultLang();
 
 // @nv_list.c
 NV_ListItem *NV_allocListItem();
+// ---- Item ----
 NV_Pointer NV_List_allocRoot();
+//
 NV_Pointer NV_List_getNextItem(NV_Pointer item);
 NV_Pointer NV_List_getPrevItem(NV_Pointer item);
+NV_Pointer NV_List_getItemByIndex(NV_Pointer rootItem, int i);
 NV_Pointer NV_List_lastItem(NV_Pointer root);
+//
 NV_Pointer NV_List_removeItem(NV_Pointer item);
 NV_Pointer NV_List_removeItemByIndex(NV_Pointer rootItem, int i);
+//
 void NV_List_insertItemAfter(NV_Pointer prevItem, NV_Pointer newItem);
 void NV_List_insertAllAfter(NV_Pointer prevItem, NV_Pointer rootItem);
 void NV_List_insertAllAfterIndex(NV_Pointer dstRoot, int index, NV_Pointer rootItem);
-NV_Pointer NV_List_divideBefore(NV_Pointer dividerItem);
-NV_Pointer NV_List_getItemByIndex(NV_Pointer rootItem, int i);
-int NV_List_getItemIndex(NV_Pointer item);
 //
+NV_Pointer NV_List_divideBefore(NV_Pointer dividerItem);
+// ---- Data ----
 void NV_List_push(NV_Pointer rootItem, NV_Pointer newData);
 NV_Pointer NV_List_pop(NV_Pointer pRoot);
 NV_Pointer NV_List_shift(NV_Pointer rootItem);
 void NV_List_unshift(NV_Pointer rootItem, NV_Pointer newData);
+//
 void NV_List_insertDataAfterItem(NV_Pointer itemInList, NV_Pointer newData);
 void NV_List_insertDataBeforeItem(NV_Pointer itemInList, NV_Pointer newData);
 void NV_List_insertDataAfterIndex(NV_Pointer root, int index, NV_Pointer newData);
+//
 NV_Pointer NV_List_getItemData(NV_Pointer item);
 NV_Pointer NV_List_getDataByIndex(NV_Pointer rootItem, int i);
 void *NV_List_getItemRawData(NV_Pointer item, NV_ElementType et);
-NV_Pointer NV_List_setItemData(NV_Pointer item, NV_Pointer newData);
 int NV_List_isItemType(NV_Pointer item, NV_ElementType et);
 int NV_List_indexOfData(NV_Pointer root, NV_Pointer data);
+//
+NV_Pointer NV_List_setItemData(NV_Pointer item, NV_Pointer newData);
 //
 void NV_ListItem_print(NV_Pointer t);
 void NV_List_printAll(NV_Pointer root, const char *prefix, const char *delimiter, const char *suffix);

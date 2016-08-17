@@ -1,35 +1,42 @@
 #include "nv.h"
 
-struct NV_LIST_ITEM {
-	NV_Pointer data;
+struct NV_DICT_ITEM {
+	NV_Pointer key;
+	NV_Pointer val;
 	NV_Pointer prev;
 	NV_Pointer next;	
 };
 
-NV_ListItem *NV_allocListItem()
+NV_DictItem *NV_allocDictItem()
 {
-	NV_ListItem *li;
-	li = NV_malloc(sizeof(NV_ListItem));
-	li->data = NV_NullPointer;
-	li->prev = NV_NullPointer;
-	li->next = NV_NullPointer;
-	return li;
+	NV_DictItem *di;
+	di = NV_malloc(sizeof(NV_DictItem));
+	di->key = NV_NullPointer;
+	di->val = NV_NullPointer;
+	di->prev = NV_NullPointer;
+	di->next = NV_NullPointer;
+	return di;
 }
 
-void NV_List_setNextItem(NV_Pointer item, NV_Pointer nextItem);
-void NV_List_setPrevItem(NV_Pointer item, NV_Pointer prevItem);
-void NV_List_setData(NV_Pointer item, NV_Pointer data);
+NV_DictItem * NV_DictItem_getRawDictItem(NV_Pointer item);
+//
+NV_Pointer NV_DictItem_getPrev(NV_Pointer item);
+NV_Pointer NV_DictItem_getNext(NV_Pointer item);
+void NV_DictItem_setPrev(NV_Pointer item, NV_Pointer prev);
+void NV_DictItem_setNext(NV_Pointer item, NV_Pointer next);
+void NV_DictItem_setKey(NV_Pointer item, NV_Pointer key);
+void NV_DictItem_setVal(NV_Pointer item, NV_Pointer val);
 
 //
 // Item operations (not data)
 //
 
-NV_Pointer NV_List_allocRoot()
+NV_Pointer NV_Dict_allocRoot()
 {
-	return NV_E_malloc_type(EList);	
+	return NV_E_malloc_type(EDict);	
 }
-
-NV_Pointer NV_List_getNextItem(NV_Pointer item)
+/*
+NV_Pointer NV_Dict_getNextItem(NV_Pointer item)
 {
 	// item: EList, EListItem
 	NV_Pointer retv;
@@ -68,11 +75,12 @@ NV_Pointer NV_List_getItemByIndex(NV_Pointer rootItem, int i)
 	} while(!NV_E_isNullPointer(tItem));
 	return tItem;
 }
-
+*/
+/*
 NV_Pointer NV_List_lastItem(NV_Pointer root)
 {
 	// root: EList
-	if(!NV_E_isType(root, EList)/* && !NV_E_isType(root, EListItem)*/)
+	if(!NV_E_isType(root, EList))
 		return NV_NullPointer;
 	//
 	NV_Pointer lastItem;
@@ -82,7 +90,8 @@ NV_Pointer NV_List_lastItem(NV_Pointer root)
 	}
 	return lastItem;
 }
-
+*/
+/*
 NV_Pointer NV_List_removeItem(NV_Pointer item)
 {
 	// retv: data of item removed.
@@ -309,37 +318,107 @@ void NV_List_printAll(NV_Pointer root, const char *prefix, const char *delimiter
 	}
 	printf("%s", suffix);
 }
+*/
+
+int NV_Dict_add(NV_Pointer dict, NV_Pointer key, NV_Pointer val)
+{
+	// retv: error?
+	// you can not add data which (key or val) == NV_NullPointer.
+	// if the same key exists, data will be overwritten by a new val.
+	NV_Pointer item, firstItem;
+	if(!NV_E_isType(dict, EDict)) return 1;
+	if(NV_E_isNullPointer(key) || NV_E_isNullPointer(val)) return 1;
+	//
+	firstItem = NV_DictItem_getNext(dict);
+	item = NV_Dict_getItemByKey(dict, key);
+	if(NV_E_isNullPointer(item)){
+		// alloc item and create link
+		item = NV_E_malloc_type(EDictItem);
+		NV_DictItem_setKey(item, key);
+		NV_DictItem_setNext(dict, item);
+		NV_DictItem_setPrev(item, dict);
+		NV_DictItem_setNext(item, firstItem);
+		NV_DictItem_setPrev(firstItem, item);
+	}
+	// update val.
+	NV_DictItem_setVal(item, val);
+	return 0;
+}
+
+NV_Pointer NV_Dict_getItemByKey(NV_Pointer dict, NV_Pointer key)
+{
+	NV_Pointer di;
+	di = NV_List_getNextItem(dict);
+	for(; !NV_E_isNullPointer(di); di = NV_List_getNextItem(di)){
+		if(NV_E_isEqual(key, NV_DictItem_getKey(di))) break;
+	}
+	return di;
+}
+
+NV_Pointer NV_Dict_getValByKey(NV_Pointer dict, NV_Pointer key)
+{
+	return NV_DictItem_getVal(NV_Dict_getItemByKey(dict, key));
+}
+
+NV_Pointer NV_DictItem_getKey(NV_Pointer item)
+{
+	NV_DictItem *di = NV_DictItem_getRawDictItem(item);
+	if(di)	return di->key;
+	return NV_NullPointer;
+}
+
+NV_Pointer NV_DictItem_getVal(NV_Pointer item)
+{
+	NV_DictItem *di = NV_DictItem_getRawDictItem(item);
+	if(di)	return di->val;
+	return NV_NullPointer;
+}
 
 //
 // InternalFunc
 //
 
-void NV_List_setNextItem(NV_Pointer item, NV_Pointer nextItem)
+NV_DictItem * NV_DictItem_getRawDictItem(NV_Pointer item)
 {
-	NV_ListItem *li;
-	if(NV_E_isType(item, EListItem)) li = NV_E_getRawPointer(item, EListItem);
-	else if(NV_E_isType(item, EList)) li = NV_E_getRawPointer(item, EList);
-	else return;
-	//
-	if(li)	li->next = nextItem;
+	if(NV_E_isType(item, EDictItem)) return NV_E_getRawPointer(item, EDictItem);
+	else if(NV_E_isType(item, EDict)) return NV_E_getRawPointer(item, EDict);
+	else return NULL;
 }
 
-void NV_List_setPrevItem(NV_Pointer item, NV_Pointer prevItem)
+NV_Pointer NV_DictItem_getPrev(NV_Pointer item)
 {
-	NV_ListItem *li;
-	if(NV_E_isType(item, EListItem)) li = NV_E_getRawPointer(item, EListItem);
-	else if(NV_E_isType(item, EList)) li = NV_E_getRawPointer(item, EList);
-	else return;
-	//
-	if(li)	li->prev = prevItem;
+	NV_DictItem *di = NV_DictItem_getRawDictItem(item);
+	if(di)	return di->prev;
+	return NV_NullPointer;
 }
 
-void NV_List_setData(NV_Pointer item, NV_Pointer data)
+NV_Pointer NV_DictItem_getNext(NV_Pointer item)
 {
-	NV_ListItem *li;
-	if(NV_E_isType(item, EListItem)) li = NV_E_getRawPointer(item, EListItem);
-	else if(NV_E_isType(item, EList)) li = NV_E_getRawPointer(item, EList);
-	else return;
-	//
-	if(li)	li->data = data;
+	NV_DictItem *di = NV_DictItem_getRawDictItem(item);
+	if(di)	return di->next;
+	return NV_NullPointer;
+}
+
+void NV_DictItem_setPrev(NV_Pointer item, NV_Pointer prev)
+{
+	NV_DictItem *di = NV_DictItem_getRawDictItem(item);
+	if(di)	di->next = prev;
+}
+
+void NV_DictItem_setNext(NV_Pointer item, NV_Pointer next)
+{
+	NV_DictItem *di = NV_DictItem_getRawDictItem(item);
+	if(di)	di->next = next;
+}
+
+void NV_DictItem_setKey(NV_Pointer item, NV_Pointer key)
+{
+	NV_DictItem *di = NV_DictItem_getRawDictItem(item);
+	if(di)	di->next = key;
+}
+
+void NV_DictItem_setVal(NV_Pointer item, NV_Pointer val)
+{
+	NV_DictItem *di = NV_DictItem_getRawDictItem(item);
+	if(di)	di->next = val;
 }
