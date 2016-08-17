@@ -107,21 +107,42 @@ void NV_List_insertItemAfter(NV_Pointer prevItem, NV_Pointer newItem)
 
 void NV_List_insertAllAfter(NV_Pointer prevItem, NV_Pointer rootItem)
 {
-	NV_Pointer data;
+	// rootItem becomes empty.
+	NV_Pointer firstItem, lastItem, nextItem;
 	if(NV_E_isNullPointer(prevItem)){
 		NV_Error("%s", "prevItem is NULL");
 		return;
 	}
-	while(!NV_E_isNullPointer(NV_List_getNextItem(rootItem))){
-		data = NV_List_removeItemByIndex(rootItem, 0);
-		NV_List_insertDataAfterItem(prevItem, data);
-		prevItem = NV_List_getNextItem(prevItem);
-	}
+	firstItem = NV_List_getNextItem(rootItem);
+	lastItem = NV_List_lastItem(rootItem);
+	nextItem = NV_List_getNextItem(prevItem);
+	// update link
+	NV_List_setNextItem(rootItem, NV_NullPointer);
+	//
+	NV_List_setNextItem(prevItem, firstItem);
+	NV_List_setPrevItem(firstItem, prevItem);
+	//
+	NV_List_setNextItem(lastItem, nextItem);
+	NV_List_setPrevItem(nextItem, lastItem);
 }
 
 void NV_List_insertAllAfterIndex(NV_Pointer dstRoot, int index, NV_Pointer rootItem)
 {
 	NV_List_insertAllAfter(NV_List_getItemByIndex(dstRoot, index), rootItem);
+}
+
+NV_Pointer NV_List_divideBefore(NV_Pointer dividerItem)
+{
+	// in:	[A, ..., dividerItem, ..., B]
+	// out: [A, ...] and retv = [dividerItem, ..., B]
+	NV_Pointer retvRoot;
+	retvRoot = NV_List_allocRoot();
+	//
+	NV_List_setNextItem(NV_List_getPrevItem(dividerItem), NV_NullPointer);
+	//
+	NV_List_setNextItem(retvRoot, dividerItem);
+	NV_List_setPrevItem(dividerItem, retvRoot);
+	return retvRoot;
 }
 
 NV_Pointer NV_List_getItemByIndex(NV_Pointer rootItem, int i)
@@ -249,11 +270,23 @@ int NV_List_indexOfData(NV_Pointer root, NV_Pointer data)
 // Print
 //
 
-void NV_List_printAll(NV_Pointer root, const char *delimiter)
+void NV_ListItem_print(NV_Pointer t)
+{
+	NV_ListItem *li;
+	li = NV_E_getRawPointer(t, EListItem);
+	if(li){
+		printf("(ListItem: data = %p)", li->data.data);
+	}
+}
+
+void NV_List_printAll(NV_Pointer root, const char *prefix, const char *delimiter, const char *suffix)
 {
 	NV_Pointer li;
+	if(!prefix) 	prefix = "[";
+	if(!delimiter)	delimiter = ", ";
+	if(!suffix) 	suffix = "]";
 	//printf("List(%p): \n", NV_E_getRawPointer(root, EList));
-	printf("[");
+	printf("%s", prefix);
 	for(li = NV_List_getNextItem(root); !NV_E_isNullPointer(li);){
 		NV_printElement(NV_List_getItemData(li));
 		//
@@ -261,7 +294,7 @@ void NV_List_printAll(NV_Pointer root, const char *delimiter)
 		if(NV_E_isNullPointer(li)) break;
 		printf("%s", delimiter);
 	}
-	printf("]\n");
+	printf("%s", suffix);
 }
 
 //

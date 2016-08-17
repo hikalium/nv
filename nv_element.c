@@ -80,6 +80,11 @@ int NV_E_isType(NV_Pointer p, NV_ElementType et)
 	return 1;
 }
 
+int NV_E_isSamePointer(NV_Pointer p, NV_Pointer q)
+{
+	return (p.data == q.data && p.token == q.token);
+}
+
 void *NV_E_getRawPointer(NV_Pointer p, NV_ElementType et)
 {
 	if(!NV_E_isType(p, et)){
@@ -98,6 +103,10 @@ void NV_printElement(NV_Pointer p)
 			NV_Operator_print(p);		
 		} else if(NV_E_isType(p, EString)){
 			NV_String_print(p);		
+		} else if(NV_E_isType(p, EListItem)){
+			NV_ListItem_print(p);
+		} else if(NV_E_isType(p, EList)){
+			NV_List_printAll(p, NULL, NULL, NULL);
 		} else{
 			printf("(type: %d)", p.data->type);
 		}

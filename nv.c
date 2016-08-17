@@ -119,7 +119,7 @@ void NV_tokenize(NV_LangDef *langDef, NV_Pointer termRoot, const char *input)
 		lastCType = cType;
 		if(input[i] == 0) break;
 	}
-	if(NV_isDebugMode) NV_List_printAll(termRoot, ", ");
+	if(NV_isDebugMode) NV_List_printAll(termRoot, NULL, NULL, "]\n");
 }
 
 void NV_tokenizeItem(NV_LangDef *langDef, NV_Pointer termRoot, const char *termStr)
@@ -272,13 +272,13 @@ NV_Pointer NV_TryExecOp(NV_Pointer env, NV_Pointer currentOp, NV_Pointer thisTer
 			if(NV_E_isNullPointer(fallbackOp)){
 				NV_Error("%s", "Operator mismatched: ");
 				NV_Operator_print(currentOp); putchar('\n');
-				NV_List_printAll(root, ", ");
+				NV_List_printAll(root, NULL, NULL, "]\n");
 				return NV_NullPointer;
 			}
 			NV_List_setItemData(orgTerm, fallbackOp);
 			thisTerm = orgTerm;
 		}
-		if(NV_isDebugMode) NV_List_printAll(root, ", ");
+		if(NV_isDebugMode) NV_List_printAll(root, NULL, NULL, "]\n");
 	}
 	return thisTerm;
 }

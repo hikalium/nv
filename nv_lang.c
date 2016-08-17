@@ -3,36 +3,36 @@
 //
 // Support functions
 //
-/*
-NV_Pointer NV_LANG00_makeBlock(NV_Pointer env, NV_Pointer thisTerm, const char *closeStr)
+
+NV_Pointer NV_LANG00_makeBlock(NV_Pointer env, NV_Pointer thisItem, const char *closeStr)
 {
 	// support func
 	// retv is prev term of thisTerm.
-	NV_Pointer t, *sentenceTerm, *sentenceRoot, remRoot, *originalTree;
+	NV_Pointer t, data, subListRoot, remListRoot, prevItem;
 	int pairCount = 1;
-	t = NV_List_getNextItem(t);
+	t = NV_List_getNextItem(thisItem);
 	for(; !NV_E_isNullPointer(t); t = NV_List_getNextItem(t)){
-		if(NV_E_isType(t, EString)){}
-		if(t->type == Unknown && strcmp(closeStr, t->data) == 0){
+		data = NV_List_getItemData(t);
+		if(NV_E_isType(data, EString) && NV_String_isEqualToCStr(data, closeStr)){
 			pairCount --;
 			if(pairCount == 0) break;
-		} else if(t->type == Operator && t->data == thisTerm->data){
+		} else if(NV_E_isType(data, EOperator) && 
+			NV_E_isSamePointer(data, thisItem)){
 			pairCount++;
 		}
 	}
-	if(pairCount != 0) return NULL;
-	//
-	originalTree = thisTerm->prev;
-	sentenceTerm = NV_createTerm_Sentence(NULL);
-	sentenceRoot = sentenceTerm->data;
-	NV_divideTerm(sentenceRoot, thisTerm->next);
-	NV_divideTerm(&remRoot, t);
-	NV_removeTerm(t);
-	NV_appendAll(originalTree, &remRoot);
-	NV_overwriteTerm(thisTerm, sentenceTerm);
-	return originalTree;
+	if(pairCount != 0) return NV_NullPointer;
+	// t is item which is close str.
+	prevItem = NV_List_getPrevItem(thisItem);
+	subListRoot = NV_List_divideBefore(thisItem);
+	remListRoot = NV_List_divideBefore(t);
+	NV_List_removeItem(thisItem);
+	NV_List_insertAllAfter(prevItem, remListRoot);
+	data = NV_List_setItemData(t, subListRoot);
+	NV_E_free(&data);	// free closeStr instance 
+	return prevItem;
 }
-
+/*
 NV_Pointer NV_LANG00_execSentence(NV_Pointer env, NV_Pointer sentenceTerm)
 {
 	// eval next sentence of thisTerm
@@ -309,17 +309,12 @@ NV_Pointer NV_LANG00_Op_stringLiteral(NV_Pointer env, NV_Pointer thisTerm)
 	NV_overwriteTerm(thisTerm, t);
 	return t;
 }
-
+*/
 NV_Pointer NV_LANG00_Op_sentenceBlock(NV_Pointer env, NV_Pointer thisTerm)
 {
-	// {}
-	NV_Pointer originalTree;
-	//
-	originalTree = NV_LANG00_makeBlock(env, thisTerm, "}");
-	if(!originalTree) return NULL;
-	return originalTree;
+	return NV_LANG00_makeBlock(env, thisTerm, "}");
 }
-
+/*
 NV_Pointer NV_LANG00_Op_precedentBlock(NV_Pointer env, NV_Pointer thisTerm)
 {
 	// ()
@@ -558,8 +553,9 @@ NV_LangDef *NV_getDefaultLang()
 	//
 	/*
 	NV_addOperator(lang, 200000,	"\"", NV_LANG00_Op_stringLiteral);
+*/
 	NV_addOperator(lang, 100050,	"{", NV_LANG00_Op_sentenceBlock);
-	NV_addOperator(lang, 100040,	";", NV_LANG00_Op_sentenceSeparator);
+/*	NV_addOperator(lang, 100040,	";", NV_LANG00_Op_sentenceSeparator);
 	NV_addOperator(lang, 100030,	"(", NV_LANG00_Op_precedentBlock);
 	NV_addOperator(lang, 100020,	"builtin_exec", NV_LANG00_Op_builtin_exec);
 	//
@@ -620,7 +616,7 @@ NV_LangDef *NV_getDefaultLang()
 	//NV_addOperator(lang, 12,	"showop", NV_LANG00_Op_showOpList);
 	NV_addOperator(lang, 10,	"exit", NV_LANG00_Op_exit);
 
-	if(NV_isDebugMode) NV_List_printAll(lang->opRoot, ",\n");
+	if(NV_isDebugMode) NV_List_printAll(lang->opRoot, "\n[\n", ",\n", "\n]\n");
 	
 	return lang;
 }

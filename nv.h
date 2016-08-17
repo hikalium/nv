@@ -119,6 +119,7 @@ int NV_E_isNullPointer(NV_Pointer p);
 void NV_E_free(NV_Pointer *p);
 int NV_E_isValidPointer(NV_Pointer p);
 int NV_E_isType(NV_Pointer p, NV_ElementType et);
+int NV_E_isSamePointer(NV_Pointer p, NV_Pointer q);
 void *NV_E_getRawPointer(NV_Pointer p, NV_ElementType et);
 void NV_printElement(NV_Pointer p);
 
@@ -166,6 +167,7 @@ NV_Pointer NV_List_removeItemByIndex(NV_Pointer rootItem, int i);
 void NV_List_insertItemAfter(NV_Pointer prevItem, NV_Pointer newItem);
 void NV_List_insertAllAfter(NV_Pointer prevItem, NV_Pointer rootItem);
 void NV_List_insertAllAfterIndex(NV_Pointer dstRoot, int index, NV_Pointer rootItem);
+NV_Pointer NV_List_divideBefore(NV_Pointer dividerItem);
 NV_Pointer NV_List_getItemByIndex(NV_Pointer rootItem, int i);
 int NV_List_getItemIndex(NV_Pointer item);
 //
@@ -183,7 +185,8 @@ NV_Pointer NV_List_setItemData(NV_Pointer item, NV_Pointer newData);
 int NV_List_isItemType(NV_Pointer item, NV_ElementType et);
 int NV_List_indexOfData(NV_Pointer root, NV_Pointer data);
 //
-void NV_List_printAll(NV_Pointer root, const char *delimiter);
+void NV_ListItem_print(NV_Pointer t);
+void NV_List_printAll(NV_Pointer root, const char *prefix, const char *delimiter, const char *suffix);
 
 // @nv_operator.c
 NV_Operator *NV_allocOperator();
@@ -198,6 +201,7 @@ NV_Pointer NV_Operator_exec(NV_Pointer op, NV_Pointer env, NV_Pointer thisTerm);
 // @nv_string.c
 NV_String *NV_allocString();
 void NV_String_setString(NV_Pointer t, const char *s);
+int NV_String_isEqualToCStr(NV_Pointer str, const char *cstr);
 void NV_String_print(NV_Pointer t);
 
 // @nv_term.c

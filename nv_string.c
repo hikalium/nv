@@ -13,9 +13,9 @@ NV_String *NV_allocString()
 	return t;
 }
 
-void NV_String_setString(NV_Pointer t, const char *s)
+void NV_String_setString(NV_Pointer strItem, const char *s)
 {
-	NV_String *v = NV_E_getRawPointer(t, EString);
+	NV_String *v = NV_E_getRawPointer(strItem, EString);
 	int len = strlen(s);
 	if(!v) return;
 	NV_free(v->s);
@@ -23,9 +23,16 @@ void NV_String_setString(NV_Pointer t, const char *s)
 	NV_strncpy(v->s, s, len + 1, len + 1);
 }
 
-void NV_String_print(NV_Pointer t)
+int NV_String_isEqualToCStr(NV_Pointer strItem, const char *cstr)
 {
-	NV_String *v = NV_E_getRawPointer(t, EString);
+	NV_String *v = NV_E_getRawPointer(strItem, EString);
+	if(!v || !v->s) return 0;
+	return (strcmp(v->s, cstr) == 0);
+}
+
+void NV_String_print(NV_Pointer strItem)
+{
+	NV_String *v = NV_E_getRawPointer(strItem, EString);
 	if(!v) return;
 	printf("\"%s\"", v->s);
 }
