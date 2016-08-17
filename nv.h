@@ -17,6 +17,7 @@
 	if(NV_isDebugMode) printf("Info : %s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
 
 typedef enum	NV_ELEMENT_TYPE NV_ElementType;
+typedef enum	NV_BIN_OP_TYPE	NV_BinOpType;
 
 typedef struct	NV_ELEMENT		NV_Element;
 typedef struct	NV_POINTER		NV_Pointer;
@@ -40,6 +41,25 @@ enum NV_ELEMENT_TYPE {
 	EInteger,
 	EString,
 	EVariable,
+};
+
+enum NV_BIN_OP_TYPE {
+	BOpNone,
+	BOpAdd,
+	BOpSub,
+	BOpMul,
+	BOpDiv,
+	BOpMod,
+	BOpLogicOR,
+	BOpLogicAND,
+	BOpBitOR,
+	BOpBitAND,
+	BOpCmpEq,
+	BOpCmpNEq,
+	BOpCmpLt,
+	BOpCmpGt,
+	BOpCmpLtE,
+	BOpCmpGtE,
 };
 
 struct NV_POINTER {
@@ -127,7 +147,10 @@ void NV_free(void *p);
 // @nv_integer.c
 NV_Integer *NV_allocInteger();
 void NV_Integer_setImm32(NV_Pointer t, int32_t data);
+int32_t NV_Integer_getImm32(NV_Pointer t);
 void NV_Integer_print(NV_Pointer t);
+//
+NV_Pointer NV_Integer_evalBinOp(NV_Pointer vL, NV_Pointer vR, NV_BinOpType type);
 
 // @nv_lang.c
 NV_LangDef *NV_getDefaultLang();
@@ -202,7 +225,7 @@ void NV_insertAllTermAfter(NV_Pointerbase, NV_PointersrcRoot);
 NV_PointerNV_overwriteTerm(NV_Pointertarget, NV_Pointernew);
 void NV_divideTerm(NV_PointersubRoot, NV_PointersubBegin);
 void NV_appendAll(NV_PointerdstRoot, NV_PointersrcRoot);
-void NV_appendTermRaw(NV_Pointerroot, NV_Pointernew);
+//
 void NV_removeTerm(NV_Pointert);
 void NV_removeTermTree(NV_Pointerroot);
 void NV_printTerms(NV_Pointerroot);

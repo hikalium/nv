@@ -53,6 +53,29 @@ NV_Pointer NV_LANG00_execSentence(NV_Pointer env, NV_Pointer sentenceTerm)
 	NV_removeTermTree(&sentenceRoot);
 	return retvTerm;
 }
+*/
+
+NV_BinOpType NV_LANG00_getBinOpTypeFromString(const char *s)
+{
+	     if(strcmp("+", 	s) == 0)	return BOpAdd;
+	else if(strcmp("-", 	s) == 0)	return BOpSub;
+	else if(strcmp("*", 	s) == 0)	return BOpMul;
+	else if(strcmp("/", 	s) == 0)	return BOpDiv;
+	else if(strcmp("%", 	s) == 0)	return BOpMod;
+	else if(strcmp("||",	s) == 0)	return BOpLogicOR;
+	else if(strcmp("&&",	s) == 0)	return BOpLogicAND;
+	else if(strcmp("|",		s) == 0)	return BOpBitOR;
+	else if(strcmp("&", 	s) == 0)	return BOpBitAND;
+	else if(strcmp("==", 	s) == 0)	return BOpCmpEq;
+	else if(strcmp("!=", 	s) == 0)	return BOpCmpNEq;
+	else if(strcmp("<", 	s) == 0)	return BOpCmpLt;
+	else if(strcmp(">", 	s) == 0)	return BOpCmpGt;
+	else if(strcmp("<=", 	s) == 0)	return BOpCmpLtE;
+	else if(strcmp(">=", 	s) == 0)	return BOpCmpGtE;
+	return BOpNone;
+}
+
+/*
 
 //
 // Native Functions
@@ -172,66 +195,37 @@ NV_Pointer NV_LANG00_Op_unaryOperator_suffix_variableOnly(NV_Pointer env, NV_Poi
 	if(NV_isDebugMode) NV_printError("NV_LANG00_Op_unaryOperator_suffix_variableOnly: Bad operand. type %d\n", prev->type);
 	return NULL;
 }
-
+*/
 NV_Pointer NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Pointer thisTerm)
 {
 	// for Integer values only.
-	NV_Pointer prev = thisTerm->prev;
-	NV_Pointer next = thisTerm->next;
-	NV_Pointer result;
-	NV_Operator *op = (NV_Operator *)thisTerm->data;
-	int vL, vR;
-	int resultVal;
+	NV_Pointer prev = NV_List_getPrevItem(thisTerm);
+	NV_Pointer next = NV_List_getNextItem(thisTerm);
+	NV_Operator *op = NV_List_getItemRawData(thisTerm, EOperator);
+	NV_Pointer resultData;
+	NV_Pointer vL, vR;
+	NV_BinOpType opType;
 	// type check
-	if(!prev || !next) return NULL;
+	if(NV_E_isNullPointer(prev) || NV_E_isNullPointer(next)) return NV_NullPointer;
+	if(!op) return NV_NullPointer;
 	// try variable conversion
-	NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &prev, 0);
-	NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &next, 0);
+	// NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &prev, 0);
+	// NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &next, 0);
 	// check type
-	if(!NV_canReadTermAsInt(prev) || !NV_canReadTermAsInt(next)) return NULL;
-	vL = NV_getValueOfTermAsInt(prev);
-	vR = NV_getValueOfTermAsInt(next);
+	//if(!NV_canReadTermAsInt(prev) || !NV_canReadTermAsInt(next)) return NULL;
+	vL = NV_List_removeItem(prev);
+	vR = NV_List_removeItem(next);
+	opType = NV_LANG00_getBinOpTypeFromString(op->name);
 	// process
-	if(strcmp("+", op->name) == 0){
-		resultVal = vL + vR;
-	} else if(strcmp("-", op->name) == 0){
-		resultVal = vL - vR;
-	} else if(strcmp("*", op->name) == 0){
-		resultVal = vL * vR;
-	} else if(strcmp("/", op->name) == 0){
-		resultVal = vL / vR;
-	} else if(strcmp("%", op->name) == 0){
-		resultVal = vL % vR;
-	} else if(strcmp("||", op->name) == 0){
-		resultVal = vL || vR;
-	} else if(strcmp("&&", op->name) == 0){
-		resultVal = vL && vR;
-	}
-	// comparison operators
-	else if(strcmp("<", op->name) == 0){
-		resultVal = vL < vR;
-	} else if(strcmp(">", op->name) == 0){
-		resultVal = vL > vR;
-	} else if(strcmp("<=", op->name) == 0){
-		resultVal = vL <= vR;
-	} else if(strcmp(">=", op->name) == 0){
-		resultVal = vL >= vR;
-	} else if(strcmp("==", op->name) == 0){
-		resultVal = vL == vR;
-	} else if(strcmp("!=", op->name) == 0){
-		resultVal = vL != vR;
-	} else{
-		return NULL;
-	}
-	result = NV_createTerm_Imm32(resultVal);
+	resultData = NV_Integer_evalBinOp(vL, vR, opType);
+	if(NV_E_isNullPointer(resultData)) return NV_NullPointer;
 	//
-	NV_removeTerm(prev);
-	NV_removeTerm(next);
-	NV_overwriteTerm(thisTerm, result);
+	NV_E_free(&vL);
+	NV_E_free(&vR);
+	NV_List_setItemData(thisTerm, resultData);
 	//
-	return result;	
+	return resultData;
 }
-*/
 NV_Pointer NV_LANG00_Op_nothingButDisappear(NV_Pointer env, NV_Pointer thisTerm)
 {
 	NV_Pointer prev = NV_List_getPrevItem(thisTerm);
@@ -594,6 +588,7 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 701,	"-", NV_LANG00_Op_unaryOperator_prefix);
 	NV_addOperator(lang, 701,	"!", NV_LANG00_Op_unaryOperator_prefix);
 	//
+*/
 	NV_addOperator(lang, 600,	"*", NV_LANG00_Op_binaryOperator);
 	NV_addOperator(lang, 600,	"/", NV_LANG00_Op_binaryOperator);
 	NV_addOperator(lang, 600,	"%", NV_LANG00_Op_binaryOperator);
@@ -611,6 +606,7 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 300,	"||", NV_LANG00_Op_binaryOperator);
 	NV_addOperator(lang, 300,	"&&", NV_LANG00_Op_binaryOperator);
 	//
+/*
 	NV_addOperator(lang, 200,	"+=", NV_LANG00_Op_compoundAssign);
 	NV_addOperator(lang, 200,	"-=", NV_LANG00_Op_compoundAssign);
 	NV_addOperator(lang, 200,	"*=", NV_LANG00_Op_compoundAssign);
