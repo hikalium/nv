@@ -497,35 +497,36 @@ NV_Pointer NV_LANG00_Op_for(NV_Pointer env, NV_Pointer thisTerm)
 	return t;
 }
 */
-NV_Pointer NV_LANG00_Op_print(NV_Pointer env, NV_Pointer thisTerm)
+NV_Pointer NV_LANG00_Op_print(NV_Pointer env, NV_Pointer thisItem)
 {
+	NV_Pointer nextItem = NV_List_getNextItem(thisItem);
+	NV_printElement(NV_List_getItemData(nextItem));
+	printf("\n");
+	NV_List_removeItem(thisItem);
 	NV_Env_setAutoPrintValueEnabled(env, 0);
-	return NV_NullPointer;
+	return nextItem;
 }
-/*
-NV_Pointer NV_LANG00_Op_showOpList(NV_Pointer env, NV_Pointer thisTerm)
-{
 
-	NV_Pointer prev = thisTerm->prev;
-	//
-	NV_Operator *p;
-	printf("Precedence: [opName]\n");
-	for(p = NV_Env_getLangDef(env)->opRoot; p; p = p->next){
-		printf("%10d: [%s]\n", p->precedence, p->name);
-	}
-	//
-	NV_removeTerm(thisTerm);
-
-	return NV_NullPointer;
-}
-*/
-/*
-NV_Pointer NV_LANG00_Op_mem(NV_Pointer env, NV_Pointer thisTerm)
+NV_Pointer NV_LANG00_Op_showOpList(NV_Pointer env, NV_Pointer thisItem)
 {
-	//thisTerm = NV_overwriteTerm(thisTerm, NV_createTerm_Imm32(NV_getMallocCount()));
-	return thisTerm;
+	NV_Pointer prevItem = NV_List_getPrevItem(thisItem);
+	//
+	NV_List_printAll(
+		NV_Env_getLangDef(env)->opRoot, "\nOpList: [\n", ",\n", "\n]\n");
+	//
+	NV_List_removeItem(thisItem);
+	NV_Env_setAutoPrintValueEnabled(env, 0);
+	return prevItem;
 }
-*/
+
+NV_Pointer NV_LANG00_Op_mem(NV_Pointer env, NV_Pointer thisItem)
+{
+	NV_Pointer memUsingSize = NV_E_malloc_type(EInteger);
+	NV_Integer_setImm32(memUsingSize, NV_getMallocCount());
+	NV_List_setItemData(thisItem, memUsingSize);
+	return thisItem;
+}
+
 NV_Pointer NV_LANG00_Op_exit(NV_Pointer env, NV_Pointer thisTerm)
 {
 	NV_Env_setEndFlag(env, 1);
@@ -556,7 +557,7 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 100030,	"(", NV_LANG00_Op_precedentBlock);
 	NV_addOperator(lang, 100020,	"builtin_exec", NV_LANG00_Op_builtin_exec);
 	//
-//	NV_addOperator(lang, 100000,	"mem", NV_LANG00_Op_mem);
+	NV_addOperator(lang, 100000,	"mem", NV_LANG00_Op_mem);
 	//
 	NV_addOperator(lang, 10000,	" ", NV_LANG00_Op_nothingButDisappear);
 	NV_addOperator(lang, 10000,	"\t", NV_LANG00_Op_nothingButDisappear);
@@ -609,7 +610,7 @@ NV_LangDef *NV_getDefaultLang()
 	*/
 	//
 	NV_addOperator(lang, 10,	"print", NV_LANG00_Op_print);
-	//NV_addOperator(lang, 12,	"showop", NV_LANG00_Op_showOpList);
+	NV_addOperator(lang, 12,	"showop", NV_LANG00_Op_showOpList);
 	NV_addOperator(lang, 10,	"exit", NV_LANG00_Op_exit);
 
 	if(NV_isDebugMode) NV_List_printAll(lang->opRoot, "\n[\n", ",\n", "\n]\n");
