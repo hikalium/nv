@@ -13,6 +13,18 @@ NV_String *NV_allocString()
 	return t;
 }
 
+NV_Pointer NV_String_clone(NV_Pointer p)
+{
+	NV_String *v;
+	NV_Pointer c;
+	if(!NV_E_isType(p, EString)) return NV_NullPointer;
+	v = NV_E_getRawPointer(p, EString);
+	if(!v || !v->s) return NV_NullPointer;
+	c = NV_E_malloc_type(EString);
+	NV_String_setString(c, v->s);
+	return c;
+}
+
 void NV_String_setString(NV_Pointer strItem, const char *s)
 {
 	NV_String *v = NV_E_getRawPointer(strItem, EString);

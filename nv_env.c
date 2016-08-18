@@ -16,7 +16,7 @@ NV_Env *NV_allocEnv()
 	t = NV_malloc(sizeof(NV_Env));
 	//
 	t->langDef = NULL;
-	t->varRoot = NV_List_allocRoot();
+	t->varRoot = NV_Dict_allocRoot();
 	t->termRoot = NV_List_allocRoot();
 
 	return t;
@@ -80,3 +80,4 @@ NV_Pointer NV_Env_getTermRoot(NV_Pointer env)
 	if(!envp) return NV_NullPointer;
 	return envp->termRoot;
 }
+

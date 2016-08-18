@@ -132,6 +132,8 @@ int NV_E_isSamePointer(NV_Pointer p, NV_Pointer q);
 int NV_E_isEqual(NV_Pointer p, NV_Pointer q);
 void *NV_E_getRawPointer(NV_Pointer p, NV_ElementType et);
 NV_Pointer NV_E_getPrimitive(NV_Pointer maybeComplexItem);
+NV_Pointer NV_E_clone(NV_Pointer p);
+//
 void NV_printElement(NV_Pointer p);
 
 // @nv_env.c
@@ -157,6 +159,7 @@ void NV_free(void *p);
 
 // @nv_integer.c
 NV_Integer *NV_allocInteger();
+NV_Pointer NV_Integer_clone(NV_Pointer p);
 void NV_Integer_setImm32(NV_Pointer t, int32_t data);
 int32_t NV_Integer_getImm32(NV_Pointer t);
 void NV_Integer_print(NV_Pointer t);
@@ -208,6 +211,7 @@ NV_Pointer NV_Operator_exec(NV_Pointer op, NV_Pointer env, NV_Pointer thisTerm);
 
 // @nv_string.c
 NV_String *NV_allocString();
+NV_Pointer NV_String_clone(NV_Pointer p);
 void NV_String_setString(NV_Pointer t, const char *s);
 int NV_String_isEqualToCStr(NV_Pointer str, const char *cstr);
 int NV_String_isEqual(NV_Pointer str0, NV_Pointer str1);
@@ -215,7 +219,11 @@ void NV_String_print(NV_Pointer t);
 
 // @nv_var.c
 NV_Variable *NV_allocVariable();
+NV_Pointer NV_Variable_allocByStr(NV_Pointer vDict, NV_Pointer str);
+NV_Pointer NV_Variable_allocByCStr(NV_Pointer vDict, const char *s);
+NV_Pointer NV_Variable_tryAllocVariableExisted(NV_Pointer vDict, NV_Pointer mayStr);
 void NV_Variable_setTarget(NV_Pointer var, NV_Pointer target);
 void NV_Variable_assignData(NV_Pointer var, NV_Pointer data);
 NV_Pointer NV_Variable_getData(NV_Pointer var);
+void NV_Variable_print(NV_Pointer p);
 

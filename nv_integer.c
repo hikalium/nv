@@ -12,6 +12,15 @@ NV_Integer *NV_allocInteger()
 	return t;
 }
 
+NV_Pointer NV_Integer_clone(NV_Pointer p)
+{
+	NV_Pointer c;
+	if(!NV_E_isType(p, EInteger)) return NV_NullPointer;
+	c = NV_E_malloc_type(EInteger);
+	NV_Integer_setImm32(c, NV_Integer_getImm32(p));
+	return c;
+}
+
 void NV_Integer_setImm32(NV_Pointer t, int32_t data)
 {
 	NV_Integer *v = NV_E_getRawPointer(t, EInteger);

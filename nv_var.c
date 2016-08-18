@@ -14,6 +14,37 @@ NV_Variable *NV_allocVariable()
 	return v;
 }
 
+NV_Pointer NV_Variable_allocByStr(NV_Pointer vDict, NV_Pointer str)
+{
+	NV_Pointer var = NV_E_malloc_type(EVariable);
+	NV_Pointer target = NV_Dict_getItemByKey(vDict, str);
+	NV_Pointer strKey = NV_String_clone(str);
+	NV_Pointer strVal = NV_E_malloc_type(EString);
+	if(NV_E_isNullPointer(target)){
+		NV_Dict_add(vDict, strKey, strVal);
+		target = NV_Dict_getItemByKey(vDict, str);
+	}
+	NV_Variable_setTarget(var, target);
+	return var;
+}
+
+NV_Pointer NV_Variable_allocByCStr(NV_Pointer vDict, const char *s)
+{
+	NV_Pointer str = NV_E_malloc_type(EString);
+	NV_Pointer var;
+	NV_String_setString(str, s);
+	var = NV_Variable_allocByStr(vDict, str);
+	NV_E_free(&str);
+	return var;
+}
+
+NV_Pointer NV_Variable_tryAllocVariableExisted(NV_Pointer vDict, NV_Pointer mayStr)
+{
+	if(!NV_E_isType(mayStr, EString)) return mayStr;
+	if(NV_E_isNullPointer(NV_Dict_getItemByKey(vDict, mayStr))) return mayStr;
+	return NV_Variable_allocByStr(vDict, mayStr);
+}
+
 void NV_Variable_setTarget(NV_Pointer var, NV_Pointer target)
 {
 	NV_Variable *v;
@@ -56,6 +87,22 @@ NV_Pointer NV_Variable_getData(NV_Pointer var)
 		NV_printElement(target);
 	}
 	return NV_NullPointer;
+}
+
+void NV_Variable_print(NV_Pointer p)
+{
+	NV_Pointer target;
+	if(!NV_E_isType(p, EVariable)) return;
+	target = NV_Variable_getTarget(p);
+	printf("(Variable ");
+	if(NV_E_isType(target, EDictItem)){
+		NV_printElement(target);
+	} else{
+		NV_Error("%s", "Not implemented.");
+		NV_printElement(target);
+		return;
+	}
+	printf(")");
 }
 
 //

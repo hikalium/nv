@@ -73,26 +73,42 @@ NV_BinOpType NV_LANG00_getBinOpTypeFromString(const char *s)
 //
 // Native Functions
 //
-NV_Pointer NV_LANG00_Op_assign(NV_Pointer env, NV_Pointer thisTerm)
+*/
+NV_Pointer NV_LANG00_Op_assign(NV_Pointer env, NV_Pointer thisItem)
 {
-	NV_Pointer left = thisTerm->prev;
-	NV_Pointer right = thisTerm->next;
+	NV_Pointer src = NV_ListItem_getNext(thisItem);
+	NV_Pointer dst = NV_ListItem_getPrev(thisItem);
+	NV_Pointer var, srcData;
+	NV_Pointer vRoot = NV_Env_getVarRoot(env);
 	// type check
-	if(!left || !right) return NULL;
-	if(right->type == Unknown)
-		NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &right, 0);
-	if(left->type != Variable)
-		NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &left, 1);
-	if(left->type != Variable) return NULL;
-	// process
-	if(!NV_Variable_assignTermValue(left->data, right)){
-		return NULL;
+	if(NV_E_isNullPointer(src) || NV_E_isNullPointer(dst)) return NV_NullPointer;
+	if(NV_ListItem_isDataType(dst, EString)){
+		// create / get val.
+		var = NV_Variable_allocByStr(vRoot, NV_ListItem_getData(dst));
+	} else if(NV_ListItem_isDataType(dst, EVariable)){
+		// use existed val.
+		var = NV_ListItem_getData(dst);
+	} else{
+		// dst is not assignable
+		NV_Error("%s", "Cannot assign data to following object.");
+		NV_printElement(dst);
+		return NV_NullPointer;
 	}
-	NV_removeTerm(thisTerm);
-	NV_removeTerm(right);
-	return left;
+	//
+	srcData = NV_ListItem_getData(src);
+	srcData = NV_Variable_tryAllocVariableExisted(vRoot, srcData);
+	srcData = NV_E_getPrimitive(srcData);
+	srcData = NV_E_clone(srcData);
+	//
+	NV_Variable_assignData(var, srcData);
+	//
+	
+	NV_List_removeItem(thisItem);
+	NV_List_removeItem(src);
+	NV_ListItem_setData(dst, var);
+	return dst;
 }
-
+/*
 NV_Pointer NV_LANG00_Op_compoundAssign(NV_Pointer env, NV_Pointer thisTerm)
 {
 	NV_Operator *op = (NV_Operator *)thisTerm->data;
@@ -198,16 +214,17 @@ NV_Pointer NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Pointer thisTerm)
 	NV_Pointer resultData;
 	NV_Pointer vL, vR;
 	NV_BinOpType opType;
+	NV_Pointer vRoot = NV_Env_getVarRoot(env);
 	// type check
 	if(NV_E_isNullPointer(prev) || NV_E_isNullPointer(next)) return NV_NullPointer;
 	if(!op) return NV_NullPointer;
-	// try variable conversion
-	// NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &prev, 0);
-	// NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &next, 0);
-	// check type
-	//if(!NV_canReadTermAsInt(prev) || !NV_canReadTermAsInt(next)) return NULL;
+	//
 	vL = NV_List_removeItem(prev);
 	vR = NV_List_removeItem(next);
+	// try variable conversion
+	vL = NV_Variable_tryAllocVariableExisted(vRoot, vL);
+	vR = NV_Variable_tryAllocVariableExisted(vRoot, vR);
+	//
 	opType = NV_LANG00_getBinOpTypeFromString(op->name);
 	// process
 	resultData = NV_Integer_evalBinOp(vL, vR, opType);
@@ -605,9 +622,9 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 200,	"*=", NV_LANG00_Op_compoundAssign);
 	NV_addOperator(lang, 200,	"/=", NV_LANG00_Op_compoundAssign);
 	NV_addOperator(lang, 200,	"%=", NV_LANG00_Op_compoundAssign);
+*/
 	//
 	NV_addOperator(lang, 101,	"=", NV_LANG00_Op_assign);
-	*/
 	//
 	NV_addOperator(lang, 10,	"print", NV_LANG00_Op_print);
 	NV_addOperator(lang, 12,	"showop", NV_LANG00_Op_showOpList);
