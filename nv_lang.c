@@ -536,6 +536,18 @@ NV_Pointer NV_LANG00_Op_showOpList(NV_Pointer env, NV_Pointer thisItem)
 	return prevItem;
 }
 
+NV_Pointer NV_LANG00_Op_showVarList(NV_Pointer env, NV_Pointer thisItem)
+{
+	NV_Pointer prevItem = NV_ListItem_getPrev(thisItem);
+	//
+	NV_Dict_printAll(
+		NV_Env_getVarRoot(env), "\nVarList: [\n", ",\n", "\n]\n");
+	//
+	NV_List_removeItem(thisItem);
+	NV_Env_setAutoPrintValueEnabled(env, 0);
+	return prevItem;
+}
+
 NV_Pointer NV_LANG00_Op_mem(NV_Pointer env, NV_Pointer thisItem)
 {
 	NV_Pointer memUsingSize = NV_E_malloc_type(EInteger);
@@ -628,6 +640,7 @@ NV_LangDef *NV_getDefaultLang()
 	//
 	NV_addOperator(lang, 10,	"print", NV_LANG00_Op_print);
 	NV_addOperator(lang, 12,	"showop", NV_LANG00_Op_showOpList);
+	NV_addOperator(lang, 12,	"vlist", NV_LANG00_Op_showVarList);
 	NV_addOperator(lang, 10,	"exit", NV_LANG00_Op_exit);
 
 	if(NV_isDebugMode) NV_List_printAll(lang->opRoot, "\n[\n", ",\n", "\n]\n");
