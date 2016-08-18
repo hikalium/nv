@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 /*
 	NV_Pointer k, v;
 	NV_Pointer dict = NV_Dict_allocRoot();
-	//NV_Pointer var = NV_E_malloc_type(EVariable);
+	NV_Pointer var = NV_E_malloc_type(EVariable);
 	char s[32];
 	int i;
 	for(i = 0; i < 5; i++){
@@ -41,14 +41,15 @@ int main(int argc, char *argv[])
 	NV_printElement(dict); printf("\n");
 	//
 	k = NV_E_malloc_type(EString);
-	//k = NV_E_malloc_type(EInteger);
-	for(i = 0; i < 6; i++){
-		snprintf(s, sizeof(s), "abc%dxx", i);
-		NV_String_setString(k, s);
-		//
-		v = NV_Dict_getValByKey(dict, k);
-		printf("%d -> ", i); NV_printElement(v); printf("\n");
-	}
+	snprintf(s, sizeof(s), "abc%dxx", 2);
+	NV_String_setString(k, s);
+	NV_Variable_setTarget(var, NV_Dict_getItemByKey(dict, k));
+	//
+	snprintf(s, sizeof(s), "Hello, world!");
+	NV_String_setString(k, s);
+	NV_Variable_assignData(var, k);
+	//
+	NV_printElement(dict); printf("\n");
 */
 }
 

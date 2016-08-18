@@ -4,7 +4,8 @@ struct NV_DICT_ITEM {
 	NV_Pointer key;
 	NV_Pointer val;
 	NV_Pointer prev;
-	NV_Pointer next;	
+	NV_Pointer next;
+	int32_t revision;
 };
 
 NV_DictItem *NV_allocDictItem()
@@ -25,7 +26,6 @@ NV_Pointer NV_DictItem_getNext(NV_Pointer item);
 void NV_DictItem_setPrev(NV_Pointer item, NV_Pointer prev);
 void NV_DictItem_setNext(NV_Pointer item, NV_Pointer next);
 void NV_DictItem_setKey(NV_Pointer item, NV_Pointer key);
-void NV_DictItem_setVal(NV_Pointer item, NV_Pointer val);
 
 //
 // Item operations (not data)
@@ -89,6 +89,26 @@ NV_Pointer NV_DictItem_getVal(NV_Pointer item)
 	NV_DictItem *di = NV_DictItem_getRawDictItem(item);
 	if(di)	return di->val;
 	return NV_NullPointer;
+}
+
+int32_t NV_DictItem_getRevision(NV_Pointer item)
+{
+	NV_DictItem *di = NV_DictItem_getRawDictItem(item);
+	if(di)	return di->revision;
+	return -1;
+}
+
+void NV_DictItem_updateRevision(NV_Pointer item)
+{
+	NV_DictItem *di = NV_DictItem_getRawDictItem(item);
+	if(di)	di->revision++;
+}
+
+void NV_DictItem_setVal(NV_Pointer item, NV_Pointer val)
+{
+	NV_DictItem *di = NV_DictItem_getRawDictItem(item);
+	if(di)	di->val = val;
+	NV_DictItem_updateRevision(item);
 }
 
 void NV_DictItem_print(NV_Pointer item)
@@ -166,8 +186,3 @@ void NV_DictItem_setKey(NV_Pointer item, NV_Pointer key)
 	if(di)	di->key = key;
 }
 
-void NV_DictItem_setVal(NV_Pointer item, NV_Pointer val)
-{
-	NV_DictItem *di = NV_DictItem_getRawDictItem(item);
-	if(di)	di->val = val;
-}

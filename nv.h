@@ -114,6 +114,9 @@ NV_Pointer NV_Dict_getValByKey(NV_Pointer dict, NV_Pointer key);
 //
 NV_Pointer NV_DictItem_getKey(NV_Pointer item);
 NV_Pointer NV_DictItem_getVal(NV_Pointer item);
+int32_t NV_DictItem_getRevision(NV_Pointer item);
+void NV_DictItem_updateRevision(NV_Pointer item);
+void NV_DictItem_setVal(NV_Pointer item, NV_Pointer val);
 //
 void NV_DictItem_print(NV_Pointer item);
 void NV_Dict_printAll(NV_Pointer dict, const char *prefix, const char *delimiter, const char *suffix);
@@ -212,5 +215,7 @@ void NV_String_print(NV_Pointer t);
 
 // @nv_var.c
 NV_Variable *NV_allocVariable();
-
+void NV_Variable_setTarget(NV_Pointer var, NV_Pointer target);
+void NV_Variable_assignData(NV_Pointer var, NV_Pointer data);
+NV_Pointer NV_Variable_getData(NV_Pointer var);
 
