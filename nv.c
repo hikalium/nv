@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 /*
 	NV_Pointer k, v;
 	NV_Pointer dict = NV_Dict_allocRoot();
-	NV_Pointer var;
+	NV_Pointer var, c;
 	char s[32];
 	int i;
 	for(i = 0; i < 5; i++){
@@ -49,6 +49,9 @@ int main(int argc, char *argv[])
 	NV_Variable_assignData(var, k);
 	//
 	NV_printElement(dict); printf("\n");
+
+	c = NV_E_clone(dict);
+	NV_printElement(c); printf("\n");
 */
 }
 

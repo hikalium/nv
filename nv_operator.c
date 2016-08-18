@@ -13,6 +13,13 @@ NV_Operator *NV_allocOperator()
 	return t;
 }
 
+NV_Pointer NV_Operator_clone(NV_Pointer p)
+{
+	// do nothing
+	return p;
+}
+
+
 void NV_Operator_print(NV_Pointer t)
 {
 	NV_Operator *op;

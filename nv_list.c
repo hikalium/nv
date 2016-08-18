@@ -104,6 +104,23 @@ NV_Pointer NV_List_allocRoot()
 	return NV_E_malloc_type(EList);	
 }
 
+NV_Pointer NV_List_clone(NV_Pointer p)
+{
+	NV_Pointer c, t, d;
+	if(!NV_E_isType(p, EList)) return NV_NullPointer;
+	c = NV_E_malloc_type(EList);
+	//
+	t = NV_ListItem_getNext(p);
+	while(!NV_E_isNullPointer(t)){
+		d = NV_E_clone(NV_ListItem_getData(t));
+		NV_List_push(c, d);
+		//
+		t = NV_ListItem_getNext(t);
+	}
+	return c;
+}
+
+
 
 NV_Pointer NV_List_getItemByIndex(NV_Pointer rootItem, int i)
 {

@@ -517,7 +517,10 @@ NV_Pointer NV_LANG00_Op_for(NV_Pointer env, NV_Pointer thisTerm)
 NV_Pointer NV_LANG00_Op_print(NV_Pointer env, NV_Pointer thisItem)
 {
 	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);
-	NV_printElement(NV_ListItem_getData(nextItem));
+	NV_printElement(
+		NV_Variable_tryAllocVariableExisted(
+			NV_Env_getVarRoot(env),
+			NV_ListItem_getData(nextItem)));
 	printf("\n");
 	NV_List_removeItem(thisItem);
 	NV_Env_setAutoPrintValueEnabled(env, 0);

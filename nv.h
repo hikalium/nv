@@ -6,9 +6,8 @@
 
 #define DEBUG	0
 
-#define MAX_INPUT_LEN	1024
-#define MAX_TOKEN_LEN	2048
-#define MAX_VARS		32
+#define MAX_INPUT_LEN	256
+#define MAX_TOKEN_LEN	256
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -40,9 +39,9 @@ enum NV_ELEMENT_TYPE {
 	EDictItem,	// complex
 	EVariable,	// complex
 	EEnv,
-	EOperator,	// primitive
-	EInteger,	// primitive
-	EString,	// primitive
+	EOperator,	// primitive, shared
+	EInteger,	// primitive, not shared
+	EString,	// primitive, not shared
 };
 
 enum NV_BIN_OP_TYPE {
@@ -106,6 +105,7 @@ NV_Pointer NV_TryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer t, NV_Poin
 // @nv_dict.c
 NV_DictItem *NV_allocDictItem();
 NV_Pointer NV_Dict_allocRoot();
+NV_Pointer NV_Dict_clone(NV_Pointer p);
 //
 int NV_Dict_add(NV_Pointer dict, NV_Pointer key, NV_Pointer val);
 NV_Pointer NV_Dict_getItemByKey(NV_Pointer dict, NV_Pointer key);
@@ -181,6 +181,7 @@ int NV_ListItem_isDataType(NV_Pointer item, NV_ElementType et);
 void NV_ListItem_print(NV_Pointer t);
 // ---- List ----
 NV_Pointer NV_List_allocRoot();
+NV_Pointer NV_List_clone(NV_Pointer p);
 NV_Pointer NV_List_getItemByIndex(NV_Pointer rootItem, int i);
 NV_Pointer NV_List_getLastItem(NV_Pointer root);
 NV_Pointer NV_List_removeItem(NV_Pointer item);
@@ -202,6 +203,7 @@ void NV_List_printAll(NV_Pointer root, const char *prefix, const char *delimiter
 
 // @nv_operator.c
 NV_Operator *NV_allocOperator();
+NV_Pointer NV_Operator_clone(NV_Pointer p);
 void NV_Operator_print(NV_Pointer t);
 void NV_addOperator(NV_LangDef *lang, int precedence, const char *name, NV_Pointer(*nativeFunc)(NV_Pointer env, NV_Pointer thisTerm));
 NV_Pointer NV_getOperatorFromString(NV_LangDef *lang, const char *termStr);

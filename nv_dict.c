@@ -35,6 +35,24 @@ NV_Pointer NV_Dict_allocRoot()
 {
 	return NV_E_malloc_type(EDict);	
 }
+
+NV_Pointer NV_Dict_clone(NV_Pointer p)
+{
+	NV_Pointer c, t, k, v;
+	if(!NV_E_isType(p, EDict)) return NV_NullPointer;
+	c = NV_E_malloc_type(EDict);
+	//
+	t = NV_DictItem_getNext(p);
+	while(!NV_E_isNullPointer(t)){
+		k = NV_E_clone(NV_DictItem_getKey(t));
+		v = NV_E_clone(NV_DictItem_getVal(t));
+		NV_Dict_add(c, k, v);
+		//
+		t = NV_DictItem_getNext(t);
+	}
+	return c;
+}
+
 int NV_Dict_add(NV_Pointer dict, NV_Pointer key, NV_Pointer val)
 {
 	// retv: error?

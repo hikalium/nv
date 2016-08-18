@@ -130,13 +130,14 @@ NV_Pointer NV_E_clone(NV_Pointer p)
 {
 	if(NV_E_isType(p, EInteger)){
 		return NV_Integer_clone(p);
-	//} else if(NV_E_isType(p, EOperator)){
+	} else if(NV_E_isType(p, EOperator)){
+		return NV_Operator_clone(p);
 	} else if(NV_E_isType(p, EString)){
 		return NV_String_clone(p);
-	//} else if(NV_E_isType(p, EListItem)){
-	//} else if(NV_E_isType(p, EList)){
-	//} else if(NV_E_isType(p, EDictItem)){
-	//} else if(NV_E_isType(p, EDict)){
+	} else if(NV_E_isType(p, EList)){
+		return NV_List_clone(p);
+	} else if(NV_E_isType(p, EDict)){
+		return NV_Dict_clone(p);
 	}
 	NV_Error("%s", "Cloning following element is not implemented.");
 	NV_printElement(p);
