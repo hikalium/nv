@@ -113,6 +113,8 @@ NV_Pointer NV_Dict_getValByKey(NV_Pointer dict, NV_Pointer key);
 NV_Pointer NV_DictItem_getKey(NV_Pointer item);
 NV_Pointer NV_DictItem_getVal(NV_Pointer item);
 //
+void NV_DictItem_print(NV_Pointer item);
+void NV_Dict_printAll(NV_Pointer dict, const char *prefix, const char *delimiter, const char *suffix);
 
 // @nv_element.c
 extern const NV_Pointer NV_NullPointer;
@@ -211,5 +213,6 @@ NV_Pointer NV_Operator_exec(NV_Pointer op, NV_Pointer env, NV_Pointer thisTerm);
 NV_String *NV_allocString();
 void NV_String_setString(NV_Pointer t, const char *s);
 int NV_String_isEqualToCStr(NV_Pointer str, const char *cstr);
+int NV_String_isEqual(NV_Pointer str0, NV_Pointer str1);
 void NV_String_print(NV_Pointer t);
 

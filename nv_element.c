@@ -22,6 +22,10 @@ NV_Pointer NV_E_malloc_type(NV_ElementType type)
 			return NV_E_malloc_internal(EList,		NV_allocListItem());
 		case EListItem:
 			return NV_E_malloc_internal(EListItem,	NV_allocListItem());
+		case EDict:
+			return NV_E_malloc_internal(EDict,		NV_allocDictItem());
+		case EDictItem:
+			return NV_E_malloc_internal(EDictItem,	NV_allocDictItem());
 		case EEnv:
 			return NV_E_malloc_internal(EEnv,		NV_allocEnv());
 		case EOperator:
@@ -88,6 +92,9 @@ int NV_E_isEqual(NV_Pointer p, NV_Pointer q)
 	if(NV_E_isType(p, EInteger) && NV_E_isType(q, EInteger)){
 		// Integer vs Integer
 		return (NV_Integer_getImm32(p) == NV_Integer_getImm32(q));
+	} else if(NV_E_isType(p, EString) && NV_E_isType(q, EString)){
+		// Integer vs Integer
+		return NV_String_isEqual(p, q);
 	}
 	NV_Error("%s", 
 		"Equality comparison between following two elements are not implemented.");
@@ -128,6 +135,10 @@ void NV_printElement(NV_Pointer p)
 			NV_ListItem_print(p);
 		} else if(NV_E_isType(p, EList)){
 			NV_List_printAll(p, NULL, NULL, NULL);
+		} else if(NV_E_isType(p, EDictItem)){
+			NV_DictItem_print(p);
+		} else if(NV_E_isType(p, EDict)){
+			NV_Dict_printAll(p, NULL, NULL, NULL);
 		} else{
 			printf("(type: %d)", p.data->type);
 		}

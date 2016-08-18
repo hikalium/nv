@@ -20,32 +20,35 @@ int main(int argc, char *argv[])
 		if(NV_Env_getEndFlag(env)) break;
 	}
 	return 0;
-/*
 
+/*
 	int i;
-	NV_Pointer t;
-	NV_Pointer root1 = NV_List_allocRoot();
+	NV_Pointer k, v;
+	NV_Pointer dict = NV_Dict_allocRoot();
 	char s[32];
-	for(i = 0; i < 3; i++){
-		t = NV_E_malloc_type(EString);
+	for(i = 0; i < 5; i++){
+		NV_printElement(dict); printf("\n");	
+		v = NV_E_malloc_type(EInteger);
+		NV_Integer_setImm32(v, i);
+		//
+		k = NV_E_malloc_type(EString);
 		snprintf(s, sizeof(s), "abc%dxx", i);
-		NV_String_setString(t, s);
-		NV_List_push(root1, t);
-		NV_List_printAll(root1, ", ");
+		NV_String_setString(k, s);
+		//
+		NV_Dict_add(dict, k, v);
 	}
-	
-	NV_Pointer root2 = NV_List_allocRoot();
-	for(i = 100; i < 105; i++){
-		t = NV_E_malloc_type(EInteger);
-		NV_Integer_setImm32(t, i);
-		NV_List_push(root2, t);
-		NV_List_printAll(root2, ", ");
+	NV_printElement(dict); printf("\n");
+	//
+	k = NV_E_malloc_type(EString);
+	//k = NV_E_malloc_type(EInteger);
+	for(i = 0; i < 6; i++){
+		snprintf(s, sizeof(s), "abc%dxy", i);
+		NV_String_setString(k, s);
+		//
+		v = NV_Dict_getValByKey(dict, k);
+		printf("%d -> ", i); NV_printElement(v); printf("\n");
 	}
-	
-	NV_List_insertAllAfterIndex(root1, 4, root2);
-	NV_List_printAll(root1, ", ");
-	NV_List_printAll(root2, ", ");
-*/	
+*/
 }
 
 //
