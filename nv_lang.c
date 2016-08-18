@@ -10,9 +10,9 @@ NV_Pointer NV_LANG00_makeBlock(NV_Pointer env, NV_Pointer thisItem, const char *
 	// retv is prev term of thisTerm.
 	NV_Pointer t, data, subListRoot, remListRoot, prevItem;
 	int pairCount = 1;
-	t = NV_List_getNextItem(thisItem);
-	for(; !NV_E_isNullPointer(t); t = NV_List_getNextItem(t)){
-		data = NV_List_getItemData(t);
+	t = NV_ListItem_getNext(thisItem);
+	for(; !NV_E_isNullPointer(t); t = NV_ListItem_getNext(t)){
+		data = NV_ListItem_getData(t);
 		if(NV_E_isType(data, EString) && NV_String_isEqualToCStr(data, closeStr)){
 			pairCount --;
 			if(pairCount == 0) break;
@@ -23,12 +23,12 @@ NV_Pointer NV_LANG00_makeBlock(NV_Pointer env, NV_Pointer thisItem, const char *
 	}
 	if(pairCount != 0) return NV_NullPointer;
 	// t is item which is close str.
-	prevItem = NV_List_getPrevItem(thisItem);
+	prevItem = NV_ListItem_getPrev(thisItem);
 	subListRoot = NV_List_divideBefore(thisItem);
 	remListRoot = NV_List_divideBefore(t);
 	NV_List_removeItem(thisItem);
 	NV_List_insertAllAfter(prevItem, remListRoot);
-	data = NV_List_setItemData(t, subListRoot);
+	data = NV_ListItem_setData(t, subListRoot);
 	NV_E_free(&data);	// free closeStr instance 
 	return prevItem;
 }
@@ -38,8 +38,8 @@ NV_Pointer NV_LANG00_execSentence(NV_Pointer env, NV_Pointer sentenceRootItem)
 	// eval sentence
 	NV_Pointer sentenceRoot;
 	//
-	if(!NV_List_isItemType(sentenceRootItem, EList)) return NV_NullPointer;
-	sentenceRoot = NV_List_getItemData(sentenceRootItem);
+	if(!NV_ListItem_isDataType(sentenceRootItem, EList)) return NV_NullPointer;
+	sentenceRoot = NV_ListItem_getData(sentenceRootItem);
 	//
 	if(NV_EvaluateSentence(env, sentenceRoot)){
 		NV_Error("%s", "Exec failed.");
@@ -192,9 +192,9 @@ NV_Pointer NV_LANG00_Op_unaryOperator_suffix_variableOnly(NV_Pointer env, NV_Poi
 NV_Pointer NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Pointer thisTerm)
 {
 	// for Integer values only.
-	NV_Pointer prev = NV_List_getPrevItem(thisTerm);
-	NV_Pointer next = NV_List_getNextItem(thisTerm);
-	NV_Operator *op = NV_List_getItemRawData(thisTerm, EOperator);
+	NV_Pointer prev = NV_ListItem_getPrev(thisTerm);
+	NV_Pointer next = NV_ListItem_getNext(thisTerm);
+	NV_Operator *op = NV_ListItem_getRawData(thisTerm, EOperator);
 	NV_Pointer resultData;
 	NV_Pointer vL, vR;
 	NV_BinOpType opType;
@@ -215,13 +215,13 @@ NV_Pointer NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Pointer thisTerm)
 	//
 	NV_E_free(&vL);
 	NV_E_free(&vR);
-	NV_List_setItemData(thisTerm, resultData);
+	NV_ListItem_setData(thisTerm, resultData);
 	//
 	return resultData;
 }
 NV_Pointer NV_LANG00_Op_nothingButDisappear(NV_Pointer env, NV_Pointer thisTerm)
 {
-	NV_Pointer prev = NV_List_getPrevItem(thisTerm);
+	NV_Pointer prev = NV_ListItem_getPrev(thisTerm);
 	NV_List_removeItem(thisTerm);
 	return prev;
 }
@@ -368,8 +368,8 @@ NV_Pointer NV_LANG00_Op_structureAccessor(NV_Pointer env, NV_Pointer thisTerm)
 NV_Pointer NV_LANG00_Op_builtin_exec(NV_Pointer env, NV_Pointer thisItem)
 {
 	NV_Pointer prevItem, nextItem;
-	prevItem = NV_List_getPrevItem(thisItem);
-	nextItem = NV_List_getNextItem(thisItem);
+	prevItem = NV_ListItem_getPrev(thisItem);
+	nextItem = NV_ListItem_getNext(thisItem);
 	if(NV_E_isNullPointer(NV_LANG00_execSentence(env, nextItem)))
 		return NV_NullPointer;
 	NV_List_removeItem(thisItem);
@@ -499,8 +499,8 @@ NV_Pointer NV_LANG00_Op_for(NV_Pointer env, NV_Pointer thisTerm)
 */
 NV_Pointer NV_LANG00_Op_print(NV_Pointer env, NV_Pointer thisItem)
 {
-	NV_Pointer nextItem = NV_List_getNextItem(thisItem);
-	NV_printElement(NV_List_getItemData(nextItem));
+	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);
+	NV_printElement(NV_ListItem_getData(nextItem));
 	printf("\n");
 	NV_List_removeItem(thisItem);
 	NV_Env_setAutoPrintValueEnabled(env, 0);
@@ -509,7 +509,7 @@ NV_Pointer NV_LANG00_Op_print(NV_Pointer env, NV_Pointer thisItem)
 
 NV_Pointer NV_LANG00_Op_showOpList(NV_Pointer env, NV_Pointer thisItem)
 {
-	NV_Pointer prevItem = NV_List_getPrevItem(thisItem);
+	NV_Pointer prevItem = NV_ListItem_getPrev(thisItem);
 	//
 	NV_List_printAll(
 		NV_Env_getLangDef(env)->opRoot, "\nOpList: [\n", ",\n", "\n]\n");
@@ -523,7 +523,7 @@ NV_Pointer NV_LANG00_Op_mem(NV_Pointer env, NV_Pointer thisItem)
 {
 	NV_Pointer memUsingSize = NV_E_malloc_type(EInteger);
 	NV_Integer_setImm32(memUsingSize, NV_getMallocCount());
-	NV_List_setItemData(thisItem, memUsingSize);
+	NV_ListItem_setData(thisItem, memUsingSize);
 	return thisItem;
 }
 

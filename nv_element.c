@@ -26,6 +26,8 @@ NV_Pointer NV_E_malloc_type(NV_ElementType type)
 			return NV_E_malloc_internal(EDict,		NV_allocDictItem());
 		case EDictItem:
 			return NV_E_malloc_internal(EDictItem,	NV_allocDictItem());
+		case EVariable:
+			return NV_E_malloc_internal(EVariable,	NV_allocVariable());
 		case EEnv:
 			return NV_E_malloc_internal(EEnv,		NV_allocEnv());
 		case EOperator:
@@ -115,9 +117,9 @@ void *NV_E_getRawPointer(NV_Pointer p, NV_ElementType et)
 NV_Pointer NV_E_getPrimitive(NV_Pointer maybeComplexItem)
 {
 	if(NV_E_isType(maybeComplexItem, EList)){
-		return NV_E_getPrimitive(NV_List_lastItem(maybeComplexItem));
+		return NV_E_getPrimitive(NV_List_getLastItem(maybeComplexItem));
 	} else if(NV_E_isType(maybeComplexItem, EListItem)){
-		return NV_E_getPrimitive(NV_List_getItemData(maybeComplexItem));
+		return NV_E_getPrimitive(NV_ListItem_getData(maybeComplexItem));
 	}
 	return maybeComplexItem;
 }

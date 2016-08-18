@@ -36,9 +36,9 @@ void NV_addOperator(NV_LangDef *lang, int precedence, const char *name, NV_Point
 	opRawData->precedence = precedence;
 	opRawData->nativeFunc = nativeFunc;
 	// op list is sorted in a descending order of precedence.
-	tOpItem = NV_List_getNextItem(lang->opRoot);
-	for(; !NV_E_isNullPointer(tOpItem); tOpItem = NV_List_getNextItem(tOpItem)){
-		tOpRawData = NV_List_getItemRawData(tOpItem, EOperator);
+	tOpItem = NV_ListItem_getNext(lang->opRoot);
+	for(; !NV_E_isNullPointer(tOpItem); tOpItem = NV_ListItem_getNext(tOpItem)){
+		tOpRawData = NV_ListItem_getRawData(tOpItem, EOperator);
 		if(tOpRawData->precedence < opRawData->precedence) break;
 	}
 	if(NV_E_isNullPointer(tOpItem)){
@@ -52,11 +52,11 @@ NV_Pointer NV_getOperatorFromString(NV_LangDef *lang, const char *termStr)
 {
 	NV_Pointer p;
 	NV_Operator *op;
-	p = NV_List_getNextItem(lang->opRoot);
-	for(; !NV_E_isNullPointer(p); p = NV_List_getNextItem(p)){
-		op = NV_List_getItemRawData(p, EOperator);
+	p = NV_ListItem_getNext(lang->opRoot);
+	for(; !NV_E_isNullPointer(p); p = NV_ListItem_getNext(p)){
+		op = NV_ListItem_getRawData(p, EOperator);
 		if(strcmp(op->name, termStr) == 0){
-			return NV_List_getItemData(p);
+			return NV_ListItem_getData(p);
 		}
 	}
 	return NV_NullPointer;
@@ -68,14 +68,14 @@ NV_Pointer NV_getFallbackOperator(NV_LangDef *lang, NV_Pointer baseP)
 	NV_Operator *op = NULL;
 	NV_Operator *baseOp = NV_E_getRawPointer(baseP, EOperator);
 	//
-	for(p = lang->opRoot; !NV_E_isNullPointer(p); p = NV_List_getNextItem(p)){
+	for(p = lang->opRoot; !NV_E_isNullPointer(p); p = NV_ListItem_getNext(p)){
 		op = NV_E_getRawPointer(p, EOperator);
 		if(op == baseOp){
-			p = NV_List_getNextItem(p);
+			p = NV_ListItem_getNext(p);
 			break;
 		}
 	}
-	for(; !NV_E_isNullPointer(p); p = NV_List_getNextItem(p)){
+	for(; !NV_E_isNullPointer(p); p = NV_ListItem_getNext(p)){
 		op = NV_E_getRawPointer(p, EOperator);
 		if(strcmp(op->name, baseOp->name) == 0){
 			return p;

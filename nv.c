@@ -3,6 +3,7 @@
 int NV_isDebugMode;
 int main(int argc, char *argv[])
 {
+
 	int i;
 	char line[MAX_INPUT_LEN];
 	NV_Pointer env;
@@ -20,12 +21,12 @@ int main(int argc, char *argv[])
 		if(NV_Env_getEndFlag(env)) break;
 	}
 	return 0;
-
 /*
-	int i;
 	NV_Pointer k, v;
 	NV_Pointer dict = NV_Dict_allocRoot();
+	//NV_Pointer var = NV_E_malloc_type(EVariable);
 	char s[32];
+	int i;
 	for(i = 0; i < 5; i++){
 		NV_printElement(dict); printf("\n");	
 		v = NV_E_malloc_type(EInteger);
@@ -42,7 +43,7 @@ int main(int argc, char *argv[])
 	k = NV_E_malloc_type(EString);
 	//k = NV_E_malloc_type(EInteger);
 	for(i = 0; i < 6; i++){
-		snprintf(s, sizeof(s), "abc%dxy", i);
+		snprintf(s, sizeof(s), "abc%dxx", i);
 		NV_String_setString(k, s);
 		//
 		v = NV_Dict_getValByKey(dict, k);
@@ -177,7 +178,7 @@ void NV_Evaluate(NV_Pointer env)
 	} else{
 		// Ended with Success
 		if(NV_Env_getAutoPrintValueEnabled(env)){
-			lastTerm = NV_List_getItemData(NV_List_lastItem(termRoot));
+			lastTerm = NV_ListItem_getData(NV_List_getLastItem(termRoot));
 			if(!NV_E_isNullPointer(lastTerm)){
 				printf("= ");
 				NV_printElement(lastTerm);
@@ -201,10 +202,10 @@ int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root)
 	while(!NV_Env_getEndFlag(env)){
 		// find op
 		targetOpPrec = -1;
-		t = NV_List_getNextItem(root);
-		for(; !NV_E_isNullPointer(t); t = NV_List_getNextItem(t)){
-			if(NV_List_isItemType(t, EOperator)){
-				op = NV_List_getItemData(t);
+		t = NV_ListItem_getNext(root);
+		for(; !NV_E_isNullPointer(t); t = NV_ListItem_getNext(t)){
+			if(NV_ListItem_isDataType(t, EOperator)){
+				op = NV_ListItem_getData(t);
 				opPrec = NV_getOperatorPrecedence(op);
 				if(opPrec == -1){
 					NV_Error("%s", "Internal error: Op not found");
@@ -222,8 +223,8 @@ int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root)
 		}
 		if((targetOpPrec & 1) == 0){
 			// left-associative
-			t = NV_List_getNextItem(root);
-			for(; !NV_E_isNullPointer(t); t = NV_List_getNextItem(t)){
+			t = NV_ListItem_getNext(root);
+			for(; !NV_E_isNullPointer(t); t = NV_ListItem_getNext(t)){
 				t = NV_TryExecOp(env, targetOpPrec, t, root);
 				if(NV_E_isNullPointer(t)){
 					NV_DbgInfo("%s", "Evaluate end (Op Mismatched)");
@@ -232,8 +233,8 @@ int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root)
 			}
 		} else{
 			// right-associative
-			t = NV_List_lastItem(root);
-			for(; !NV_E_isNullPointer(t); t = NV_List_getPrevItem(t)){
+			t = NV_List_getLastItem(root);
+			for(; !NV_E_isNullPointer(t); t = NV_ListItem_getPrev(t)){
 				// rewind
 				t = NV_TryExecOp(env, targetOpPrec, t, root);
 				if(NV_E_isNullPointer(t)){
@@ -255,7 +256,7 @@ NV_Pointer NV_TryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer thisTerm, 
 	NV_Pointer fallbackOp, op;
 	NV_Pointer orgTerm = thisTerm;
 	//
-	op = NV_List_getItemData(thisTerm);
+	op = NV_ListItem_getData(thisTerm);
 	if(NV_E_isType(op, EOperator) && 
 		NV_getOperatorPrecedence(op) == currentOpPrec){
 		if(NV_isDebugMode){
@@ -277,7 +278,7 @@ NV_Pointer NV_TryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer thisTerm, 
 				NV_List_printAll(root, NULL, NULL, "]\n");
 				return NV_NullPointer;
 			}
-			NV_List_setItemData(orgTerm, fallbackOp);
+			NV_ListItem_setData(orgTerm, fallbackOp);
 			thisTerm = orgTerm;
 		}
 		if(NV_isDebugMode) NV_List_printAll(root, NULL, NULL, "]\n");
