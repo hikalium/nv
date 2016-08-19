@@ -69,22 +69,23 @@ NV_Pointer NV_getOperatorFromString(NV_LangDef *lang, const char *termStr)
 	return NV_NullPointer;
 }
 
-NV_Pointer NV_getFallbackOperator(NV_LangDef *lang, NV_Pointer baseP)
+NV_Pointer NV_getFallbackOperator(NV_LangDef *lang, NV_Pointer baseOp)
 {
 	NV_Pointer p;
 	NV_Operator *op = NULL;
-	NV_Operator *baseOp = NV_E_getRawPointer(baseP, EOperator);
+	NV_Operator *rawBaseOp = NV_E_getRawPointer(baseOp, EOperator);
 	//
-	for(p = lang->opRoot; !NV_E_isNullPointer(p); p = NV_ListItem_getNext(p)){
-		op = NV_E_getRawPointer(p, EOperator);
-		if(op == baseOp){
+	p = NV_ListItem_getNext(lang->opRoot);
+	for(; !NV_E_isNullPointer(p); p = NV_ListItem_getNext(p)){
+		op = NV_ListItem_getRawData(p, EOperator);
+		if(op == rawBaseOp){
 			p = NV_ListItem_getNext(p);
 			break;
 		}
 	}
 	for(; !NV_E_isNullPointer(p); p = NV_ListItem_getNext(p)){
-		op = NV_E_getRawPointer(p, EOperator);
-		if(strcmp(op->name, baseOp->name) == 0){
+		op = NV_ListItem_getRawData(p, EOperator);
+		if(strcmp(op->name, rawBaseOp->name) == 0){
 			return p;
 		}
 	}

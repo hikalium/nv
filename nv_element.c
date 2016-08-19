@@ -159,6 +159,8 @@ NV_Pointer NV_E_clone(NV_Pointer p)
 		return NV_List_clone(p);
 	} else if(NV_E_isType(p, EDict)){
 		return NV_Dict_clone(p);
+	} else if(NV_E_isType(p, EVariable)){
+		return NV_Variable_clone(p);
 	}
 	NV_Error("%s", "Cloning following element is not implemented.");
 	NV_printElement(p);

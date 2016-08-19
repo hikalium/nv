@@ -108,25 +108,33 @@ NV_Pointer NV_LANG00_Op_assign(NV_Pointer env, NV_Pointer thisItem)
 	NV_ListItem_setData(dst, var);
 	return dst;
 }
-/*
-NV_Pointer NV_LANG00_Op_compoundAssign(NV_Pointer env, NV_Pointer thisTerm)
+
+NV_Pointer NV_LANG00_Op_compoundAssign(NV_Pointer env, NV_Pointer thisItem)
 {
-	NV_Operator *op = (NV_Operator *)thisTerm->data;
-	NV_Pointer prev = thisTerm->prev;
+	NV_Operator *op;
+	NV_LangDef *lang = NV_Env_getLangDef(env);
+	NV_Pointer var;
+	NV_Pointer vDict = NV_Env_getVarRoot(env);
 	char s[2];
 	//
-	if(!prev || (prev->type != Unknown && prev->type != Variable)) return NULL;
+	if(!NV_ListItem_isDataType(thisItem, EOperator))
+		return NV_NullPointer;
+	var = NV_ListItem_getData(NV_ListItem_getPrev(thisItem));
+	var = NV_Variable_tryAllocVariableExisted(vDict, var);
+	if(!NV_E_isType(var, EVariable))
+		return NV_NullPointer;
 	//
+	op = NV_ListItem_getRawData(thisItem, EOperator);
+	if(!op) return NV_NullPointer;
 	s[0] = op->name[0];
 	s[1] = 0;
 	//
-	NV_insertTermAfter(thisTerm, NV_createTerm_Operator(NV_Env_getLangDef(env), s));
-	NV_insertTermAfter(thisTerm, NV_cloneTerm(prev));
-	NV_insertTermAfter(thisTerm, NV_createTerm_Operator(NV_Env_getLangDef(env), "="));
-	NV_removeTerm(thisTerm);
-	return prev->next;
+	NV_ListItem_setData(thisItem, NV_getOperatorFromString(lang, "="));
+	NV_List_insertDataAfterItem(thisItem, NV_getOperatorFromString(lang, s));
+	NV_List_insertDataAfterItem(thisItem, var);
+	return thisItem;
 }
-
+/*
 NV_Pointer NV_LANG00_Op_unaryOperator_prefix(NV_Pointer env, NV_Pointer thisTerm)
 {
 	NV_Pointer prev = thisTerm->prev;
@@ -631,13 +639,11 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 300,	"||", NV_LANG00_Op_binaryOperator);
 	NV_addOperator(lang, 300,	"&&", NV_LANG00_Op_binaryOperator);
 	//
-/*
 	NV_addOperator(lang, 200,	"+=", NV_LANG00_Op_compoundAssign);
 	NV_addOperator(lang, 200,	"-=", NV_LANG00_Op_compoundAssign);
 	NV_addOperator(lang, 200,	"*=", NV_LANG00_Op_compoundAssign);
 	NV_addOperator(lang, 200,	"/=", NV_LANG00_Op_compoundAssign);
 	NV_addOperator(lang, 200,	"%=", NV_LANG00_Op_compoundAssign);
-*/
 	//
 	NV_addOperator(lang, 101,	"=", NV_LANG00_Op_assign);
 	//

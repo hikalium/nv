@@ -14,6 +14,15 @@ NV_Variable *NV_allocVariable()
 	return v;
 }
 
+NV_Pointer NV_Variable_clone(NV_Pointer p)
+{
+	NV_Pointer c;
+	if(!NV_E_isType(p, EVariable)) return NV_NullPointer;
+	c = NV_E_malloc_type(EVariable);
+	NV_Variable_setTarget(c, NV_Variable_getTarget(p));
+	return c;
+}
+
 NV_Pointer NV_Variable_allocByStr(NV_Pointer vDict, NV_Pointer str)
 {
 	NV_Pointer var = NV_E_malloc_type(EVariable);

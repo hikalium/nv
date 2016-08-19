@@ -229,6 +229,7 @@ void NV_String_print(NV_Pointer t);
 
 // @nv_var.c
 NV_Variable *NV_allocVariable();
+NV_Pointer NV_Variable_clone(NV_Pointer p);
 NV_Pointer NV_Variable_allocByStr(NV_Pointer vDict, NV_Pointer str);
 NV_Pointer NV_Variable_allocByCStr(NV_Pointer vDict, const char *s);
 NV_Pointer NV_Variable_tryAllocVariableExisted(NV_Pointer vDict, NV_Pointer mayStr);
