@@ -16,6 +16,7 @@
 	if(NV_isDebugMode) printf("Info : %s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
 
 typedef enum	NV_ELEMENT_TYPE NV_ElementType;
+typedef enum	NV_ELEMENT_FLAG NV_ElementFlag;
 typedef enum	NV_BIN_OP_TYPE	NV_BinOpType;
 
 typedef struct	NV_ELEMENT		NV_Element;
@@ -42,6 +43,10 @@ enum NV_ELEMENT_TYPE {
 	EOperator,	// primitive, shared
 	EInteger,	// primitive, not shared
 	EString,	// primitive, not shared
+};
+
+enum NV_ELEMENT_FLAG {
+	EFUnknownToken = 1,
 };
 
 enum NV_BIN_OP_TYPE {
@@ -132,6 +137,9 @@ int NV_E_isSamePointer(NV_Pointer p, NV_Pointer q);
 int NV_E_isEqual(NV_Pointer p, NV_Pointer q);
 void *NV_E_getRawPointer(NV_Pointer p, NV_ElementType et);
 NV_Pointer NV_E_getPrimitive(NV_Pointer maybeComplexItem);
+void NV_E_setFlag(NV_Pointer p, int32_t flag);
+void NV_E_clearFlag(NV_Pointer p, int32_t flag);
+int NV_E_checkFlag(NV_Pointer p, int32_t pattern);
 NV_Pointer NV_E_clone(NV_Pointer p);
 //
 void NV_printElement(NV_Pointer p);

@@ -2,7 +2,8 @@
 
 struct NV_ELEMENT {
     NV_ElementType type;
-    int token;
+    int32_t token;
+	int32_t flag;
     void *data;
 };
 
@@ -126,6 +127,26 @@ NV_Pointer NV_E_getPrimitive(NV_Pointer maybeComplexItem)
 	return maybeComplexItem;
 }
 
+void NV_E_setFlag(NV_Pointer p, int32_t flag)
+{
+	if(!NV_E_isValidPointer(p)) return;
+	p.data->flag |= flag;
+}
+
+void NV_E_clearFlag(NV_Pointer p, int32_t flag)
+{
+	if(!NV_E_isValidPointer(p)) return;
+	p.data->flag &= ~flag;
+}
+
+int NV_E_checkFlag(NV_Pointer p, int32_t pattern)
+{
+	if(!NV_E_isValidPointer(p)) return 0;
+	return p.data->flag & pattern;
+}
+
+
+
 NV_Pointer NV_E_clone(NV_Pointer p)
 {
 	if(NV_E_isType(p, EInteger)){
@@ -192,6 +213,7 @@ NV_Pointer NV_E_malloc_internal(NV_ElementType type, void *data)
 	}
 	e->type = type;
 	e->token = rand();
+	e->flag = 0;
 	e->data = data;
 	//
 	p.token = e->token;

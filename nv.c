@@ -150,6 +150,7 @@ void NV_tokenizeItem(NV_LangDef *langDef, NV_Pointer termRoot, const char *termS
 	// unknown -> string
 	t = NV_E_malloc_type(EString);
 	NV_String_setString(t, termStr);
+	NV_E_setFlag(t, EFUnknownToken);
 	NV_List_push(termRoot, t);
 }
 //

@@ -40,7 +40,11 @@ NV_Pointer NV_Variable_allocByCStr(NV_Pointer vDict, const char *s)
 
 NV_Pointer NV_Variable_tryAllocVariableExisted(NV_Pointer vDict, NV_Pointer mayStr)
 {
+	// if mayStr object is EString and EFUnknownToken (not string literal),
+	// try to convert from string to variable,
+	// if not, return original mayStr object.
 	if(!NV_E_isType(mayStr, EString)) return mayStr;
+	if(!NV_E_checkFlag(mayStr, EFUnknownToken)) return mayStr;
 	if(NV_E_isNullPointer(NV_Dict_getItemByKey(vDict, mayStr))) return mayStr;
 	return NV_Variable_allocByStr(vDict, mayStr);
 }
