@@ -8,8 +8,9 @@ NV_Pointer NV_LANG00_makeBlock(NV_Pointer env, NV_Pointer thisItem, const char *
 {
 	// support func
 	// retv is prev term of thisTerm.
-	NV_Pointer t, data, subListRoot, remListRoot, prevItem;
+	NV_Pointer t, data, subListRoot, remListRoot, prevItem, thisData;
 	int pairCount = 1;
+	thisData = NV_ListItem_getData(thisItem);
 	t = NV_ListItem_getNext(thisItem);
 	for(; !NV_E_isNullPointer(t); t = NV_ListItem_getNext(t)){
 		data = NV_ListItem_getData(t);
@@ -17,7 +18,7 @@ NV_Pointer NV_LANG00_makeBlock(NV_Pointer env, NV_Pointer thisItem, const char *
 			pairCount --;
 			if(pairCount == 0) break;
 		} else if(NV_E_isType(data, EOperator) && 
-			NV_E_isSamePointer(data, thisItem)){
+			NV_E_isSamePointer(data, thisData)){
 			pairCount++;
 		}
 	}
@@ -401,66 +402,68 @@ NV_Pointer NV_LANG00_Op_builtin_exec(NV_Pointer env, NV_Pointer thisItem)
 	//
 	return prevItem;
 }
-/*
-NV_Pointer NV_LANG00_Op_if(NV_Pointer env, NV_Pointer thisTerm)
+
+void NV_LANG00_Op_if_fetch(NV_Pointer t, NV_Pointer *list1, NV_Pointer *list2)
+{
+	*list1 = NV_NullPointer;
+	*list2 = NV_NullPointer;
+	//
+	t = NV_ListItem_getNext(t);
+	if(!NV_ListItem_isDataType(t, EList)) return;
+	*list1 = t;
+	//
+	t = NV_ListItem_getNext(t);
+	if(!NV_ListItem_isDataType(t, EList)) return;
+	*list2 = t;
+}
+
+NV_Pointer NV_LANG00_Op_if(NV_Pointer env, NV_Pointer thisItem)
 {
 	// if {cond} {do} [{cond} {do}] [{else}]
-	int cond;
-	NV_Pointer condTerm, *doTerm, *t, *next;
+	int32_t cond;
+	NV_Pointer condItem, doItem, t;
 	//
-	t = thisTerm;
-	//
-	t = t->next; if(!NV_canReadTermAsSentence(t)) return NULL;
-	condTerm = t;
-	t = t->next; if(!NV_canReadTermAsSentence(t)) return NULL;
-	doTerm = t;
+	NV_LANG00_Op_if_fetch(thisItem, &condItem, &doItem);
 	for(;;){
 		// evaluate cond
-		if(!NV_LANG00_execSentence(env, thisTerm->next))
-			return NULL;
-		condTerm = thisTerm->next;
-		if(condTerm->next != doTerm)
-			return NULL;
+		NV_LANG00_execSentence(env, condItem);
+		if(NV_E_isNullPointer(doItem)){
+			// condItem was else block so break here.
+			break;
+		}
 		// get cond value
-		if(!NV_canReadTermAsInt(condTerm)) return NULL;
-		cond = NV_getValueOfTermAsInt(condTerm);
-		NV_removeTerm(condTerm);
+		t = NV_ListItem_getData(condItem);	// t is root of the list.
+		t = NV_E_getPrimitive(
+			NV_ListItem_getData(NV_List_getLastItem(t)));
+		if(!NV_E_isType(t, EInteger)) return NV_NullPointer;
+		cond = NV_Integer_getImm32(t);
+		NV_List_removeItem(condItem);
 		// evaluate do
 		if(cond){
 			// cond is true.
-			t = NV_LANG00_execSentence(env, thisTerm->next);
-			if(!t) return NULL;
+			t = NV_LANG00_execSentence(env, doItem);
+			if(NV_E_isNullPointer(t)) return NV_NullPointer;
 			// remove rest of sentence blocks.
-			for(t = t->next; t; t = next){
-				if(t->type != Sentence) break;
-				next = t->next;
-				NV_removeTerm(t);
+			t = NV_ListItem_getNext(doItem);
+			while(NV_ListItem_isDataType(t, EList)){
+				t = NV_ListItem_getNext(t);
+				NV_List_removeItem(NV_ListItem_getPrev(t));
 			}
 			break;
 		} else{
-			NV_removeTerm(doTerm);
+			NV_List_removeItem(doItem);
 		}
 		// cond is false. check next cond.
-		t = thisTerm;
-		//
-		t = t->next; if(t == NULL || t->type != Sentence) return NULL;
-		condTerm = t;
-		t = t->next; if(t == NULL || t->type != Sentence){
-			// next term is else block.
-			t = NV_LANG00_execSentence(env, thisTerm->next);
-			if(!t) return NULL;
-			break;
-		};
-		doTerm = t;
+		NV_LANG00_Op_if_fetch(thisItem, &condItem, &doItem);
 		// continue checking.
 	}
 	// remove 'if' term.
-	thisTerm = thisTerm->prev;
-	NV_removeTerm(thisTerm->next);
+	t = NV_ListItem_getPrev(thisItem);
+	NV_List_removeItem(thisItem);
 	//
-	return thisTerm;
+	return t;
 }
-
+/*
 NV_Pointer NV_LANG00_Op_for(NV_Pointer env, NV_Pointer thisTerm)
 {
 	// for {init block}{conditional block}{update block}{statement}
@@ -611,7 +614,9 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 2010,	"[", NV_LANG00_Op_structureAccessor);	
 	NV_addOperator(lang, 2000,	"]", NV_LANG00_Op_nothingButDisappear);
 	//
+*/
 	NV_addOperator(lang, 1000,  "if", NV_LANG00_Op_if);
+/*
 	NV_addOperator(lang, 1000,  "for", NV_LANG00_Op_for);
 	//
 	NV_addOperator(lang, 702,	"++", NV_LANG00_Op_unaryOperator_suffix_variableOnly);

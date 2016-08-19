@@ -117,11 +117,11 @@ void *NV_E_getRawPointer(NV_Pointer p, NV_ElementType et)
 
 NV_Pointer NV_E_getPrimitive(NV_Pointer maybeComplexItem)
 {
-	if(NV_E_isType(maybeComplexItem, EList)){
-		return NV_E_getPrimitive(NV_List_getLastItem(maybeComplexItem));
-	} else if(NV_E_isType(maybeComplexItem, EListItem)){
-		return NV_E_getPrimitive(NV_ListItem_getData(maybeComplexItem));
-	} else if(NV_E_isType(maybeComplexItem, EVariable)){
+//	if(NV_E_isType(maybeComplexItem, EList)){
+//		return NV_E_getPrimitive(NV_List_getLastItem(maybeComplexItem));
+//	} else if(NV_E_isType(maybeComplexItem, EListItem)){
+//		return NV_E_getPrimitive(NV_ListItem_getData(maybeComplexItem));
+	/*} else*/ if(NV_E_isType(maybeComplexItem, EVariable)){
 		return NV_E_getPrimitive(NV_Variable_getData(maybeComplexItem));
 	}
 	return maybeComplexItem;

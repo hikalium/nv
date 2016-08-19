@@ -1,0 +1,2 @@
+a = 3
+if{a < 3}{print less}{if{a > 3}{print greater}{print bingo}}
