@@ -69,6 +69,16 @@ NV_BinOpType NV_LANG00_getBinOpTypeFromString(const char *s)
 	return BOpNone;
 }
 
+void NV_LANG00_fetchNextSentenceItem(NV_Pointer *t, NV_Pointer *list)
+{
+	// t will moved to next item.
+	*list = NV_NullPointer;
+	//
+	*t = NV_ListItem_getNext(*t);
+	if(!NV_ListItem_isDataType(*t, EList)) return;
+	*list = *t;
+}
+
 /*
 
 //
@@ -98,7 +108,7 @@ NV_Pointer NV_LANG00_Op_assign(NV_Pointer env, NV_Pointer thisItem)
 	//
 	srcData = NV_ListItem_getData(src);
 	srcData = NV_Variable_tryAllocVariableExisted(vRoot, srcData);
-	srcData = NV_E_getPrimitive(srcData);
+	srcData = NV_E_unbox(srcData);
 	srcData = NV_E_clone(srcData);
 	//
 	NV_Variable_assignData(var, srcData);
@@ -172,7 +182,8 @@ NV_Pointer NV_LANG00_Op_unaryOperator_prefix(NV_Pointer env, NV_Pointer thisTerm
 	if(NV_isDebugMode) NV_printError("NV_LANG00_Op_unaryOperator: Bad operand. type %d\n", next->type);
 	return NULL;
 }
-
+*/
+/*
 NV_Pointer NV_LANG00_Op_unaryOperator_suffix_variableOnly(NV_Pointer env, NV_Pointer thisTerm)
 {
 	NV_Pointer prev = thisTerm->prev;
@@ -225,8 +236,14 @@ NV_Pointer NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Pointer thisTerm)
 	NV_BinOpType opType;
 	NV_Pointer vRoot = NV_Env_getVarRoot(env);
 	// type check
-	if(NV_E_isNullPointer(prev) || NV_E_isNullPointer(next)) return NV_NullPointer;
-	if(!op) return NV_NullPointer;
+	if(NV_E_isNullPointer(prev) || NV_E_isNullPointer(next)){
+		NV_Error("%s", "operand is NULL");
+		return NV_NullPointer;
+	}
+	if(!op){
+		NV_Error("%s", "op is NULL!");
+		return NV_NullPointer;
+	}
 	//
 	vL = NV_List_removeItem(prev);
 	vR = NV_List_removeItem(next);
@@ -237,7 +254,10 @@ NV_Pointer NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Pointer thisTerm)
 	opType = NV_LANG00_getBinOpTypeFromString(op->name);
 	// process
 	resultData = NV_Integer_evalBinOp(vL, vR, opType);
-	if(NV_E_isNullPointer(resultData)) return NV_NullPointer;
+	if(NV_E_isNullPointer(resultData)){
+		NV_Error("%s", "result is NULL!");
+		return NV_NullPointer;
+	}
 	//
 	NV_E_free(&vL);
 	NV_E_free(&vR);
@@ -403,27 +423,15 @@ NV_Pointer NV_LANG00_Op_builtin_exec(NV_Pointer env, NV_Pointer thisItem)
 	return prevItem;
 }
 
-void NV_LANG00_Op_if_fetch(NV_Pointer t, NV_Pointer *list1, NV_Pointer *list2)
-{
-	*list1 = NV_NullPointer;
-	*list2 = NV_NullPointer;
-	//
-	t = NV_ListItem_getNext(t);
-	if(!NV_ListItem_isDataType(t, EList)) return;
-	*list1 = t;
-	//
-	t = NV_ListItem_getNext(t);
-	if(!NV_ListItem_isDataType(t, EList)) return;
-	*list2 = t;
-}
-
 NV_Pointer NV_LANG00_Op_if(NV_Pointer env, NV_Pointer thisItem)
 {
 	// if {cond} {do} [{cond} {do}] [{else}]
 	int32_t cond;
 	NV_Pointer condItem, doItem, t;
 	//
-	NV_LANG00_Op_if_fetch(thisItem, &condItem, &doItem);
+	t = thisItem;
+	NV_LANG00_fetchNextSentenceItem(&t, &condItem);
+	NV_LANG00_fetchNextSentenceItem(&t, &doItem);
 	for(;;){
 		// evaluate cond
 		NV_LANG00_execSentence(env, condItem);
@@ -433,8 +441,7 @@ NV_Pointer NV_LANG00_Op_if(NV_Pointer env, NV_Pointer thisItem)
 		}
 		// get cond value
 		t = NV_ListItem_getData(condItem);	// t is root of the list.
-		t = NV_E_getPrimitive(
-			NV_ListItem_getData(NV_List_getLastItem(t)));
+		t = NV_E_unbox(NV_ListItem_getData(NV_List_getLastItem(t)));
 		if(!NV_E_isType(t, EInteger)) return NV_NullPointer;
 		cond = NV_Integer_getImm32(t);
 		NV_List_removeItem(condItem);
@@ -454,7 +461,9 @@ NV_Pointer NV_LANG00_Op_if(NV_Pointer env, NV_Pointer thisItem)
 			NV_List_removeItem(doItem);
 		}
 		// cond is false. check next cond.
-		NV_LANG00_Op_if_fetch(thisItem, &condItem, &doItem);
+		t = thisItem;
+		NV_LANG00_fetchNextSentenceItem(&t, &condItem);
+		NV_LANG00_fetchNextSentenceItem(&t, &doItem);
 		// continue checking.
 	}
 	// remove 'if' term.
@@ -463,75 +472,78 @@ NV_Pointer NV_LANG00_Op_if(NV_Pointer env, NV_Pointer thisItem)
 	//
 	return t;
 }
-/*
-NV_Pointer NV_LANG00_Op_for(NV_Pointer env, NV_Pointer thisTerm)
+
+NV_Pointer NV_LANG00_Op_for(NV_Pointer env, NV_Pointer thisItem)
 {
 	// for {init block}{conditional block}{update block}{statement}
-	//int cond;
-	NV_Pointer t, *initTerm, *condTerm, *updateTerm, *doTerm;
-	NV_Term tmpCondRoot, tmpUpdateRoot, tmpDoRoot;
+	int cond;
+	NV_Pointer t, initItem, condItem, updateItem, doItem;
+	NV_Pointer tmpCondRoot, tmpUpdateRoot, tmpDoRoot;
 	//
-	t = thisTerm;
-	//
-	t = t->next;
-	if(t == NULL || t->type != Sentence) return NULL;
-	initTerm = t;
-	//
-	t = t->next;
-	if(t == NULL || t->type != Sentence) return NULL;
-	condTerm = t;
-	//
-	t = t->next;
-	if(t == NULL || t->type != Sentence) return NULL;
-	updateTerm = t;
-	//
-	t = t->next;
-	if(t == NULL || t->type != Sentence) return NULL;
-	doTerm = t;
-	//
+	t = thisItem;
+	NV_LANG00_fetchNextSentenceItem(&t, &initItem);
+	NV_LANG00_fetchNextSentenceItem(&t, &condItem);
+	NV_LANG00_fetchNextSentenceItem(&t, &updateItem);
+	NV_LANG00_fetchNextSentenceItem(&t, &doItem);
+	if(NV_E_isNullPointer(initItem) || NV_E_isNullPointer(condItem) || 
+		NV_E_isNullPointer(updateItem) || NV_E_isNullPointer(doItem))
+		return NV_NullPointer;
 	// do init block
 	// initTerm is removed here.
-	if(NV_LANG00_execSentence(env, thisTerm->next) == NULL) return NULL;
+	t = NV_LANG00_execSentence(env,initItem);
+	if(NV_E_isNullPointer(t)) return NV_NullPointer;
+	NV_List_removeItem(t);
+	// 
 	for(;;){
 		// copy blocks
-		NV_cloneTermTree(&tmpCondRoot, condTerm->data);
-		NV_cloneTermTree(&tmpUpdateRoot, updateTerm->data);
-		NV_cloneTermTree(&tmpDoRoot, doTerm->data);
+		tmpCondRoot = NV_E_clone(NV_ListItem_getData(condItem));
+		tmpUpdateRoot = NV_E_clone(NV_ListItem_getData(updateItem));
+		tmpDoRoot = NV_E_clone(NV_ListItem_getData(doItem));
 		// check cond
-		if(NV_EvaluateSentence(env, &tmpCondRoot)) return NULL;
-		t = NV_getLastTerm(&tmpCondRoot);
-		if(!NV_getValueOfTermAsInt(t)) break;
+		if(NV_EvaluateSentence(env, tmpCondRoot)) return NV_NullPointer;
+		t = NV_E_unbox(NV_ListItem_getData(NV_List_getLastItem(tmpCondRoot)));
+		if(!NV_E_isType(t, EInteger)) return NV_NullPointer;
+		cond = NV_Integer_getImm32(t);
+		if(!cond) break;
 		// do
-		if(NV_EvaluateSentence(env, &tmpDoRoot)) return NULL;
+		if(NV_EvaluateSentence(env, tmpDoRoot)) return NV_NullPointer;
 		// update
-		if(NV_EvaluateSentence(env, &tmpUpdateRoot)) return NULL;
+		if(NV_EvaluateSentence(env, tmpUpdateRoot)) return NV_NullPointer;
 		// free tmp
-		NV_removeTermTree(&tmpCondRoot);
-		NV_removeTermTree(&tmpUpdateRoot);
-		NV_removeTermTree(&tmpDoRoot);
+		NV_resetEvalTree(tmpCondRoot);
+		NV_resetEvalTree(tmpUpdateRoot);
+		NV_resetEvalTree(tmpDoRoot);
+		//
+		NV_E_free(&tmpCondRoot);
+		NV_E_free(&tmpUpdateRoot);
+		NV_E_free(&tmpDoRoot);
 	}
 	// free tmp
-	NV_removeTermTree(&tmpCondRoot);
-	NV_removeTermTree(&tmpUpdateRoot);
-	NV_removeTermTree(&tmpDoRoot);
-	// remove
-	NV_removeTerm(updateTerm);
-	NV_removeTerm(condTerm);
-	NV_removeTerm(doTerm);
+	NV_resetEvalTree(tmpCondRoot);
+	NV_resetEvalTree(tmpUpdateRoot);
+	NV_resetEvalTree(tmpDoRoot);
 	//
-	t = thisTerm;
-	NV_removeTerm(thisTerm);
+	NV_E_free(&tmpCondRoot);
+	NV_E_free(&tmpUpdateRoot);
+	NV_E_free(&tmpDoRoot);
+	// remove original
+	NV_List_removeItem(updateItem);
+	NV_List_removeItem(condItem);
+	NV_List_removeItem(doItem);
+	// remove 'for' term.
+	t = NV_ListItem_getPrev(thisItem);
+	NV_List_removeItem(thisItem);
 	//
 	return t;
 }
-*/
+
 NV_Pointer NV_LANG00_Op_print(NV_Pointer env, NV_Pointer thisItem)
 {
 	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);
 	NV_printElement(
-		NV_Variable_tryAllocVariableExisted(
+		NV_E_unbox(NV_Variable_tryAllocVariableExisted(
 			NV_Env_getVarRoot(env),
-			NV_ListItem_getData(nextItem)));
+			NV_ListItem_getData(nextItem))));
 	printf("\n");
 	NV_List_removeItem(thisItem);
 	NV_Env_setAutoPrintValueEnabled(env, 0);
@@ -616,9 +628,9 @@ NV_LangDef *NV_getDefaultLang()
 	//
 */
 	NV_addOperator(lang, 1000,  "if", NV_LANG00_Op_if);
-/*
 	NV_addOperator(lang, 1000,  "for", NV_LANG00_Op_for);
 	//
+/*
 	NV_addOperator(lang, 702,	"++", NV_LANG00_Op_unaryOperator_suffix_variableOnly);
 	NV_addOperator(lang, 702,	"--", NV_LANG00_Op_unaryOperator_suffix_variableOnly);
 	//

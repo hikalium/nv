@@ -103,6 +103,7 @@ int NV_getCharType(NV_LangDef *lang, char c);
 void NV_tokenize(NV_LangDef *langDef, NV_Pointer termRoot, const char *input);
 void NV_tokenizeItem(NV_LangDef *langDef, NV_Pointer termRoot, const char *termStr);
 //
+void NV_resetEvalTree(NV_Pointer root);
 void NV_Evaluate(NV_Pointer env);
 int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root);
 NV_Pointer NV_TryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer t, NV_Pointer root);
@@ -136,7 +137,7 @@ int NV_E_isType(NV_Pointer p, NV_ElementType et);
 int NV_E_isSamePointer(NV_Pointer p, NV_Pointer q);
 int NV_E_isEqual(NV_Pointer p, NV_Pointer q);
 void *NV_E_getRawPointer(NV_Pointer p, NV_ElementType et);
-NV_Pointer NV_E_getPrimitive(NV_Pointer maybeComplexItem);
+NV_Pointer NV_E_unbox(NV_Pointer maybeBoxedItem);
 void NV_E_setFlag(NV_Pointer p, int32_t flag);
 void NV_E_clearFlag(NV_Pointer p, int32_t flag);
 int NV_E_checkFlag(NV_Pointer p, int32_t pattern);

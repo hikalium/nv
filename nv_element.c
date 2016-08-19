@@ -115,16 +115,12 @@ void *NV_E_getRawPointer(NV_Pointer p, NV_ElementType et)
 	return p.data->data;
 }
 
-NV_Pointer NV_E_getPrimitive(NV_Pointer maybeComplexItem)
+NV_Pointer NV_E_unbox(NV_Pointer maybeBoxedItem)
 {
-//	if(NV_E_isType(maybeComplexItem, EList)){
-//		return NV_E_getPrimitive(NV_List_getLastItem(maybeComplexItem));
-//	} else if(NV_E_isType(maybeComplexItem, EListItem)){
-//		return NV_E_getPrimitive(NV_ListItem_getData(maybeComplexItem));
-	/*} else*/ if(NV_E_isType(maybeComplexItem, EVariable)){
-		return NV_E_getPrimitive(NV_Variable_getData(maybeComplexItem));
+	if(NV_E_isType(maybeBoxedItem, EVariable)){
+		return NV_E_unbox(NV_Variable_getData(maybeBoxedItem));
 	}
-	return maybeComplexItem;
+	return maybeBoxedItem;
 }
 
 void NV_E_setFlag(NV_Pointer p, int32_t flag)
@@ -149,22 +145,27 @@ int NV_E_checkFlag(NV_Pointer p, int32_t pattern)
 
 NV_Pointer NV_E_clone(NV_Pointer p)
 {
+	NV_Pointer c = NV_NullPointer;
 	if(NV_E_isType(p, EInteger)){
-		return NV_Integer_clone(p);
+		c = NV_Integer_clone(p);
 	} else if(NV_E_isType(p, EOperator)){
-		return NV_Operator_clone(p);
+		c = NV_Operator_clone(p);
 	} else if(NV_E_isType(p, EString)){
-		return NV_String_clone(p);
+		c = NV_String_clone(p);
 	} else if(NV_E_isType(p, EList)){
-		return NV_List_clone(p);
+		c = NV_List_clone(p);
 	} else if(NV_E_isType(p, EDict)){
-		return NV_Dict_clone(p);
+		c = NV_Dict_clone(p);
 	} else if(NV_E_isType(p, EVariable)){
-		return NV_Variable_clone(p);
+		c = NV_Variable_clone(p);
 	}
-	NV_Error("%s", "Cloning following element is not implemented.");
-	NV_printElement(p);
-	return NV_NullPointer;
+	if(NV_E_isNullPointer(c)){
+		NV_Error("%s", "Failed to cloning following element.");
+		NV_printElement(p);
+		return NV_NullPointer;
+	}
+	c.data->flag = p.data->flag;
+	return c;
 }
 
 void NV_printElement(NV_Pointer p)
