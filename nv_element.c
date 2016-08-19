@@ -110,6 +110,7 @@ void *NV_E_getRawPointer(NV_Pointer p, NV_ElementType et)
 {
 	if(!NV_E_isType(p, et)){
 		NV_Error("Attempting to get raw pointer for wrong type (type: %d)\n", et);
+		NV_printElement(p); printf("\n");
 		return NULL;
 	}
 	return p.data->data;

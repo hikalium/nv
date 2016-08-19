@@ -183,48 +183,36 @@ NV_Pointer NV_LANG00_Op_unaryOperator_prefix(NV_Pointer env, NV_Pointer thisTerm
 	return NULL;
 }
 */
-/*
-NV_Pointer NV_LANG00_Op_unaryOperator_suffix_variableOnly(NV_Pointer env, NV_Pointer thisTerm)
+
+NV_Pointer NV_LANG00_Op_unaryOperator_varSuffix(NV_Pointer env, NV_Pointer thisItem)
 {
-	NV_Pointer prev = thisTerm->prev;
-	NV_Pointer next = thisTerm->next;
-	NV_Operator *op = (NV_Operator *)thisTerm->data;
-	NV_Pointer result;
-	NV_Variable *var;
-	// type check
-	if(!prev) return NULL;
-	if(next && (next->type != Operator && next->type != Root)) return NULL;
-	if(prev->type == Unknown)
-		NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &prev, 1);
-	// process
-	if(prev->type == Variable){
-		var = prev->data;
-		if(var->type == VInteger){
-			if(var->byteSize == sizeof(int32_t)){
-				result = NV_createTerm_Imm32(*((int32_t *)var->data));
-				if(strcmp("++", op->name) == 0){
-					(*((int32_t *)var->data))++;
-				} else if(strcmp("--", op->name) == 0){
-					(*((int32_t *)var->data))--;
-				} else{
-					return NULL;
-				}
-			} else{
-				return NULL;
-			}
-		} else{
-			return NULL;
-		}
-		//
-		NV_removeTerm(thisTerm);
-		NV_overwriteTerm(prev, result);
-		//
-		return prev;
-	}
-	if(NV_isDebugMode) NV_printError("NV_LANG00_Op_unaryOperator_suffix_variableOnly: Bad operand. type %d\n", prev->type);
-	return NULL;
+	NV_Operator *op;
+	NV_LangDef *lang = NV_Env_getLangDef(env);
+	NV_Pointer var, cint;
+	NV_Pointer vDict = NV_Env_getVarRoot(env);
+	char s[2];
+	//
+	if(!NV_ListItem_isDataType(thisItem, EOperator))
+		return NV_NullPointer;
+	var = NV_ListItem_getData(NV_ListItem_getPrev(thisItem));
+	var = NV_Variable_tryAllocVariableExisted(vDict, var);
+	if(!NV_E_isType(var, EVariable))
+		return NV_NullPointer;
+	//
+	op = NV_ListItem_getRawData(thisItem, EOperator);
+	if(!op) return NV_NullPointer;
+	s[0] = op->name[0];
+	s[1] = 0;
+	//
+	cint = NV_E_malloc_type(EInteger);
+	NV_Integer_setImm32(cint, 1);
+	NV_ListItem_setData(thisItem, NV_getOperatorFromString(lang, "="));
+	NV_List_insertDataAfterItem(thisItem, var);
+	NV_List_insertDataAfterItem(thisItem, NV_getOperatorFromString(lang, s));
+	NV_List_insertDataAfterItem(thisItem, cint);
+	return thisItem;
 }
-*/
+
 NV_Pointer NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Pointer thisTerm)
 {
 	// for Integer values only.
@@ -271,32 +259,34 @@ NV_Pointer NV_LANG00_Op_nothingButDisappear(NV_Pointer env, NV_Pointer thisTerm)
 	NV_List_removeItem(thisTerm);
 	return prev;
 }
-/*
-NV_Pointer NV_LANG00_Op_sentenceSeparator(NV_Pointer env, NV_Pointer thisTerm)
+
+NV_Pointer NV_LANG00_Op_sentenceSeparator(NV_Pointer env, NV_Pointer thisItem)
 {
-	NV_Pointer b;
-	NV_Pointer sentenceTerm = NV_createTerm_Sentence(NULL);
-	NV_Pointer sentenceRoot, remRoot;
-
-	sentenceRoot = sentenceTerm->data;
-
-	for(b = thisTerm->prev; b; b = b->prev){
-		if(b->type == Root) break;
-		if(b->type == Operator && strcmp(";;", ((NV_Operator *)b->data)->name) == 0){
-			b = b->prev;
-			NV_removeTerm(b->next);
+	NV_Pointer t, sentenceRoot, remRoot;
+	NV_Operator *tOp;
+	sentenceRoot = NV_E_malloc_type(EList);
+	t = NV_ListItem_getPrev(thisItem);
+	for(; !NV_E_isNullPointer(t); t = NV_ListItem_getPrev(t)){
+		if(NV_E_isType(t, EList)) break;
+		if(!NV_ListItem_isDataType(t, EOperator)) continue;
+		tOp = NV_ListItem_getRawData(t, EOperator);
+		if(strcmp(tOp->name, ";;") == 0){
+			t = NV_ListItem_getPrev(t);
+			NV_List_removeItem(NV_ListItem_getNext(t));
 			break;
 		}
 	}
-	NV_divideTerm(sentenceRoot, b->next);
-	NV_divideTerm(&remRoot, thisTerm);
-	NV_appendAll(b, &remRoot);
-	NV_overwriteTerm(thisTerm, sentenceTerm);
-	NV_insertTermAfter(b, NV_createTerm_Operator(NV_Env_getLangDef(env), "builtin_exec"));
-	NV_insertTermAfter(b, NV_createTerm_Operator(NV_Env_getLangDef(env), ";;"));
-	return b;
+	sentenceRoot = NV_List_divideBefore(NV_ListItem_getNext(t));
+	remRoot = NV_List_divideBefore(thisItem);
+	NV_List_insertAllAfter(t, remRoot);
+	NV_ListItem_setData(thisItem, sentenceRoot);
+	NV_List_insertDataAfterItem(t, 
+		NV_getOperatorFromString(NV_Env_getLangDef(env), "builtin_exec"));
+	NV_List_insertDataAfterItem(t, 
+		NV_getOperatorFromString(NV_Env_getLangDef(env), ";;"));
+	return t;
 }
-
+/*
 NV_Pointer NV_LANG00_Op_stringLiteral(NV_Pointer env, NV_Pointer thisTerm)
 {
 	// "string literal"
@@ -608,7 +598,7 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 200000,	"\"", NV_LANG00_Op_stringLiteral);
 */
 	NV_addOperator(lang, 100050,	"{", NV_LANG00_Op_sentenceBlock);
-//	NV_addOperator(lang, 100040,	";", NV_LANG00_Op_sentenceSeparator);
+	NV_addOperator(lang, 100040,	";", NV_LANG00_Op_sentenceSeparator);
 	NV_addOperator(lang, 100030,	"(", NV_LANG00_Op_precedentBlock);
 	NV_addOperator(lang, 100020,	"builtin_exec", NV_LANG00_Op_builtin_exec);
 	//
@@ -630,10 +620,10 @@ NV_LangDef *NV_getDefaultLang()
 	NV_addOperator(lang, 1000,  "if", NV_LANG00_Op_if);
 	NV_addOperator(lang, 1000,  "for", NV_LANG00_Op_for);
 	//
-/*
-	NV_addOperator(lang, 702,	"++", NV_LANG00_Op_unaryOperator_suffix_variableOnly);
-	NV_addOperator(lang, 702,	"--", NV_LANG00_Op_unaryOperator_suffix_variableOnly);
+	NV_addOperator(lang, 702,	"++", NV_LANG00_Op_unaryOperator_varSuffix);
+	NV_addOperator(lang, 702,	"--", NV_LANG00_Op_unaryOperator_varSuffix);
 	//
+	/*
 	NV_addOperator(lang, 701,	"+", NV_LANG00_Op_unaryOperator_prefix);
 	NV_addOperator(lang, 701,	"-", NV_LANG00_Op_unaryOperator_prefix);
 	NV_addOperator(lang, 701,	"!", NV_LANG00_Op_unaryOperator_prefix);

@@ -173,7 +173,7 @@ void NV_resetEvalTree(NV_Pointer root)
 void NV_Evaluate(NV_Pointer env)
 {
 	NV_Pointer termRoot = NV_Env_getTermRoot(env);
-	NV_Pointer lastTerm;
+	NV_Pointer lastData;
 	//
 	NV_Env_setAutoPrintValueEnabled(env, 1);
 	if(NV_EvaluateSentence(env, termRoot)){
@@ -182,10 +182,13 @@ void NV_Evaluate(NV_Pointer env)
 	} else{
 		// Ended with Success
 		if(NV_Env_getAutoPrintValueEnabled(env)){
-			lastTerm = NV_ListItem_getData(NV_List_getLastItem(termRoot));
-			if(!NV_E_isNullPointer(lastTerm)){
+			lastData = NV_ListItem_getData(NV_List_getLastItem(termRoot));
+			if(!NV_E_isNullPointer(lastData)){
 				printf("= ");
-				NV_printElement(lastTerm);
+				NV_printElement(
+					NV_E_unbox(
+						NV_Variable_tryAllocVariableExisted(
+							NV_Env_getVarRoot(env),lastData)));
 				printf("\n");
 			}
 		}

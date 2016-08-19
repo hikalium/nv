@@ -11,3 +11,5 @@ clean:
 log:
 	git log --pretty=format:" - %s %n   http://github.com/hikalium/nv/commit/%H" --since=10hour
 
+sc:
+	~/Downloads/a.out $(SRCS) $(HEADERS)
