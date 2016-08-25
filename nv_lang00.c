@@ -7,7 +7,7 @@
 NV_Pointer NV_LANG00_makeBlock(NV_Pointer env, NV_Pointer thisItem, const char *closeStr)
 {
 	// support func
-	// retv is prev term of thisTerm.
+	// retv is prev term of thisItem.
 	NV_Pointer t, data, subListRoot, remListRoot, prevItem, thisData;
 	int pairCount = 1;
 	thisData = NV_ListItem_getData(thisItem);
@@ -85,7 +85,7 @@ void NV_LANG00_fetchNextSentenceItem(NV_Pointer *t, NV_Pointer *list)
 // Native Functions
 //
 */
-NV_Pointer NV_LANG00_Op_assign(NV_Pointer env, NV_Pointer thisItem)
+NV_Pointer NV_LANG00_Op_assign(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer src = NV_ListItem_getNext(thisItem);
 	NV_Pointer dst = NV_ListItem_getPrev(thisItem);
@@ -117,12 +117,11 @@ NV_Pointer NV_LANG00_Op_assign(NV_Pointer env, NV_Pointer thisItem)
 	return dst;
 }
 
-NV_Pointer NV_LANG00_Op_compoundAssign(NV_Pointer env, NV_Pointer thisItem)
+NV_Pointer NV_LANG00_Op_compoundAssign(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Operator *op;
 	NV_Pointer lang = NV_Env_getLang(env);
 	NV_Pointer var;
-	NV_Pointer vDict = NV_Env_getVarRoot(env);
 	char s[2];
 	//
 	if(!NV_ListItem_isDataType(thisItem, EOperator))
@@ -143,12 +142,12 @@ NV_Pointer NV_LANG00_Op_compoundAssign(NV_Pointer env, NV_Pointer thisItem)
 	return thisItem;
 }
 /*
-NV_Pointer NV_LANG00_Op_unaryOperator_prefix(NV_Pointer env, NV_Pointer thisTerm)
+NV_Pointer NV_LANG00_Op_unaryOperator_prefix(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
-	NV_Pointer prev = thisTerm->prev;
-	NV_Pointer next = thisTerm->next;
+	NV_Pointer prev = thisItem->prev;
+	NV_Pointer next = thisItem->next;
 	NV_Pointer result;
-	NV_Operator *op = (NV_Operator *)thisTerm->data;
+	NV_Operator *op = (NV_Operator *)thisItem->data;
 	// type check
 	if(!next) return NULL;
 	if(prev && (prev->type != Operator && prev->type != Root)) return NULL;
@@ -172,7 +171,7 @@ NV_Pointer NV_LANG00_Op_unaryOperator_prefix(NV_Pointer env, NV_Pointer thisTerm
 		result = NV_createTerm_Imm32(resultVal);
 		//
 		NV_removeTerm(next);
-		NV_overwriteTerm(thisTerm, result);
+		NV_overwriteTerm(thisItem, result);
 		//
 		return result;	
 	}
@@ -181,12 +180,11 @@ NV_Pointer NV_LANG00_Op_unaryOperator_prefix(NV_Pointer env, NV_Pointer thisTerm
 }
 */
 
-NV_Pointer NV_LANG00_Op_unaryOperator_varSuffix(NV_Pointer env, NV_Pointer thisItem)
+NV_Pointer NV_LANG00_Op_unaryOperator_varSuffix(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Operator *op;
 	NV_Pointer lang = NV_Env_getLang(env);
 	NV_Pointer var, cint;
-	NV_Pointer vDict = NV_Env_getVarRoot(env);
 	char s[2];
 	//
 	if(!NV_ListItem_isDataType(thisItem, EOperator))
@@ -210,12 +208,12 @@ NV_Pointer NV_LANG00_Op_unaryOperator_varSuffix(NV_Pointer env, NV_Pointer thisI
 	return thisItem;
 }
 
-NV_Pointer NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Pointer thisTerm)
+NV_Pointer NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	// for Integer values only.
-	NV_Pointer prev = NV_ListItem_getPrev(thisTerm);
-	NV_Pointer next = NV_ListItem_getNext(thisTerm);
-	NV_Operator *op = NV_ListItem_getRawData(thisTerm, EOperator);
+	NV_Pointer prev = NV_ListItem_getPrev(thisItem);
+	NV_Pointer next = NV_ListItem_getNext(thisItem);
+	NV_Operator *op = NV_ListItem_getRawData(thisItem, EOperator);
 	NV_Pointer resultData;
 	NV_Pointer vL, vR;
 	NV_BinOpType opType;
@@ -246,18 +244,18 @@ NV_Pointer NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Pointer thisTerm)
 	//
 	NV_E_free(&vL);
 	NV_E_free(&vR);
-	NV_ListItem_setData(thisTerm, resultData);
+	NV_ListItem_setData(thisItem, resultData);
 	//
 	return resultData;
 }
-NV_Pointer NV_LANG00_Op_nothingButDisappear(NV_Pointer env, NV_Pointer thisTerm)
+NV_Pointer NV_LANG00_Op_nothingButDisappear(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
-	NV_Pointer prev = NV_ListItem_getPrev(thisTerm);
-	NV_List_removeItem(thisTerm);
+	NV_Pointer prev = NV_ListItem_getPrev(thisItem);
+	NV_List_removeItem(thisItem);
 	return prev;
 }
 
-NV_Pointer NV_LANG00_Op_sentenceSeparator(NV_Pointer env, NV_Pointer thisItem)
+NV_Pointer NV_LANG00_Op_sentenceSeparator(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer t, sentenceRoot, remRoot;
 	NV_Operator *tOp;
@@ -284,14 +282,14 @@ NV_Pointer NV_LANG00_Op_sentenceSeparator(NV_Pointer env, NV_Pointer thisItem)
 	return t;
 }
 /*
-NV_Pointer NV_LANG00_Op_stringLiteral(NV_Pointer env, NV_Pointer thisTerm)
+NV_Pointer NV_LANG00_Op_stringLiteral(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	// "string literal"
 	int len = 0, sp;
 	NV_Pointer t, *endTerm;
 	NV_Operator *op;
 	char *s, *st;
-	for(t = thisTerm->next;;t = t->next){
+	for(t = thisItem->next;;t = t->next){
 		if(!t) return NULL;
 		if(t->type == Operator && ((NV_Operator *)t->data)->nativeFunc == NV_LANG00_Op_stringLiteral){
 			endTerm = t;
@@ -311,7 +309,7 @@ NV_Pointer NV_LANG00_Op_stringLiteral(NV_Pointer env, NV_Pointer thisTerm)
 	}
 	s = NV_malloc(len + 1);
 	sp = 0;
-	for(t = thisTerm->next; t != endTerm;){
+	for(t = thisItem->next; t != endTerm;){
 		switch(t->type){
 			case Operator:
 				op = t->data;
@@ -332,16 +330,16 @@ NV_Pointer NV_LANG00_Op_stringLiteral(NV_Pointer env, NV_Pointer thisTerm)
 	NV_removeTerm(endTerm);
 	t = NV_createTerm_String(s);
 	NV_free(s);
-	NV_overwriteTerm(thisTerm, t);
+	NV_overwriteTerm(thisItem, t);
 	return t;
 }
 */
-NV_Pointer NV_LANG00_Op_sentenceBlock(NV_Pointer env, NV_Pointer thisTerm)
+NV_Pointer NV_LANG00_Op_sentenceBlock(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
-	return NV_LANG00_makeBlock(env, thisTerm, "}");
+	return NV_LANG00_makeBlock(env, thisItem, "}");
 }
 
-NV_Pointer NV_LANG00_Op_precedentBlock(NV_Pointer env, NV_Pointer thisItem)
+NV_Pointer NV_LANG00_Op_precedentBlock(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	// ()
 	NV_Pointer itemBeforeBlock, f;
@@ -364,20 +362,20 @@ NV_Pointer NV_LANG00_Op_precedentBlock(NV_Pointer env, NV_Pointer thisItem)
 	return itemBeforeBlock;
 }
 /*
-NV_Pointer NV_LANG00_Op_structureAccessor(NV_Pointer env, NV_Pointer thisTerm)
+NV_Pointer NV_LANG00_Op_structureAccessor(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	// []
 	NV_Pointer structTerm, *indexTerm, *t, *v;
 	int index;
 	char s[32];
 	//
-	t = thisTerm->prev;
+	t = thisItem->prev;
 	if(!t) return NULL;
 	if(t->type != Variable) NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &t, 1);
 	if(t->type != Variable) return NULL;
 	structTerm = t;
 	//
-	t = thisTerm->next;
+	t = thisItem->next;
 	if(!t) return NULL;
 	if(t->type != Imm32s) return NULL;
 	if(!t->next || t->next->type != Operator || strcmp("]", ((NV_Operator *)t->next->data)->name) != 0) return NULL;
@@ -397,7 +395,7 @@ NV_Pointer NV_LANG00_Op_structureAccessor(NV_Pointer env, NV_Pointer thisTerm)
 	return v;
 }
 */
-NV_Pointer NV_LANG00_Op_builtin_exec(NV_Pointer env, NV_Pointer thisItem)
+NV_Pointer NV_LANG00_Op_builtin_exec(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer prevItem, nextItem;
 	prevItem = NV_ListItem_getPrev(thisItem);
@@ -409,7 +407,7 @@ NV_Pointer NV_LANG00_Op_builtin_exec(NV_Pointer env, NV_Pointer thisItem)
 	return prevItem;
 }
 
-NV_Pointer NV_LANG00_Op_if(NV_Pointer env, NV_Pointer thisItem)
+NV_Pointer NV_LANG00_Op_if(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	// if {cond} {do} [{cond} {do}] [{else}]
 	int32_t cond;
@@ -459,7 +457,7 @@ NV_Pointer NV_LANG00_Op_if(NV_Pointer env, NV_Pointer thisItem)
 	return t;
 }
 
-NV_Pointer NV_LANG00_Op_for(NV_Pointer env, NV_Pointer thisItem)
+NV_Pointer NV_LANG00_Op_for(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	// for {init block}{conditional block}{update block}{statement}
 	int cond;
@@ -523,7 +521,7 @@ NV_Pointer NV_LANG00_Op_for(NV_Pointer env, NV_Pointer thisItem)
 	return t;
 }
 
-NV_Pointer NV_LANG00_Op_print(NV_Pointer env, NV_Pointer thisItem)
+NV_Pointer NV_LANG00_Op_print(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);
 	NV_printElement(
@@ -535,7 +533,7 @@ NV_Pointer NV_LANG00_Op_print(NV_Pointer env, NV_Pointer thisItem)
 	return nextItem;
 }
 
-NV_Pointer NV_LANG00_Op_showOpList(NV_Pointer env, NV_Pointer thisItem)
+NV_Pointer NV_LANG00_Op_showOpList(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer prevItem = NV_ListItem_getPrev(thisItem);
 	//
@@ -547,7 +545,7 @@ NV_Pointer NV_LANG00_Op_showOpList(NV_Pointer env, NV_Pointer thisItem)
 	return prevItem;
 }
 
-NV_Pointer NV_LANG00_Op_showVarList(NV_Pointer env, NV_Pointer thisItem)
+NV_Pointer NV_LANG00_Op_showVarList(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer prevItem = NV_ListItem_getPrev(thisItem);
 	//
@@ -559,7 +557,7 @@ NV_Pointer NV_LANG00_Op_showVarList(NV_Pointer env, NV_Pointer thisItem)
 	return prevItem;
 }
 
-NV_Pointer NV_LANG00_Op_mem(NV_Pointer env, NV_Pointer thisItem)
+NV_Pointer NV_LANG00_Op_mem(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer memUsingSize = NV_E_malloc_type(EInteger);
 	NV_Integer_setImm32(memUsingSize, NV_getMallocCount());
@@ -567,11 +565,11 @@ NV_Pointer NV_LANG00_Op_mem(NV_Pointer env, NV_Pointer thisItem)
 	return thisItem;
 }
 
-NV_Pointer NV_LANG00_Op_exit(NV_Pointer env, NV_Pointer thisTerm)
+NV_Pointer NV_LANG00_Op_exit(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Env_setEndFlag(env, 1);
 	NV_Env_setAutoPrintValueEnabled(env, 0);
-	return thisTerm;
+	return thisItem;
 }
 
 NV_Pointer NV_allocLang00()

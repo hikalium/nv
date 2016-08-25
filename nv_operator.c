@@ -57,6 +57,6 @@ NV_Pointer NV_Operator_exec(NV_Pointer op, NV_Pointer env, NV_Pointer thisTerm)
 {
 	NV_Operator *opData;
 	opData = NV_E_getRawPointer(op, EOperator);
-	if(opData) return opData->nativeFunc(env, thisTerm);
+	if(opData) return opData->nativeFunc(env, NV_Env_getVarRoot(env), thisTerm);
 	return NV_NullPointer;
 }

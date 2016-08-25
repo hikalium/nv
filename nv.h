@@ -32,7 +32,7 @@ typedef struct	NV_INTEGER		NV_Integer;
 typedef struct	NV_STRING		NV_String;
 typedef struct	NV_VARIABLE		NV_Variable;
 
-typedef NV_Pointer(*NV_OpFunc)(NV_Pointer env, NV_Pointer thisTerm);
+typedef NV_Pointer(*NV_OpFunc)(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisTerm);
 
 enum NV_ELEMENT_TYPE {
 	ENone,

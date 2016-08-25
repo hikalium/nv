@@ -99,12 +99,13 @@ NV_Pointer NV_Lang_getFallbackOperator(NV_Pointer lang, NV_Pointer baseOp)
 void NV_Lang_registerOperator(NV_Pointer lang, NV_Pointer op)
 {
 	// op list is sorted in a descending order of precedence.
-	NV_Pointer tOpItem, opList;
+	NV_Pointer tOpItem, opList, tOp;
 	//
 	opList = NV_Lang_getOpList(lang);
 	tOpItem = NV_ListItem_getNext(opList);
 	for(; !NV_E_isNullPointer(tOpItem); tOpItem = NV_ListItem_getNext(tOpItem)){
-		if(NV_getOperatorPrecedence(tOpItem) < NV_getOperatorPrecedence(op)) break;
+		tOp = NV_ListItem_getData(tOpItem);
+		if(NV_getOperatorPrecedence(tOp) < NV_getOperatorPrecedence(op)) break;
 	}
 	if(NV_E_isNullPointer(tOpItem)){
 		NV_List_push(opList, op);
