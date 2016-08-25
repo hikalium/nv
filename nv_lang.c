@@ -90,7 +90,7 @@ NV_Pointer NV_Lang_getFallbackOperator(NV_Pointer lang, NV_Pointer baseOp)
 	for(; !NV_E_isNullPointer(p); p = NV_ListItem_getNext(p)){
 		op = NV_ListItem_getRawData(p, EOperator);
 		if(strcmp(op->name, rawBaseOp->name) == 0){
-			return p;
+			return NV_ListItem_getData(p);
 		}
 	}
 	return NV_NullPointer;

@@ -141,46 +141,47 @@ NV_Pointer NV_LANG00_Op_compoundAssign(NV_Pointer env, NV_Pointer vDict, NV_Poin
 	NV_List_insertDataAfterItem(thisItem, var);
 	return thisItem;
 }
-/*
-NV_Pointer NV_LANG00_Op_unaryOperator_prefix(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+
+NV_Pointer
+NV_LANG00_Op_unaryOperator_prefix
+(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
-	NV_Pointer prev = thisItem->prev;
-	NV_Pointer next = thisItem->next;
-	NV_Pointer result;
-	NV_Operator *op = (NV_Operator *)thisItem->data;
+	NV_Pointer prev = NV_ListItem_getPrev(thisItem);
+	NV_Pointer next = NV_ListItem_getNext(thisItem);
+	NV_Pointer data;
+	NV_Operator *op = NV_ListItem_getRawData(thisItem, EOperator);
+	int32_t val;
 	// type check
-	if(!next) return NULL;
-	if(prev && (prev->type != Operator && prev->type != Root)) return NULL;
-	if(next->type == Unknown)
-		NV_tryConvertTermFromUnknownToImm(NV_Env_getVarSet(env), &next);
+	if(NV_E_isNullPointer(next)) return NV_NullPointer;
+	if(!NV_ListItem_isDataType(prev, EOperator) && 
+		!NV_ListItem_isDataType(prev, EList)) return NV_NullPointer;
+	data = NV_E_convertToContents(vDict, NV_ListItem_getData(next));
 	// process
-	if(next->type == Imm32s){
-		int resultVal;
+	if(NV_E_isType(data, EInteger)){
+		val = NV_Integer_getImm32(data);
 		if(strcmp("+", op->name) == 0){
-			resultVal = + *((int *)next->data);
+			val = + val;
 		} else if(strcmp("-", op->name) == 0){
-			resultVal = - *((int *)next->data);
+			val = - val;
 		}
 		// comparison operators
 		else if(strcmp("!", op->name) == 0){
-			resultVal = ! *((int *)next->data);
+			val = ! val;
 		} else{
-			if(NV_isDebugMode) NV_printError("NV_LANG00_Op_unaryOperator: Not implemented %s\n", op->name);
-			return NULL;
+			if(NV_isDebugMode) NV_Error("Not implemented %s\n", op->name);
+			return NV_NullPointer;
 		}
-		result = NV_createTerm_Imm32(resultVal);
-		//
-		NV_removeTerm(next);
-		NV_overwriteTerm(thisItem, result);
-		//
-		return result;	
+		NV_Integer_setImm32(data, val);
+		NV_List_removeItem(thisItem);
+		return next;
 	}
-	if(NV_isDebugMode) NV_printError("NV_LANG00_Op_unaryOperator: Bad operand. type %d\n", next->type);
-	return NULL;
+	if(NV_isDebugMode) NV_Error("%s", "Bad operand.");
+	return NV_NullPointer;
 }
-*/
 
-NV_Pointer NV_LANG00_Op_unaryOperator_varSuffix(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+NV_Pointer
+NV_LANG00_Op_unaryOperator_varSuffix
+(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Operator *op;
 	NV_Pointer lang = NV_Env_getLang(env);
@@ -610,12 +611,10 @@ NV_Pointer NV_allocLang00()
 	NV_Lang_addOp(lang, 702,	"++", NV_LANG00_Op_unaryOperator_varSuffix);
 	NV_Lang_addOp(lang, 702,	"--", NV_LANG00_Op_unaryOperator_varSuffix);
 	//
-	/*
 	NV_Lang_addOp(lang, 701,	"+", NV_LANG00_Op_unaryOperator_prefix);
 	NV_Lang_addOp(lang, 701,	"-", NV_LANG00_Op_unaryOperator_prefix);
 	NV_Lang_addOp(lang, 701,	"!", NV_LANG00_Op_unaryOperator_prefix);
 	//
-*/
 	NV_Lang_addOp(lang, 600,	"*", NV_LANG00_Op_binaryOperator);
 	NV_Lang_addOp(lang, 600,	"/", NV_LANG00_Op_binaryOperator);
 	NV_Lang_addOp(lang, 600,	"%", NV_LANG00_Op_binaryOperator);

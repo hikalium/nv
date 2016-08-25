@@ -84,3 +84,4 @@ NV_Pointer NV_Integer_evalBinOp(NV_Pointer vL, NV_Pointer vR, NV_BinOpType type)
 	NV_Integer_setImm32(result, rv);
 	return result;
 }
+
