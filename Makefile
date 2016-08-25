@@ -4,6 +4,7 @@ HEADERS=nv.h
 
 nv : $(SRCS) $(HEADERS) Makefile
 	cc -Wall -lncurses -Wunused-function -ferror-limit=5 -Os -o nv  $(SRCS)
+	strip nv
 
 clean:
 	-rm nv
@@ -12,4 +13,5 @@ log:
 	git log --pretty=format:" - %s %n   http://github.com/hikalium/nv/commit/%H" --since=10hour
 
 sc:
-	~/Downloads/a.out $(SRCS) $(HEADERS)
+	~/Desktop/LocalProjects/hdp/scsc/scsc $(SRCS) $(HEADERS)
+	wc -l $(SRCS) $(HEADERS)
