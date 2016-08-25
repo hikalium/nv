@@ -2,7 +2,7 @@
 #include "nv.h"
 
 struct NV_ENV {
-	NV_LangDef *langDef;
+	NV_Pointer lang;
 	NV_Pointer varRoot;
 	NV_Pointer termRoot;
 	int autoPrintValue;
@@ -15,7 +15,7 @@ NV_Env *NV_allocEnv()
 
 	t = NV_malloc(sizeof(NV_Env));
 	//
-	t->langDef = NULL;
+	t->lang = NV_NullPointer;
 	t->varRoot = NV_Dict_allocRoot();
 	t->termRoot = NV_List_allocRoot();
 
@@ -29,19 +29,19 @@ NV_Pointer NV_Env_getVarRoot(NV_Pointer env)
 	return envp->varRoot;
 }
 
-int NV_Env_setLangDef(NV_Pointer env, NV_LangDef *ld)
+int NV_Env_setLang(NV_Pointer env, NV_Pointer lang)
 {
 	NV_Env *envp = NV_E_getRawPointer(env, EEnv);
 	if(!envp) return 1;
-	envp->langDef = ld;
+	envp->lang = lang;
 	return 0;
 }
 
-NV_LangDef *NV_Env_getLangDef(NV_Pointer env)
+NV_Pointer NV_Env_getLang(NV_Pointer env)
 {
 	NV_Env *envp = NV_E_getRawPointer(env, EEnv);
-	if(!envp) return NULL;
-	return envp->langDef;
+	if(!envp) return NV_NullPointer;
+	return envp->lang;
 }
 
 int NV_Env_setAutoPrintValueEnabled(NV_Pointer env, int b)

@@ -22,7 +22,7 @@ typedef enum	NV_BIN_OP_TYPE	NV_BinOpType;
 typedef struct	NV_ELEMENT		NV_Element;
 typedef struct	NV_POINTER		NV_Pointer;
 
-typedef struct	NV_LANGDEF		NV_LangDef;
+typedef struct	NV_LANG			NV_Lang;
 
 typedef struct	NV_LIST_ITEM	NV_ListItem;
 typedef struct	NV_DICT_ITEM	NV_DictItem;
@@ -32,6 +32,8 @@ typedef struct	NV_INTEGER		NV_Integer;
 typedef struct	NV_STRING		NV_String;
 typedef struct	NV_VARIABLE		NV_Variable;
 
+typedef NV_Pointer(*NV_OpFunc)(NV_Pointer env, NV_Pointer thisTerm);
+
 enum NV_ELEMENT_TYPE {
 	ENone,
 	EList,		// complex
@@ -40,6 +42,7 @@ enum NV_ELEMENT_TYPE {
 	EDictItem,	// complex
 	EVariable,	// complex
 	EEnv,
+	ELang,
 	EOperator,	// primitive, shared
 	EInteger,	// primitive, not shared
 	EString,	// primitive, not shared
@@ -76,32 +79,18 @@ struct NV_POINTER {
 struct NV_OPERATOR {
 	char name[MAX_TOKEN_LEN];
 	int precedence;		// do not change after adding.
-	NV_Pointer (*nativeFunc)(NV_Pointer env, NV_Pointer thisTerm);
+	NV_OpFunc nativeFunc;
 	// retv: Last of Result Term
 	// thisTerm.type == EList
 };
 
-struct NV_LANGDEF {
-	// interpreter params
-	int char0Len;
-	const char *char0List;	// should be terminated with 0
-	int char1Len;
-	const char *char1List;	// should be terminated with 0
-	int char2Len;
-	const char *char2List;	// should be terminated with 0
-	NV_Pointer opRoot;
-};
-
 extern int NV_isDebugMode;
 
-
 // @nv.c
-NV_LangDef *NV_allocLangDef();
 //
 //
-int NV_getCharType(NV_LangDef *lang, char c);
-void NV_tokenize(NV_LangDef *langDef, NV_Pointer termRoot, const char *input);
-void NV_tokenizeItem(NV_LangDef *langDef, NV_Pointer termRoot, const char *termStr);
+void NV_tokenize(NV_Pointer langDef, NV_Pointer termRoot, const char *input);
+void NV_tokenizeItem(NV_Pointer langDef, NV_Pointer termRoot, const char *termStr);
 //
 void NV_resetEvalTree(NV_Pointer root);
 void NV_Evaluate(NV_Pointer env);
@@ -150,8 +139,8 @@ void NV_printElement(NV_Pointer p);
 // @nv_env.c
 NV_Env *NV_allocEnv();
 NV_Pointer NV_Env_getVarRoot(NV_Pointer env);
-int NV_Env_setLangDef(NV_Pointer env, NV_LangDef *ld);
-NV_LangDef *NV_Env_getLangDef(NV_Pointer env);
+int NV_Env_setLang(NV_Pointer env, NV_Pointer lang);
+NV_Pointer NV_Env_getLang(NV_Pointer env);
 int NV_Env_setAutoPrintValueEnabled(NV_Pointer env, int b);
 int NV_Env_getAutoPrintValueEnabled(NV_Pointer env);
 int NV_Env_setEndFlag(NV_Pointer env, int b);
@@ -178,7 +167,18 @@ void NV_Integer_print(NV_Pointer t);
 NV_Pointer NV_Integer_evalBinOp(NV_Pointer vL, NV_Pointer vR, NV_BinOpType type);
 
 // @nv_lang.c
-NV_LangDef *NV_getDefaultLang();
+NV_Lang *NV_allocLang();
+NV_Pointer NV_allocDefaultLang();
+void NV_Lang_setCharList(NV_Pointer lang, int type, const char *s);
+int NV_Lang_getCharType(NV_Pointer lang, char c);
+NV_Pointer NV_Lang_getOpList(NV_Pointer lang);
+NV_Pointer NV_Lang_getOperatorFromString(NV_Pointer lang, const char *termStr);
+NV_Pointer NV_Lang_getFallbackOperator(NV_Pointer lang, NV_Pointer baseP);
+void NV_Lang_registerOperator(NV_Pointer lang, NV_Pointer op);
+void NV_Lang_addOp(NV_Pointer lang, int pr, const char *name, NV_OpFunc f);
+
+// @nv_lang00.c
+NV_Pointer NV_allocLang00();
 
 // @nv_list.c
 NV_ListItem *NV_allocListItem();
@@ -214,11 +214,9 @@ void NV_List_printAll(NV_Pointer root, const char *prefix, const char *delimiter
 
 // @nv_operator.c
 NV_Operator *NV_allocOperator();
+NV_Pointer NV_Operator_alloc(int precedence, const char *name, NV_OpFunc nativeFunc);
 NV_Pointer NV_Operator_clone(NV_Pointer p);
 void NV_Operator_print(NV_Pointer t);
-void NV_addOperator(NV_LangDef *lang, int precedence, const char *name, NV_Pointer(*nativeFunc)(NV_Pointer env, NV_Pointer thisTerm));
-NV_Pointer NV_getOperatorFromString(NV_LangDef *lang, const char *termStr);
-NV_Pointer NV_getFallbackOperator(NV_LangDef *lang, NV_Pointer baseP);
 int NV_getOperatorPrecedence(NV_Pointer op);
 NV_Pointer NV_Operator_exec(NV_Pointer op, NV_Pointer env, NV_Pointer thisTerm);
 

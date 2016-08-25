@@ -13,10 +13,10 @@ int main(int argc, char *argv[])
 	}
 
 	env = NV_E_malloc_type(EEnv);
-	NV_Env_setLangDef(env, NV_getDefaultLang());
+	NV_Env_setLang(env, NV_allocDefaultLang());
 
 	while(NV_gets(line, sizeof(line)) != NULL){
-		NV_tokenize(NV_Env_getLangDef(env), NV_Env_getTermRoot(env), line);
+		NV_tokenize(NV_Env_getLang(env), NV_Env_getTermRoot(env), line);
 		NV_Evaluate(env);
 		if(NV_Env_getEndFlag(env)) break;
 	}
@@ -56,52 +56,11 @@ int main(int argc, char *argv[])
 }
 
 //
-// LangDef
-//
-
-NV_LangDef *NV_allocLangDef()
-{
-	NV_LangDef *t;
-
-	t = NV_malloc(sizeof(NV_LangDef));
-	//
-	t->char0Len = 0;
-	t->char0List = "";
-	t->char1Len = 0;
-	t->char1List = "";
-	t->char2Len = 0;
-	t->char2List = "";
-	//
-	t->opRoot = NV_List_allocRoot();
-
-	return t;
-	
-}
-
-//
 // Tokenize
 //
 
-int NV_getCharType(NV_LangDef *lang, char c)
-{
-	if(c == '\0'){
-		return -1;
-	} else if(strchr(lang->char0List, c)){
-		// type 0 chars divide tokens but can't be a part of a token. 
-		// (only to disappear)
-		return 0;
-	} else if(strchr(lang->char1List, c)){
-		// sequences of type 1 chars make tokens.
-		return 1;
-	} else if(strchr(lang->char2List, c)){
-		// type 2 chars make token separately.
-		return 2;
-	}
-	// sequences of type 2 chars make tokens.
-	return 3;
-}
 
-void NV_tokenize(NV_LangDef *langDef, NV_Pointer termRoot, const char *input)
+void NV_tokenize(NV_Pointer lang, NV_Pointer termRoot, const char *input)
 {
 	const char *p;
 	int i, lastCType, cType;
@@ -109,7 +68,7 @@ void NV_tokenize(NV_LangDef *langDef, NV_Pointer termRoot, const char *input)
 	lastCType = 0;
 	p = input;
 	for(i = 0; ; i++){
-		cType = NV_getCharType(langDef, input[i]);
+		cType = NV_Lang_getCharType(lang, input[i]);
 		if(cType != lastCType ||
 			cType == 2 || lastCType == 2 || cType == 0 || lastCType == 0){
 			if(input + i - p != 0){
@@ -118,7 +77,7 @@ void NV_tokenize(NV_LangDef *langDef, NV_Pointer termRoot, const char *input)
 					exit(EXIT_FAILURE);
 				}
 				NV_strncpy(buf, p, MAX_TOKEN_LEN, input + i - p);
-				NV_tokenizeItem(langDef, termRoot, buf);
+				NV_tokenizeItem(lang, termRoot, buf);
 			}
 			p = input + i;
 		}
@@ -128,13 +87,13 @@ void NV_tokenize(NV_LangDef *langDef, NV_Pointer termRoot, const char *input)
 	if(NV_isDebugMode) NV_List_printAll(termRoot, NULL, NULL, "]\n");
 }
 
-void NV_tokenizeItem(NV_LangDef *langDef, NV_Pointer termRoot, const char *termStr)
+void NV_tokenizeItem(NV_Pointer lang, NV_Pointer termRoot, const char *termStr)
 {
 	NV_Pointer t;
 	int32_t tmpNum;
 	char *p;
 	
-	t = NV_getOperatorFromString(langDef, termStr);
+	t = NV_Lang_getOperatorFromString(lang, termStr);
 	if(!NV_E_isNullPointer(t)){
 		NV_List_push(termRoot, t);
 		return;
@@ -276,7 +235,7 @@ NV_Pointer NV_TryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer thisTerm, 
 		if(NV_E_isNullPointer(thisTerm)){
 			// try fallback
 			fallbackOp = 
-				NV_getFallbackOperator(NV_Env_getLangDef(env), op);
+				NV_Lang_getFallbackOperator(NV_Env_getLang(env), op);
 			if(NV_E_isNullPointer(fallbackOp)){
 				NV_Error("%s", "Operator mismatched: ");
 				NV_Operator_print(op); putchar('\n');

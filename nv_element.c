@@ -31,6 +31,8 @@ NV_Pointer NV_E_malloc_type(NV_ElementType type)
 			return NV_E_malloc_internal(EVariable,	NV_allocVariable());
 		case EEnv:
 			return NV_E_malloc_internal(EEnv,		NV_allocEnv());
+		case ELang:
+			return NV_E_malloc_internal(ELang,		NV_allocLang());
 		case EOperator:
 			return NV_E_malloc_internal(EOperator,	NV_allocOperator());
 		case EInteger:

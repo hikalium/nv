@@ -30,66 +30,19 @@ void NV_Operator_print(NV_Pointer t)
 	}
 }
 
-void NV_addOperator(NV_LangDef *lang, int precedence, const char *name, NV_Pointer (*nativeFunc)(NV_Pointer env, NV_Pointer thisTerm))
+NV_Pointer NV_Operator_alloc(int precedence, const char *name, NV_OpFunc nativeFunc)
 {
-	NV_Pointer opData, tOpItem;
-	NV_Operator *opRawData, *tOpRawData;
-	
-
+	NV_Pointer opData;
+	NV_Operator *opRawData;
+	//
 	opData = NV_E_malloc_type(EOperator);
 	opRawData = NV_E_getRawPointer(opData, EOperator);
 	//
 	NV_strncpy(opRawData->name, name, sizeof(opRawData->name), strlen(name));
 	opRawData->precedence = precedence;
 	opRawData->nativeFunc = nativeFunc;
-	// op list is sorted in a descending order of precedence.
-	tOpItem = NV_ListItem_getNext(lang->opRoot);
-	for(; !NV_E_isNullPointer(tOpItem); tOpItem = NV_ListItem_getNext(tOpItem)){
-		tOpRawData = NV_ListItem_getRawData(tOpItem, EOperator);
-		if(tOpRawData->precedence < opRawData->precedence) break;
-	}
-	if(NV_E_isNullPointer(tOpItem)){
-		NV_List_push(lang->opRoot, opData);
-	} else{
-		NV_List_insertDataBeforeItem(tOpItem, opData);
-	}
-}
-
-NV_Pointer NV_getOperatorFromString(NV_LangDef *lang, const char *termStr)
-{
-	NV_Pointer p;
-	NV_Operator *op;
-	p = NV_ListItem_getNext(lang->opRoot);
-	for(; !NV_E_isNullPointer(p); p = NV_ListItem_getNext(p)){
-		op = NV_ListItem_getRawData(p, EOperator);
-		if(strcmp(op->name, termStr) == 0){
-			return NV_ListItem_getData(p);
-		}
-	}
-	return NV_NullPointer;
-}
-
-NV_Pointer NV_getFallbackOperator(NV_LangDef *lang, NV_Pointer baseOp)
-{
-	NV_Pointer p;
-	NV_Operator *op = NULL;
-	NV_Operator *rawBaseOp = NV_E_getRawPointer(baseOp, EOperator);
 	//
-	p = NV_ListItem_getNext(lang->opRoot);
-	for(; !NV_E_isNullPointer(p); p = NV_ListItem_getNext(p)){
-		op = NV_ListItem_getRawData(p, EOperator);
-		if(op == rawBaseOp){
-			p = NV_ListItem_getNext(p);
-			break;
-		}
-	}
-	for(; !NV_E_isNullPointer(p); p = NV_ListItem_getNext(p)){
-		op = NV_ListItem_getRawData(p, EOperator);
-		if(strcmp(op->name, rawBaseOp->name) == 0){
-			return p;
-		}
-	}
-	return NV_NullPointer;
+	return opData;
 }
 
 int NV_getOperatorPrecedence(NV_Pointer op)
