@@ -12,7 +12,7 @@ struct NV_LANG {
 	NV_Pointer opList;
 };
 
-NV_Lang *NV_allocLang()
+NV_Lang *NV_E_allocLang()
 {
 	NV_Lang *t;
 

@@ -1,0 +1,16 @@
+// @nv_dict.c
+NV_DictItem *NV_E_allocDictItem();
+// @nv_env.c
+NV_Env *NV_E_allocEnv();
+// @nv_integer.c
+NV_Integer *NV_E_allocInteger();
+// @nv_lang.c
+NV_Lang *NV_E_allocLang();
+// @nv_list.c
+NV_ListItem *NV_E_allocListItem();
+// @nv_operator.c
+NV_Operator *NV_E_allocOperator();
+// @nv_string.c
+NV_String *NV_E_allocString();
+// @nv_var.c
+NV_Variable *NV_E_allocVariable();

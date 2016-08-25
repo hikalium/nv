@@ -9,7 +9,7 @@ struct NV_ENV {
 	int endFlag;
 };
 
-NV_Env *NV_allocEnv()
+NV_Env *NV_E_allocEnv()
 {
 	NV_Env *t;
 

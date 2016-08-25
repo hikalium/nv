@@ -92,13 +92,11 @@ extern int NV_isDebugMode;
 void NV_tokenize(NV_Pointer langDef, NV_Pointer termRoot, const char *input);
 void NV_tokenizeItem(NV_Pointer langDef, NV_Pointer termRoot, const char *termStr);
 //
-void NV_resetEvalTree(NV_Pointer root);
 void NV_Evaluate(NV_Pointer env);
 int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root);
 NV_Pointer NV_TryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer t, NV_Pointer root);
 
 // @nv_dict.c
-NV_DictItem *NV_allocDictItem();
 NV_Pointer NV_Dict_allocRoot();
 NV_Pointer NV_Dict_clone(NV_Pointer p);
 //
@@ -132,12 +130,13 @@ NV_Pointer NV_E_convertToContents(NV_Pointer vDict, NV_Pointer item);
 void NV_E_setFlag(NV_Pointer p, int32_t flag);
 void NV_E_clearFlag(NV_Pointer p, int32_t flag);
 int NV_E_checkFlag(NV_Pointer p, int32_t pattern);
+void NV_E_setPool(NV_Pointer p, NV_Pointer pool);
 NV_Pointer NV_E_clone(NV_Pointer p);
 //
 void NV_printElement(NV_Pointer p);
+int NV_E_getNumOfUsingElements();
 
 // @nv_env.c
-NV_Env *NV_allocEnv();
 NV_Pointer NV_Env_getVarRoot(NV_Pointer env);
 int NV_Env_setLang(NV_Pointer env, NV_Pointer lang);
 NV_Pointer NV_Env_getLang(NV_Pointer env);
@@ -158,7 +157,7 @@ void *NV_malloc(size_t size);
 void NV_free(void *p);
 
 // @nv_integer.c
-NV_Integer *NV_allocInteger();
+NV_Pointer NV_Integer_alloc(int32_t data);
 NV_Pointer NV_Integer_clone(NV_Pointer p);
 void NV_Integer_setImm32(NV_Pointer t, int32_t data);
 int32_t NV_Integer_getImm32(NV_Pointer t);
@@ -167,7 +166,6 @@ void NV_Integer_print(NV_Pointer t);
 NV_Pointer NV_Integer_evalBinOp(NV_Pointer vL, NV_Pointer vR, NV_BinOpType type);
 
 // @nv_lang.c
-NV_Lang *NV_allocLang();
 NV_Pointer NV_allocDefaultLang();
 void NV_Lang_setCharList(NV_Pointer lang, int type, const char *s);
 int NV_Lang_getCharType(NV_Pointer lang, char c);
@@ -181,7 +179,6 @@ void NV_Lang_addOp(NV_Pointer lang, int pr, const char *name, NV_OpFunc f);
 NV_Pointer NV_allocLang00();
 
 // @nv_list.c
-NV_ListItem *NV_allocListItem();
 // ---- Item ----
 NV_Pointer NV_ListItem_getNext(NV_Pointer item);
 NV_Pointer NV_ListItem_getPrev(NV_Pointer item);
@@ -195,8 +192,8 @@ NV_Pointer NV_List_allocRoot();
 NV_Pointer NV_List_clone(NV_Pointer p);
 NV_Pointer NV_List_getItemByIndex(NV_Pointer rootItem, int i);
 NV_Pointer NV_List_getLastItem(NV_Pointer root);
-NV_Pointer NV_List_removeItem(NV_Pointer item);
-NV_Pointer NV_List_removeItemByIndex(NV_Pointer rootItem, int i);
+NV_Pointer NV_List_unlinkItem(NV_Pointer item);
+NV_Pointer NV_List_unlinkItemByIndex(NV_Pointer rootItem, int i);
 void NV_List_insertItemAfter(NV_Pointer prevItem, NV_Pointer newItem);
 void NV_List_insertAllAfter(NV_Pointer prevItem, NV_Pointer rootItem);
 void NV_List_insertAllAfterIndex(NV_Pointer dstRoot, int index, NV_Pointer rootItem);
@@ -213,7 +210,6 @@ int NV_List_indexOfData(NV_Pointer root, NV_Pointer data);
 void NV_List_printAll(NV_Pointer root, const char *prefix, const char *delimiter, const char *suffix);
 
 // @nv_operator.c
-NV_Operator *NV_allocOperator();
 NV_Pointer NV_Operator_alloc(int precedence, const char *name, NV_OpFunc nativeFunc);
 NV_Pointer NV_Operator_clone(NV_Pointer p);
 void NV_Operator_print(NV_Pointer t);
@@ -221,7 +217,6 @@ int NV_getOperatorPrecedence(NV_Pointer op);
 NV_Pointer NV_Operator_exec(NV_Pointer op, NV_Pointer env, NV_Pointer thisTerm);
 
 // @nv_string.c
-NV_String *NV_allocString();
 NV_Pointer NV_String_clone(NV_Pointer p);
 void NV_String_setString(NV_Pointer t, const char *s);
 int NV_String_isEqualToCStr(NV_Pointer str, const char *cstr);
@@ -229,7 +224,6 @@ int NV_String_isEqual(NV_Pointer str0, NV_Pointer str1);
 void NV_String_print(NV_Pointer t);
 
 // @nv_var.c
-NV_Variable *NV_allocVariable();
 NV_Pointer NV_Variable_clone(NV_Pointer p);
 NV_Pointer NV_Variable_allocByStr(NV_Pointer vDict, NV_Pointer str);
 NV_Pointer NV_Variable_allocByCStr(NV_Pointer vDict, const char *s);

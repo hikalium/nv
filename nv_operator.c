@@ -1,6 +1,6 @@
 #include "nv.h"
 
-NV_Operator *NV_allocOperator()
+NV_Operator *NV_E_allocOperator()
 {
 	NV_Operator *t;
 

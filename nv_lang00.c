@@ -27,7 +27,7 @@ NV_Pointer NV_LANG00_makeBlock(NV_Pointer env, NV_Pointer thisItem, const char *
 	prevItem = NV_ListItem_getPrev(thisItem);
 	subListRoot = NV_List_divideBefore(thisItem);
 	remListRoot = NV_List_divideBefore(t);
-	NV_List_removeItem(thisItem);
+	NV_List_unlinkItem(thisItem);
 	NV_List_insertAllAfter(prevItem, remListRoot);
 	data = NV_ListItem_setData(t, subListRoot);
 	NV_E_free(&data);	// free closeStr instance 
@@ -111,8 +111,8 @@ NV_Pointer NV_LANG00_Op_assign(NV_Pointer env, NV_Pointer vDict, NV_Pointer this
 	NV_Variable_assignData(var, srcData);
 	//
 	
-	NV_List_removeItem(thisItem);
-	NV_List_removeItem(src);
+	NV_List_unlinkItem(thisItem);
+	NV_List_unlinkItem(src);
 	NV_ListItem_setData(dst, var);
 	return dst;
 }
@@ -172,7 +172,7 @@ NV_LANG00_Op_unaryOperator_prefix
 			return NV_NullPointer;
 		}
 		NV_Integer_setImm32(data, val);
-		NV_List_removeItem(thisItem);
+		NV_List_unlinkItem(thisItem);
 		return next;
 	}
 	if(NV_isDebugMode) NV_Error("%s", "Bad operand.");
@@ -229,8 +229,8 @@ NV_Pointer NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Pointer vDict, NV_Poin
 		return NV_NullPointer;
 	}
 	//
-	vL = NV_List_removeItem(prev);
-	vR = NV_List_removeItem(next);
+	vL = NV_List_unlinkItem(prev);
+	vR = NV_List_unlinkItem(next);
 	// try variable conversion
 	vL = NV_E_convertUnknownToKnown(vRoot, vL);
 	vR = NV_E_convertUnknownToKnown(vRoot, vR);
@@ -252,7 +252,7 @@ NV_Pointer NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Pointer vDict, NV_Poin
 NV_Pointer NV_LANG00_Op_nothingButDisappear(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer prev = NV_ListItem_getPrev(thisItem);
-	NV_List_removeItem(thisItem);
+	NV_List_unlinkItem(thisItem);
 	return prev;
 }
 
@@ -268,7 +268,7 @@ NV_Pointer NV_LANG00_Op_sentenceSeparator(NV_Pointer env, NV_Pointer vDict, NV_P
 		tOp = NV_ListItem_getRawData(t, EOperator);
 		if(strcmp(tOp->name, ";;") == 0){
 			t = NV_ListItem_getPrev(t);
-			NV_List_removeItem(NV_ListItem_getNext(t));
+			NV_List_unlinkItem(NV_ListItem_getNext(t));
 			break;
 		}
 	}
@@ -352,7 +352,7 @@ NV_Pointer NV_LANG00_Op_precedentBlock(NV_Pointer env, NV_Pointer vDict, NV_Poin
 	f = NV_E_convertToContents(
 			NV_Env_getVarRoot(env), NV_ListItem_getData(itemBeforeBlock));
 	if(NV_E_isType(f, EList)){
-		NV_List_removeItem(NV_ListItem_getNext(itemBeforeBlock));
+		NV_List_unlinkItem(NV_ListItem_getNext(itemBeforeBlock));
 		NV_ListItem_setData(itemBeforeBlock, NV_E_clone(f));
 		NV_LANG00_execSentence(env, itemBeforeBlock);
 		return itemBeforeBlock;
@@ -362,40 +362,42 @@ NV_Pointer NV_LANG00_Op_precedentBlock(NV_Pointer env, NV_Pointer vDict, NV_Poin
 		NV_Lang_getOperatorFromString(NV_Env_getLang(env), "builtin_exec"));
 	return itemBeforeBlock;
 }
-/*
-NV_Pointer NV_LANG00_Op_structureAccessor(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+
+NV_Pointer
+NV_LANG00_Op_structureAccessor
+(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	// []
-	NV_Pointer structTerm, *indexTerm, *t, *v;
+	NV_Pointer prev, next, prevData, nextData, target, var;
 	int index;
-	char s[32];
 	//
-	t = thisItem->prev;
-	if(!t) return NULL;
-	if(t->type != Variable) NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &t, 1);
-	if(t->type != Variable) return NULL;
-	structTerm = t;
+	prev = NV_ListItem_getPrev(thisItem);
+	next = NV_ListItem_getNext(thisItem);
+	prevData = NV_E_convertToContents(vDict, NV_ListItem_getData(prev));
+	nextData = NV_E_convertToContents(vDict, NV_ListItem_getData(next));
 	//
-	t = thisItem->next;
-	if(!t) return NULL;
-	if(t->type != Imm32s) return NULL;
-	if(!t->next || t->next->type != Operator || strcmp("]", ((NV_Operator *)t->next->data)->name) != 0) return NULL;
-	indexTerm = t;
+	if(NV_E_isType(prevData, EList)){
+		if(NV_E_isType(nextData, EInteger)){
+			index = NV_Integer_getImm32(nextData);
+			target = NV_List_getItemByIndex(prevData, index);
+		} else{
+			NV_Error("%s", "Can't use this type of index.");
+			return NV_NullPointer;
+		}
+	//} else if(NV_E_isType(prevData, EDict)){
+	} else{
+		NV_Error("%s", "data is not enumerable.");
+		return NV_NullPointer;
+	}
+	var = NV_E_malloc_type(EVariable);
+	NV_Variable_setTarget(var, target);
 	//
-	if(!NV_canReadTermAsInt(indexTerm)) return NULL;
-	index = NV_getValueOfTermAsInt(indexTerm);
-	t = NV_getItemFromStructureByIndex(structTerm->data, index);
-	if(!t) return NULL;
-	NV_removeTerm(indexTerm->next);
-	NV_removeTerm(indexTerm->prev);
-	NV_removeTerm(indexTerm);
-	snprintf(s, sizeof(s) - 1, "%d", rand());
-	v = NV_createTerm_Variable(NV_Env_getVarSet(env), s);
-	NV_Variable_assignStructureItem(v->data, t);
-	NV_overwriteTerm(structTerm, v);
-	return v;
+	NV_ListItem_setData(thisItem, var);
+	NV_List_unlinkItem(prev);
+	NV_List_unlinkItem(next);
+	return thisItem;
 }
-*/
+
 NV_Pointer NV_LANG00_Op_builtin_exec(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer prevItem, nextItem;
@@ -403,7 +405,7 @@ NV_Pointer NV_LANG00_Op_builtin_exec(NV_Pointer env, NV_Pointer vDict, NV_Pointe
 	nextItem = NV_ListItem_getNext(thisItem);
 	if(NV_E_isNullPointer(NV_LANG00_execSentence(env, nextItem)))
 		return NV_NullPointer;
-	NV_List_removeItem(thisItem);
+	NV_List_unlinkItem(thisItem);
 	//
 	return prevItem;
 }
@@ -429,7 +431,7 @@ NV_Pointer NV_LANG00_Op_if(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem
 		t = NV_E_unbox(NV_ListItem_getData(NV_List_getLastItem(t)));
 		if(!NV_E_isType(t, EInteger)) return NV_NullPointer;
 		cond = NV_Integer_getImm32(t);
-		NV_List_removeItem(condItem);
+		NV_List_unlinkItem(condItem);
 		// evaluate do
 		if(cond){
 			// cond is true.
@@ -439,11 +441,11 @@ NV_Pointer NV_LANG00_Op_if(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem
 			t = NV_ListItem_getNext(doItem);
 			while(NV_ListItem_isDataType(t, EList)){
 				t = NV_ListItem_getNext(t);
-				NV_List_removeItem(NV_ListItem_getPrev(t));
+				NV_List_unlinkItem(NV_ListItem_getPrev(t));
 			}
 			break;
 		} else{
-			NV_List_removeItem(doItem);
+			NV_List_unlinkItem(doItem);
 		}
 		// cond is false. check next cond.
 		t = thisItem;
@@ -453,7 +455,7 @@ NV_Pointer NV_LANG00_Op_if(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem
 	}
 	// remove 'if' term.
 	t = NV_ListItem_getPrev(thisItem);
-	NV_List_removeItem(thisItem);
+	NV_List_unlinkItem(thisItem);
 	//
 	return t;
 }
@@ -477,7 +479,7 @@ NV_Pointer NV_LANG00_Op_for(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisIte
 	// initTerm is removed here.
 	t = NV_LANG00_execSentence(env,initItem);
 	if(NV_E_isNullPointer(t)) return NV_NullPointer;
-	NV_List_removeItem(t);
+	NV_List_unlinkItem(t);
 	// 
 	for(;;){
 		// copy blocks
@@ -495,29 +497,33 @@ NV_Pointer NV_LANG00_Op_for(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisIte
 		// update
 		if(NV_EvaluateSentence(env, tmpUpdateRoot)) return NV_NullPointer;
 		// free tmp
+/*
 		NV_resetEvalTree(tmpCondRoot);
 		NV_resetEvalTree(tmpUpdateRoot);
 		NV_resetEvalTree(tmpDoRoot);
+*/
 		//
 		NV_E_free(&tmpCondRoot);
 		NV_E_free(&tmpUpdateRoot);
 		NV_E_free(&tmpDoRoot);
 	}
 	// free tmp
+/*
 	NV_resetEvalTree(tmpCondRoot);
 	NV_resetEvalTree(tmpUpdateRoot);
 	NV_resetEvalTree(tmpDoRoot);
+*/
 	//
 	NV_E_free(&tmpCondRoot);
 	NV_E_free(&tmpUpdateRoot);
 	NV_E_free(&tmpDoRoot);
 	// remove original
-	NV_List_removeItem(updateItem);
-	NV_List_removeItem(condItem);
-	NV_List_removeItem(doItem);
+	NV_List_unlinkItem(updateItem);
+	NV_List_unlinkItem(condItem);
+	NV_List_unlinkItem(doItem);
 	// remove 'for' term.
 	t = NV_ListItem_getPrev(thisItem);
-	NV_List_removeItem(thisItem);
+	NV_List_unlinkItem(thisItem);
 	//
 	return t;
 }
@@ -529,7 +535,7 @@ NV_Pointer NV_LANG00_Op_print(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisI
 		NV_E_convertToContents(
 			NV_Env_getVarRoot(env), NV_ListItem_getData(nextItem)));
 	printf("\n");
-	NV_List_removeItem(thisItem);
+	NV_List_unlinkItem(thisItem);
 	NV_Env_setAutoPrintValueEnabled(env, 0);
 	return nextItem;
 }
@@ -541,7 +547,7 @@ NV_Pointer NV_LANG00_Op_showOpList(NV_Pointer env, NV_Pointer vDict, NV_Pointer 
 	NV_List_printAll(
 		NV_Lang_getOpList(NV_Env_getLang(env)), "\nOpList: [\n", ",\n", "\n]\n");
 	//
-	NV_List_removeItem(thisItem);
+	NV_List_unlinkItem(thisItem);
 	NV_Env_setAutoPrintValueEnabled(env, 0);
 	return prevItem;
 }
@@ -553,7 +559,7 @@ NV_Pointer NV_LANG00_Op_showVarList(NV_Pointer env, NV_Pointer vDict, NV_Pointer
 	NV_Dict_printAll(
 		NV_Env_getVarRoot(env), "\nVarList: [\n", ",\n", "\n]\n");
 	//
-	NV_List_removeItem(thisItem);
+	NV_List_unlinkItem(thisItem);
 	NV_Env_setAutoPrintValueEnabled(env, 0);
 	return prevItem;
 }
@@ -561,7 +567,7 @@ NV_Pointer NV_LANG00_Op_showVarList(NV_Pointer env, NV_Pointer vDict, NV_Pointer
 NV_Pointer NV_LANG00_Op_mem(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer memUsingSize = NV_E_malloc_type(EInteger);
-	NV_Integer_setImm32(memUsingSize, NV_getMallocCount());
+	NV_Integer_setImm32(memUsingSize, NV_getMallocCount() - NV_E_getNumOfUsingElements());
 	NV_ListItem_setData(thisItem, memUsingSize);
 	return thisItem;
 }
@@ -599,12 +605,10 @@ NV_Pointer NV_allocLang00()
 	NV_Lang_addOp(lang, 10000,	";;", NV_LANG00_Op_nothingButDisappear);
 	NV_Lang_addOp(lang, 10000,	"else", NV_LANG00_Op_nothingButDisappear);
 	NV_Lang_addOp(lang, 10000,	"elseif", NV_LANG00_Op_nothingButDisappear);
-/*
 	//
 	NV_Lang_addOp(lang, 2010,	"[", NV_LANG00_Op_structureAccessor);	
 	NV_Lang_addOp(lang, 2000,	"]", NV_LANG00_Op_nothingButDisappear);
 	//
-*/
 	NV_Lang_addOp(lang, 1000,  "if", NV_LANG00_Op_if);
 	NV_Lang_addOp(lang, 1000,  "for", NV_LANG00_Op_for);
 	//

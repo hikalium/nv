@@ -4,7 +4,10 @@ struct NV_INTEGER {
 	int32_t imm32;
 };
 
-NV_Integer *NV_allocInteger()
+//
+// NV_Element
+//
+NV_Integer *NV_E_allocInteger()
 {
 	NV_Integer *t;
 	t = NV_malloc(sizeof(NV_Integer));
@@ -19,6 +22,17 @@ NV_Pointer NV_Integer_clone(NV_Pointer p)
 	c = NV_E_malloc_type(EInteger);
 	NV_Integer_setImm32(c, NV_Integer_getImm32(p));
 	return c;
+}
+
+//
+// NV_Integer
+//
+
+NV_Pointer NV_Integer_alloc(int32_t data)
+{
+	NV_Pointer p = NV_E_malloc_type(EInteger);
+	NV_Integer_setImm32(p, data);
+	return p;
 }
 
 void NV_Integer_setImm32(NV_Pointer t, int32_t data)

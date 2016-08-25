@@ -1,6 +1,8 @@
 #include "nv.h"
+#include "nv_rawelem.h"
 
 struct NV_ELEMENT {
+	NV_Pointer pool;	// EList
     NV_ElementType type;
     int32_t token;
 	int32_t flag;
@@ -8,6 +10,9 @@ struct NV_ELEMENT {
 };
 
 NV_Pointer NV_E_malloc_internal(NV_ElementType type, void *data);
+void NV_E_free_internal(NV_Pointer *p, NV_Pointer pool);
+void NV_E_free_internal_ListItem(NV_Pointer item, NV_Pointer pool);
+void NV_E_free_internal_List(NV_Pointer root, NV_Pointer pool);
 
 NV_Element *freeRoot = NULL;
 const NV_Pointer NV_NullPointer = {
@@ -20,25 +25,25 @@ NV_Pointer NV_E_malloc_type(NV_ElementType type)
 	NV_Pointer p;
 	switch(type){
 		case EList:
-			return NV_E_malloc_internal(EList,		NV_allocListItem());
+			return NV_E_malloc_internal(EList,		NV_E_allocListItem());
 		case EListItem:
-			return NV_E_malloc_internal(EListItem,	NV_allocListItem());
+			return NV_E_malloc_internal(EListItem,	NV_E_allocListItem());
 		case EDict:
-			return NV_E_malloc_internal(EDict,		NV_allocDictItem());
+			return NV_E_malloc_internal(EDict,		NV_E_allocDictItem());
 		case EDictItem:
-			return NV_E_malloc_internal(EDictItem,	NV_allocDictItem());
+			return NV_E_malloc_internal(EDictItem,	NV_E_allocDictItem());
 		case EVariable:
-			return NV_E_malloc_internal(EVariable,	NV_allocVariable());
+			return NV_E_malloc_internal(EVariable,	NV_E_allocVariable());
 		case EEnv:
-			return NV_E_malloc_internal(EEnv,		NV_allocEnv());
+			return NV_E_malloc_internal(EEnv,		NV_E_allocEnv());
 		case ELang:
-			return NV_E_malloc_internal(ELang,		NV_allocLang());
+			return NV_E_malloc_internal(ELang,		NV_E_allocLang());
 		case EOperator:
-			return NV_E_malloc_internal(EOperator,	NV_allocOperator());
+			return NV_E_malloc_internal(EOperator,	NV_E_allocOperator());
 		case EInteger:
-			return NV_E_malloc_internal(EInteger, 	NV_allocInteger());
+			return NV_E_malloc_internal(EInteger, 	NV_E_allocInteger());
 		case EString:
-			return NV_E_malloc_internal(EString, 	NV_allocString());
+			return NV_E_malloc_internal(EString, 	NV_E_allocString());
 		default:
 			NV_Error("Unknown element type %d\n", type);
 			p = NV_NullPointer;
@@ -54,17 +59,7 @@ int NV_E_isNullPointer(NV_Pointer p)
 
 void NV_E_free(NV_Pointer *p)
 {
-	if(!p) return;
-	NV_Element *e = p->data;
-	if(!NV_E_isValidPointer(*p)) return;
-	e->token = rand();
-	e->type = ENone;
-	NV_free(e->data);
-	//
-	e->data = freeRoot;
-	freeRoot = e;
-	//
-	*p = NV_NullPointer;
+	NV_E_free_internal(p, NV_NullPointer);
 }
 
 int NV_E_isValidPointer(NV_Pointer p)
@@ -169,7 +164,18 @@ int NV_E_checkFlag(NV_Pointer p, int32_t pattern)
 	return p.data->flag & pattern;
 }
 
-
+void NV_E_setPool(NV_Pointer p, NV_Pointer pool)
+{
+	if(!NV_E_isValidPointer(p)) return;
+	if(!NV_E_isType(pool, EList)) return;
+	//
+	if(!NV_E_isNullPointer(p.data->pool)){
+		NV_List_unlinkItemByIndex(
+			p.data->pool, NV_List_indexOfData(p.data->pool, p));
+	}
+	p.data->pool = pool;
+	NV_List_push(p.data->pool, p);
+}
 
 NV_Pointer NV_E_clone(NV_Pointer p)
 {
@@ -227,9 +233,16 @@ void NV_printElement(NV_Pointer p)
 	}
 }
 
+int NV_E_NumOfUsingElements;
+int NV_E_getNumOfUsingElements()
+{
+	return NV_E_NumOfUsingElements;
+}
+
 //
 // internal function
 //
+
 
 NV_Pointer NV_E_malloc_internal(NV_ElementType type, void *data)
 {
@@ -239,9 +252,13 @@ NV_Pointer NV_E_malloc_internal(NV_ElementType type, void *data)
 	if(freeRoot){
 		e = freeRoot;
 		freeRoot = e->data;
+		NV_DbgInfo("%s", "reuse elem!");
 	} else{
+		NV_E_NumOfUsingElements++;
 		e = NV_malloc(sizeof(NV_Element));
+		NV_DbgInfo("malloc elem! (type: %d)", type);
 	}
+	e->pool = NV_NullPointer;
 	e->type = type;
 	e->token = rand();
 	e->flag = 0;
@@ -252,3 +269,51 @@ NV_Pointer NV_E_malloc_internal(NV_ElementType type, void *data)
 	return p;
 }
 
+void NV_E_free_internal(NV_Pointer *p, NV_Pointer pool)
+{
+	NV_Element *e;
+	//
+	if(!p) return;
+	if(!NV_E_isValidPointer(*p)) return;
+	e = p->data;
+NV_DbgInfo("fe: %d %d %d %d %d", e->type, 
+	NV_E_isNullPointer(e->pool), NV_E_isSamePointer(e->pool, pool),
+	NV_E_isType(*p, EListItem), NV_E_isType(*p, EDictItem));
+	if(NV_E_isNullPointer(e->pool) || NV_E_isSamePointer(e->pool, pool) ||
+		NV_E_isType(*p, EListItem) || NV_E_isType(*p, EDictItem)){
+		if(NV_E_isType(*p, EListItem)){
+			NV_E_free_internal_ListItem(*p, pool);
+		} else if(NV_E_isType(*p, EList)){
+			NV_E_free_internal_List(*p, pool);
+		}
+		//
+		NV_DbgInfo("free elem! (type: %d)", e->type);
+		e->token = rand();
+		e->type = ENone;
+		NV_free(e->data);
+		//
+		e->data = freeRoot;
+		freeRoot = e;
+		//
+		*p = NV_NullPointer;
+	}
+}
+
+void NV_E_free_internal_ListItem(NV_Pointer item, NV_Pointer pool)
+{
+	NV_Pointer data = NV_ListItem_getData(item);
+	NV_E_free_internal(&data, pool);
+	NV_List_unlinkItem(item);
+}
+
+void NV_E_free_internal_List(NV_Pointer root, NV_Pointer pool)
+{
+	// free children
+	NV_Pointer item;
+	//
+	for(;;){
+		item = NV_List_getItemByIndex(root, 0);
+		if(NV_E_isNullPointer(item)) break;
+		NV_E_free_internal(&item, root);
+	}
+}

@@ -15,6 +15,7 @@ int main(int argc, char *argv[])
 	env = NV_E_malloc_type(EEnv);
 	NV_Env_setLang(env, NV_allocDefaultLang());
 
+NV_DbgInfo("%s", "Entering interpreter loop.");
 	while(NV_gets(line, sizeof(line)) != NULL){
 		NV_tokenize(NV_Env_getLang(env), NV_Env_getTermRoot(env), line);
 		NV_Evaluate(env);
@@ -22,37 +23,32 @@ int main(int argc, char *argv[])
 	}
 	return 0;
 /*
-	NV_Pointer k, v;
-	NV_Pointer dict = NV_Dict_allocRoot();
-	NV_Pointer var, c;
-	char s[32];
 	int i;
-	for(i = 0; i < 5; i++){
-		NV_printElement(dict); printf("\n");	
-		v = NV_E_malloc_type(EInteger);
-		NV_Integer_setImm32(v, i);
-		//
-		k = NV_E_malloc_type(EString);
-		snprintf(s, sizeof(s), "abc%dxx", i);
-		NV_String_setString(k, s);
-		//
-		NV_Dict_add(dict, k, v);
+	NV_Pointer list, item, pool;
+	//
+	NV_isDebugMode = 1;
+	//
+	NV_DbgInfo("mem: %d", NV_getMallocCount() - NV_E_getNumOfUsingElements());
+	pool = NV_E_malloc_type(EList);
+	list = NV_E_malloc_type(EList);
+	//
+	NV_printElement(list); putchar('\n');
+	for(i = 0; i < 3; i++){
+		item = NV_Integer_alloc(i);
+		NV_List_push(list, item);
+		NV_printElement(list); putchar('\n');
+		if(i == 1){
+			NV_E_setPool(item, pool);
+		}
 	}
-	NV_printElement(dict); printf("\n");
+	NV_E_free(&list);
+	NV_printElement(list); putchar('\n');
 	//
-	var = NV_Variable_allocByCStr(dict, "abc2xy");
-	NV_printElement(dict); printf("\n");
-	//
-	snprintf(s, sizeof(s), "Hello, world!");
-	k = NV_E_malloc_type(EString);
-	NV_String_setString(k, s);
-	NV_Variable_assignData(var, k);
-	//
-	NV_printElement(dict); printf("\n");
-
-	c = NV_E_clone(dict);
-	NV_printElement(c); printf("\n");
-*/
+	NV_printElement(pool); putchar('\n');
+	NV_E_free(&pool);
+	NV_printElement(pool); putchar('\n');
+	NV_DbgInfo("mem: %d", NV_getMallocCount() - NV_E_getNumOfUsingElements());
+	*/
 }
 
 //
@@ -67,6 +63,7 @@ void NV_tokenize(NV_Pointer lang, NV_Pointer termRoot, const char *input)
 	char buf[MAX_TOKEN_LEN];
 	lastCType = 0;
 	p = input;
+NV_DbgInfo("%s", "Tokenize begin");
 	for(i = 0; ; i++){
 		cType = NV_Lang_getCharType(lang, input[i]);
 		if(cType != lastCType ||
@@ -85,6 +82,7 @@ void NV_tokenize(NV_Pointer lang, NV_Pointer termRoot, const char *input)
 		if(input[i] == 0) break;
 	}
 	if(NV_isDebugMode) NV_List_printAll(termRoot, NULL, NULL, "]\n");
+NV_DbgInfo("%s", "Tokenize end");
 }
 
 void NV_tokenizeItem(NV_Pointer lang, NV_Pointer termRoot, const char *termStr)
@@ -116,19 +114,6 @@ void NV_tokenizeItem(NV_Pointer lang, NV_Pointer termRoot, const char *termStr)
 // Evaluate
 //
 
-void NV_resetEvalTree(NV_Pointer root)
-{
-	NV_Pointer item, data;
-	for(;;){
-		item = NV_List_getItemByIndex(root, 0);
-		if(NV_E_isNullPointer(item)) break;
-		data = NV_List_removeItem(item);
-		if(NV_E_isType(data, EString) || NV_E_isType(data, EInteger)){
-			NV_E_free(&data);
-		}
-	}
-}
-
 void NV_Evaluate(NV_Pointer env)
 {
 	NV_Pointer termRoot = NV_Env_getTermRoot(env);
@@ -150,7 +135,6 @@ void NV_Evaluate(NV_Pointer env)
 			}
 		}
 	}
-	NV_resetEvalTree(termRoot);
 	//if(NV_isDebugMode) NV_printVarsInVarSet(NV_Env_getVarSet(env));
 }
 

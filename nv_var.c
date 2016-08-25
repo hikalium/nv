@@ -6,7 +6,7 @@ struct NV_VARIABLE {
 
 NV_Pointer NV_Variable_getTarget(NV_Pointer var);
 
-NV_Variable *NV_allocVariable()
+NV_Variable *NV_E_allocVariable()
 {
 	NV_Variable *v;
 	v = NV_malloc(sizeof(NV_Variable));
@@ -53,7 +53,7 @@ void NV_Variable_setTarget(NV_Pointer var, NV_Pointer target)
 	// var type check
 	if(!NV_E_isType(var, EVariable)) return;
 	// target type check
-	if(!NV_E_isType(target, EDictItem)){
+	if(!NV_E_isType(target, EDictItem) && !NV_E_isType(target, EListItem)){
 		NV_Error("%s", "Cannot set following object as Target of Variable.");
 		NV_printElement(target);
 		return;
@@ -70,6 +70,8 @@ void NV_Variable_assignData(NV_Pointer var, NV_Pointer data)
 	target = NV_Variable_getTarget(var);
 	if(NV_E_isType(target, EDictItem)){
 		NV_DictItem_setVal(target, data);
+	} else if(NV_E_isType(target, EListItem)){
+		NV_ListItem_setData(target, data);
 	} else{
 		NV_Error("%s", "Cannot assign data to following object.");
 		NV_printElement(target);
@@ -84,6 +86,8 @@ NV_Pointer NV_Variable_getData(NV_Pointer var)
 	target = NV_Variable_getTarget(var);
 	if(NV_E_isType(target, EDictItem)){	
 		return NV_DictItem_getVal(target);
+	} else if(NV_E_isType(target, EListItem)){
+		return NV_ListItem_getData(target);
 	} else{
 		NV_Error("%s", "Cannot get data from following object.");
 		NV_printElement(target);
@@ -97,7 +101,7 @@ void NV_Variable_print(NV_Pointer p)
 	if(!NV_E_isType(p, EVariable)) return;
 	target = NV_Variable_getTarget(p);
 	printf("(Variable ");
-	if(NV_E_isType(target, EDictItem)){
+	if(NV_E_isType(target, EDictItem) || NV_E_isType(target, EListItem)){
 		NV_printElement(target);
 	} else{
 		NV_Error("%s", "Not implemented.");

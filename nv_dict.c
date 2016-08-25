@@ -1,5 +1,8 @@
 #include "nv.h"
 
+//
+// NV_DictItem
+//
 struct NV_DICT_ITEM {
 	NV_Pointer key;
 	NV_Pointer val;
@@ -8,17 +11,9 @@ struct NV_DICT_ITEM {
 	int32_t revision;
 };
 
-NV_DictItem *NV_allocDictItem()
-{
-	NV_DictItem *di;
-	di = NV_malloc(sizeof(NV_DictItem));
-	di->key = NV_NullPointer;
-	di->val = NV_NullPointer;
-	di->prev = NV_NullPointer;
-	di->next = NV_NullPointer;
-	return di;
-}
-
+//
+// Internal functions
+//
 NV_DictItem * NV_DictItem_getRawDictItem(NV_Pointer item);
 //
 NV_Pointer NV_DictItem_getPrev(NV_Pointer item);
@@ -28,12 +23,17 @@ void NV_DictItem_setNext(NV_Pointer item, NV_Pointer next);
 void NV_DictItem_setKey(NV_Pointer item, NV_Pointer key);
 
 //
-// Item operations (not data)
+// NV_Element
 //
-
-NV_Pointer NV_Dict_allocRoot()
+NV_DictItem *NV_E_allocDictItem()
 {
-	return NV_E_malloc_type(EDict);	
+	NV_DictItem *di;
+	di = NV_malloc(sizeof(NV_DictItem));
+	di->key = NV_NullPointer;
+	di->val = NV_NullPointer;
+	di->prev = NV_NullPointer;
+	di->next = NV_NullPointer;
+	return di;
 }
 
 NV_Pointer NV_Dict_clone(NV_Pointer p)
@@ -51,6 +51,15 @@ NV_Pointer NV_Dict_clone(NV_Pointer p)
 		t = NV_DictItem_getNext(t);
 	}
 	return c;
+}
+
+//
+// NV_Dict / NV_DictItem
+//
+
+NV_Pointer NV_Dict_allocRoot()
+{
+	return NV_E_malloc_type(EDict);	
 }
 
 int NV_Dict_add(NV_Pointer dict, NV_Pointer key, NV_Pointer val)

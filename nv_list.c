@@ -7,7 +7,14 @@ struct NV_LIST_ITEM {
 	int revision;
 };
 
-NV_ListItem *NV_allocListItem()
+void NV_ListItem_setNext(NV_Pointer item, NV_Pointer nextItem);
+void NV_ListItem_setPrev(NV_Pointer item, NV_Pointer prevItem);
+
+//
+// NV_Element
+//
+
+NV_ListItem *NV_E_allocListItem()
 {
 	NV_ListItem *li;
 	li = NV_malloc(sizeof(NV_ListItem));
@@ -17,9 +24,6 @@ NV_ListItem *NV_allocListItem()
 	li->revision = 0;
 	return li;
 }
-
-void NV_ListItem_setNext(NV_Pointer item, NV_Pointer nextItem);
-void NV_ListItem_setPrev(NV_Pointer item, NV_Pointer prevItem);
 
 //
 // Item operations
@@ -148,7 +152,7 @@ NV_Pointer NV_List_getLastItem(NV_Pointer root)
 	return lastItem;
 }
 
-NV_Pointer NV_List_removeItem(NV_Pointer item)
+NV_Pointer NV_List_unlinkItem(NV_Pointer item)
 {
 	// retv: data of item removed.
 	// note: this func does not free data of the item.
@@ -166,7 +170,7 @@ NV_Pointer NV_List_removeItem(NV_Pointer item)
 	return tData;
 }
 
-NV_Pointer NV_List_removeItemByIndex(NV_Pointer rootItem, int i)
+NV_Pointer NV_List_unlinkItemByIndex(NV_Pointer rootItem, int i)
 {
 	// retv: data of item removed.
 	// note: this func does not free data of the item.
@@ -175,7 +179,7 @@ NV_Pointer NV_List_removeItemByIndex(NV_Pointer rootItem, int i)
 	//
 	if(!NV_E_isValidPointer(rootItem)) return NV_NullPointer;
 	tItem = NV_List_getItemByIndex(rootItem, i);
-	return NV_List_removeItem(tItem);
+	return NV_List_unlinkItem(tItem);
 }
 
 void NV_List_insertItemAfter(NV_Pointer prevItem, NV_Pointer newItem)
@@ -267,7 +271,7 @@ NV_Pointer NV_List_pop(NV_Pointer pRoot)
 NV_Pointer NV_List_shift(NV_Pointer rootItem)
 {
 	// <- []
-	return NV_List_removeItemByIndex(rootItem, 0);
+	return NV_List_unlinkItemByIndex(rootItem, 0);
 }
 
 void NV_List_unshift(NV_Pointer rootItem, NV_Pointer newData)

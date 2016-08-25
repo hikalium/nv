@@ -4,7 +4,7 @@ struct NV_STRING {
 	char *s;
 };
 
-NV_String *NV_allocString()
+NV_String *NV_E_allocString()
 {
 	NV_String *t;
 	t = NV_malloc(sizeof(NV_String));
