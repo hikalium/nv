@@ -186,9 +186,7 @@ void NV_Evaluate(NV_Pointer env)
 			if(!NV_E_isNullPointer(lastData)){
 				printf("= ");
 				NV_printElement(
-					NV_E_unbox(
-						NV_Variable_tryAllocVariableExisted(
-							NV_Env_getVarRoot(env),lastData)));
+					NV_E_convertToContents(NV_Env_getVarRoot(env), lastData));
 				printf("\n");
 			}
 		}

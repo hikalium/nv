@@ -106,10 +106,7 @@ NV_Pointer NV_LANG00_Op_assign(NV_Pointer env, NV_Pointer thisItem)
 		return NV_NullPointer;
 	}
 	//
-	srcData = NV_ListItem_getData(src);
-	srcData = NV_Variable_tryAllocVariableExisted(vRoot, srcData);
-	srcData = NV_E_unbox(srcData);
-	srcData = NV_E_clone(srcData);
+	srcData = NV_E_clone(NV_E_convertToContents(vRoot, src));
 	//
 	NV_Variable_assignData(var, srcData);
 	//
@@ -131,7 +128,7 @@ NV_Pointer NV_LANG00_Op_compoundAssign(NV_Pointer env, NV_Pointer thisItem)
 	if(!NV_ListItem_isDataType(thisItem, EOperator))
 		return NV_NullPointer;
 	var = NV_ListItem_getData(NV_ListItem_getPrev(thisItem));
-	var = NV_Variable_tryAllocVariableExisted(vDict, var);
+	var = NV_E_convertUnknownToKnown(vDict, var);
 	if(!NV_E_isType(var, EVariable))
 		return NV_NullPointer;
 	//
@@ -195,7 +192,7 @@ NV_Pointer NV_LANG00_Op_unaryOperator_varSuffix(NV_Pointer env, NV_Pointer thisI
 	if(!NV_ListItem_isDataType(thisItem, EOperator))
 		return NV_NullPointer;
 	var = NV_ListItem_getData(NV_ListItem_getPrev(thisItem));
-	var = NV_Variable_tryAllocVariableExisted(vDict, var);
+	var = NV_E_convertUnknownToKnown(vDict, var);
 	if(!NV_E_isType(var, EVariable))
 		return NV_NullPointer;
 	//
@@ -236,8 +233,8 @@ NV_Pointer NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Pointer thisTerm)
 	vL = NV_List_removeItem(prev);
 	vR = NV_List_removeItem(next);
 	// try variable conversion
-	vL = NV_Variable_tryAllocVariableExisted(vRoot, vL);
-	vR = NV_Variable_tryAllocVariableExisted(vRoot, vR);
+	vL = NV_E_convertUnknownToKnown(vRoot, vL);
+	vR = NV_E_convertUnknownToKnown(vRoot, vR);
 	//
 	opType = NV_LANG00_getBinOpTypeFromString(op->name);
 	// process
@@ -347,21 +344,20 @@ NV_Pointer NV_LANG00_Op_sentenceBlock(NV_Pointer env, NV_Pointer thisTerm)
 NV_Pointer NV_LANG00_Op_precedentBlock(NV_Pointer env, NV_Pointer thisItem)
 {
 	// ()
-	NV_Pointer itemBeforeBlock;
+	NV_Pointer itemBeforeBlock, f;
 	// NV_Pointer prev;
 	//
 	itemBeforeBlock = NV_LANG00_makeBlock(env, thisItem, ")");
 	if(NV_E_isNullPointer(itemBeforeBlock)) return NV_NullPointer;
-/*
 	// if prev term is sentence object, perform function call. 
-	if(originalTree->type == Unknown) NV_tryConvertTermFromUnknownToVariable(NV_Env_getVarSet(env), &originalTree, 0);
-	if(NV_canReadTermAsSentence(originalTree)){
-		NV_removeTerm(originalTree->next);
-		prev = originalTree->prev;
-		NV_LANG00_execSentence(env, originalTree);
-		return prev;
+	f = NV_E_convertToContents(
+			NV_Env_getVarRoot(env), NV_ListItem_getData(itemBeforeBlock));
+	if(NV_E_isType(f, EList)){
+		NV_List_removeItem(NV_ListItem_getNext(itemBeforeBlock));
+		NV_ListItem_setData(itemBeforeBlock, NV_E_clone(f));
+		NV_LANG00_execSentence(env, itemBeforeBlock);
+		return itemBeforeBlock;
 	}
-*/
 	NV_List_insertDataAfterItem(
 		itemBeforeBlock,
 		NV_getOperatorFromString(NV_Env_getLangDef(env), "builtin_exec"));
@@ -531,9 +527,8 @@ NV_Pointer NV_LANG00_Op_print(NV_Pointer env, NV_Pointer thisItem)
 {
 	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);
 	NV_printElement(
-		NV_E_unbox(NV_Variable_tryAllocVariableExisted(
-			NV_Env_getVarRoot(env),
-			NV_ListItem_getData(nextItem))));
+		NV_E_convertToContents(
+			NV_Env_getVarRoot(env), NV_ListItem_getData(nextItem)));
 	printf("\n");
 	NV_List_removeItem(thisItem);
 	NV_Env_setAutoPrintValueEnabled(env, 0);

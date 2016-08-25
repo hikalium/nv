@@ -118,10 +118,35 @@ void *NV_E_getRawPointer(NV_Pointer p, NV_ElementType et)
 
 NV_Pointer NV_E_unbox(NV_Pointer maybeBoxedItem)
 {
+	// EVariable, EListItem, EDictItem -> content object
 	if(NV_E_isType(maybeBoxedItem, EVariable)){
 		return NV_E_unbox(NV_Variable_getData(maybeBoxedItem));
+	} else if(NV_E_isType(maybeBoxedItem, EListItem)){
+		return NV_E_unbox(NV_ListItem_getData(maybeBoxedItem));
+	} else if(NV_E_isType(maybeBoxedItem, EDictItem)){
+		return NV_E_unbox(NV_DictItem_getVal(maybeBoxedItem));
 	}
 	return maybeBoxedItem;
+}
+
+NV_Pointer NV_E_convertUnknownToKnown(NV_Pointer vDict, NV_Pointer mayStr)
+{
+	// if mayStr object is EString and EFUnknownToken (not string literal),
+	// try to convert from string to variable,
+	// if not, return original mayStr object.
+	if(!NV_E_isType(mayStr, EString) ||
+		!NV_E_checkFlag(mayStr, EFUnknownToken) ||
+		NV_E_isNullPointer(NV_Dict_getItemByKey(vDict, mayStr))){
+		NV_E_clearFlag(mayStr, EFUnknownToken);
+		return mayStr;
+	}
+	return NV_Variable_allocByStr(vDict, mayStr);
+}
+
+NV_Pointer NV_E_convertToContents(NV_Pointer vDict, NV_Pointer item)
+{
+	NV_Pointer p = NV_E_convertUnknownToKnown(vDict, item);
+	return NV_E_unbox(p);
 }
 
 void NV_E_setFlag(NV_Pointer p, int32_t flag)
