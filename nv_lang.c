@@ -10,7 +10,12 @@ struct NV_LANG {
 	// interpreter params
 	const char *charList[NV_LANG_CHAR_LIST_LEN]; // should be terminated with 0
 	NV_Pointer opList;
+	NV_Pointer pool;
 };
+
+//
+// NV_Element
+//
 
 NV_Lang *NV_E_allocLang()
 {
@@ -23,10 +28,22 @@ NV_Lang *NV_E_allocLang()
 	t->charList[2] = NULL;
 	//
 	t->opList = NV_List_allocRoot();
+	t->pool = NV_List_allocRoot();
 
 	return t;
 	
 }
+
+void NV_E_free_internal_Lang(NV_Pointer p, NV_Pointer pool)
+{
+	NV_Lang *t = NV_E_getRawPointer(p, ELang);
+	NV_E_freeWithPool(&t->opList, pool);
+	NV_E_freeWithPool(&t->pool, pool);
+}
+
+//
+// NV_Lang
+//
 
 NV_Pointer NV_allocDefaultLang()
 {
@@ -112,6 +129,7 @@ void NV_Lang_registerOperator(NV_Pointer lang, NV_Pointer op)
 	} else{
 		NV_List_insertDataBeforeItem(tOpItem, op);
 	}
+	NV_E_setPool(op, opList);
 }
 
 void NV_Lang_addOp(NV_Pointer lang, int pr, const char *name, NV_OpFunc f)

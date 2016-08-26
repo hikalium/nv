@@ -4,6 +4,10 @@ struct NV_STRING {
 	char *s;
 };
 
+//
+// NV_Element
+//
+
 NV_String *NV_E_allocString()
 {
 	NV_String *t;
@@ -12,6 +16,17 @@ NV_String *NV_E_allocString()
 	t->s[0] = 0;
 	return t;
 }
+
+void NV_E_free_internal_String(NV_Pointer p, NV_Pointer pool)
+{
+	NV_String *v;
+	v = NV_E_getRawPointer(p, EString);
+	if(v) NV_free(v->s);
+}
+
+//
+// NV_String
+//
 
 NV_Pointer NV_String_clone(NV_Pointer p)
 {

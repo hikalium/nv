@@ -22,7 +22,7 @@ void *NV_malloc(size_t size)
 		exit(EXIT_FAILURE);
 	}
 	mallocCount++;
-	NV_DbgInfo("%s", "malloc!");
+	//NV_DbgInfo("%s", "malloc!");
 	return retv;
 }
 
@@ -34,6 +34,6 @@ void NV_free(void *p)
 	}
 	free(p);
 	mallocCount--;
-	NV_DbgInfo("%s", "free!");
+	//NV_DbgInfo("%s", "free!");
 	return;
 }

@@ -1,6 +1,8 @@
 #include "nv.h"
 #include "nv_rawelem.h"
 
+#define NV_ELEMENT_TYPES	11
+
 struct NV_ELEMENT {
 	NV_Pointer pool;	// EList
     NV_ElementType type;
@@ -10,11 +12,14 @@ struct NV_ELEMENT {
 };
 
 NV_Pointer NV_E_malloc_internal(NV_ElementType type, void *data);
-void NV_E_free_internal(NV_Pointer *p, NV_Pointer pool);
 void NV_E_free_internal_ListItem(NV_Pointer item, NV_Pointer pool);
 void NV_E_free_internal_List(NV_Pointer root, NV_Pointer pool);
 
 NV_Element *freeRoot = NULL;
+int NV_E_NumOfElementsAlloced;
+int NV_E_NumOfElementsUsing;
+int NV_E_NumOfElements[NV_ELEMENT_TYPES];
+
 const NV_Pointer NV_NullPointer = {
 	0,
 	NULL
@@ -59,7 +64,52 @@ int NV_E_isNullPointer(NV_Pointer p)
 
 void NV_E_free(NV_Pointer *p)
 {
-	NV_E_free_internal(p, NV_NullPointer);
+	NV_E_freeWithPool(p, NV_NullPointer);
+}
+
+void NV_E_freeWithPool(NV_Pointer *p, NV_Pointer pool)
+{
+	NV_Element *e;
+	//
+	if(!p) return;
+	if(!NV_E_isValidPointer(*p)) return;
+	e = p->data;
+	//NV_DbgInfo("fe: %d %d %d %d %d", e->type, 
+	//NV_E_isNullPointer(e->pool), NV_E_isSamePointer(e->pool, pool),
+	//NV_E_isType(*p, EListItem), NV_E_isType(*p, EDictItem));
+	if(NV_E_isNullPointer(e->pool) || NV_E_isSamePointer(e->pool, pool)){
+		
+		// free contents in complex type
+		if(NV_E_isType(*p, EList)){
+			NV_E_free_internal_List(*p, pool);
+		} else if(NV_E_isType(*p, EListItem)){
+			NV_E_free_internal_ListItem(*p, pool);
+		} else if(NV_E_isType(*p, EDict)){
+			NV_E_free_internal_Dict(*p, pool);
+		} else if(NV_E_isType(*p, EDictItem)){
+			NV_E_free_internal_DictItem(*p, pool);
+		} else if(NV_E_isType(*p, EVariable)){
+			NV_E_free_internal_Variable(*p, pool);
+		} else if(NV_E_isType(*p, EEnv)){
+			NV_E_free_internal_Env(*p, pool);
+		} else if(NV_E_isType(*p, ELang)){
+			NV_E_free_internal_Lang(*p, pool);
+		} else if(NV_E_isType(*p, EString)){
+			NV_E_free_internal_String(*p, pool);
+		}
+		//
+		if(e->type < NV_ELEMENT_TYPES) NV_E_NumOfElements[e->type]--;
+		NV_E_NumOfElementsUsing--;
+//		NV_DbgInfo("free elem! (type: %d)", e->type);
+		e->token = rand();
+		e->type = ENone;
+		NV_free(e->data);
+		// add freeRoot to reuse
+		e->data = freeRoot;
+		freeRoot = e;
+		//
+		*p = NV_NullPointer;
+	}
 }
 
 int NV_E_isValidPointer(NV_Pointer p)
@@ -131,6 +181,13 @@ NV_Pointer NV_E_convertUnknownToKnown(NV_Pointer vDict, NV_Pointer mayStr)
 	// if mayStr object is EString and EFUnknownToken (not string literal),
 	// try to convert from string to variable,
 	// if not, return original mayStr object.
+/*
+	NV_DbgInfo("%d %d %d ", 
+		!NV_E_isType(mayStr, EString),
+		!NV_E_checkFlag(mayStr, EFUnknownToken),
+		NV_E_isNullPointer(NV_Dict_getItemByKey(vDict, mayStr))
+	);
+*/
 	if(!NV_E_isType(mayStr, EString) ||
 		!NV_E_checkFlag(mayStr, EFUnknownToken) ||
 		NV_E_isNullPointer(NV_Dict_getItemByKey(vDict, mayStr))){
@@ -164,7 +221,7 @@ int NV_E_checkFlag(NV_Pointer p, int32_t pattern)
 	return p.data->flag & pattern;
 }
 
-void NV_E_setPool(NV_Pointer p, NV_Pointer pool)
+void NV_E_addToPool(NV_Pointer p, NV_Pointer pool)
 {
 	if(!NV_E_isValidPointer(p)) return;
 	if(!NV_E_isType(pool, EList)) return;
@@ -175,6 +232,14 @@ void NV_E_setPool(NV_Pointer p, NV_Pointer pool)
 	}
 	p.data->pool = pool;
 	NV_List_push(p.data->pool, p);
+}
+
+void NV_E_setPool(NV_Pointer p, NV_Pointer pool)
+{
+	if(!NV_E_isValidPointer(p)) return;
+	if(!NV_E_isType(pool, EList) && !NV_E_isType(pool, EDict)) return;
+	//
+	p.data->pool = pool;
 }
 
 NV_Pointer NV_E_clone(NV_Pointer p)
@@ -233,10 +298,18 @@ void NV_printElement(NV_Pointer p)
 	}
 }
 
-int NV_E_NumOfUsingElements;
-int NV_E_getNumOfUsingElements()
+void NV_E_printMemStat()
 {
-	return NV_E_NumOfUsingElements;
+	int i;
+	printf("Malloc count: %d\n", NV_getMallocCount());
+	printf("Elem using: %d, (pooling: %d)\n",
+		NV_E_NumOfElementsUsing,
+		NV_E_NumOfElementsAlloced - NV_E_NumOfElementsUsing);
+	printf("RawMem using: %d\n", NV_getMallocCount() - NV_E_NumOfElementsAlloced);
+	for(i = 0; i < NV_ELEMENT_TYPES; i++){
+		printf("%d, ", NV_E_NumOfElements[i]);
+	}
+	putchar('\n');
 }
 
 //
@@ -252,12 +325,16 @@ NV_Pointer NV_E_malloc_internal(NV_ElementType type, void *data)
 	if(freeRoot){
 		e = freeRoot;
 		freeRoot = e->data;
-		NV_DbgInfo("%s", "reuse elem!");
+		//NV_DbgInfo("reuse elem! (type: %d)", type);
 	} else{
-		NV_E_NumOfUsingElements++;
+		NV_E_NumOfElementsAlloced++;
 		e = NV_malloc(sizeof(NV_Element));
-		NV_DbgInfo("malloc elem! (type: %d)", type);
+		//NV_DbgInfo("malloc elem! (type: %d)", type);
 	}
+	//
+	if(type < NV_ELEMENT_TYPES) NV_E_NumOfElements[type]++;
+	NV_E_NumOfElementsUsing++;
+	//
 	e->pool = NV_NullPointer;
 	e->type = type;
 	e->token = rand();
@@ -269,40 +346,10 @@ NV_Pointer NV_E_malloc_internal(NV_ElementType type, void *data)
 	return p;
 }
 
-void NV_E_free_internal(NV_Pointer *p, NV_Pointer pool)
-{
-	NV_Element *e;
-	//
-	if(!p) return;
-	if(!NV_E_isValidPointer(*p)) return;
-	e = p->data;
-NV_DbgInfo("fe: %d %d %d %d %d", e->type, 
-	NV_E_isNullPointer(e->pool), NV_E_isSamePointer(e->pool, pool),
-	NV_E_isType(*p, EListItem), NV_E_isType(*p, EDictItem));
-	if(NV_E_isNullPointer(e->pool) || NV_E_isSamePointer(e->pool, pool) ||
-		NV_E_isType(*p, EListItem) || NV_E_isType(*p, EDictItem)){
-		if(NV_E_isType(*p, EListItem)){
-			NV_E_free_internal_ListItem(*p, pool);
-		} else if(NV_E_isType(*p, EList)){
-			NV_E_free_internal_List(*p, pool);
-		}
-		//
-		NV_DbgInfo("free elem! (type: %d)", e->type);
-		e->token = rand();
-		e->type = ENone;
-		NV_free(e->data);
-		//
-		e->data = freeRoot;
-		freeRoot = e;
-		//
-		*p = NV_NullPointer;
-	}
-}
-
 void NV_E_free_internal_ListItem(NV_Pointer item, NV_Pointer pool)
 {
 	NV_Pointer data = NV_ListItem_getData(item);
-	NV_E_free_internal(&data, pool);
+	NV_E_freeWithPool(&data, pool);
 	NV_List_unlinkItem(item);
 }
 
@@ -314,6 +361,6 @@ void NV_E_free_internal_List(NV_Pointer root, NV_Pointer pool)
 	for(;;){
 		item = NV_List_getItemByIndex(root, 0);
 		if(NV_E_isNullPointer(item)) break;
-		NV_E_free_internal(&item, root);
+		NV_E_freeWithPool(&item, root);
 	}
 }

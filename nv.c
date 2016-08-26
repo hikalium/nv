@@ -3,52 +3,47 @@
 int NV_isDebugMode;
 int main(int argc, char *argv[])
 {
-
 	int i;
 	char line[MAX_INPUT_LEN];
-	NV_Pointer env;
-
+	NV_Pointer env, root, lastData;
+	// get interpreter args
 	for(i = 1; i < argc; i++){
 		if(strcmp(argv[i], "-v") == 0) NV_isDebugMode = 1;
 	}
-
+	// init env
+NV_E_printMemStat();
 	env = NV_E_malloc_type(EEnv);
 	NV_Env_setLang(env, NV_allocDefaultLang());
-
-NV_DbgInfo("%s", "Entering interpreter loop.");
+	// main loop
 	while(NV_gets(line, sizeof(line)) != NULL){
-		NV_tokenize(NV_Env_getLang(env), NV_Env_getTermRoot(env), line);
-		NV_Evaluate(env);
+		root = NV_E_malloc_type(EList);
+		//
+		NV_tokenize(NV_Env_getLang(env), root, line);
+		//
+		NV_Env_setAutoPrintValueEnabled(env, 1);
+		if(NV_EvaluateSentence(env, root)){
+			// Ended with error
+			NV_Error("%s\n", "Bad Syntax");
+		} else{
+			// Ended with Success
+			if(NV_Env_getAutoPrintValueEnabled(env)){
+				lastData = NV_ListItem_getData(NV_List_getLastItem(root));
+				if(!NV_E_isNullPointer(lastData)){
+					printf("= ");
+					NV_printElement(
+						NV_E_convertToContents(NV_Env_getVarRoot(env), lastData));
+					printf("\n");
+				}
+			}
+		}
+		// cleanup current code
+		NV_E_free(&root);
 		if(NV_Env_getEndFlag(env)) break;
 	}
+	// cleanup
+	NV_E_free(&env);
+NV_E_printMemStat();
 	return 0;
-/*
-	int i;
-	NV_Pointer list, item, pool;
-	//
-	NV_isDebugMode = 1;
-	//
-	NV_DbgInfo("mem: %d", NV_getMallocCount() - NV_E_getNumOfUsingElements());
-	pool = NV_E_malloc_type(EList);
-	list = NV_E_malloc_type(EList);
-	//
-	NV_printElement(list); putchar('\n');
-	for(i = 0; i < 3; i++){
-		item = NV_Integer_alloc(i);
-		NV_List_push(list, item);
-		NV_printElement(list); putchar('\n');
-		if(i == 1){
-			NV_E_setPool(item, pool);
-		}
-	}
-	NV_E_free(&list);
-	NV_printElement(list); putchar('\n');
-	//
-	NV_printElement(pool); putchar('\n');
-	NV_E_free(&pool);
-	NV_printElement(pool); putchar('\n');
-	NV_DbgInfo("mem: %d", NV_getMallocCount() - NV_E_getNumOfUsingElements());
-	*/
 }
 
 //
@@ -113,30 +108,6 @@ void NV_tokenizeItem(NV_Pointer lang, NV_Pointer termRoot, const char *termStr)
 //
 // Evaluate
 //
-
-void NV_Evaluate(NV_Pointer env)
-{
-	NV_Pointer termRoot = NV_Env_getTermRoot(env);
-	NV_Pointer lastData;
-	//
-	NV_Env_setAutoPrintValueEnabled(env, 1);
-	if(NV_EvaluateSentence(env, termRoot)){
-		// Ended with error
-		NV_Error("%s\n", "Bad Syntax");
-	} else{
-		// Ended with Success
-		if(NV_Env_getAutoPrintValueEnabled(env)){
-			lastData = NV_ListItem_getData(NV_List_getLastItem(termRoot));
-			if(!NV_E_isNullPointer(lastData)){
-				printf("= ");
-				NV_printElement(
-					NV_E_convertToContents(NV_Env_getVarRoot(env), lastData));
-				printf("\n");
-			}
-		}
-	}
-	//if(NV_isDebugMode) NV_printVarsInVarSet(NV_Env_getVarSet(env));
-}
 
 int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root)
 {

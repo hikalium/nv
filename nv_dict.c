@@ -21,6 +21,7 @@ NV_Pointer NV_DictItem_getNext(NV_Pointer item);
 void NV_DictItem_setPrev(NV_Pointer item, NV_Pointer prev);
 void NV_DictItem_setNext(NV_Pointer item, NV_Pointer next);
 void NV_DictItem_setKey(NV_Pointer item, NV_Pointer key);
+void NV_DictItem_unlink(NV_Pointer item);
 
 //
 // NV_Element
@@ -51,6 +52,28 @@ NV_Pointer NV_Dict_clone(NV_Pointer p)
 		t = NV_DictItem_getNext(t);
 	}
 	return c;
+}
+
+void NV_E_free_internal_DictItem(NV_Pointer item, NV_Pointer pool)
+{
+	NV_Pointer d;
+	if(!NV_E_isType(item, EDictItem)) return;
+	//
+	NV_DictItem_unlink(item);
+	d = NV_DictItem_getKey(item); NV_E_freeWithPool(&d, pool);
+	d = NV_DictItem_getVal(item); NV_E_freeWithPool(&d, pool);
+}
+
+void NV_E_free_internal_Dict(NV_Pointer dict, NV_Pointer pool)
+{
+	NV_Pointer item;
+	if(!NV_E_isType(dict, EDict)) return;
+	//
+	for(;;){
+		item = NV_DictItem_getNext(dict);
+		if(NV_E_isNullPointer(item)) break;
+		NV_E_freeWithPool(&item, dict);
+	}
 }
 
 //
@@ -212,4 +235,17 @@ void NV_DictItem_setKey(NV_Pointer item, NV_Pointer key)
 	NV_DictItem *di = NV_DictItem_getRawDictItem(item);
 	if(di)	di->key = key;
 }
+
+void NV_DictItem_unlink(NV_Pointer item)
+{
+	NV_Pointer prevItem, nextItem;
+	//
+	if(!NV_E_isType(item, EDictItem)) return;
+	//
+	prevItem = NV_DictItem_getPrev(item);
+	nextItem = NV_DictItem_getNext(item);
+	NV_DictItem_setNext(prevItem, nextItem);
+	NV_DictItem_setPrev(nextItem, prevItem);
+}
+
 

@@ -4,10 +4,13 @@
 struct NV_ENV {
 	NV_Pointer lang;
 	NV_Pointer varRoot;
-	NV_Pointer termRoot;
 	int autoPrintValue;
 	int endFlag;
 };
+
+//
+// NV_Element
+//
 
 NV_Env *NV_E_allocEnv()
 {
@@ -17,10 +20,20 @@ NV_Env *NV_E_allocEnv()
 	//
 	t->lang = NV_NullPointer;
 	t->varRoot = NV_Dict_allocRoot();
-	t->termRoot = NV_List_allocRoot();
 
 	return t;
 }
+
+void NV_E_free_internal_Env(NV_Pointer item, NV_Pointer pool)
+{
+	NV_Env *envp = NV_E_getRawPointer(item, EEnv);
+	NV_E_freeWithPool(&envp->lang, pool);	
+	NV_E_freeWithPool(&envp->varRoot, pool);	
+}
+
+//
+// NV_Env
+//
 
 NV_Pointer NV_Env_getVarRoot(NV_Pointer env)
 {
@@ -72,12 +85,5 @@ int NV_Env_getEndFlag(NV_Pointer env)
 	NV_Env *envp = NV_E_getRawPointer(env, EEnv);
 	if(!envp) return 1;
 	return envp->endFlag;
-}
-
-NV_Pointer NV_Env_getTermRoot(NV_Pointer env)
-{
-	NV_Env *envp = NV_E_getRawPointer(env, EEnv);
-	if(!envp) return NV_NullPointer;
-	return envp->termRoot;
 }
 

@@ -163,6 +163,8 @@ NV_Pointer NV_List_unlinkItem(NV_Pointer item)
 	if(NV_E_isNullPointer(item)) return NV_NullPointer;
 	//
 	tData = NV_ListItem_getData(item);
+	NV_ListItem_setData(item, NV_NullPointer);
+	//
 	prevItem = NV_ListItem_getPrev(item);
 	nextItem = NV_ListItem_getNext(item);
 	NV_ListItem_setNext(prevItem, nextItem);

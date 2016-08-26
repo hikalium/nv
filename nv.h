@@ -11,9 +11,9 @@
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
-#define NV_Error(fmt, ...)	printf("Error: %s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
+#define NV_Error(fmt, ...)	printf("\nError: %s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
 #define NV_DbgInfo(fmt, ...) \
-	if(NV_isDebugMode) printf("Info : %s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
+	if(NV_isDebugMode) printf("\nInfo : %s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
 
 typedef enum	NV_ELEMENT_TYPE NV_ElementType;
 typedef enum	NV_ELEMENT_FLAG NV_ElementFlag;
@@ -37,15 +37,15 @@ typedef NV_Pointer(*NV_OpFunc)(NV_Pointer env, NV_Pointer vDict, NV_Pointer this
 enum NV_ELEMENT_TYPE {
 	ENone,
 	EList,		// complex
-	EListItem,	// complex
+	EListItem,	// complex (can't be a pool)
 	EDict,		// complex
-	EDictItem,	// complex
+	EDictItem,	// complex (can't be a pool)
 	EVariable,	// complex
 	EEnv,
 	ELang,
-	EOperator,	// primitive, shared
-	EInteger,	// primitive, not shared
-	EString,	// primitive, not shared
+	EOperator,	// primitive
+	EInteger,	// primitive
+	EString,	// primitive
 };
 
 enum NV_ELEMENT_FLAG {
@@ -92,7 +92,6 @@ extern int NV_isDebugMode;
 void NV_tokenize(NV_Pointer langDef, NV_Pointer termRoot, const char *input);
 void NV_tokenizeItem(NV_Pointer langDef, NV_Pointer termRoot, const char *termStr);
 //
-void NV_Evaluate(NV_Pointer env);
 int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root);
 NV_Pointer NV_TryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer t, NV_Pointer root);
 
@@ -119,6 +118,7 @@ extern const NV_Pointer NV_NullPointer;
 NV_Pointer NV_E_malloc_type(NV_ElementType type);
 int NV_E_isNullPointer(NV_Pointer p);
 void NV_E_free(NV_Pointer *p);
+void NV_E_freeWithPool(NV_Pointer *p, NV_Pointer pool);
 int NV_E_isValidPointer(NV_Pointer p);
 int NV_E_isType(NV_Pointer p, NV_ElementType et);
 int NV_E_isSamePointer(NV_Pointer p, NV_Pointer q);
@@ -130,11 +130,12 @@ NV_Pointer NV_E_convertToContents(NV_Pointer vDict, NV_Pointer item);
 void NV_E_setFlag(NV_Pointer p, int32_t flag);
 void NV_E_clearFlag(NV_Pointer p, int32_t flag);
 int NV_E_checkFlag(NV_Pointer p, int32_t pattern);
+void NV_E_addToPool(NV_Pointer p, NV_Pointer pool);
 void NV_E_setPool(NV_Pointer p, NV_Pointer pool);
 NV_Pointer NV_E_clone(NV_Pointer p);
 //
 void NV_printElement(NV_Pointer p);
-int NV_E_getNumOfUsingElements();
+void NV_E_printMemStat();
 
 // @nv_env.c
 NV_Pointer NV_Env_getVarRoot(NV_Pointer env);
@@ -144,7 +145,6 @@ int NV_Env_setAutoPrintValueEnabled(NV_Pointer env, int b);
 int NV_Env_getAutoPrintValueEnabled(NV_Pointer env);
 int NV_Env_setEndFlag(NV_Pointer env, int b);
 int NV_Env_getEndFlag(NV_Pointer env);
-NV_Pointer NV_Env_getTermRoot(NV_Pointer env);
 
 // @nv_envdep.c
 char *NV_gets(char *str, int size);

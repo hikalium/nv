@@ -85,36 +85,38 @@ void NV_LANG00_fetchNextSentenceItem(NV_Pointer *t, NV_Pointer *list)
 // Native Functions
 //
 */
-NV_Pointer NV_LANG00_Op_assign(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+NV_Pointer
+NV_LANG00_Op_assign
+(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
-	NV_Pointer src = NV_ListItem_getNext(thisItem);
-	NV_Pointer dst = NV_ListItem_getPrev(thisItem);
-	NV_Pointer var, srcData;
-	NV_Pointer vRoot = NV_Env_getVarRoot(env);
-	// type check
-	if(NV_E_isNullPointer(src) || NV_E_isNullPointer(dst)) return NV_NullPointer;
-	if(NV_ListItem_isDataType(dst, EString)){
-		// create / get val.
-		var = NV_Variable_allocByStr(vRoot, NV_ListItem_getData(dst));
-	} else if(NV_ListItem_isDataType(dst, EVariable)){
-		// use existed val.
-		var = NV_ListItem_getData(dst);
-	} else{
+	NV_Pointer srcData;
+	NV_Pointer dstData;
+	NV_Pointer var;
+	{
+		NV_Pointer src = NV_ListItem_getNext(thisItem);
+		NV_Pointer dst = NV_ListItem_getPrev(thisItem);
+		//
+		if(NV_E_isNullPointer(src) || NV_E_isNullPointer(dst))
+			return NV_NullPointer;
+		srcData = NV_ListItem_getData(src);
+		dstData = NV_ListItem_getData(dst);
+		//
+		NV_List_unlinkItem(src); NV_E_free(&src);
+		NV_List_unlinkItem(dst); NV_E_free(&dst);
+	}
+	var = NV_E_convertUnknownToKnown(vDict, dstData);
+	if(!NV_E_isType(var, EVariable)){
 		// dst is not assignable
 		NV_Error("%s", "Cannot assign data to following object.");
-		NV_printElement(dst);
+		NV_printElement(var);
 		return NV_NullPointer;
 	}
+	NV_Variable_assignData(var, NV_E_clone(NV_E_convertToContents(vDict, srcData)));
+	NV_ListItem_setData(thisItem, var);
 	//
-	srcData = NV_E_clone(NV_E_convertToContents(vRoot, src));
-	//
-	NV_Variable_assignData(var, srcData);
-	//
-	
-	NV_List_unlinkItem(thisItem);
-	NV_List_unlinkItem(src);
-	NV_ListItem_setData(dst, var);
-	return dst;
+	NV_E_free(&srcData);
+	if(!NV_E_isType(dstData, EVariable)) NV_E_free(&dstData);
+	return thisItem;
 }
 
 NV_Pointer NV_LANG00_Op_compoundAssign(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
@@ -139,6 +141,21 @@ NV_Pointer NV_LANG00_Op_compoundAssign(NV_Pointer env, NV_Pointer vDict, NV_Poin
 	NV_ListItem_setData(thisItem, NV_Lang_getOperatorFromString(lang, "="));
 	NV_List_insertDataAfterItem(thisItem, NV_Lang_getOperatorFromString(lang, s));
 	NV_List_insertDataAfterItem(thisItem, var);
+	return thisItem;
+}
+
+NV_Pointer
+NV_LANG00_Op_declareVariable
+(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+{
+	NV_Pointer next = NV_ListItem_getNext(thisItem);
+	NV_Pointer var;
+	if(!NV_ListItem_isDataType(next, EString)) return NV_NullPointer;
+	//
+	var = NV_Variable_allocByStr(vDict, NV_ListItem_getData(next));
+	//
+	NV_E_free(&next);
+	NV_ListItem_setData(thisItem, var);
 	return thisItem;
 }
 
@@ -209,7 +226,9 @@ NV_LANG00_Op_unaryOperator_varSuffix
 	return thisItem;
 }
 
-NV_Pointer NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+NV_Pointer
+NV_LANG00_Op_binaryOperator
+(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	// for Integer values only.
 	NV_Pointer prev = NV_ListItem_getPrev(thisItem);
@@ -229,8 +248,8 @@ NV_Pointer NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Pointer vDict, NV_Poin
 		return NV_NullPointer;
 	}
 	//
-	vL = NV_List_unlinkItem(prev);
-	vR = NV_List_unlinkItem(next);
+	vL = NV_List_unlinkItem(prev); NV_E_free(&prev);
+	vR = NV_List_unlinkItem(next); NV_E_free(&next);
 	// try variable conversion
 	vL = NV_E_convertUnknownToKnown(vRoot, vL);
 	vR = NV_E_convertUnknownToKnown(vRoot, vR);
@@ -252,7 +271,7 @@ NV_Pointer NV_LANG00_Op_binaryOperator(NV_Pointer env, NV_Pointer vDict, NV_Poin
 NV_Pointer NV_LANG00_Op_nothingButDisappear(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer prev = NV_ListItem_getPrev(thisItem);
-	NV_List_unlinkItem(thisItem);
+	NV_E_free(&thisItem);
 	return prev;
 }
 
@@ -567,7 +586,7 @@ NV_Pointer NV_LANG00_Op_showVarList(NV_Pointer env, NV_Pointer vDict, NV_Pointer
 NV_Pointer NV_LANG00_Op_mem(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer memUsingSize = NV_E_malloc_type(EInteger);
-	NV_Integer_setImm32(memUsingSize, NV_getMallocCount() - NV_E_getNumOfUsingElements());
+	NV_Integer_setImm32(memUsingSize, NV_getMallocCount());
 	NV_ListItem_setData(thisItem, memUsingSize);
 	return thisItem;
 }
@@ -584,7 +603,7 @@ NV_Pointer NV_allocLang00()
 	NV_Pointer lang = NV_E_malloc_type(ELang);
 	//
 	NV_Lang_setCharList(lang, 0, " \t\r\n");
-	NV_Lang_setCharList(lang, 1, "!%&-=^~|+*:.<>/");
+	NV_Lang_setCharList(lang, 1, "#!%&-=^~|+*:.<>/");
 	NV_Lang_setCharList(lang, 2, "(){}[],;\"");
 	// based on http://www.tutorialspoint.com/cprogramming/c_operators.htm
 	//
@@ -611,6 +630,8 @@ NV_Pointer NV_allocLang00()
 	//
 	NV_Lang_addOp(lang, 1000,  "if", NV_LANG00_Op_if);
 	NV_Lang_addOp(lang, 1000,  "for", NV_LANG00_Op_for);
+	//
+	NV_Lang_addOp(lang, 800,	"#", NV_LANG00_Op_declareVariable);
 	//
 	NV_Lang_addOp(lang, 702,	"++", NV_LANG00_Op_unaryOperator_varSuffix);
 	NV_Lang_addOp(lang, 702,	"--", NV_LANG00_Op_unaryOperator_varSuffix);
