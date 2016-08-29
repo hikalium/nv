@@ -112,6 +112,25 @@ int NV_ListItem_isDataType(NV_Pointer item, NV_ElementType et)
 	return NV_E_isType(NV_ListItem_getData(item), et);
 }
 
+void NV_ListItem_convertUnknownToKnown(NV_Pointer vDict, NV_Pointer item)
+{
+	// if mayStr object is EString and EFUnknownToken (not string literal),
+	// try to convert from string to variable,
+	// if not, return original mayStr object.
+	NV_Pointer new, data;
+	data = NV_ListItem_getData(item);
+	if(!NV_E_isType(data, EString) ||
+		!NV_E_checkFlag(data, EFUnknownToken) ||
+		NV_E_isNullPointer(NV_Dict_getItemByKey(vDict, data))){
+NV_DbgInfo("%s", "not converted");
+		NV_E_clearFlag(data, EFUnknownToken);
+	} else{
+NV_DbgInfo("%s", "converted to variable");
+		new = NV_Variable_allocByStr(vDict, data);
+		NV_ListItem_setData(item, NV_E_autorelease(new));
+	}
+}
+
 void NV_ListItem_print(NV_Pointer t)
 {
 	NV_ListItem *li;

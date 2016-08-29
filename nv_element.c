@@ -98,7 +98,7 @@ void NV_E_free_raw(NV_Pointer *p)
 		if(e->type < NV_ELEMENT_TYPES) NV_E_NumOfElements[e->type]--;
 		NV_E_NumOfElementsUsing--;
 #ifdef NV_DEBUG_MEMORY
-		NV_DbgInfo("free elem! (type: %d)", e->type);
+		NV_DbgInfo(ESC_ANSI_YERROW("free")" elem! (type: %d)", e->type);
 #endif
 		e->token = rand();
 		e->type = ENone;
@@ -113,6 +113,12 @@ void NV_E_free_raw(NV_Pointer *p)
 		NV_DbgInfo("release elem! (type: %d)", e->type);
 #endif
 	}
+}
+
+NV_Pointer NV_E_autorelease_raw(NV_Pointer p)
+{
+	if(NV_E_isValidPointer(p)) p.data->refCount--;
+	return p;
 }
 
 #ifdef NV_DEBUG_MEMORY
@@ -130,6 +136,11 @@ void NV_E_freeWithInfo(NV_Pointer *p, const char *fname)
 		(p && p->data && p->data->token == p->token) ?
 		p->data->type : -1);
 	return NV_E_free_raw(p);
+}
+NV_Pointer NV_E_autoreleaseWithInfo(NV_Pointer p, const char *fname)
+{
+	NV_DbgInfo("called from %s: %p", fname, p.data);
+	return NV_E_autorelease_raw(p);
 }
 
 #endif
@@ -341,7 +352,7 @@ NV_Pointer NV_E_malloc_internal(NV_ElementType type, void *data)
 		NV_E_NumOfElementsAlloced++;
 		e = NV_malloc(sizeof(NV_Element));
 #ifdef NV_DEBUG_MEMORY
-		NV_DbgInfo("malloc elem! (type: %d)", type);
+		NV_DbgInfo(ESC_ANSI_CYAN("malloc")" elem! (type: %d)", type);
 #endif
 	}
 	//

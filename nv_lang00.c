@@ -90,33 +90,30 @@ NV_LANG00_Op_assign
 {
 	NV_Pointer srcData;
 	NV_Pointer dstData;
-	NV_Pointer var;
 	{
 		NV_Pointer src = NV_ListItem_getNext(thisItem);
 		NV_Pointer dst = NV_ListItem_getPrev(thisItem);
 		//
 		if(NV_E_isNullPointer(src) || NV_E_isNullPointer(dst))
 			return NV_NullPointer;
+		NV_ListItem_convertUnknownToKnown(vDict, dst);
 		srcData = NV_E_retain(NV_ListItem_getData(src));
 		dstData = NV_E_retain(NV_ListItem_getData(dst));
 		//
 		NV_E_free(&src);
 		NV_E_free(&dst);
 	}
-	var = NV_E_retain(dstData);
-	NV_E_convertUnknownToKnown(vDict, &var);
-	if(!NV_E_isType(var, EVariable)){
+	if(!NV_E_isType(dstData, EVariable)){
 		// dst is not assignable
 		NV_Error("%s", "Cannot assign data to following object.");
-		NV_printElement(var);
+		NV_printElement(dstData);
 		return NV_NullPointer;
 	}
 	NV_E_convertToContents(vDict, &srcData);
-	NV_Variable_assignData(var, NV_E_clone(srcData));
-	NV_ListItem_setData(thisItem, var);
+	NV_Variable_assignData(dstData, NV_E_autorelease(NV_E_clone(srcData)));
+	NV_ListItem_setData(thisItem, NV_E_autorelease(dstData));
 	//
 	NV_E_free(&srcData);
-	if(!NV_E_isType(dstData, EVariable)) NV_E_free(&dstData);
 	return thisItem;
 }
 
@@ -124,13 +121,15 @@ NV_Pointer NV_LANG00_Op_compoundAssign(NV_Pointer env, NV_Pointer vDict, NV_Poin
 {
 	NV_Operator *op;
 	NV_Pointer lang = NV_Env_getLang(env);
-	NV_Pointer var;
+	NV_Pointer var, prevItem;
 	char s[2];
 	//
 	if(!NV_ListItem_isDataType(thisItem, EOperator))
 		return NV_NullPointer;
-	var = NV_ListItem_getData(NV_ListItem_getPrev(thisItem));
-	NV_E_convertUnknownToKnown(vDict, &var);
+	
+	prevItem = NV_ListItem_getPrev(thisItem);
+	NV_ListItem_convertUnknownToKnown(vDict, prevItem);
+	var = NV_ListItem_getData(prevItem);
 	if(!NV_E_isType(var, EVariable))
 		return NV_NullPointer;
 	//
@@ -141,7 +140,7 @@ NV_Pointer NV_LANG00_Op_compoundAssign(NV_Pointer env, NV_Pointer vDict, NV_Poin
 	//
 	NV_ListItem_setData(thisItem, NV_Lang_getOperatorFromString(lang, "="));
 	NV_List_insertDataAfterItem(thisItem, NV_Lang_getOperatorFromString(lang, s));
-	NV_List_insertDataAfterItem(thisItem, var);
+	NV_List_insertDataAfterItem(thisItem, NV_E_autorelease(NV_E_clone(var)));
 	return thisItem;
 }
 
@@ -204,13 +203,14 @@ NV_LANG00_Op_unaryOperator_varSuffix
 {
 	NV_Operator *op;
 	NV_Pointer lang = NV_Env_getLang(env);
-	NV_Pointer var, cint;
+	NV_Pointer var, cint, prevItem;
 	char s[2];
 	//
 	if(!NV_ListItem_isDataType(thisItem, EOperator))
 		return NV_NullPointer;
-	var = NV_ListItem_getData(NV_ListItem_getPrev(thisItem));
-	NV_E_convertUnknownToKnown(vDict, &var);
+	prevItem = NV_ListItem_getPrev(thisItem);
+	NV_ListItem_convertUnknownToKnown(vDict, prevItem);
+	var = NV_ListItem_getData(prevItem);
 	if(!NV_E_isType(var, EVariable))
 		return NV_NullPointer;
 	//
@@ -221,10 +221,11 @@ NV_LANG00_Op_unaryOperator_varSuffix
 	//
 	cint = NV_E_malloc_type(EInteger);
 	NV_Integer_setImm32(cint, 1);
+	//
 	NV_ListItem_setData(thisItem, NV_Lang_getOperatorFromString(lang, "="));
-	NV_List_insertDataAfterItem(thisItem, var);
+	NV_List_insertDataAfterItem(thisItem, NV_E_autorelease(NV_E_clone(var)));
 	NV_List_insertDataAfterItem(thisItem, NV_Lang_getOperatorFromString(lang, s));
-	NV_List_insertDataAfterItem(thisItem, cint);
+	NV_List_insertDataAfterItem(thisItem, NV_E_autorelease(cint));
 	return thisItem;
 }
 
@@ -266,7 +267,7 @@ NV_LANG00_Op_binaryOperator
 	//
 	NV_E_free(&vL);
 	NV_E_free(&vR);
-	NV_ListItem_setData(thisItem, resultData);
+	NV_ListItem_setData(thisItem, NV_E_autorelease(resultData));
 	//
 	return resultData;
 }

@@ -45,7 +45,7 @@ NV_Pointer NV_Variable_allocByStr(NV_Pointer vDict, NV_Pointer key)
 	//
 	NV_Pointer target = NV_Dict_getItemByKey(vDict, key);
 	if(NV_E_isNullPointer(target)){
-		NV_Dict_add(vDict, key, NV_E_malloc_type(EString));
+		NV_Dict_add(vDict, key, NV_E_autorelease(NV_E_malloc_type(EString)));
 		target = NV_Dict_getItemByKey(vDict, key);
 	}
 	NV_Variable_setTarget(var, target);

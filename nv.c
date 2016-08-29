@@ -11,6 +11,7 @@ int main(int argc, char *argv[])
 		if(strcmp(argv[i], "-v") == 0) NV_isDebugMode = 1;
 	}
 	// init env
+NV_E_printMemStat();
 	env = NV_E_malloc_type(EEnv);
 	NV_Env_setLang(env, NV_allocDefaultLang());
 	// main loop
@@ -41,6 +42,7 @@ int main(int argc, char *argv[])
 	}
 	// cleanup
 	NV_E_free(&env);
+NV_E_printMemStat();
 	return 0;
 }
 
@@ -84,7 +86,7 @@ void NV_tokenizeItem(NV_Pointer lang, NV_Pointer termRoot, const char *termStr)
 	
 	t = NV_Lang_getOperatorFromString(lang, termStr);
 	if(!NV_E_isNullPointer(t)){
-		NV_List_push(termRoot, NV_E_retain(t));
+		NV_List_push(termRoot, t);
 		return;
 	}
 	// check Integer
@@ -92,14 +94,14 @@ void NV_tokenizeItem(NV_Pointer lang, NV_Pointer termRoot, const char *termStr)
 	if(termStr != p && *p == 0){
 		t = NV_E_malloc_type(EInteger);
 		NV_Integer_setImm32(t, tmpNum);
-		NV_List_push(termRoot, t);
+		NV_List_push(termRoot, NV_E_autorelease(t));
 		return;
 	}
 	// unknown -> string
 	t = NV_E_malloc_type(EString);
 	NV_String_setString(t, termStr);
 	NV_E_setFlag(t, EFUnknownToken);
-	NV_List_push(termRoot, t);
+	NV_List_push(termRoot, NV_E_autorelease(t));
 }
 //
 // Evaluate

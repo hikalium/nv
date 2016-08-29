@@ -17,15 +17,19 @@
 	if(NV_isDebugMode) printf("\nInfo : %s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
 
 #ifdef NV_DEBUG_MEMORY
-	#define NV_E_retain(p)	NV_E_retainWithInfo(p, __FUNCTION__)
-	#define NV_E_free(p)	NV_E_freeWithInfo(p, __FUNCTION__)
+	#define NV_E_retain(p)		NV_E_retainWithInfo(p, __FUNCTION__)
+	#define NV_E_free(p)		NV_E_freeWithInfo(p, __FUNCTION__)
+	#define NV_E_autorelease(p)	NV_E_autoreleaseWithInfo(p, __FUNCTION__)
 #else
 	#define NV_E_retain(p)	NV_E_retain_raw(p)
 	#define NV_E_free(p)	NV_E_free_raw(p)
+	#define NV_E_autorelease(p)	NV_E_autorelease_raw(p)
 #endif
 
 #define ESC_ANSI_RED(s)		"\033[31m"s"\033[39m"
 #define ESC_ANSI_GREEN(s)	"\033[32m"s"\033[39m"
+#define ESC_ANSI_YERROW(s)	"\033[33m"s"\033[39m"
+#define ESC_ANSI_CYAN(s)	"\033[36m"s"\033[39m"
 
 #define malloc(s)	DO_NOT_USE_MALLOC(s)
 #define free(p)		DO_NOT_USE_FREE(p)
@@ -134,9 +138,11 @@ NV_Pointer NV_E_malloc_type(NV_ElementType type);
 int NV_E_isNullPointer(NV_Pointer p);
 NV_Pointer NV_E_retain_raw(NV_Pointer p);
 void NV_E_free_raw(NV_Pointer *p);
+NV_Pointer NV_E_autorelease_raw(NV_Pointer p);
 #ifdef NV_E_retain
 NV_Pointer NV_E_retainWithInfo(NV_Pointer p, const char *fname);
 void NV_E_freeWithInfo(NV_Pointer *p, const char *fname);
+NV_Pointer NV_E_autoreleaseWithInfo(NV_Pointer p, const char *fname);
 #endif
 int NV_E_isValidPointer(NV_Pointer p);
 int NV_E_isType(NV_Pointer p, NV_ElementType et);
@@ -203,6 +209,7 @@ NV_Pointer NV_ListItem_getData(NV_Pointer item);
 void NV_ListItem_setData(NV_Pointer item, NV_Pointer newData);
 void *NV_ListItem_getRawData(NV_Pointer item, NV_ElementType et);
 int NV_ListItem_isDataType(NV_Pointer item, NV_ElementType et);
+void NV_ListItem_convertUnknownToKnown(NV_Pointer vDict, NV_Pointer item);
 void NV_ListItem_print(NV_Pointer t);
 // ---- List ----
 NV_Pointer NV_List_allocRoot();

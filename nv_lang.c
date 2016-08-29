@@ -133,5 +133,6 @@ void NV_Lang_registerOperator(NV_Pointer lang, NV_Pointer op)
 
 void NV_Lang_addOp(NV_Pointer lang, int pr, const char *name, NV_OpFunc f)
 {
-	NV_Lang_registerOperator(lang, NV_Operator_alloc(pr, name, f));
+	NV_Lang_registerOperator(lang, 
+		NV_E_autorelease(NV_Operator_alloc(pr, name, f)));
 }
