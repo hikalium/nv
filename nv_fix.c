@@ -1,5 +1,8 @@
 #include "nv.h"
 
+#undef malloc
+#undef free
+
 char *NV_strncpy(char *dst, const char *src, size_t dst_size, size_t copy_size)
 {
 	int real_size = MIN(dst_size, copy_size + 1);

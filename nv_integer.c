@@ -65,8 +65,8 @@ NV_Pointer NV_Integer_evalBinOp(NV_Pointer vL, NV_Pointer vR, NV_BinOpType type)
 	NV_Pointer result;
 	int32_t rv, ivL, ivR;
 	//
-	vL = NV_E_unbox(vL);
-	vR = NV_E_unbox(vR);
+	NV_E_unbox(&vL);
+	NV_E_unbox(&vR);
 	//
 	if(!NV_E_isType(vL, EInteger) || !NV_E_isType(vR, EInteger)){
 		NV_Error("%s", "Operand is not Integer");

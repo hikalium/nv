@@ -7,6 +7,14 @@ nv : $(SRCS) $(HEADERS) Makefile
 	strip nv
 	upx -9 nv
 
+
+debugbin : $(SRCS) $(HEADERS) Makefile
+	cc -g -Wall -lncurses -Wunused-function -ferror-limit=5 -o nv  $(SRCS)
+
+debug: $(SRCS) $(HEADERS) Makefile
+	make debugbin
+	lldb -f ./nv
+
 clean:
 	-rm nv
 

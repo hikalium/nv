@@ -2,6 +2,7 @@
 #include "nv_rawelem.h"
 
 #define NV_ELEMENT_TYPES	11
+#define NV_DEBUG_MEMORY		1
 
 struct NV_ELEMENT {
 	NV_Pointer pool;	// EList
@@ -100,7 +101,9 @@ void NV_E_freeWithPool(NV_Pointer *p, NV_Pointer pool)
 		//
 		if(e->type < NV_ELEMENT_TYPES) NV_E_NumOfElements[e->type]--;
 		NV_E_NumOfElementsUsing--;
-//		NV_DbgInfo("free elem! (type: %d)", e->type);
+#if NV_DEBUG_MEMORY
+		NV_DbgInfo("free elem! (type: %d)", e->type);
+#endif
 		e->token = rand();
 		e->type = ENone;
 		NV_free(e->data);
@@ -163,20 +166,22 @@ void *NV_E_getRawPointer(NV_Pointer p, NV_ElementType et)
 	return p.data->data;
 }
 
-NV_Pointer NV_E_unbox(NV_Pointer maybeBoxedItem)
+void NV_E_unbox(NV_Pointer *maybeBoxedItem)
 {
 	// EVariable, EListItem, EDictItem -> content object
-	if(NV_E_isType(maybeBoxedItem, EVariable)){
-		return NV_E_unbox(NV_Variable_getData(maybeBoxedItem));
-	} else if(NV_E_isType(maybeBoxedItem, EListItem)){
-		return NV_E_unbox(NV_ListItem_getData(maybeBoxedItem));
-	} else if(NV_E_isType(maybeBoxedItem, EDictItem)){
-		return NV_E_unbox(NV_DictItem_getVal(maybeBoxedItem));
+	if(NV_E_isType(*maybeBoxedItem, EVariable)){
+		*maybeBoxedItem = NV_Variable_getData(*maybeBoxedItem);
+		NV_E_unbox(maybeBoxedItem);
+	} else if(NV_E_isType(*maybeBoxedItem, EListItem)){
+		*maybeBoxedItem = NV_ListItem_getData(*maybeBoxedItem);
+		NV_E_unbox(maybeBoxedItem);
+	} else if(NV_E_isType(*maybeBoxedItem, EDictItem)){
+		*maybeBoxedItem = NV_DictItem_getVal(*maybeBoxedItem);
+		NV_E_unbox(maybeBoxedItem);
 	}
-	return maybeBoxedItem;
 }
 
-NV_Pointer NV_E_convertUnknownToKnown(NV_Pointer vDict, NV_Pointer mayStr)
+void NV_E_convertUnknownToKnown(NV_Pointer vDict, NV_Pointer *mayStr)
 {
 	// if mayStr object is EString and EFUnknownToken (not string literal),
 	// try to convert from string to variable,
@@ -188,19 +193,22 @@ NV_Pointer NV_E_convertUnknownToKnown(NV_Pointer vDict, NV_Pointer mayStr)
 		NV_E_isNullPointer(NV_Dict_getItemByKey(vDict, mayStr))
 	);
 */
-	if(!NV_E_isType(mayStr, EString) ||
-		!NV_E_checkFlag(mayStr, EFUnknownToken) ||
-		NV_E_isNullPointer(NV_Dict_getItemByKey(vDict, mayStr))){
-		NV_E_clearFlag(mayStr, EFUnknownToken);
-		return mayStr;
+	NV_Pointer new;
+	if(!NV_E_isType(*mayStr, EString) ||
+		!NV_E_checkFlag(*mayStr, EFUnknownToken) ||
+		NV_E_isNullPointer(NV_Dict_getItemByKey(vDict, *mayStr))){
+		NV_E_clearFlag(*mayStr, EFUnknownToken);
+	} else{
+		new = NV_Variable_allocByStr(vDict, *mayStr);
+		NV_E_free(mayStr);
+		*mayStr = new;
 	}
-	return NV_Variable_allocByStr(vDict, mayStr);
 }
 
-NV_Pointer NV_E_convertToContents(NV_Pointer vDict, NV_Pointer item)
+void NV_E_convertToContents(NV_Pointer vDict, NV_Pointer *item)
 {
-	NV_Pointer p = NV_E_convertUnknownToKnown(vDict, item);
-	return NV_E_unbox(p);
+	NV_E_convertUnknownToKnown(vDict, item);
+	NV_E_unbox(item);
 }
 
 void NV_E_setFlag(NV_Pointer p, int32_t flag)
@@ -325,11 +333,15 @@ NV_Pointer NV_E_malloc_internal(NV_ElementType type, void *data)
 	if(freeRoot){
 		e = freeRoot;
 		freeRoot = e->data;
-		//NV_DbgInfo("reuse elem! (type: %d)", type);
+#if NV_DEBUG_MEMORY
+		NV_DbgInfo("reuse elem! (type: %d)", type);
+#endif
 	} else{
 		NV_E_NumOfElementsAlloced++;
 		e = NV_malloc(sizeof(NV_Element));
-		//NV_DbgInfo("malloc elem! (type: %d)", type);
+#if NV_DEBUG_MEMORY
+		NV_DbgInfo("malloc elem! (type: %d)", type);
+#endif
 	}
 	//
 	if(type < NV_ELEMENT_TYPES) NV_E_NumOfElements[type]++;

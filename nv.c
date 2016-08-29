@@ -30,8 +30,8 @@ NV_E_printMemStat();
 				lastData = NV_ListItem_getData(NV_List_getLastItem(root));
 				if(!NV_E_isNullPointer(lastData)){
 					printf("= ");
-					NV_printElement(
-						NV_E_convertToContents(NV_Env_getVarRoot(env), lastData));
+					NV_E_convertToContents(NV_Env_getVarRoot(env), &lastData);
+					NV_printElement(lastData);
 					printf("\n");
 				}
 			}
