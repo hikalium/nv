@@ -16,7 +16,7 @@ NV_Operator *NV_E_allocOperator()
 NV_Pointer NV_Operator_clone(NV_Pointer p)
 {
 	// do nothing
-	return p;
+	return NV_E_retain(p);
 }
 
 

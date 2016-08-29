@@ -1,0 +1,12 @@
+#a = 3
+if{a < 3}{print less}{if{a > 3}{print greater}{print bingo}}
+if{a < 3}{print less}{a > 3}{print greater}{print bingo}
+a++;
+a--;
+a += 1;
+a -= 1;
+print a;
+#b = 3;
+a = a + b;
+{1 + 3 + 3}()
+mem

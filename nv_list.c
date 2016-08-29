@@ -157,7 +157,7 @@ NV_Pointer NV_List_clone(NV_Pointer p)
 	t = NV_ListItem_getNext(p);
 	while(!NV_E_isNullPointer(t)){
 		d = NV_E_clone(NV_ListItem_getData(t));
-		NV_List_push(c, d);
+		NV_List_push(c, NV_E_autorelease(d));
 		//
 		t = NV_ListItem_getNext(t);
 	}
