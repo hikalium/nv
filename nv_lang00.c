@@ -29,7 +29,8 @@ NV_Pointer NV_LANG00_makeBlock(NV_Pointer env, NV_Pointer thisItem, const char *
 	remListRoot = NV_List_divideBefore(t);
 	NV_E_free(&thisItem);
 	NV_List_insertAllAfter(prevItem, remListRoot);
-	NV_ListItem_setData(t, subListRoot);
+	NV_E_free(&remListRoot);
+	NV_ListItem_setData(t, NV_E_autorelease(subListRoot));
 	return prevItem;
 }
 
@@ -278,11 +279,12 @@ NV_Pointer NV_LANG00_Op_nothingButDisappear(NV_Pointer env, NV_Pointer vDict, NV
 	return prev;
 }
 
-NV_Pointer NV_LANG00_Op_sentenceSeparator(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+NV_Pointer
+NV_LANG00_Op_sentenceSeparator
+(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer t, sentenceRoot, remRoot, tmp;
 	NV_Operator *tOp;
-	sentenceRoot = NV_E_malloc_type(EList);
 	t = NV_ListItem_getPrev(thisItem);
 	for(; !NV_E_isNullPointer(t); t = NV_ListItem_getPrev(t)){
 		if(NV_E_isType(t, EList)) break;
@@ -298,7 +300,8 @@ NV_Pointer NV_LANG00_Op_sentenceSeparator(NV_Pointer env, NV_Pointer vDict, NV_P
 	sentenceRoot = NV_List_divideBefore(NV_ListItem_getNext(t));
 	remRoot = NV_List_divideBefore(thisItem);
 	NV_List_insertAllAfter(t, remRoot);
-	NV_ListItem_setData(thisItem, sentenceRoot);
+	NV_E_free(&remRoot);
+	NV_ListItem_setData(thisItem, NV_E_autorelease(sentenceRoot));
 	NV_List_insertDataAfterItem(t, 
 		NV_Lang_getOperatorFromString(NV_Env_getLang(env), "builtin_exec"));
 	NV_List_insertDataAfterItem(t, 
@@ -355,7 +358,7 @@ NV_Pointer NV_LANG00_Op_stringLiteral(NV_Pointer env, NV_Pointer vDict, NV_Point
 	t = NV_createTerm_String(s);
 	NV_free(s);
 	NV_overwriteTerm(thisItem, t);
-	return t;
+	return 
 }
 */
 NV_Pointer NV_LANG00_Op_sentenceBlock(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
@@ -437,7 +440,9 @@ NV_Pointer NV_LANG00_Op_builtin_exec(NV_Pointer env, NV_Pointer vDict, NV_Pointe
 	return prevItem;
 }
 
-NV_Pointer NV_LANG00_Op_if(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+NV_Pointer
+NV_LANG00_Op_if
+(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	// if {cond} {do} [{cond} {do}] [{else}]
 	int32_t cond;
