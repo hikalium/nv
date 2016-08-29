@@ -18,12 +18,12 @@ NV_Variable *NV_E_allocVariable()
 	return v;
 }
 
-void NV_E_free_internal_Variable(NV_Pointer p, NV_Pointer pool)
+void NV_E_free_internal_Variable(NV_Pointer p)
 {
 	NV_Variable *v;
 	v = NV_E_getRawPointer(p, EVariable);
 	if(!v) return;
-	NV_E_freeWithPool(&v->target, p);
+	NV_E_free(&v->target);
 }
 
 //
@@ -39,18 +39,15 @@ NV_Pointer NV_Variable_clone(NV_Pointer p)
 	return c;
 }
 
-NV_Pointer NV_Variable_allocByStr(NV_Pointer vDict, NV_Pointer str)
+NV_Pointer NV_Variable_allocByStr(NV_Pointer vDict, NV_Pointer key)
 {
 	NV_Pointer var = NV_E_malloc_type(EVariable);
-	NV_Pointer strKey = NV_String_clone(str);
-	NV_Pointer strVal = NV_E_malloc_type(EString);
 	//
-	NV_Pointer target = NV_Dict_getItemByKey(vDict, str);
+	NV_Pointer target = NV_Dict_getItemByKey(vDict, key);
 	if(NV_E_isNullPointer(target)){
-		NV_Dict_add(vDict, strKey, strVal);
-		target = NV_Dict_getItemByKey(vDict, str);
+		NV_Dict_add(vDict, key, NV_E_malloc_type(EString));
+		target = NV_Dict_getItemByKey(vDict, key);
 	}
-	NV_E_setPool(target, vDict);
 	NV_Variable_setTarget(var, target);
 	return var;
 }
@@ -67,6 +64,7 @@ NV_Pointer NV_Variable_allocByCStr(NV_Pointer vDict, const char *s)
 
 void NV_Variable_setTarget(NV_Pointer var, NV_Pointer target)
 {
+	// retains target.
 	NV_Variable *v;
 	// var type check
 	if(!NV_E_isType(var, EVariable)) return;
@@ -78,7 +76,7 @@ void NV_Variable_setTarget(NV_Pointer var, NV_Pointer target)
 	}
 	//
 	v = NV_E_getRawPointer(var, EVariable);
-	if(v) v->target = target;
+	if(v) v->target = NV_E_retain(target);
 }
 
 void NV_Variable_assignData(NV_Pointer var, NV_Pointer data)

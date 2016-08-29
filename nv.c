@@ -11,7 +11,6 @@ int main(int argc, char *argv[])
 		if(strcmp(argv[i], "-v") == 0) NV_isDebugMode = 1;
 	}
 	// init env
-NV_E_printMemStat();
 	env = NV_E_malloc_type(EEnv);
 	NV_Env_setLang(env, NV_allocDefaultLang());
 	// main loop
@@ -42,7 +41,6 @@ NV_E_printMemStat();
 	}
 	// cleanup
 	NV_E_free(&env);
-NV_E_printMemStat();
 	return 0;
 }
 
@@ -58,7 +56,6 @@ void NV_tokenize(NV_Pointer lang, NV_Pointer termRoot, const char *input)
 	char buf[MAX_TOKEN_LEN];
 	lastCType = 0;
 	p = input;
-NV_DbgInfo("%s", "Tokenize begin");
 	for(i = 0; ; i++){
 		cType = NV_Lang_getCharType(lang, input[i]);
 		if(cType != lastCType ||
@@ -77,7 +74,6 @@ NV_DbgInfo("%s", "Tokenize begin");
 		if(input[i] == 0) break;
 	}
 	if(NV_isDebugMode) NV_List_printAll(termRoot, NULL, NULL, "]\n");
-NV_DbgInfo("%s", "Tokenize end");
 }
 
 void NV_tokenizeItem(NV_Pointer lang, NV_Pointer termRoot, const char *termStr)
@@ -88,7 +84,7 @@ void NV_tokenizeItem(NV_Pointer lang, NV_Pointer termRoot, const char *termStr)
 	
 	t = NV_Lang_getOperatorFromString(lang, termStr);
 	if(!NV_E_isNullPointer(t)){
-		NV_List_push(termRoot, t);
+		NV_List_push(termRoot, NV_E_retain(t));
 		return;
 	}
 	// check Integer

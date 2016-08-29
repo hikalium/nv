@@ -24,11 +24,11 @@ NV_Env *NV_E_allocEnv()
 	return t;
 }
 
-void NV_E_free_internal_Env(NV_Pointer item, NV_Pointer pool)
+void NV_E_free_internal_Env(NV_Pointer item)
 {
 	NV_Env *envp = NV_E_getRawPointer(item, EEnv);
-	NV_E_freeWithPool(&envp->lang, pool);	
-	NV_E_freeWithPool(&envp->varRoot, pool);	
+	NV_E_free(&envp->lang);	
+	NV_E_free(&envp->varRoot);	
 }
 
 //

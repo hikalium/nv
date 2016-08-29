@@ -9,7 +9,7 @@ struct NV_LIST_ITEM {
 
 void NV_ListItem_setNext(NV_Pointer item, NV_Pointer nextItem);
 void NV_ListItem_setPrev(NV_Pointer item, NV_Pointer prevItem);
-
+void NV_ListItem_clearLink(NV_Pointer item);
 //
 // NV_Element
 //
@@ -23,6 +23,25 @@ NV_ListItem *NV_E_allocListItem()
 	li->next = NV_NullPointer;
 	li->revision = 0;
 	return li;
+}
+
+void NV_E_free_internal_ListItem(NV_Pointer item)
+{
+	NV_Pointer data = NV_ListItem_getData(item);
+	NV_E_free(&data);
+	NV_ListItem_clearLink(item);
+}
+
+void NV_E_free_internal_List(NV_Pointer root)
+{
+	// free children
+	NV_Pointer item;
+	//
+	for(;;){
+		item = NV_List_getItemByIndex(root, 0);
+		if(NV_E_isNullPointer(item)) break;
+		NV_E_free(&item);
+	}
 }
 
 //
@@ -67,8 +86,9 @@ NV_Pointer NV_ListItem_getData(NV_Pointer item)
 	return retv;
 }
 
-NV_Pointer NV_ListItem_setData(NV_Pointer item, NV_Pointer data)
+void NV_ListItem_setData(NV_Pointer item, NV_Pointer data)
 {
+	// retains data, frees before data.
 	NV_ListItem *li = NULL;
 	NV_Pointer oldData = NV_NullPointer;
 	if(NV_E_isType(item, EListItem)) li = NV_E_getRawPointer(item, EListItem);
@@ -76,9 +96,10 @@ NV_Pointer NV_ListItem_setData(NV_Pointer item, NV_Pointer data)
 	//
 	if(li){
 		oldData = li->data;
-		li->data = data;
+		li->data = NV_E_retain(data);
 	}
-	return oldData;
+	NV_E_free(&oldData);
+	return;
 }
 
 void *NV_ListItem_getRawData(NV_Pointer item, NV_ElementType et)
@@ -151,8 +172,8 @@ NV_Pointer NV_List_getLastItem(NV_Pointer root)
 	}
 	return lastItem;
 }
-
-NV_Pointer NV_List_unlinkItem(NV_Pointer item)
+/*
+void NV_List_unlinkItem(NV_Pointer item)
 {
 	// retv: data of item removed.
 	// note: this func does not free data of the item.
@@ -160,7 +181,7 @@ NV_Pointer NV_List_unlinkItem(NV_Pointer item)
 	NV_Pointer tData;
 	NV_Pointer prevItem, nextItem;
 	//
-	if(NV_E_isNullPointer(item)) return NV_NullPointer;
+	if(NV_E_isNullPointer(item)) return;
 	//
 	tData = NV_ListItem_getData(item);
 	NV_ListItem_setData(item, NV_NullPointer);
@@ -169,10 +190,10 @@ NV_Pointer NV_List_unlinkItem(NV_Pointer item)
 	nextItem = NV_ListItem_getNext(item);
 	NV_ListItem_setNext(prevItem, nextItem);
 	NV_ListItem_setPrev(nextItem, prevItem);
-	return tData;
+	return;
 }
 
-NV_Pointer NV_List_unlinkItemByIndex(NV_Pointer rootItem, int i)
+void NV_List_unlinkItemByIndex(NV_Pointer rootItem, int i)
 {
 	// retv: data of item removed.
 	// note: this func does not free data of the item.
@@ -183,7 +204,7 @@ NV_Pointer NV_List_unlinkItemByIndex(NV_Pointer rootItem, int i)
 	tItem = NV_List_getItemByIndex(rootItem, i);
 	return NV_List_unlinkItem(tItem);
 }
-
+*/
 void NV_List_insertItemAfter(NV_Pointer prevItem, NV_Pointer newItem)
 {
 	if(NV_E_isNullPointer(newItem)){
@@ -258,11 +279,12 @@ void NV_List_push(NV_Pointer rootItem, NV_Pointer newData)
 NV_Pointer NV_List_pop(NV_Pointer pRoot)
 {
 	// [] ->
+	// retains data
 	NV_Pointer lastItem, lastData;
 	//
 	lastItem = NV_List_getLastItem(pRoot);
 	if(NV_E_isNullPointer(lastItem)) return NV_NullPointer;
-	lastData = NV_ListItem_getData(lastItem);
+	lastData = NV_E_retain(NV_ListItem_getData(lastItem));
 	//
 	NV_ListItem_setNext(NV_ListItem_getPrev(lastItem), NV_NullPointer);
 	NV_E_free(&lastItem);
@@ -273,7 +295,12 @@ NV_Pointer NV_List_pop(NV_Pointer pRoot)
 NV_Pointer NV_List_shift(NV_Pointer rootItem)
 {
 	// <- []
-	return NV_List_unlinkItemByIndex(rootItem, 0);
+	// retains data
+	NV_Pointer data, item;
+	item = NV_ListItem_getNext(rootItem);
+	data = NV_E_retain(NV_ListItem_getData(item));
+	NV_E_free(&item);
+	return data;
 }
 
 void NV_List_unshift(NV_Pointer rootItem, NV_Pointer newData)
@@ -368,3 +395,15 @@ void NV_ListItem_setPrev(NV_Pointer item, NV_Pointer prevItem)
 	if(li)	li->prev = prevItem;
 }
 
+void NV_ListItem_clearLink(NV_Pointer item)
+{
+	NV_Pointer prevItem, nextItem;
+	//
+	if(NV_E_isNullPointer(item)) return;
+	//
+	prevItem = NV_ListItem_getPrev(item);
+	nextItem = NV_ListItem_getNext(item);
+	NV_ListItem_setNext(prevItem, nextItem);
+	NV_ListItem_setPrev(nextItem, prevItem);
+	return;
+}

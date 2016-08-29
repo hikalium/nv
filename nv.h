@@ -5,6 +5,7 @@
 #include <stdarg.h>
 
 #define DEBUG	0
+#define NV_DEBUG_MEMORY
 
 #define MAX_INPUT_LEN	256
 #define MAX_TOKEN_LEN	256
@@ -13,7 +14,18 @@
 
 #define NV_Error(fmt, ...)	printf("\nError: %s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
 #define NV_DbgInfo(fmt, ...) \
-	if(NV_isDebugMode) fprintf(stderr, "\nInfo : %s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
+	if(NV_isDebugMode) printf("\nInfo : %s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
+
+#ifdef NV_DEBUG_MEMORY
+	#define NV_E_retain(p)	NV_E_retainWithInfo(p, __FUNCTION__)
+	#define NV_E_free(p)	NV_E_freeWithInfo(p, __FUNCTION__)
+#else
+	#define NV_E_retain(p)	NV_E_retain_raw(p)
+	#define NV_E_free(p)	NV_E_free_raw(p)
+#endif
+
+#define ESC_ANSI_RED(s)		"\033[31m"s"\033[39m"
+#define ESC_ANSI_GREEN(s)	"\033[32m"s"\033[39m"
 
 #define malloc(s)	DO_NOT_USE_MALLOC(s)
 #define free(p)		DO_NOT_USE_FREE(p)
@@ -120,8 +132,12 @@ void NV_Dict_printAll(NV_Pointer dict, const char *prefix, const char *delimiter
 extern const NV_Pointer NV_NullPointer;
 NV_Pointer NV_E_malloc_type(NV_ElementType type);
 int NV_E_isNullPointer(NV_Pointer p);
-void NV_E_free(NV_Pointer *p);
-void NV_E_freeWithPool(NV_Pointer *p, NV_Pointer pool);
+NV_Pointer NV_E_retain_raw(NV_Pointer p);
+void NV_E_free_raw(NV_Pointer *p);
+#ifdef NV_E_retain
+NV_Pointer NV_E_retainWithInfo(NV_Pointer p, const char *fname);
+void NV_E_freeWithInfo(NV_Pointer *p, const char *fname);
+#endif
 int NV_E_isValidPointer(NV_Pointer p);
 int NV_E_isType(NV_Pointer p, NV_ElementType et);
 int NV_E_isSamePointer(NV_Pointer p, NV_Pointer q);
@@ -133,8 +149,6 @@ void NV_E_convertToContents(NV_Pointer vDict, NV_Pointer *item);
 void NV_E_setFlag(NV_Pointer p, int32_t flag);
 void NV_E_clearFlag(NV_Pointer p, int32_t flag);
 int NV_E_checkFlag(NV_Pointer p, int32_t pattern);
-void NV_E_addToPool(NV_Pointer p, NV_Pointer pool);
-void NV_E_setPool(NV_Pointer p, NV_Pointer pool);
 NV_Pointer NV_E_clone(NV_Pointer p);
 //
 void NV_printElement(NV_Pointer p);
@@ -186,7 +200,7 @@ NV_Pointer NV_allocLang00();
 NV_Pointer NV_ListItem_getNext(NV_Pointer item);
 NV_Pointer NV_ListItem_getPrev(NV_Pointer item);
 NV_Pointer NV_ListItem_getData(NV_Pointer item);
-NV_Pointer NV_ListItem_setData(NV_Pointer item, NV_Pointer newData);
+void NV_ListItem_setData(NV_Pointer item, NV_Pointer newData);
 void *NV_ListItem_getRawData(NV_Pointer item, NV_ElementType et);
 int NV_ListItem_isDataType(NV_Pointer item, NV_ElementType et);
 void NV_ListItem_print(NV_Pointer t);
@@ -195,8 +209,10 @@ NV_Pointer NV_List_allocRoot();
 NV_Pointer NV_List_clone(NV_Pointer p);
 NV_Pointer NV_List_getItemByIndex(NV_Pointer rootItem, int i);
 NV_Pointer NV_List_getLastItem(NV_Pointer root);
-NV_Pointer NV_List_unlinkItem(NV_Pointer item);
-NV_Pointer NV_List_unlinkItemByIndex(NV_Pointer rootItem, int i);
+/*
+void NV_List_unlinkItem(NV_Pointer item);
+void NV_List_unlinkItemByIndex(NV_Pointer rootItem, int i);
+*/
 void NV_List_insertItemAfter(NV_Pointer prevItem, NV_Pointer newItem);
 void NV_List_insertAllAfter(NV_Pointer prevItem, NV_Pointer rootItem);
 void NV_List_insertAllAfterIndex(NV_Pointer dstRoot, int index, NV_Pointer rootItem);

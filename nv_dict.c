@@ -54,17 +54,17 @@ NV_Pointer NV_Dict_clone(NV_Pointer p)
 	return c;
 }
 
-void NV_E_free_internal_DictItem(NV_Pointer item, NV_Pointer pool)
+void NV_E_free_internal_DictItem(NV_Pointer item)
 {
 	NV_Pointer d;
 	if(!NV_E_isType(item, EDictItem)) return;
 	//
 	NV_DictItem_unlink(item);
-	d = NV_DictItem_getKey(item); NV_E_freeWithPool(&d, pool);
-	d = NV_DictItem_getVal(item); NV_E_freeWithPool(&d, pool);
+	d = NV_DictItem_getKey(item); NV_E_free(&d);
+	d = NV_DictItem_getVal(item); NV_E_free(&d);
 }
 
-void NV_E_free_internal_Dict(NV_Pointer dict, NV_Pointer pool)
+void NV_E_free_internal_Dict(NV_Pointer dict)
 {
 	NV_Pointer item;
 	if(!NV_E_isType(dict, EDict)) return;
@@ -72,7 +72,7 @@ void NV_E_free_internal_Dict(NV_Pointer dict, NV_Pointer pool)
 	for(;;){
 		item = NV_DictItem_getNext(dict);
 		if(NV_E_isNullPointer(item)) break;
-		NV_E_freeWithPool(&item, dict);
+		NV_E_free(&item);
 	}
 }
 
@@ -87,6 +87,8 @@ NV_Pointer NV_Dict_allocRoot()
 
 int NV_Dict_add(NV_Pointer dict, NV_Pointer key, NV_Pointer val)
 {
+	// key will be cloned.
+	// val will retain.
 	// retv: error?
 	// you can not add data which (key or val) == NV_NullPointer.
 	// if the same key exists, data will be overwritten by a new val.
@@ -98,6 +100,7 @@ int NV_Dict_add(NV_Pointer dict, NV_Pointer key, NV_Pointer val)
 	item = NV_Dict_getItemByKey(dict, key);
 	if(NV_E_isNullPointer(item)){
 		// alloc item and create link
+		key = NV_E_clone(key);
 		item = NV_E_malloc_type(EDictItem);
 		NV_DictItem_setKey(item, key);
 		NV_DictItem_setNext(dict, item);
@@ -156,8 +159,12 @@ void NV_DictItem_updateRevision(NV_Pointer item)
 
 void NV_DictItem_setVal(NV_Pointer item, NV_Pointer val)
 {
+	// retains val
 	NV_DictItem *di = NV_DictItem_getRawDictItem(item);
-	if(di)	di->val = val;
+	if(di){
+		NV_E_free(&di->val);
+		di->val = NV_E_retain(val);
+	}
 	NV_DictItem_updateRevision(item);
 }
 

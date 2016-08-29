@@ -34,11 +34,11 @@ NV_Lang *NV_E_allocLang()
 	
 }
 
-void NV_E_free_internal_Lang(NV_Pointer p, NV_Pointer pool)
+void NV_E_free_internal_Lang(NV_Pointer p)
 {
 	NV_Lang *t = NV_E_getRawPointer(p, ELang);
-	NV_E_freeWithPool(&t->opList, pool);
-	NV_E_freeWithPool(&t->pool, pool);
+	NV_E_free(&t->opList);
+	NV_E_free(&t->pool);
 }
 
 //
@@ -83,7 +83,7 @@ NV_Pointer NV_Lang_getOperatorFromString(NV_Pointer lang, const char *termStr)
 	p = NV_ListItem_getNext(NV_Lang_getOpList(lang));
 	for(; !NV_E_isNullPointer(p); p = NV_ListItem_getNext(p)){
 		op = NV_ListItem_getRawData(p, EOperator);
-		if(strcmp(op->name, termStr) == 0){
+		if(op && strcmp(op->name, termStr) == 0){
 			return NV_ListItem_getData(p);
 		}
 	}
@@ -129,7 +129,6 @@ void NV_Lang_registerOperator(NV_Pointer lang, NV_Pointer op)
 	} else{
 		NV_List_insertDataBeforeItem(tOpItem, op);
 	}
-	NV_E_setPool(op, opList);
 }
 
 void NV_Lang_addOp(NV_Pointer lang, int pr, const char *name, NV_OpFunc f)
