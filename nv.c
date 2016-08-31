@@ -5,7 +5,7 @@ int main(int argc, char *argv[])
 {
 	int i;
 	char line[MAX_INPUT_LEN];
-	NV_Pointer env, root, lastData;
+	NV_Pointer env, root, lastItem, lastData;
 	// get interpreter args
 	for(i = 1; i < argc; i++){
 		if(strcmp(argv[i], "-v") == 0) NV_isDebugMode = 1;
@@ -27,10 +27,12 @@ NV_E_printMemStat();
 		} else{
 			// Ended with Success
 			if(NV_Env_getAutoPrintValueEnabled(env)){
-				lastData = NV_ListItem_getData(NV_List_getLastItem(root));
+				lastItem = NV_List_getLastItem(root);
+				NV_ListItem_convertUnknownToKnown(NV_Env_getVarRoot(env), lastItem);
+				NV_ListItem_unbox(lastItem);
+				lastData = NV_ListItem_getData(lastItem);
 				if(!NV_E_isNullPointer(lastData)){
 					printf("= ");
-					NV_E_convertToContents(NV_Env_getVarRoot(env), &lastData);
 					NV_printElement(lastData);
 					printf("\n");
 				}

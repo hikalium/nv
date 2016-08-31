@@ -121,7 +121,6 @@ NV_Pointer NV_Dict_clone(NV_Pointer p);
 int NV_Dict_add(NV_Pointer dict, NV_Pointer key, NV_Pointer val);
 NV_Pointer NV_Dict_getItemByKey(NV_Pointer dict, NV_Pointer key);
 NV_Pointer NV_Dict_getValByKey(NV_Pointer dict, NV_Pointer key);
-//NV_Pointer NV_Dict_getKeys(NV_Pointer dict, NV_Pointer val);
 //
 NV_Pointer NV_DictItem_getKey(NV_Pointer item);
 NV_Pointer NV_DictItem_getVal(NV_Pointer item);
@@ -149,15 +148,13 @@ int NV_E_isType(NV_Pointer p, NV_ElementType et);
 int NV_E_isSamePointer(NV_Pointer p, NV_Pointer q);
 int NV_E_isEqual(NV_Pointer p, NV_Pointer q);
 void *NV_E_getRawPointer(NV_Pointer p, NV_ElementType et);
-void NV_E_unbox(NV_Pointer * maybeBoxedItem);
-void NV_E_convertUnknownToKnown(NV_Pointer vDict, NV_Pointer *mayStr);
-void NV_E_convertToContents(NV_Pointer vDict, NV_Pointer *item);
 void NV_E_setFlag(NV_Pointer p, int32_t flag);
 void NV_E_clearFlag(NV_Pointer p, int32_t flag);
 int NV_E_checkFlag(NV_Pointer p, int32_t pattern);
 NV_Pointer NV_E_clone(NV_Pointer p);
 //
 void NV_printElement(NV_Pointer p);
+void NV_printElementRefCount(NV_Pointer p);
 void NV_E_printMemStat();
 
 // @nv_env.c
@@ -210,16 +207,13 @@ void NV_ListItem_setData(NV_Pointer item, NV_Pointer newData);
 void *NV_ListItem_getRawData(NV_Pointer item, NV_ElementType et);
 int NV_ListItem_isDataType(NV_Pointer item, NV_ElementType et);
 void NV_ListItem_convertUnknownToKnown(NV_Pointer vDict, NV_Pointer item);
+void NV_ListItem_unbox(NV_Pointer item);
 void NV_ListItem_print(NV_Pointer t);
 // ---- List ----
 NV_Pointer NV_List_allocRoot();
 NV_Pointer NV_List_clone(NV_Pointer p);
 NV_Pointer NV_List_getItemByIndex(NV_Pointer rootItem, int i);
 NV_Pointer NV_List_getLastItem(NV_Pointer root);
-/*
-void NV_List_unlinkItem(NV_Pointer item);
-void NV_List_unlinkItemByIndex(NV_Pointer rootItem, int i);
-*/
 void NV_List_insertItemAfter(NV_Pointer prevItem, NV_Pointer newItem);
 void NV_List_insertAllAfter(NV_Pointer prevItem, NV_Pointer rootItem);
 void NV_List_insertAllAfterIndex(NV_Pointer dstRoot, int index, NV_Pointer rootItem);

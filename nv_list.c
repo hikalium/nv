@@ -40,6 +40,7 @@ void NV_E_free_internal_List(NV_Pointer root)
 	for(;;){
 		item = NV_List_getItemByIndex(root, 0);
 		if(NV_E_isNullPointer(item)) break;
+		NV_ListItem_clearLink(item);
 		NV_E_free(&item);
 	}
 }
@@ -131,12 +132,30 @@ NV_DbgInfo("%s", "converted to variable");
 	}
 }
 
+void NV_ListItem_unbox(NV_Pointer item)
+{
+	NV_Pointer nData, cData;
+	cData = NV_ListItem_getData(item);
+	if(NV_E_isType(cData, EVariable)){
+		nData = NV_Variable_getData(cData);
+	} else if(NV_E_isType(cData, EListItem)){
+		nData = NV_ListItem_getData(cData);
+	} else if(NV_E_isType(cData, EDictItem)){
+		nData = NV_DictItem_getVal(cData);
+	} else{
+		return;
+	}
+	NV_ListItem_setData(item, nData);
+	NV_ListItem_unbox(item);
+}
+
 void NV_ListItem_print(NV_Pointer t)
 {
 	NV_ListItem *li;
 	li = NV_E_getRawPointer(t, EListItem);
 	if(li){
-		printf("(ListItem: data = %p)", li->data.data);
+		printf("(ListItem: ");
+		NV_printElement(li->data);
 	}
 }
 
@@ -191,39 +210,7 @@ NV_Pointer NV_List_getLastItem(NV_Pointer root)
 	}
 	return lastItem;
 }
-/*
-void NV_List_unlinkItem(NV_Pointer item)
-{
-	// retv: data of item removed.
-	// note: this func does not free data of the item.
-	// you should free data manually
-	NV_Pointer tData;
-	NV_Pointer prevItem, nextItem;
-	//
-	if(NV_E_isNullPointer(item)) return;
-	//
-	tData = NV_ListItem_getData(item);
-	NV_ListItem_setData(item, NV_NullPointer);
-	//
-	prevItem = NV_ListItem_getPrev(item);
-	nextItem = NV_ListItem_getNext(item);
-	NV_ListItem_setNext(prevItem, nextItem);
-	NV_ListItem_setPrev(nextItem, prevItem);
-	return;
-}
 
-void NV_List_unlinkItemByIndex(NV_Pointer rootItem, int i)
-{
-	// retv: data of item removed.
-	// note: this func does not free data of the item.
-	// you should free data manually
-	NV_Pointer tItem;
-	//
-	if(!NV_E_isValidPointer(rootItem)) return NV_NullPointer;
-	tItem = NV_List_getItemByIndex(rootItem, i);
-	return NV_List_unlinkItem(tItem);
-}
-*/
 void NV_List_insertItemAfter(NV_Pointer prevItem, NV_Pointer newItem)
 {
 	if(NV_E_isNullPointer(newItem)){

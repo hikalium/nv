@@ -98,7 +98,7 @@ void NV_E_free_raw(NV_Pointer *p)
 		if(e->type < NV_ELEMENT_TYPES) NV_E_NumOfElements[e->type]--;
 		NV_E_NumOfElementsUsing--;
 #ifdef NV_DEBUG_MEMORY
-		NV_DbgInfo(ESC_ANSI_YERROW("free")" elem! (type: %d)", e->type);
+		NV_DbgInfo(ESC_ANSI_YERROW("free")" elem! (type: %d, @%p)", e->type, e->data);
 #endif
 		e->token = rand();
 		e->type = ENone;
@@ -110,7 +110,7 @@ void NV_E_free_raw(NV_Pointer *p)
 		*p = NV_NullPointer;
 	} else{
 #ifdef NV_DEBUG_MEMORY
-		NV_DbgInfo("release elem! (type: %d)", e->type);
+		NV_DbgInfo("release elem! (type: %d, @%p)", e->type, e->data);
 #endif
 	}
 }
@@ -197,53 +197,6 @@ void *NV_E_getRawPointer(NV_Pointer p, NV_ElementType et)
 	return p.data->data;
 }
 
-void NV_E_unbox(NV_Pointer *maybeBoxedItem)
-{
-	// EVariable, EListItem, EDictItem -> content object
-	NV_Pointer new;
-	if(NV_E_isType(*maybeBoxedItem, EVariable)){
-		new = NV_Variable_getData(*maybeBoxedItem);
-		NV_E_free(maybeBoxedItem);
-		*maybeBoxedItem = new;
-		NV_E_unbox(maybeBoxedItem);
-	} else if(NV_E_isType(*maybeBoxedItem, EListItem)){
-		new = NV_ListItem_getData(*maybeBoxedItem);
-		NV_E_free(maybeBoxedItem);
-		*maybeBoxedItem = new;
-		NV_E_unbox(maybeBoxedItem);
-	} else if(NV_E_isType(*maybeBoxedItem, EDictItem)){
-		new = NV_DictItem_getVal(*maybeBoxedItem);
-		NV_E_free(maybeBoxedItem);
-		*maybeBoxedItem = new;
-		NV_E_unbox(maybeBoxedItem);
-	}
-}
-
-void NV_E_convertUnknownToKnown(NV_Pointer vDict, NV_Pointer *mayStr)
-{
-	// if mayStr object is EString and EFUnknownToken (not string literal),
-	// try to convert from string to variable,
-	// if not, return original mayStr object.
-	NV_Pointer new;
-	if(!NV_E_isType(*mayStr, EString) ||
-		!NV_E_checkFlag(*mayStr, EFUnknownToken) ||
-		NV_E_isNullPointer(NV_Dict_getItemByKey(vDict, *mayStr))){
-NV_DbgInfo("%s", "not converted");
-		NV_E_clearFlag(*mayStr, EFUnknownToken);
-	} else{
-NV_DbgInfo("%s", "converted to variable");
-		new = NV_Variable_allocByStr(vDict, *mayStr);
-		NV_E_free(mayStr);
-		*mayStr = new;
-	}
-}
-
-void NV_E_convertToContents(NV_Pointer vDict, NV_Pointer *item)
-{
-	NV_E_convertUnknownToKnown(vDict, item);
-	NV_E_unbox(item);
-}
-
 void NV_E_setFlag(NV_Pointer p, int32_t flag)
 {
 	if(!NV_E_isValidPointer(p)) return;
@@ -309,6 +262,19 @@ void NV_printElement(NV_Pointer p)
 		} else{
 			printf("(type: %d)", p.data->type);
 		}
+	} else{
+		if(p.data){
+			printf("(Invalid) %p ", p.data);
+		} else{
+			printf("(null)");
+		}
+	}
+}
+
+void NV_printElementRefCount(NV_Pointer p)
+{
+	if(NV_E_isValidPointer(p)){
+		printf("(ref: %d)", p.data->refCount);
 	} else{
 		if(p.data){
 			printf("(Invalid) %p ", p.data);
