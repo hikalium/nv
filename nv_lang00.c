@@ -200,7 +200,7 @@ NV_LANG00_Op_unaryOperator_prefix
 	// type check
 	if(NV_E_isNullPointer(next)) return NV_NullPointer;
 	if(!NV_ListItem_isDataType(prev, EOperator) && 
-		!NV_ListItem_isDataType(prev, EList)) return NV_NullPointer;
+		!NV_E_isType(prev, EList)) return NV_NullPointer;
 	NV_ListItem_convertUnknownToKnown(vDict, next);
 	NV_ListItem_unbox(next);
 	data = NV_ListItem_getData(next);
