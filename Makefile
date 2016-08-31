@@ -7,6 +7,8 @@ nv : $(SRCS) $(HEADERS) Makefile
 	strip nv
 	upx -9 nv
 
+fastbin : $(SRCS) $(HEADERS) Makefile
+	cc -Wall -lncurses -Wunused-function -ferror-limit=5 -O3 -o nv  $(SRCS)
 
 debugbin : $(SRCS) $(HEADERS) Makefile
 	cc -g -Wall -lncurses -Wunused-function -ferror-limit=5 -o nv  $(SRCS)

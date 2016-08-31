@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdarg.h>
+#include <time.h>
 
 #define DEBUG	0
 //#define NV_DEBUG_MEMORY
@@ -111,8 +112,8 @@ extern int NV_isDebugMode;
 void NV_tokenize(NV_Pointer langDef, NV_Pointer termRoot, const char *input);
 int NV_convertLiteral(NV_Pointer root, NV_Pointer lang);
 //
-int NV_evaluateSentence(NV_Pointer env, NV_Pointer root);
-NV_Pointer NV_tryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer t, NV_Pointer root);
+int NV_evaluateSentence(NV_Pointer env, NV_Pointer vDict, NV_Pointer root);
+NV_Pointer NV_tryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer t, NV_Pointer vDict, NV_Pointer root);
 
 // @nv_dict.c
 NV_Pointer NV_Dict_allocRoot();
@@ -158,7 +159,6 @@ void NV_printElementRefCount(NV_Pointer p);
 void NV_E_printMemStat();
 
 // @nv_env.c
-NV_Pointer NV_Env_getVarRoot(NV_Pointer env);
 int NV_Env_setLang(NV_Pointer env, NV_Pointer lang);
 NV_Pointer NV_Env_getLang(NV_Pointer env);
 int NV_Env_setAutoPrintValueEnabled(NV_Pointer env, int b);
@@ -234,7 +234,7 @@ NV_Pointer NV_Operator_alloc(int precedence, const char *name, NV_OpFunc nativeF
 NV_Pointer NV_Operator_clone(NV_Pointer p);
 void NV_Operator_print(NV_Pointer t);
 int NV_getOperatorPrecedence(NV_Pointer op);
-NV_Pointer NV_Operator_exec(NV_Pointer op, NV_Pointer env, NV_Pointer thisTerm);
+NV_Pointer NV_Operator_exec(NV_Pointer op, NV_Pointer env, NV_Pointer vDict, NV_Pointer thisTerm);
 
 // @nv_string.c
 NV_Pointer NV_String_alloc(const char *cs);

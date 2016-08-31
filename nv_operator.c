@@ -53,10 +53,12 @@ int NV_getOperatorPrecedence(NV_Pointer op)
 	return opData->precedence;
 }
 
-NV_Pointer NV_Operator_exec(NV_Pointer op, NV_Pointer env, NV_Pointer thisTerm)
+NV_Pointer
+NV_Operator_exec
+(NV_Pointer op, NV_Pointer env, NV_Pointer vDict, NV_Pointer thisTerm)
 {
 	NV_Operator *opData;
 	opData = NV_E_getRawPointer(op, EOperator);
-	if(opData) return opData->nativeFunc(env, NV_Env_getVarRoot(env), thisTerm);
+	if(opData) return opData->nativeFunc(env, vDict, thisTerm);
 	return NV_NullPointer;
 }

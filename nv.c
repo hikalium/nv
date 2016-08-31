@@ -5,7 +5,8 @@ int main(int argc, char *argv[])
 {
 	int i;
 	char line[MAX_INPUT_LEN];
-	NV_Pointer env, root, lastItem, lastData, lang;
+	NV_Pointer env, root, lastItem, lastData, lang, vDict;
+	clock_t t0 = clock();
 	// get interpreter args
 	for(i = 1; i < argc; i++){
 		if(strcmp(argv[i], "-v") == 0) NV_isDebugMode = 1;
@@ -14,6 +15,7 @@ int main(int argc, char *argv[])
 	if(NV_isDebugMode) NV_E_printMemStat();
 	env = NV_E_malloc_type(EEnv);
 	lang = NV_allocDefaultLang();
+	vDict = NV_E_malloc_type(EDict);
 	NV_Env_setLang(env, lang);
 	// main loop
 	while(NV_gets(line, sizeof(line)) != NULL){
@@ -21,14 +23,14 @@ int main(int argc, char *argv[])
 		//
 		NV_tokenize(lang, root, line);
 		NV_Env_setAutoPrintValueEnabled(env, 1);
-		if(NV_convertLiteral(root, lang) || NV_evaluateSentence(env, root)){
+		if(NV_convertLiteral(root, lang) || NV_evaluateSentence(env, vDict, root)){
 			// Ended with error
 			NV_Error("%s\n", "Bad Syntax");
 		} else{
 			// Ended with Success
 			if(NV_Env_getAutoPrintValueEnabled(env)){
 				lastItem = NV_List_getLastItem(root);
-				NV_ListItem_convertUnknownToKnown(NV_Env_getVarRoot(env), lastItem);
+				NV_ListItem_convertUnknownToKnown(vDict, lastItem);
 				NV_ListItem_unbox(lastItem);
 				lastData = NV_ListItem_getData(lastItem);
 				if(!NV_E_isNullPointer(lastData)){
@@ -45,6 +47,7 @@ int main(int argc, char *argv[])
 	// cleanup
 	NV_E_free(&env);
 	if(NV_isDebugMode) NV_E_printMemStat();
+	printf("Processed in %f seconds.\n", (double)(clock() - t0) / CLOCKS_PER_SEC);
 	return 0;
 }
 
@@ -156,7 +159,7 @@ int NV_convertLiteral(NV_Pointer root, NV_Pointer lang)
 // Evaluate
 //
 
-int NV_evaluateSentence(NV_Pointer env, NV_Pointer root)
+int NV_evaluateSentence(NV_Pointer env, NV_Pointer vDict, NV_Pointer root)
 {
 	NV_Pointer t;
 	NV_Pointer op;
@@ -191,7 +194,7 @@ int NV_evaluateSentence(NV_Pointer env, NV_Pointer root)
 			// left-associative
 			t = NV_ListItem_getNext(root);
 			for(; !NV_E_isNullPointer(t); t = NV_ListItem_getNext(t)){
-				t = NV_tryExecOp(env, targetOpPrec, t, root);
+				t = NV_tryExecOp(env, targetOpPrec, t, vDict, root);
 				if(NV_E_isNullPointer(t)){
 					NV_DbgInfo("%s", "Evaluate end (Op Mismatched)");
 					return 1;
@@ -202,7 +205,7 @@ int NV_evaluateSentence(NV_Pointer env, NV_Pointer root)
 			t = NV_List_getLastItem(root);
 			for(; !NV_E_isNullPointer(t); t = NV_ListItem_getPrev(t)){
 				// rewind
-				t = NV_tryExecOp(env, targetOpPrec, t, root);
+				t = NV_tryExecOp(env, targetOpPrec, t, vDict, root);
 				if(NV_E_isNullPointer(t)){
 					NV_DbgInfo("%s", "Evaluate end (Op Mismatched)");
 					return 1;
@@ -217,7 +220,7 @@ int NV_evaluateSentence(NV_Pointer env, NV_Pointer root)
 	return 0;
 }
 
-NV_Pointer NV_tryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer thisTerm, NV_Pointer root)
+NV_Pointer NV_tryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer thisTerm, NV_Pointer vDict, NV_Pointer root)
 {
 	NV_Pointer fallbackOp, op;
 	NV_Pointer orgTerm = thisTerm;
@@ -229,7 +232,7 @@ NV_Pointer NV_tryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer thisTerm, 
 			NV_DbgInfo("%s", "Begin native op: ");
 			NV_Operator_print(op); putchar('\n');
 		}
-		thisTerm = NV_Operator_exec(op, env, thisTerm);
+		thisTerm = NV_Operator_exec(op, env, vDict, thisTerm);
 		if(NV_isDebugMode){
 			NV_DbgInfo("%s", "End native op:");
 			NV_Operator_print(op); putchar('\n');

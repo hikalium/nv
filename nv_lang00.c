@@ -38,7 +38,7 @@ NV_LANG00_makeBlock
 
 NV_Pointer
 NV_LANG00_execSentence
-(NV_Pointer env, NV_Pointer sentenceRootItem)
+(NV_Pointer env, NV_Pointer vDict, NV_Pointer sentenceRootItem)
 {
 	// eval sentence
 	// retv is sentenceRootItem(success) or NV_NullPointer(failed)
@@ -47,26 +47,27 @@ NV_LANG00_execSentence
 	if(!NV_ListItem_isDataType(sentenceRootItem, EList)) return NV_NullPointer;
 	sentenceRoot = NV_ListItem_getData(sentenceRootItem);
 	//
-	if(NV_evaluateSentence(env, sentenceRoot)){
+	if(NV_evaluateSentence(env, vDict, sentenceRoot)){
 		NV_Error("%s", "Exec failed.");
 		return NV_NullPointer;
 	}
 	return sentenceRootItem;
 }
 
+
 NV_Pointer
 NV_LANG00_execSentenceScalar
-(NV_Pointer env, NV_Pointer sentenceRootItem)
+(NV_Pointer env, NV_Pointer vDict, NV_Pointer sentenceRootItem)
 {
 	// eval sentence
 	// sentenceRootItem will be repaced by last value of eval tree.
-	NV_Pointer data;
-	if(NV_E_isNullPointer(NV_LANG00_execSentence(env, sentenceRootItem))){
+	if(NV_E_isNullPointer(NV_LANG00_execSentence(env, vDict, sentenceRootItem))){
 		return NV_NullPointer;
 	}
-	data = NV_ListItem_getData(
-		NV_List_getLastItem(NV_ListItem_getData(sentenceRootItem)));
-	NV_ListItem_setData(sentenceRootItem, data);
+	NV_ListItem_setData(sentenceRootItem,
+		NV_ListItem_getData(
+			NV_List_getLastItem(
+				NV_ListItem_getData(sentenceRootItem))));
 	return sentenceRootItem;
 }
 
@@ -366,7 +367,7 @@ NV_LANG00_Op_precedentBlock
 		tmp = NV_ListItem_getNext(itemBeforeBlock);
 		NV_E_free(&tmp);
 		NV_ListItem_setData(itemBeforeBlock, NV_E_autorelease(NV_E_clone(f)));
-		NV_LANG00_execSentence(env, itemBeforeBlock);
+		NV_LANG00_execSentence(env, vDict, itemBeforeBlock);
 		return itemBeforeBlock;
 	}
 	NV_List_insertDataAfterItem(
@@ -441,7 +442,7 @@ NV_LANG00_Op_builtin_exec
 	NV_Pointer prevItem, nextItem;
 	prevItem = NV_ListItem_getPrev(thisItem);
 	nextItem = NV_ListItem_getNext(thisItem);
-	if(NV_E_isNullPointer(NV_LANG00_execSentence(env, nextItem)))
+	if(NV_E_isNullPointer(NV_LANG00_execSentence(env, vDict, nextItem)))
 		return NV_NullPointer;
 	NV_E_free(&thisItem);
 	//
@@ -455,7 +456,7 @@ NV_LANG00_Op_builtin_exec_scalar
 	NV_Pointer prevItem, nextItem;
 	prevItem = NV_ListItem_getPrev(thisItem);
 	nextItem = NV_ListItem_getNext(thisItem);
-	if(NV_E_isNullPointer(NV_LANG00_execSentenceScalar(env, nextItem)))
+	if(NV_E_isNullPointer(NV_LANG00_execSentenceScalar(env, vDict, nextItem)))
 		return NV_NullPointer;
 	NV_E_free(&thisItem);
 	//
@@ -475,7 +476,7 @@ NV_LANG00_Op_if
 	NV_LANG00_fetchNextSentenceItem(&t, &doItem);
 	for(;;){
 		// evaluate cond
-		NV_LANG00_execSentence(env, condItem);
+		NV_LANG00_execSentence(env, vDict, condItem);
 		if(NV_E_isNullPointer(doItem)){
 			// condItem was else block so break here.
 			break;
@@ -491,7 +492,7 @@ NV_LANG00_Op_if
 		// evaluate do
 		if(cond){
 			// cond is true.
-			t = NV_LANG00_execSentence(env, doItem);
+			t = NV_LANG00_execSentence(env, vDict, doItem);
 			if(NV_E_isNullPointer(t)) return NV_NullPointer;
 			// remove rest of sentence blocks.
 			t = NV_ListItem_getNext(doItem);
@@ -524,6 +525,7 @@ NV_LANG00_Op_for
 	// for {init block}{conditional block}{update block}{statement}
 	int cond;
 	NV_Pointer t, initItem, condItem, updateItem, doItem, lastItem;
+	NV_Pointer condRoot, updateRoot, doRoot;
 	NV_Pointer tmpCondRoot, tmpUpdateRoot, tmpDoRoot;
 	//
 	t = thisItem;
@@ -534,19 +536,23 @@ NV_LANG00_Op_for
 	if(NV_E_isNullPointer(initItem) || NV_E_isNullPointer(condItem) || 
 		NV_E_isNullPointer(updateItem) || NV_E_isNullPointer(doItem))
 		return NV_NullPointer;
+	//
+	condRoot = NV_ListItem_getData(condItem);
+	updateRoot = NV_ListItem_getData(updateItem);
+	doRoot = NV_ListItem_getData(doItem);
 	// do init block
 	// initTerm is removed here.
-	t = NV_LANG00_execSentence(env,initItem);
+	t = NV_LANG00_execSentence(env, vDict, initItem);
 	if(NV_E_isNullPointer(t)) return NV_NullPointer;
 	NV_E_free(&t);
 	// 
 	for(;;){
 		// copy blocks
-		tmpCondRoot = NV_E_clone(NV_ListItem_getData(condItem));
-		tmpUpdateRoot = NV_E_clone(NV_ListItem_getData(updateItem));
-		tmpDoRoot = NV_E_clone(NV_ListItem_getData(doItem));
+		tmpCondRoot = NV_E_clone(condRoot);
+		tmpUpdateRoot = NV_E_clone(updateRoot);
+		tmpDoRoot = NV_E_clone(doRoot);
 		// check cond
-		if(NV_evaluateSentence(env, tmpCondRoot)) return NV_NullPointer;
+		if(NV_evaluateSentence(env, vDict, tmpCondRoot)) return NV_NullPointer;
 		lastItem = NV_List_getLastItem(tmpCondRoot);
 		NV_ListItem_unbox(lastItem);
 		t = NV_ListItem_getData(lastItem);
@@ -554,9 +560,9 @@ NV_LANG00_Op_for
 		cond = NV_Integer_getImm32(t);
 		if(!cond) break;
 		// do
-		if(NV_evaluateSentence(env, tmpDoRoot)) return NV_NullPointer;
+		if(NV_evaluateSentence(env, vDict, tmpDoRoot)) return NV_NullPointer;
 		// update
-		if(NV_evaluateSentence(env, tmpUpdateRoot)) return NV_NullPointer;
+		if(NV_evaluateSentence(env, vDict, tmpUpdateRoot)) return NV_NullPointer;
 		// free tmp
 		NV_E_free(&tmpCondRoot);
 		NV_E_free(&tmpUpdateRoot);
@@ -608,7 +614,7 @@ NV_Pointer NV_LANG00_Op_showVarList(NV_Pointer env, NV_Pointer vDict, NV_Pointer
 	NV_Pointer prevItem = NV_ListItem_getPrev(thisItem);
 	//
 	NV_Dict_printAll(
-		NV_Env_getVarRoot(env), "\nVarList: [\n", ",\n", "\n]\n");
+		vDict, "\nVarList: [\n", ",\n", "\n]\n");
 	//
 	NV_E_free(&thisItem);
 	NV_Env_setAutoPrintValueEnabled(env, 0);

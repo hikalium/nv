@@ -3,7 +3,6 @@
 
 struct NV_ENV {
 	NV_Pointer lang;
-	NV_Pointer varRoot;
 	int autoPrintValue;
 	int endFlag;
 };
@@ -19,7 +18,6 @@ NV_Env *NV_E_allocEnv()
 	t = NV_malloc(sizeof(NV_Env));
 	//
 	t->lang = NV_NullPointer;
-	t->varRoot = NV_Dict_allocRoot();
 
 	return t;
 }
@@ -28,19 +26,11 @@ void NV_E_free_internal_Env(NV_Pointer item)
 {
 	NV_Env *envp = NV_E_getRawPointer(item, EEnv);
 	NV_E_free(&envp->lang);	
-	NV_E_free(&envp->varRoot);	
 }
 
 //
 // NV_Env
 //
-
-NV_Pointer NV_Env_getVarRoot(NV_Pointer env)
-{
-	NV_Env *envp = NV_E_getRawPointer(env, EEnv);
-	if(!envp) return NV_NullPointer;
-	return envp->varRoot;
-}
 
 int NV_Env_setLang(NV_Pointer env, NV_Pointer lang)
 {
