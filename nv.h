@@ -5,7 +5,7 @@
 #include <stdarg.h>
 
 #define DEBUG	0
-#define NV_DEBUG_MEMORY
+//#define NV_DEBUG_MEMORY
 
 #define MAX_INPUT_LEN	256
 #define MAX_TOKEN_LEN	256
@@ -109,7 +109,8 @@ extern int NV_isDebugMode;
 //
 //
 void NV_tokenize(NV_Pointer langDef, NV_Pointer termRoot, const char *input);
-void NV_tokenizeItem(NV_Pointer langDef, NV_Pointer termRoot, const char *termStr);
+int NV_convertLiteral(NV_Pointer root, NV_Pointer lang);
+//void NV_tokenizeItem(NV_Pointer langDef, NV_Pointer termRoot, const char *termStr);
 //
 int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root);
 NV_Pointer NV_TryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer t, NV_Pointer root);
@@ -237,10 +238,13 @@ int NV_getOperatorPrecedence(NV_Pointer op);
 NV_Pointer NV_Operator_exec(NV_Pointer op, NV_Pointer env, NV_Pointer thisTerm);
 
 // @nv_string.c
+NV_Pointer NV_String_alloc(const char *cs);
 NV_Pointer NV_String_clone(NV_Pointer p);
 void NV_String_setString(NV_Pointer t, const char *s);
+void NV_String_concatenateCStr(NV_Pointer str1, const char *s2);
 int NV_String_isEqualToCStr(NV_Pointer str, const char *cstr);
 int NV_String_isEqual(NV_Pointer str0, NV_Pointer str1);
+const char *NV_String_getCStr(NV_Pointer s);
 void NV_String_print(NV_Pointer t);
 
 // @nv_var.c

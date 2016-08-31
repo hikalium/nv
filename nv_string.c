@@ -28,6 +28,14 @@ void NV_E_free_internal_String(NV_Pointer p, NV_Pointer pool)
 // NV_String
 //
 
+NV_Pointer NV_String_alloc(const char *cs)
+{
+	NV_Pointer s;
+	s = NV_E_malloc_type(EString);
+	NV_String_setString(s, cs);
+	return s;
+}
+
 NV_Pointer NV_String_clone(NV_Pointer p)
 {
 	NV_String *v;
@@ -50,6 +58,24 @@ void NV_String_setString(NV_Pointer strItem, const char *s)
 	NV_strncpy(v->s, s, len + 1, len + 1);
 }
 
+void NV_String_concatenateCStr(NV_Pointer str1, const char *s2)
+{
+	NV_Pointer s;
+	NV_String *v = NV_E_getRawPointer(str1, EString);
+	int len;
+	char *buf;
+	const char *s1 = NV_String_getCStr(str1);
+	if(!s1) s1 = "";
+	if(!s2) s2 = "";
+	len = strlen(s1) + strlen(s2);
+	s = NV_E_malloc_type(EString);
+	v = NV_E_getRawPointer(s, EString);
+	buf = NV_malloc(len + 1);
+	NV_strncpy(buf, s1, strlen(s1) + 1, strlen(s1) + 1);
+	NV_strncpy(buf + strlen(s1), s2, strlen(s2) + 1, strlen(s2) + 1);
+	NV_String_setString(str1, buf);
+}
+
 int NV_String_isEqualToCStr(NV_Pointer strItem, const char *cstr)
 {
 	NV_String *v = NV_E_getRawPointer(strItem, EString);
@@ -65,9 +91,17 @@ int NV_String_isEqual(NV_Pointer str0, NV_Pointer str1)
 	return (strcmp(v0->s, v1->s) == 0);
 }
 
+const char *NV_String_getCStr(NV_Pointer s)
+{
+	NV_String *v = NV_E_getRawPointer(s, EString);
+	if(!v) return NULL;
+	return v->s; 
+}
+
 void NV_String_print(NV_Pointer strItem)
 {
 	NV_String *v = NV_E_getRawPointer(strItem, EString);
 	if(!v) return;
 	printf("\"%s\"", v->s);
 }
+

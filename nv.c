@@ -5,7 +5,7 @@ int main(int argc, char *argv[])
 {
 	int i;
 	char line[MAX_INPUT_LEN];
-	NV_Pointer env, root, lastItem, lastData;
+	NV_Pointer env, root, lastItem, lastData, lang;
 	// get interpreter args
 	for(i = 1; i < argc; i++){
 		if(strcmp(argv[i], "-v") == 0) NV_isDebugMode = 1;
@@ -13,15 +13,15 @@ int main(int argc, char *argv[])
 	// init env
 NV_E_printMemStat();
 	env = NV_E_malloc_type(EEnv);
-	NV_Env_setLang(env, NV_allocDefaultLang());
+	lang = NV_allocDefaultLang();
+	NV_Env_setLang(env, lang);
 	// main loop
 	while(NV_gets(line, sizeof(line)) != NULL){
 		root = NV_E_malloc_type(EList);
 		//
-		NV_tokenize(NV_Env_getLang(env), root, line);
-		//
+		NV_tokenize(lang, root, line);
 		NV_Env_setAutoPrintValueEnabled(env, 1);
-		if(NV_EvaluateSentence(env, root)){
+		if(NV_convertLiteral(root, lang) || NV_EvaluateSentence(env, root)){
 			// Ended with error
 			NV_Error("%s\n", "Bad Syntax");
 		} else{
@@ -58,6 +58,7 @@ void NV_tokenize(NV_Pointer lang, NV_Pointer termRoot, const char *input)
 	const char *p;
 	int i, lastCType, cType;
 	char buf[MAX_TOKEN_LEN];
+	NV_Pointer t;
 	lastCType = 0;
 	p = input;
 	for(i = 0; ; i++){
@@ -70,7 +71,12 @@ void NV_tokenize(NV_Pointer lang, NV_Pointer termRoot, const char *input)
 					exit(EXIT_FAILURE);
 				}
 				NV_strncpy(buf, p, MAX_TOKEN_LEN, input + i - p);
-				NV_tokenizeItem(lang, termRoot, buf);
+				//
+				t = NV_E_malloc_type(EString);
+				NV_String_setString(t, buf);
+				NV_E_setFlag(t, EFUnknownToken);
+				NV_List_push(termRoot, NV_E_autorelease(t));
+				//NV_tokenizeItem(lang, termRoot, buf, strLiteral);
 			}
 			p = input + i;
 		}
@@ -80,12 +86,80 @@ void NV_tokenize(NV_Pointer lang, NV_Pointer termRoot, const char *input)
 	if(NV_isDebugMode) NV_List_printAll(termRoot, NULL, NULL, "]\n");
 }
 
+int NV_convertLiteral(NV_Pointer root, NV_Pointer lang)
+{
+	NV_Pointer item, t, strLiteral = NV_NullPointer;
+	const char *termStr;
+	char *p;
+	int32_t tmpNum;
+	//
+	if(!NV_E_isType(root, EList)) return 1;
+	item = root;
+	NV_DbgInfo("%s", "start");
+	for(;;){
+		if(NV_isDebugMode) NV_List_printAll(root, NULL, NULL, "]\n");
+		item = NV_ListItem_getNext(item);
+		if(NV_E_isNullPointer(item)) break;
+		// get CStr
+		termStr = NV_String_getCStr(NV_ListItem_getData(item));
+		if(!termStr){
+			NV_Error("%s", "termStr is NULL!!!");
+			return 1;
+		}
+		if(!NV_E_isNullPointer(strLiteral)){
+			if(termStr[0] == '"'){
+				// end of string literal
+				NV_ListItem_setData(item, strLiteral);
+				NV_E_free(&strLiteral);
+				strLiteral = NV_NullPointer;
+				continue;
+			} else{
+				// body of string literal
+				NV_String_concatenateCStr(strLiteral, termStr);
+				t = NV_ListItem_getPrev(item);
+				NV_E_free(&item);
+				item = t;
+				continue;
+			}
+		}
+		if(termStr[0] == '"'){
+			// begin of str literal
+			t = NV_ListItem_getPrev(item);
+			NV_E_free(&item);
+			item = t;
+			strLiteral = NV_E_malloc_type(EString);
+			continue;
+		}
+		// check operator	
+		t = NV_Lang_getOperatorFromString(lang, termStr);
+		if(!NV_E_isNullPointer(t)){
+			NV_ListItem_setData(item, t);
+			continue;
+		}
+		// check Integer
+		tmpNum = strtol(termStr, &p, 0);
+		if(termStr != p && *p == 0){
+			t = NV_E_malloc_type(EInteger);
+			NV_Integer_setImm32(t, tmpNum);
+			NV_ListItem_setData(item, NV_E_autorelease(t));
+			continue;
+		}
+	}
+	if(!NV_E_isNullPointer(strLiteral)){
+		NV_Error("%s", "Missing end of string literal.");
+		return 1;
+	}
+	return 0;
+}
+
+/*
 void NV_tokenizeItem(NV_Pointer lang, NV_Pointer termRoot, const char *termStr)
 {
 	NV_Pointer t;
 	int32_t tmpNum;
 	char *p;
-	
+
+	// check operator	
 	t = NV_Lang_getOperatorFromString(lang, termStr);
 	if(!NV_E_isNullPointer(t)){
 		NV_List_push(termRoot, t);
@@ -105,6 +179,7 @@ void NV_tokenizeItem(NV_Pointer lang, NV_Pointer termRoot, const char *termStr)
 	NV_E_setFlag(t, EFUnknownToken);
 	NV_List_push(termRoot, NV_E_autorelease(t));
 }
+*/
 //
 // Evaluate
 //

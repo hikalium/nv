@@ -1,4 +1,5 @@
 #sum = 0;
 for {#i = 1}{i <= 10000}{i++}{sum += i}
 print sum;
-if {sum == (i*i-i)[0]/2}{print OK}{print BAD}
+print i * i - i;
+if {sum == (i*i-i)/2}{print OK}{print BAD}
