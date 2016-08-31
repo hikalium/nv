@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
 		if(strcmp(argv[i], "-v") == 0) NV_isDebugMode = 1;
 	}
 	// init env
-NV_E_printMemStat();
+	if(NV_isDebugMode) NV_E_printMemStat();
 	env = NV_E_malloc_type(EEnv);
 	lang = NV_allocDefaultLang();
 	NV_Env_setLang(env, lang);
@@ -21,7 +21,7 @@ NV_E_printMemStat();
 		//
 		NV_tokenize(lang, root, line);
 		NV_Env_setAutoPrintValueEnabled(env, 1);
-		if(NV_convertLiteral(root, lang) || NV_EvaluateSentence(env, root)){
+		if(NV_convertLiteral(root, lang) || NV_evaluateSentence(env, root)){
 			// Ended with error
 			NV_Error("%s\n", "Bad Syntax");
 		} else{
@@ -44,7 +44,7 @@ NV_E_printMemStat();
 	}
 	// cleanup
 	NV_E_free(&env);
-NV_E_printMemStat();
+	if(NV_isDebugMode) NV_E_printMemStat();
 	return 0;
 }
 
@@ -152,39 +152,11 @@ int NV_convertLiteral(NV_Pointer root, NV_Pointer lang)
 	return 0;
 }
 
-/*
-void NV_tokenizeItem(NV_Pointer lang, NV_Pointer termRoot, const char *termStr)
-{
-	NV_Pointer t;
-	int32_t tmpNum;
-	char *p;
-
-	// check operator	
-	t = NV_Lang_getOperatorFromString(lang, termStr);
-	if(!NV_E_isNullPointer(t)){
-		NV_List_push(termRoot, t);
-		return;
-	}
-	// check Integer
-	tmpNum = strtol(termStr, &p, 0);
-	if(termStr != p && *p == 0){
-		t = NV_E_malloc_type(EInteger);
-		NV_Integer_setImm32(t, tmpNum);
-		NV_List_push(termRoot, NV_E_autorelease(t));
-		return;
-	}
-	// unknown -> string
-	t = NV_E_malloc_type(EString);
-	NV_String_setString(t, termStr);
-	NV_E_setFlag(t, EFUnknownToken);
-	NV_List_push(termRoot, NV_E_autorelease(t));
-}
-*/
 //
 // Evaluate
 //
 
-int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root)
+int NV_evaluateSentence(NV_Pointer env, NV_Pointer root)
 {
 	NV_Pointer t;
 	NV_Pointer op;
@@ -219,7 +191,7 @@ int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root)
 			// left-associative
 			t = NV_ListItem_getNext(root);
 			for(; !NV_E_isNullPointer(t); t = NV_ListItem_getNext(t)){
-				t = NV_TryExecOp(env, targetOpPrec, t, root);
+				t = NV_tryExecOp(env, targetOpPrec, t, root);
 				if(NV_E_isNullPointer(t)){
 					NV_DbgInfo("%s", "Evaluate end (Op Mismatched)");
 					return 1;
@@ -230,7 +202,7 @@ int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root)
 			t = NV_List_getLastItem(root);
 			for(; !NV_E_isNullPointer(t); t = NV_ListItem_getPrev(t)){
 				// rewind
-				t = NV_TryExecOp(env, targetOpPrec, t, root);
+				t = NV_tryExecOp(env, targetOpPrec, t, root);
 				if(NV_E_isNullPointer(t)){
 					NV_DbgInfo("%s", "Evaluate end (Op Mismatched)");
 					return 1;
@@ -245,7 +217,7 @@ int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root)
 	return 0;
 }
 
-NV_Pointer NV_TryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer thisTerm, NV_Pointer root)
+NV_Pointer NV_tryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer thisTerm, NV_Pointer root)
 {
 	NV_Pointer fallbackOp, op;
 	NV_Pointer orgTerm = thisTerm;

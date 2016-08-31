@@ -110,10 +110,9 @@ extern int NV_isDebugMode;
 //
 void NV_tokenize(NV_Pointer langDef, NV_Pointer termRoot, const char *input);
 int NV_convertLiteral(NV_Pointer root, NV_Pointer lang);
-//void NV_tokenizeItem(NV_Pointer langDef, NV_Pointer termRoot, const char *termStr);
 //
-int NV_EvaluateSentence(NV_Pointer env, NV_Pointer root);
-NV_Pointer NV_TryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer t, NV_Pointer root);
+int NV_evaluateSentence(NV_Pointer env, NV_Pointer root);
+NV_Pointer NV_tryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer t, NV_Pointer root);
 
 // @nv_dict.c
 NV_Pointer NV_Dict_allocRoot();

@@ -47,7 +47,7 @@ NV_LANG00_execSentence
 	if(!NV_ListItem_isDataType(sentenceRootItem, EList)) return NV_NullPointer;
 	sentenceRoot = NV_ListItem_getData(sentenceRootItem);
 	//
-	if(NV_EvaluateSentence(env, sentenceRoot)){
+	if(NV_evaluateSentence(env, sentenceRoot)){
 		NV_Error("%s", "Exec failed.");
 		return NV_NullPointer;
 	}
@@ -339,59 +339,7 @@ NV_LANG00_Op_sentenceSeparator
 		NV_Lang_getOperatorFromString(NV_Env_getLang(env), ";;"));
 	return t;
 }
-/*
-NV_Pointer NV_LANG00_Op_stringLiteral(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
-{
-	// "string literal"
-	int len = 0, sp;
-	NV_Pointer t, *endTerm;
-	NV_Operator *op;
-	char *s, *st;
-	for(t = thisItem->next;;t = t->next){
-		if(!t) return NULL;
-		if(t->type == Operator && ((NV_Operator *)t->data)->nativeFunc == NV_LANG00_Op_stringLiteral){
-			endTerm = t;
-			break;
-		}
-		switch(t->type){
-			case Operator:
-				op = t->data;
-				len += strlen(op->name);
-				break;
-			case Unknown:
-				len += strlen((const char *)t->data);
-				break;
-			default:
-				return NULL;
-		}
-	}
-	s = NV_malloc(len + 1);
-	sp = 0;
-	for(t = thisItem->next; t != endTerm;){
-		switch(t->type){
-			case Operator:
-				op = t->data;
-				st = op->name;
-				break;
-			case Unknown:
-				st = t->data;
-				break;
-			default:
-				return NULL;
-		}
-		strcpy(&s[sp], st);
-		sp += strlen(st);
-		t = t->next;
-		NV_removeTerm(t->prev);
-	}
-	s[len] = 0;
-	NV_removeTerm(endTerm);
-	t = NV_createTerm_String(s);
-	NV_free(s);
-	NV_overwriteTerm(thisItem, t);
-	return 
-}
-*/
+
 NV_Pointer
 NV_LANG00_Op_sentenceBlock
 (NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
@@ -598,7 +546,7 @@ NV_LANG00_Op_for
 		tmpUpdateRoot = NV_E_clone(NV_ListItem_getData(updateItem));
 		tmpDoRoot = NV_E_clone(NV_ListItem_getData(doItem));
 		// check cond
-		if(NV_EvaluateSentence(env, tmpCondRoot)) return NV_NullPointer;
+		if(NV_evaluateSentence(env, tmpCondRoot)) return NV_NullPointer;
 		lastItem = NV_List_getLastItem(tmpCondRoot);
 		NV_ListItem_unbox(lastItem);
 		t = NV_ListItem_getData(lastItem);
@@ -606,9 +554,9 @@ NV_LANG00_Op_for
 		cond = NV_Integer_getImm32(t);
 		if(!cond) break;
 		// do
-		if(NV_EvaluateSentence(env, tmpDoRoot)) return NV_NullPointer;
+		if(NV_evaluateSentence(env, tmpDoRoot)) return NV_NullPointer;
 		// update
-		if(NV_EvaluateSentence(env, tmpUpdateRoot)) return NV_NullPointer;
+		if(NV_evaluateSentence(env, tmpUpdateRoot)) return NV_NullPointer;
 		// free tmp
 		NV_E_free(&tmpCondRoot);
 		NV_E_free(&tmpUpdateRoot);
@@ -689,11 +637,8 @@ NV_Pointer NV_allocLang00()
 	NV_Lang_setCharList(lang, 0, " \t\r\n");
 	NV_Lang_setCharList(lang, 1, "#!%&-=^~|+*:.<>/");
 	NV_Lang_setCharList(lang, 2, "(){}[],;\"");
+
 	// based on http://www.tutorialspoint.com/cprogramming/c_operators.htm
-	//
-	/*
-	NV_Lang_addOp(lang, 200000,	"\"", NV_LANG00_Op_stringLiteral);
-*/
 	NV_Lang_addOp(lang, 100050,	"{", NV_LANG00_Op_sentenceBlock);
 	NV_Lang_addOp(lang, 100040,	";", NV_LANG00_Op_sentenceSeparator);
 	NV_Lang_addOp(lang, 100030,	"(", NV_LANG00_Op_precedentBlock);
@@ -712,7 +657,6 @@ NV_Pointer NV_allocLang00()
 	//
 	NV_Lang_addOp(lang, 2010,	"[", NV_LANG00_Op_structureAccessor);	
 	NV_Lang_addOp(lang, 2008,	"builtin_get_item", NV_LANG00_Op_builtin_get_item);	
-	//NV_Lang_addOp(lang, 2000,	"]", NV_LANG00_Op_nothingButDisappear);
 	//
 	NV_Lang_addOp(lang, 1000,  "if", NV_LANG00_Op_if);
 	NV_Lang_addOp(lang, 1000,  "for", NV_LANG00_Op_for);
