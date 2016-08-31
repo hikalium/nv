@@ -54,6 +54,22 @@ NV_LANG00_execSentence
 	return sentenceRootItem;
 }
 
+NV_Pointer
+NV_LANG00_execSentenceScalar
+(NV_Pointer env, NV_Pointer sentenceRootItem)
+{
+	// eval sentence
+	// sentenceRootItem will be repaced by last value of eval tree.
+	NV_Pointer data;
+	if(NV_E_isNullPointer(NV_LANG00_execSentence(env, sentenceRootItem))){
+		return NV_NullPointer;
+	}
+	data = NV_ListItem_getData(
+		NV_List_getLastItem(NV_ListItem_getData(sentenceRootItem)));
+	NV_ListItem_setData(sentenceRootItem, data);
+	return sentenceRootItem;
+}
+
 NV_BinOpType
 NV_LANG00_getBinOpTypeFromString
 (const char *s)
@@ -407,25 +423,14 @@ NV_LANG00_Op_precedentBlock
 	}
 	NV_List_insertDataAfterItem(
 		itemBeforeBlock,
-		NV_Lang_getOperatorFromString(NV_Env_getLang(env), "builtin_exec")
-	);
-	NV_List_insertDataAfterItem(
-		itemBlock,
-		NV_Lang_getOperatorFromString(NV_Env_getLang(env), "]")
-	);
-	NV_List_insertDataAfterItem(
-		itemBlock,
-		NV_E_autorelease(NV_Integer_alloc(0))
-	);
-	NV_List_insertDataAfterItem(
-		itemBlock,
-		NV_Lang_getOperatorFromString(NV_Env_getLang(env), "[")
+		NV_Lang_getOperatorFromString(NV_Env_getLang(env), "builtin_exec_scalar")
 	);
 	return itemBeforeBlock;
 }
 
+
 NV_Pointer
-NV_LANG00_Op_structureAccessor
+NV_LANG00_Op_builtin_get_item
 (NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	// []
@@ -463,12 +468,46 @@ NV_LANG00_Op_structureAccessor
 	return thisItem;
 }
 
-NV_Pointer NV_LANG00_Op_builtin_exec(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+NV_Pointer
+NV_LANG00_Op_structureAccessor
+(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+{
+	NV_Pointer itemBeforeBlock;
+	itemBeforeBlock = NV_LANG00_makeBlock(env, thisItem, "]");
+
+	NV_List_insertDataAfterItem(
+		itemBeforeBlock,
+		NV_Lang_getOperatorFromString(NV_Env_getLang(env), "builtin_exec_scalar")
+	);
+	NV_List_insertDataAfterItem(
+		itemBeforeBlock,
+		NV_Lang_getOperatorFromString(NV_Env_getLang(env), "builtin_get_item")
+	);
+	return itemBeforeBlock;
+}
+
+NV_Pointer
+NV_LANG00_Op_builtin_exec
+(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer prevItem, nextItem;
 	prevItem = NV_ListItem_getPrev(thisItem);
 	nextItem = NV_ListItem_getNext(thisItem);
 	if(NV_E_isNullPointer(NV_LANG00_execSentence(env, nextItem)))
+		return NV_NullPointer;
+	NV_E_free(&thisItem);
+	//
+	return prevItem;
+}
+
+NV_Pointer
+NV_LANG00_Op_builtin_exec_scalar
+(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+{
+	NV_Pointer prevItem, nextItem;
+	prevItem = NV_ListItem_getPrev(thisItem);
+	nextItem = NV_ListItem_getNext(thisItem);
+	if(NV_E_isNullPointer(NV_LANG00_execSentenceScalar(env, nextItem)))
 		return NV_NullPointer;
 	NV_E_free(&thisItem);
 	//
@@ -659,6 +698,7 @@ NV_Pointer NV_allocLang00()
 	NV_Lang_addOp(lang, 100040,	";", NV_LANG00_Op_sentenceSeparator);
 	NV_Lang_addOp(lang, 100030,	"(", NV_LANG00_Op_precedentBlock);
 	NV_Lang_addOp(lang, 100020,	"builtin_exec", NV_LANG00_Op_builtin_exec);
+	NV_Lang_addOp(lang, 100020,	"builtin_exec_scalar", NV_LANG00_Op_builtin_exec_scalar);
 	//
 	NV_Lang_addOp(lang, 100000,	"mem", NV_LANG00_Op_mem);
 	//
@@ -671,7 +711,8 @@ NV_Pointer NV_allocLang00()
 	NV_Lang_addOp(lang, 10000,	"elseif", NV_LANG00_Op_nothingButDisappear);
 	//
 	NV_Lang_addOp(lang, 2010,	"[", NV_LANG00_Op_structureAccessor);	
-	NV_Lang_addOp(lang, 2000,	"]", NV_LANG00_Op_nothingButDisappear);
+	NV_Lang_addOp(lang, 2008,	"builtin_get_item", NV_LANG00_Op_builtin_get_item);	
+	//NV_Lang_addOp(lang, 2000,	"]", NV_LANG00_Op_nothingButDisappear);
 	//
 	NV_Lang_addOp(lang, 1000,  "if", NV_LANG00_Op_if);
 	NV_Lang_addOp(lang, 1000,  "for", NV_LANG00_Op_for);
