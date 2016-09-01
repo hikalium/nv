@@ -25,6 +25,8 @@ int main(int argc, char *argv[])
 	// main loop
 	while(NV_gets(line, sizeof(line)) != NULL){
 		root = NV_E_malloc_type(EList);
+		// init flag
+		excFlag = 0;
 		SET_FLAG(excFlag, NV_EXC_FLAG_AUTO_PRINT);
 		//
 		NV_tokenize(lang, root, line);
