@@ -37,8 +37,6 @@ NV_Pointer NV_E_malloc_type(NV_ElementType type)
 			return NV_E_malloc_internal(EDictItem,	NV_E_allocDictItem());
 		case EVariable:
 			return NV_E_malloc_internal(EVariable,	NV_E_allocVariable());
-		case EEnv:
-			return NV_E_malloc_internal(EEnv,		NV_E_allocEnv());
 		case ELang:
 			return NV_E_malloc_internal(ELang,		NV_E_allocLang());
 		case EOperator:
@@ -87,8 +85,6 @@ void NV_E_free_raw(NV_Pointer *p)
 			NV_E_free_internal_DictItem(*p);
 		} else if(NV_E_isType(*p, EVariable)){
 			NV_E_free_internal_Variable(*p);
-		} else if(NV_E_isType(*p, EEnv)){
-			NV_E_free_internal_Env(*p);
 		} else if(NV_E_isType(*p, ELang)){
 			NV_E_free_internal_Lang(*p);
 		} else if(NV_E_isType(*p, EString)){

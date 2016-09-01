@@ -1,3 +1,5 @@
 #s = "BAD";
 s = "OK";
 print s;
+s = "Hello nv world!";
+print s;

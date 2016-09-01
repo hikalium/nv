@@ -55,10 +55,11 @@ int NV_getOperatorPrecedence(NV_Pointer op)
 
 NV_Pointer
 NV_Operator_exec
-(NV_Pointer op, NV_Pointer env, NV_Pointer vDict, NV_Pointer thisTerm)
+(NV_Pointer op, int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisTerm)
 {
 	NV_Operator *opData;
 	opData = NV_E_getRawPointer(op, EOperator);
-	if(opData) return opData->nativeFunc(env, vDict, thisTerm);
+	if(opData) return opData->nativeFunc(excFlag, lang, vDict, thisTerm);
+	NV_Error("%s", "opData is null");
 	return NV_NullPointer;
 }

@@ -6,14 +6,21 @@
 #include <time.h>
 
 #define DEBUG	0
-//#define NV_DEBUG_MEMORY
+#define NV_DEBUG_MEMORY
 
 #define MAX_INPUT_LEN	256
 #define MAX_TOKEN_LEN	256
 
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define ESC_ANSI_RED(s)		"\033[31m"s"\033[39m"
+#define ESC_ANSI_GREEN(s)	"\033[32m"s"\033[39m"
+#define ESC_ANSI_YERROW(s)	"\033[33m"s"\033[39m"
+#define ESC_ANSI_CYAN(s)	"\033[36m"s"\033[39m"
 
-#define NV_Error(fmt, ...)	printf("\nError: %s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define SET_FLAG(f, d)	f |= (d)
+#define CLR_FLAG(f, d) f &= ~(d)
+
+#define NV_Error(fmt, ...)	printf(ESC_ANSI_RED("\nError: %s: %d: ")fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
 #define NV_DbgInfo(fmt, ...) \
 	if(NV_isDebugMode) printf("\nInfo : %s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
 
@@ -27,13 +34,12 @@
 	#define NV_E_autorelease(p)	NV_E_autorelease_raw(p)
 #endif
 
-#define ESC_ANSI_RED(s)		"\033[31m"s"\033[39m"
-#define ESC_ANSI_GREEN(s)	"\033[32m"s"\033[39m"
-#define ESC_ANSI_YERROW(s)	"\033[33m"s"\033[39m"
-#define ESC_ANSI_CYAN(s)	"\033[36m"s"\033[39m"
-
 #define malloc(s)	DO_NOT_USE_MALLOC(s)
 #define free(p)		DO_NOT_USE_FREE(p)
+
+#define NV_EXC_FLAG_EXIT			0x0001
+#define NV_EXC_FLAG_AUTO_PRINT		0x0002
+#define NV_EXC_FLAG_FAILED			0x0004
 
 typedef enum	NV_ELEMENT_TYPE NV_ElementType;
 typedef enum	NV_ELEMENT_FLAG NV_ElementFlag;
@@ -52,7 +58,7 @@ typedef struct	NV_INTEGER		NV_Integer;
 typedef struct	NV_STRING		NV_String;
 typedef struct	NV_VARIABLE		NV_Variable;
 
-typedef NV_Pointer(*NV_OpFunc)(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisTerm);
+typedef NV_Pointer(*NV_OpFunc)(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisTerm);
 
 enum NV_ELEMENT_TYPE {
 	ENone,
@@ -61,12 +67,15 @@ enum NV_ELEMENT_TYPE {
 	EDict,		// complex
 	EDictItem,	// complex (can't be a pool)
 	EVariable,	// complex
-	EEnv,
 	ELang,
 	EOperator,	// primitive
 	EInteger,	// primitive
 	EString,	// primitive
 };
+
+// a: assignable: EVariable
+// o: operator: EOperator
+// 
 
 enum NV_ELEMENT_FLAG {
 	EFUnknownToken = 1,
@@ -112,8 +121,8 @@ extern int NV_isDebugMode;
 void NV_tokenize(NV_Pointer langDef, NV_Pointer termRoot, const char *input);
 int NV_convertLiteral(NV_Pointer root, NV_Pointer lang);
 //
-int NV_evaluateSentence(NV_Pointer env, NV_Pointer vDict, NV_Pointer root);
-NV_Pointer NV_tryExecOp(NV_Pointer env, int currentOpPrec, NV_Pointer t, NV_Pointer vDict, NV_Pointer root);
+void NV_evaluateSentence(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer root);
+NV_Pointer NV_tryExecOp(int32_t *excFlag, NV_Pointer lang, int currentOpPrec, NV_Pointer t, NV_Pointer vDict, NV_Pointer root);
 
 // @nv_dict.c
 NV_Pointer NV_Dict_allocRoot();
@@ -131,6 +140,10 @@ void NV_DictItem_setVal(NV_Pointer item, NV_Pointer val);
 //
 void NV_DictItem_print(NV_Pointer item);
 void NV_Dict_printAll(NV_Pointer dict, const char *prefix, const char *delimiter, const char *suffix);
+
+// @nv_envdep.c
+char *NV_gets(char *str, int size);
+void NV_prinitf(const char *format, ...);
 
 // @nv_element.c
 extern const NV_Pointer NV_NullPointer;
@@ -157,18 +170,6 @@ NV_Pointer NV_E_clone(NV_Pointer p);
 void NV_printElement(NV_Pointer p);
 void NV_printElementRefCount(NV_Pointer p);
 void NV_E_printMemStat();
-
-// @nv_env.c
-int NV_Env_setLang(NV_Pointer env, NV_Pointer lang);
-NV_Pointer NV_Env_getLang(NV_Pointer env);
-int NV_Env_setAutoPrintValueEnabled(NV_Pointer env, int b);
-int NV_Env_getAutoPrintValueEnabled(NV_Pointer env);
-int NV_Env_setEndFlag(NV_Pointer env, int b);
-int NV_Env_getEndFlag(NV_Pointer env);
-
-// @nv_envdep.c
-char *NV_gets(char *str, int size);
-void NV_prinitf(const char *format, ...);
 
 // @nv_fix.c
 char *NV_strncpy(char *dst, const char *src, size_t dst_size, size_t copy_size);
@@ -234,7 +235,8 @@ NV_Pointer NV_Operator_alloc(int precedence, const char *name, NV_OpFunc nativeF
 NV_Pointer NV_Operator_clone(NV_Pointer p);
 void NV_Operator_print(NV_Pointer t);
 int NV_getOperatorPrecedence(NV_Pointer op);
-NV_Pointer NV_Operator_exec(NV_Pointer op, NV_Pointer env, NV_Pointer vDict, NV_Pointer thisTerm);
+NV_Pointer NV_Operator_exec
+	(NV_Pointer op, int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisTerm);
 
 // @nv_string.c
 NV_Pointer NV_String_alloc(const char *cs);

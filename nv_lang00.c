@@ -6,7 +6,7 @@
 
 NV_Pointer
 NV_LANG00_makeBlock
-(NV_Pointer env, NV_Pointer thisItem, const char *closeStr)
+(NV_Pointer thisItem, const char *closeStr)
 {
 	// support func
 	// retv is prev term of thisItem.
@@ -36,39 +36,49 @@ NV_LANG00_makeBlock
 	return prevItem;
 }
 
-NV_Pointer
+void
 NV_LANG00_execSentence
-(NV_Pointer env, NV_Pointer vDict, NV_Pointer sentenceRootItem)
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer sentenceRootItem)
 {
 	// eval sentence
 	// retv is sentenceRootItem(success) or NV_NullPointer(failed)
 	NV_Pointer sentenceRoot;
 	//
-	if(!NV_ListItem_isDataType(sentenceRootItem, EList)) return NV_NullPointer;
+	if(!NV_ListItem_isDataType(sentenceRootItem, EList)){
+		NV_Error("%s", "sentenceRootItem is not EList");
+		NV_printElement(sentenceRootItem);
+		SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
+		return;
+	}
 	sentenceRoot = NV_ListItem_getData(sentenceRootItem);
 	//
-	if(NV_evaluateSentence(env, vDict, sentenceRoot)){
+	NV_evaluateSentence(excFlag, lang, vDict, sentenceRoot);
+	if(*excFlag & NV_EXC_FLAG_FAILED){
 		NV_Error("%s", "Exec failed.");
-		return NV_NullPointer;
+		return;
 	}
-	return sentenceRootItem;
+	return;
 }
 
 
-NV_Pointer
+void
 NV_LANG00_execSentenceScalar
-(NV_Pointer env, NV_Pointer vDict, NV_Pointer sentenceRootItem)
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer sentenceRootItem)
 {
 	// eval sentence
 	// sentenceRootItem will be repaced by last value of eval tree.
-	if(NV_E_isNullPointer(NV_LANG00_execSentence(env, vDict, sentenceRootItem))){
-		return NV_NullPointer;
+	NV_LANG00_execSentence(excFlag, lang, vDict, sentenceRootItem);
+	if(*excFlag & NV_EXC_FLAG_FAILED){
+		NV_Error("%s", "sentenceRootItem is not EList");
+		NV_printElement(sentenceRootItem);
+		SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
+		return;
 	}
 	NV_ListItem_setData(sentenceRootItem,
 		NV_ListItem_getData(
 			NV_List_getLastItem(
 				NV_ListItem_getData(sentenceRootItem))));
-	return sentenceRootItem;
+	return;
 }
 
 NV_BinOpType
@@ -113,7 +123,7 @@ NV_LANG00_fetchNextSentenceItem
 */
 NV_Pointer
 NV_LANG00_Op_assign
-(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer srcData;
 	NV_Pointer dstData;
@@ -147,10 +157,9 @@ NV_LANG00_Op_assign
 
 NV_Pointer
 NV_LANG00_Op_compoundAssign
-(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Operator *op;
-	NV_Pointer lang = NV_Env_getLang(env);
 	NV_Pointer var, prevItem;
 	char s[2];
 	//
@@ -176,7 +185,7 @@ NV_LANG00_Op_compoundAssign
 
 NV_Pointer
 NV_LANG00_Op_declareVariable
-(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer next = NV_ListItem_getNext(thisItem);
 	NV_Pointer var;
@@ -191,7 +200,7 @@ NV_LANG00_Op_declareVariable
 
 NV_Pointer
 NV_LANG00_Op_unaryOperator_prefix
-(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer prev = NV_ListItem_getPrev(thisItem);
 	NV_Pointer next = NV_ListItem_getNext(thisItem);
@@ -230,10 +239,9 @@ NV_LANG00_Op_unaryOperator_prefix
 
 NV_Pointer
 NV_LANG00_Op_unaryOperator_varSuffix
-(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Operator *op;
-	NV_Pointer lang = NV_Env_getLang(env);
 	NV_Pointer var, cint, prevItem;
 	char s[2];
 	//
@@ -262,7 +270,7 @@ NV_LANG00_Op_unaryOperator_varSuffix
 
 NV_Pointer
 NV_LANG00_Op_binaryOperator
-(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	// for Integer values only.
 	NV_Pointer prev = NV_ListItem_getPrev(thisItem);
@@ -304,7 +312,7 @@ NV_LANG00_Op_binaryOperator
 	//
 	return resultData;
 }
-NV_Pointer NV_LANG00_Op_nothingButDisappear(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+NV_Pointer NV_LANG00_Op_nothingButDisappear(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer prev = NV_ListItem_getPrev(thisItem);
 	NV_E_free(&thisItem);
@@ -313,7 +321,7 @@ NV_Pointer NV_LANG00_Op_nothingButDisappear(NV_Pointer env, NV_Pointer vDict, NV
 
 NV_Pointer
 NV_LANG00_Op_sentenceSeparator
-(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer t, sentenceRoot, remRoot, tmp;
 	NV_Operator *tOp;
@@ -335,28 +343,28 @@ NV_LANG00_Op_sentenceSeparator
 	NV_E_free(&remRoot);
 	NV_ListItem_setData(thisItem, NV_E_autorelease(sentenceRoot));
 	NV_List_insertDataAfterItem(t, 
-		NV_Lang_getOperatorFromString(NV_Env_getLang(env), "builtin_exec"));
+		NV_Lang_getOperatorFromString(lang, "builtin_exec_scalar"));
 	NV_List_insertDataAfterItem(t, 
-		NV_Lang_getOperatorFromString(NV_Env_getLang(env), ";;"));
+		NV_Lang_getOperatorFromString(lang, ";;"));
 	return t;
 }
 
 NV_Pointer
 NV_LANG00_Op_sentenceBlock
-(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
-	return NV_LANG00_makeBlock(env, thisItem, "}");
+	return NV_LANG00_makeBlock(thisItem, "}");
 }
 
 NV_Pointer
 NV_LANG00_Op_precedentBlock
-(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	// ()
 	NV_Pointer itemBeforeBlock, itemBlock, f, tmp;
 	// NV_Pointer prev;
 	//
-	itemBeforeBlock = NV_LANG00_makeBlock(env, thisItem, ")");
+	itemBeforeBlock = NV_LANG00_makeBlock(thisItem, ")");
 	itemBlock = NV_ListItem_getNext(itemBeforeBlock);
 	if(NV_E_isNullPointer(itemBeforeBlock)) return NV_NullPointer;
 	// if prev term is sentence object, perform function call.
@@ -367,12 +375,12 @@ NV_LANG00_Op_precedentBlock
 		tmp = NV_ListItem_getNext(itemBeforeBlock);
 		NV_E_free(&tmp);
 		NV_ListItem_setData(itemBeforeBlock, NV_E_autorelease(NV_E_clone(f)));
-		NV_LANG00_execSentence(env, vDict, itemBeforeBlock);
+		NV_LANG00_execSentence(excFlag, lang, vDict, itemBeforeBlock);
 		return itemBeforeBlock;
 	}
 	NV_List_insertDataAfterItem(
 		itemBeforeBlock,
-		NV_Lang_getOperatorFromString(NV_Env_getLang(env), "builtin_exec_scalar")
+		NV_Lang_getOperatorFromString(lang, "builtin_exec_scalar")
 	);
 	return itemBeforeBlock;
 }
@@ -380,7 +388,7 @@ NV_LANG00_Op_precedentBlock
 
 NV_Pointer
 NV_LANG00_Op_builtin_get_item
-(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	// []
 	NV_Pointer prev, next, prevData, nextData, target, var;
@@ -419,30 +427,31 @@ NV_LANG00_Op_builtin_get_item
 
 NV_Pointer
 NV_LANG00_Op_structureAccessor
-(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer itemBeforeBlock;
-	itemBeforeBlock = NV_LANG00_makeBlock(env, thisItem, "]");
+	itemBeforeBlock = NV_LANG00_makeBlock(thisItem, "]");
 
 	NV_List_insertDataAfterItem(
 		itemBeforeBlock,
-		NV_Lang_getOperatorFromString(NV_Env_getLang(env), "builtin_exec_scalar")
+		NV_Lang_getOperatorFromString(lang, "builtin_exec_scalar")
 	);
 	NV_List_insertDataAfterItem(
 		itemBeforeBlock,
-		NV_Lang_getOperatorFromString(NV_Env_getLang(env), "builtin_get_item")
+		NV_Lang_getOperatorFromString(lang, "builtin_get_item")
 	);
 	return itemBeforeBlock;
 }
 
 NV_Pointer
 NV_LANG00_Op_builtin_exec
-(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer prevItem, nextItem;
 	prevItem = NV_ListItem_getPrev(thisItem);
 	nextItem = NV_ListItem_getNext(thisItem);
-	if(NV_E_isNullPointer(NV_LANG00_execSentence(env, vDict, nextItem)))
+	NV_LANG00_execSentence(excFlag, lang, vDict, nextItem);
+	if(*excFlag & NV_EXC_FLAG_FAILED)
 		return NV_NullPointer;
 	NV_E_free(&thisItem);
 	//
@@ -451,12 +460,13 @@ NV_LANG00_Op_builtin_exec
 
 NV_Pointer
 NV_LANG00_Op_builtin_exec_scalar
-(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer prevItem, nextItem;
 	prevItem = NV_ListItem_getPrev(thisItem);
 	nextItem = NV_ListItem_getNext(thisItem);
-	if(NV_E_isNullPointer(NV_LANG00_execSentenceScalar(env, vDict, nextItem)))
+	NV_LANG00_execSentenceScalar(excFlag, lang, vDict, nextItem);
+	if(*excFlag & NV_EXC_FLAG_FAILED)
 		return NV_NullPointer;
 	NV_E_free(&thisItem);
 	//
@@ -465,7 +475,7 @@ NV_LANG00_Op_builtin_exec_scalar
 
 NV_Pointer
 NV_LANG00_Op_if
-(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	// if {cond} {do} [{cond} {do}] [{else}]
 	int32_t cond;
@@ -475,8 +485,16 @@ NV_LANG00_Op_if
 	NV_LANG00_fetchNextSentenceItem(&t, &condItem);
 	NV_LANG00_fetchNextSentenceItem(&t, &doItem);
 	for(;;){
+		if(NV_E_isNullPointer(condItem)){
+			// end here
+			break;
+		}
 		// evaluate cond
-		NV_LANG00_execSentence(env, vDict, condItem);
+		NV_LANG00_execSentence(excFlag, lang, vDict, condItem);
+		if(*excFlag & NV_EXC_FLAG_FAILED){
+			NV_Error("%s", "exec cond failed.");
+			return NV_NullPointer;
+		}
 		if(NV_E_isNullPointer(doItem)){
 			// condItem was else block so break here.
 			break;
@@ -486,14 +504,20 @@ NV_LANG00_Op_if
 		lastItem = NV_List_getLastItem(t);
 		NV_ListItem_unbox(lastItem);
 		t = NV_ListItem_getData(lastItem);
-		if(!NV_E_isType(t, EInteger)) return NV_NullPointer;
+		if(!NV_E_isType(t, EInteger)){
+			NV_Error("%s", "cond is not integer");
+			return NV_NullPointer;
+		}
 		cond = NV_Integer_getImm32(t);
 		NV_E_free(&condItem);
 		// evaluate do
 		if(cond){
 			// cond is true.
-			t = NV_LANG00_execSentence(env, vDict, doItem);
-			if(NV_E_isNullPointer(t)) return NV_NullPointer;
+			NV_LANG00_execSentence(excFlag, lang, vDict, doItem);
+			if(*excFlag & NV_EXC_FLAG_FAILED){
+				NV_Error("%s", "exec do failed.");
+				return NV_NullPointer;
+			}
 			// remove rest of sentence blocks.
 			t = NV_ListItem_getNext(doItem);
 			while(NV_ListItem_isDataType(t, EList)){
@@ -520,7 +544,7 @@ NV_LANG00_Op_if
 
 NV_Pointer
 NV_LANG00_Op_for
-(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	// for {init block}{conditional block}{update block}{statement}
 	int cond;
@@ -534,17 +558,22 @@ NV_LANG00_Op_for
 	NV_LANG00_fetchNextSentenceItem(&t, &updateItem);
 	NV_LANG00_fetchNextSentenceItem(&t, &doItem);
 	if(NV_E_isNullPointer(initItem) || NV_E_isNullPointer(condItem) || 
-		NV_E_isNullPointer(updateItem) || NV_E_isNullPointer(doItem))
+		NV_E_isNullPointer(updateItem) || NV_E_isNullPointer(doItem)){
+		NV_Error("%s", "Operand mismatched.");
 		return NV_NullPointer;
+	}
 	//
 	condRoot = NV_ListItem_getData(condItem);
 	updateRoot = NV_ListItem_getData(updateItem);
 	doRoot = NV_ListItem_getData(doItem);
 	// do init block
-	// initTerm is removed here.
-	t = NV_LANG00_execSentence(env, vDict, initItem);
-	if(NV_E_isNullPointer(t)) return NV_NullPointer;
-	NV_E_free(&t);
+	// initItem is removed here.
+	NV_LANG00_execSentence(excFlag, lang, vDict, initItem);
+	if(*excFlag & NV_EXC_FLAG_FAILED){
+		NV_Error("%s", "Exec init failed.");
+		return NV_NullPointer;
+	}
+	NV_E_free(&initItem);
 	// 
 	for(;;){
 		// copy blocks
@@ -552,17 +581,33 @@ NV_LANG00_Op_for
 		tmpUpdateRoot = NV_E_clone(updateRoot);
 		tmpDoRoot = NV_E_clone(doRoot);
 		// check cond
-		if(NV_evaluateSentence(env, vDict, tmpCondRoot)) return NV_NullPointer;
+		NV_evaluateSentence(excFlag, lang, vDict, tmpCondRoot);
+		if(*excFlag & NV_EXC_FLAG_FAILED){
+			NV_Error("%s", "Exec cond failed.");
+			return NV_NullPointer;
+		}
+		//
 		lastItem = NV_List_getLastItem(tmpCondRoot);
 		NV_ListItem_unbox(lastItem);
 		t = NV_ListItem_getData(lastItem);
-		if(!NV_E_isType(t, EInteger)) return NV_NullPointer;
+		if(!NV_E_isType(t, EInteger)){
+			NV_Error("%s", "cond type invalid");
+			return NV_NullPointer;
+		}
 		cond = NV_Integer_getImm32(t);
 		if(!cond) break;
 		// do
-		if(NV_evaluateSentence(env, vDict, tmpDoRoot)) return NV_NullPointer;
+		NV_evaluateSentence(excFlag, lang, vDict, tmpDoRoot);
+		if(*excFlag & NV_EXC_FLAG_FAILED){
+			NV_Error("%s", "Exec do failed");
+			return NV_NullPointer;
+		}
 		// update
-		if(NV_evaluateSentence(env, vDict, tmpUpdateRoot)) return NV_NullPointer;
+		NV_evaluateSentence(excFlag, lang, vDict, tmpUpdateRoot);
+		if(*excFlag & NV_EXC_FLAG_FAILED){
+			NV_Error("%s", "Exec update failed");
+			return NV_NullPointer;
+		}
 		// free tmp
 		NV_E_free(&tmpCondRoot);
 		NV_E_free(&tmpUpdateRoot);
@@ -583,7 +628,7 @@ NV_LANG00_Op_for
 	return t;
 }
 
-NV_Pointer NV_LANG00_Op_print(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+NV_Pointer NV_LANG00_Op_print(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);
 	NV_Pointer nextData;
@@ -593,23 +638,23 @@ NV_Pointer NV_LANG00_Op_print(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisI
 	NV_printElement(nextData);
 	printf("\n");
 	NV_E_free(&thisItem);
-	NV_Env_setAutoPrintValueEnabled(env, 0);
+	CLR_FLAG(*excFlag, NV_EXC_FLAG_AUTO_PRINT);
 	return nextItem;
 }
 
-NV_Pointer NV_LANG00_Op_showOpList(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+NV_Pointer NV_LANG00_Op_showOpList(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer prevItem = NV_ListItem_getPrev(thisItem);
 	//
 	NV_List_printAll(
-		NV_Lang_getOpList(NV_Env_getLang(env)), "\nOpList: [\n", ",\n", "\n]\n");
+		NV_Lang_getOpList(lang), "\nOpList: [\n", ",\n", "\n]\n");
 	//
 	NV_E_free(&thisItem);
-	NV_Env_setAutoPrintValueEnabled(env, 0);
+	CLR_FLAG(*excFlag, NV_EXC_FLAG_AUTO_PRINT);
 	return prevItem;
 }
 
-NV_Pointer NV_LANG00_Op_showVarList(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+NV_Pointer NV_LANG00_Op_showVarList(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer prevItem = NV_ListItem_getPrev(thisItem);
 	//
@@ -617,11 +662,11 @@ NV_Pointer NV_LANG00_Op_showVarList(NV_Pointer env, NV_Pointer vDict, NV_Pointer
 		vDict, "\nVarList: [\n", ",\n", "\n]\n");
 	//
 	NV_E_free(&thisItem);
-	NV_Env_setAutoPrintValueEnabled(env, 0);
+	CLR_FLAG(*excFlag, NV_EXC_FLAG_AUTO_PRINT);
 	return prevItem;
 }
 
-NV_Pointer NV_LANG00_Op_mem(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+NV_Pointer NV_LANG00_Op_mem(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer memUsingSize = NV_E_malloc_type(EInteger);
 	NV_Integer_setImm32(memUsingSize, NV_getMallocCount());
@@ -629,10 +674,10 @@ NV_Pointer NV_LANG00_Op_mem(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisIte
 	return thisItem;
 }
 
-NV_Pointer NV_LANG00_Op_exit(NV_Pointer env, NV_Pointer vDict, NV_Pointer thisItem)
+NV_Pointer NV_LANG00_Op_exit(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
-	NV_Env_setEndFlag(env, 1);
-	NV_Env_setAutoPrintValueEnabled(env, 0);
+	SET_FLAG(*excFlag, NV_EXC_FLAG_EXIT);
+	CLR_FLAG(*excFlag, NV_EXC_FLAG_AUTO_PRINT);
 	return thisItem;
 }
 
@@ -706,7 +751,8 @@ NV_Pointer NV_allocLang00()
 	NV_Lang_addOp(lang, 12,	"vlist", NV_LANG00_Op_showVarList);
 	NV_Lang_addOp(lang, 10,	"exit", NV_LANG00_Op_exit);
 
-	if(NV_isDebugMode) NV_List_printAll(NV_Lang_getOpList(lang), "\n[\n", ",\n", "\n]\n");
+	if(NV_isDebugMode)
+		NV_List_printAll(NV_Lang_getOpList(lang), "\n[\n", ",\n", "\n]\n");
 	
 	return lang;
 }
