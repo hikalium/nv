@@ -1,5 +1,9 @@
 #include "nv.h"
 
+#define NV_EXC_FLAG_LANG00_EXIT_BY_CONTINUE		0x010000
+#define NV_EXC_FLAG_LANG00_EXIT_BY_BREAK		0x020000
+
+
 //
 // Support functions
 //
@@ -602,6 +606,12 @@ NV_LANG00_Op_for
 			NV_Error("%s", "Exec do failed");
 			return NV_NullPointer;
 		}
+		if(*excFlag & NV_EXC_FLAG_LANG00_EXIT_BY_BREAK){
+			// break
+			CLR_FLAG(*excFlag, NV_EXC_FLAG_LANG00_EXIT_BY_BREAK);
+			CLR_FLAG(*excFlag, NV_EXC_FLAG_EXIT);
+			break;
+		}
 		// update
 		NV_evaluateSentence(excFlag, lang, vDict, tmpUpdateRoot);
 		if(*excFlag & NV_EXC_FLAG_FAILED){
@@ -681,6 +691,22 @@ NV_Pointer NV_LANG00_Op_exit(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict
 	return thisItem;
 }
 
+NV_Pointer NV_LANG00_Op_continue(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
+{
+	SET_FLAG(*excFlag, NV_EXC_FLAG_EXIT);
+	CLR_FLAG(*excFlag, NV_EXC_FLAG_AUTO_PRINT);
+	SET_FLAG(*excFlag, NV_EXC_FLAG_LANG00_EXIT_BY_CONTINUE);
+	return thisItem;
+}
+
+NV_Pointer NV_LANG00_Op_break(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
+{
+	SET_FLAG(*excFlag, NV_EXC_FLAG_EXIT);
+	CLR_FLAG(*excFlag, NV_EXC_FLAG_AUTO_PRINT);
+	SET_FLAG(*excFlag, NV_EXC_FLAG_LANG00_EXIT_BY_BREAK);
+	return thisItem;
+}
+
 NV_Pointer NV_allocLang00()
 {
 	NV_Pointer lang = NV_E_malloc_type(ELang);
@@ -750,6 +776,8 @@ NV_Pointer NV_allocLang00()
 	NV_Lang_addOp(lang, 12,	"showop", NV_LANG00_Op_showOpList);
 	NV_Lang_addOp(lang, 12,	"vlist", NV_LANG00_Op_showVarList);
 	NV_Lang_addOp(lang, 10,	"exit", NV_LANG00_Op_exit);
+	NV_Lang_addOp(lang, 10,	"continue", NV_LANG00_Op_continue);
+	NV_Lang_addOp(lang, 10,	"break", NV_LANG00_Op_break);
 
 	if(NV_isDebugMode)
 		NV_List_printAll(NV_Lang_getOpList(lang), "\n[\n", ",\n", "\n]\n");
