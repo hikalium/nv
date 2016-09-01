@@ -230,14 +230,20 @@ NV_LANG00_Op_unaryOperator_prefix
 		else if(strcmp("!", op->name) == 0){
 			val = ! val;
 		} else{
-			if(NV_isDebugMode) NV_Error("Not implemented %s\n", op->name);
+#ifdef DEBUG
+			if(NV_debugFlag & NV_DBG_FLAG_VERBOSE)
+				NV_Error("Not implemented %s\n", op->name);
+#endif
 			return NV_NullPointer;
 		}
 		NV_Integer_setImm32(data, val);
 		NV_E_free(&thisItem);
 		return next;
 	}
-	if(NV_isDebugMode) NV_Error("%s", "Bad operand.");
+#ifdef DEBUG
+	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE)
+		NV_Error("%s", "Bad operand.");
+#endif
 	return NV_NullPointer;
 }
 
@@ -314,7 +320,7 @@ NV_LANG00_Op_binaryOperator
 	NV_E_free(&vR);
 	NV_ListItem_setData(thisItem, NV_E_autorelease(resultData));
 	//
-	return resultData;
+	return thisItem;
 }
 NV_Pointer NV_LANG00_Op_nothingButDisappear(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
@@ -717,10 +723,10 @@ NV_Pointer NV_allocLang00()
 
 	// based on http://www.tutorialspoint.com/cprogramming/c_operators.htm
 	NV_Lang_addOp(lang, 100050,	"{", NV_LANG00_Op_sentenceBlock);
-	NV_Lang_addOp(lang, 100040,	";", NV_LANG00_Op_sentenceSeparator);
 	NV_Lang_addOp(lang, 100030,	"(", NV_LANG00_Op_precedentBlock);
 	NV_Lang_addOp(lang, 100020,	"builtin_exec", NV_LANG00_Op_builtin_exec);
 	NV_Lang_addOp(lang, 100020,	"builtin_exec_scalar", NV_LANG00_Op_builtin_exec_scalar);
+	NV_Lang_addOp(lang, 100010,	";", NV_LANG00_Op_sentenceSeparator);
 	//
 	NV_Lang_addOp(lang, 100000,	"mem", NV_LANG00_Op_mem);
 	//
@@ -772,16 +778,19 @@ NV_Pointer NV_allocLang00()
 	//
 	NV_Lang_addOp(lang, 101,	"=", NV_LANG00_Op_assign);
 	//
-	NV_Lang_addOp(lang, 10,	"print", NV_LANG00_Op_print);
-	NV_Lang_addOp(lang, 12,	"showop", NV_LANG00_Op_showOpList);
-	NV_Lang_addOp(lang, 12,	"vlist", NV_LANG00_Op_showVarList);
-	NV_Lang_addOp(lang, 10,	"exit", NV_LANG00_Op_exit);
-	NV_Lang_addOp(lang, 10,	"continue", NV_LANG00_Op_continue);
-	NV_Lang_addOp(lang, 10,	"break", NV_LANG00_Op_break);
-
-	if(NV_isDebugMode)
-		NV_List_printAll(NV_Lang_getOpList(lang), "\n[\n", ",\n", "\n]\n");
+	NV_Lang_addOp(lang, 50,	"print", NV_LANG00_Op_print);
+	NV_Lang_addOp(lang, 52,	"showop", NV_LANG00_Op_showOpList);
+	NV_Lang_addOp(lang, 52,	"vlist", NV_LANG00_Op_showVarList);
+	NV_Lang_addOp(lang, 50,	"exit", NV_LANG00_Op_exit);
+	NV_Lang_addOp(lang, 50,	"continue", NV_LANG00_Op_continue);
+	NV_Lang_addOp(lang, 50,	"break", NV_LANG00_Op_break);
+	//
 	
+	//
+#ifdef DEBUG
+	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE)
+		NV_List_printAll(NV_Lang_getOpList(lang), "\n[\n", ",\n", "\n]\n");
+#endif
 	return lang;
 }
 

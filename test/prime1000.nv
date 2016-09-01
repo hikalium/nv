@@ -1,1 +1,1 @@
-print 2;for{#i=3}{i<=1000}{i+=2}{for{#k=3}{k<i}{k+=2}{if{i%k==0}{break}}if{k>=i}{print i}}
+#c=1;for{#i=3}{i<=1000}{i+=2}{for{#k=3}{k<i}{k+=2}{if{i%k==0}{break}}if{k>=i}{c++}};print c

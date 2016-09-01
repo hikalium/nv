@@ -5,8 +5,11 @@
 #include <stdarg.h>
 #include <time.h>
 
-#define DEBUG	0
-#define NV_DEBUG_MEMORY
+#define DEBUG
+
+#define NV_DBG_FLAG_VERBOSE	0x0001
+#define NV_DBG_FLAG_MEM		0x0002
+#define NV_DBG_FLAG_TIME	0x0004
 
 #define MAX_INPUT_LEN	256
 #define MAX_TOKEN_LEN	256
@@ -22,7 +25,7 @@
 
 #define NV_Error(fmt, ...)	printf(ESC_ANSI_RED("\nError: %s: %d: ")fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
 #define NV_DbgInfo(fmt, ...) \
-	if(NV_isDebugMode) printf("\nInfo : %s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
+	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE) printf("\nInfo : %s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
 
 #ifdef NV_DEBUG_MEMORY
 	#define NV_E_retain(p)		NV_E_retainWithInfo(p, __FUNCTION__)
@@ -73,10 +76,6 @@ enum NV_ELEMENT_TYPE {
 	EString,	// primitive
 };
 
-// a: assignable: EVariable
-// o: operator: EOperator
-// 
-
 enum NV_ELEMENT_FLAG {
 	EFUnknownToken = 1,
 };
@@ -113,7 +112,7 @@ struct NV_OPERATOR {
 	// thisTerm.type == EList
 };
 
-extern int NV_isDebugMode;
+extern int32_t NV_debugFlag;
 
 // @nv.c
 //
@@ -122,7 +121,7 @@ void NV_tokenize(NV_Pointer langDef, NV_Pointer termRoot, const char *input);
 int NV_convertLiteral(NV_Pointer root, NV_Pointer lang);
 //
 void NV_evaluateSentence(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer root);
-NV_Pointer NV_tryExecOp(int32_t *excFlag, NV_Pointer lang, int currentOpPrec, NV_Pointer t, NV_Pointer vDict, NV_Pointer root);
+NV_Pointer NV_tryExecOp(int32_t *excFlag, NV_Pointer lang, NV_Pointer t, NV_Pointer vDict, NV_Pointer root);
 
 // @nv_dict.c
 NV_Pointer NV_Dict_allocRoot();
