@@ -422,7 +422,13 @@ NV_LANG00_Op_builtin_get_item
 			NV_Error("%s", "Can't use this type of index.");
 			return NV_NullPointer;
 		}
-	//} else if(NV_E_isType(prevData, EDict)){
+	} else if(NV_E_isType(prevData, EDict)){
+		target = NV_Dict_getItemByKey(prevData, nextData);
+		if(NV_E_isNullPointer(target)){
+			// if key not found, add entry
+			NV_Dict_add(prevData, nextData, NV_E_autorelease(NV_Integer_alloc(0)));
+			target = NV_Dict_getItemByKey(prevData, nextData);
+		}
 	} else{
 		NV_Error("%s", "data is not enumerable.");
 		return NV_NullPointer;
@@ -706,12 +712,40 @@ NV_Pointer NV_LANG00_Op_continue(int32_t *excFlag, NV_Pointer lang, NV_Pointer v
 	return thisItem;
 }
 
-NV_Pointer NV_LANG00_Op_break(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
+NV_Pointer
+NV_LANG00_Op_break
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	SET_FLAG(*excFlag, NV_EXC_FLAG_EXIT);
 	CLR_FLAG(*excFlag, NV_EXC_FLAG_AUTO_PRINT);
 	SET_FLAG(*excFlag, NV_EXC_FLAG_LANG00_EXIT_BY_BREAK);
 	return thisItem;
+}
+
+NV_Pointer
+NV_LANG00_Op_genKeyValue
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
+{
+	NV_Pointer dictItem, prevItem, nextItem, dict;
+	prevItem = NV_ListItem_getPrev(thisItem);
+	dictItem = NV_ListItem_getPrev(prevItem);
+	nextItem = NV_ListItem_getNext(thisItem);
+	if(NV_E_isNullPointer(prevItem) || NV_E_isNullPointer(nextItem) ||
+		NV_E_isType(prevItem, EList) /* Root item */){
+		NV_Error("%s", "Operand mismatched.");
+		return NV_NullPointer;
+	}
+	if(!NV_ListItem_isDataType(dictItem, EDict)){
+		dict = NV_E_autorelease(NV_E_malloc_type(EDict));
+		NV_List_insertDataAfterItem(dictItem, dict);
+		dictItem = NV_ListItem_getNext(dictItem);
+	}
+	dict = NV_ListItem_getData(dictItem);
+	NV_Dict_add(dict, NV_ListItem_getData(prevItem), NV_ListItem_getData(nextItem));
+	NV_E_free(&prevItem);
+	NV_E_free(&thisItem);
+	NV_E_free(&nextItem);
+	return dictItem;
 }
 
 NV_Pointer NV_allocLang00()
@@ -738,6 +772,7 @@ NV_Pointer NV_allocLang00()
 	NV_Lang_addOp(lang, 10000,	";;", NV_LANG00_Op_nothingButDisappear);
 	NV_Lang_addOp(lang, 10000,	"else", NV_LANG00_Op_nothingButDisappear);
 	NV_Lang_addOp(lang, 10000,	"elseif", NV_LANG00_Op_nothingButDisappear);
+	NV_Lang_addOp(lang, 10000,	",", NV_LANG00_Op_nothingButDisappear);
 	//
 	NV_Lang_addOp(lang, 2010,	"[", NV_LANG00_Op_structureAccessor);	
 	NV_Lang_addOp(lang, 2008,	"builtin_get_item", NV_LANG00_Op_builtin_get_item);	
@@ -785,6 +820,8 @@ NV_Pointer NV_allocLang00()
 	NV_Lang_addOp(lang, 201,	"/=", NV_LANG00_Op_compoundAssign);
 	NV_Lang_addOp(lang, 201,	"%=", NV_LANG00_Op_compoundAssign);
 	NV_Lang_addOp(lang, 201,	"=", NV_LANG00_Op_assign);
+	//
+	NV_Lang_addOp(lang, 100,    ":", NV_LANG00_Op_genKeyValue);
 	//
 	NV_Lang_addOp(lang, 50,	"print", NV_LANG00_Op_print);
 	NV_Lang_addOp(lang, 52,	"showop", NV_LANG00_Op_showOpList);

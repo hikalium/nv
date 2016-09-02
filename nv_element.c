@@ -169,6 +169,13 @@ int NV_E_isSamePointer(NV_Pointer p, NV_Pointer q)
 
 int NV_E_isEqual(NV_Pointer p, NV_Pointer q)
 {
+	if(!NV_E_isValidPointer(p) || !NV_E_isValidPointer(q)){
+		return 0;
+	}
+	if(p.data->type != q.data->type){
+		return 0;
+	}
+
 	if(NV_E_isType(p, EInteger) && NV_E_isType(q, EInteger)){
 		// Integer vs Integer
 		return (NV_Integer_getImm32(p) == NV_Integer_getImm32(q));
