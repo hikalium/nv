@@ -1,13 +1,16 @@
 #include "nv.h"
 
+int NV_run(NV_Pointer lang, NV_Pointer vRoot, NV_Pointer cRoot);
+
 int32_t NV_debugFlag;
 int main(int argc, char *argv[])
 {
 	int i;
 	char line[MAX_INPUT_LEN];
-	NV_Pointer root, lastItem, lastData, lang, vDict;
+	NV_Pointer root, lang, vDict;
 	clock_t t0 = clock();
-	int32_t excFlag = 0;
+	const char *fname = NULL;
+	FILE *fp;
 	// get interpreter args
 	for(i = 1; i < argc; i++){
 #ifdef DEBUG
@@ -15,56 +18,76 @@ int main(int argc, char *argv[])
 		if(strcmp(argv[i], "-m") == 0) NV_debugFlag |= NV_DBG_FLAG_MEM;
 		if(strcmp(argv[i], "-t") == 0) NV_debugFlag |= NV_DBG_FLAG_TIME;
 #endif
+		if(argv[i][0] != '-') fname = argv[i];
 	}
-	// init env
 #ifdef DEBUG
 	if(NV_debugFlag & NV_DBG_FLAG_MEM) NV_E_printMemStat();
 #endif
 	lang = NV_allocDefaultLang();
 	vDict = NV_E_malloc_type(EDict);
-	// main loop
-	while(NV_gets(line, sizeof(line)) != NULL){
-		root = NV_E_malloc_type(EList);
-		// init flag
-		excFlag = 0;
-		SET_FLAG(excFlag, NV_EXC_FLAG_AUTO_PRINT);
-		//
-		NV_tokenize(lang, root, line);
-		if(NV_convertLiteral(root, lang)){
-			NV_Error("%s\n", "Literal conversion failed.");
-		} else{
-			NV_evaluateSentence(&excFlag, lang, vDict, root);
-			if(excFlag & NV_EXC_FLAG_FAILED){
-				// Ended with error
-				NV_Error("%s\n", "Bad Syntax");
-			} else{
-				// Ended with Success
-				if(excFlag & NV_EXC_FLAG_AUTO_PRINT){
-					lastItem = NV_List_getLastItem(root);
-					NV_ListItem_convertUnknownToKnown(vDict, lastItem);
-					NV_ListItem_unbox(lastItem);
-					lastData = NV_ListItem_getData(lastItem);
-					if(!NV_E_isNullPointer(lastData)){
-						printf("= ");
-						NV_printElement(lastData);
-						printf("\n");
-					}
-				}
-			}
+	if(!fname){
+		// interaction mode main loop
+		while(NV_gets(line, sizeof(line)) != NULL){
+			root = NV_E_malloc_type(EList);
+			// init flag
+			//
+			NV_tokenize(lang, root, line);
+			if(NV_run(lang, vDict, root)) break;
+			NV_E_free(&root);
 		}
-		// cleanup current code
-		NV_E_free(&root);
-		if(excFlag & NV_EXC_FLAG_EXIT) break;
+	} else{
+		fp = fopen(fname, "rb");
+		if(!fp){
+			NV_Error("File not found. [%s]", fname);
+		} else{
+			root = NV_E_malloc_type(EList);
+			while(fgets(line, sizeof(line), fp)){
+				NV_tokenize(lang, root, line);
+			}
+			NV_run(lang, vDict, root);
+			NV_E_free(&root);
+		}
 	}
+	// cleanup
 	NV_E_free(&lang);
 	NV_E_free(&vDict);
-	// cleanup
 #ifdef DEBUG
 	if(NV_debugFlag & NV_DBG_FLAG_MEM)
 		NV_E_printMemStat();
 	if(NV_debugFlag & NV_DBG_FLAG_TIME)
 		printf("Processed in %f seconds.\n", (double)(clock() - t0) / CLOCKS_PER_SEC);
 #endif
+	return 0;
+}
+
+int NV_run(NV_Pointer lang, NV_Pointer vRoot, NV_Pointer cRoot)
+{
+	int32_t excFlag = NV_EXC_FLAG_AUTO_PRINT;
+	NV_Pointer lastItem, lastData;
+	//
+	if(NV_convertLiteral(cRoot, lang)){
+		NV_Error("%s\n", "Literal conversion failed.");
+	} else{
+		NV_evaluateSentence(&excFlag, lang, vRoot, cRoot);
+		if(excFlag & NV_EXC_FLAG_FAILED){
+			// Ended with error
+			NV_Error("%s\n", "Bad Syntax");
+		} else{
+			// Ended with Success
+			if(excFlag & NV_EXC_FLAG_AUTO_PRINT){
+				lastItem = NV_List_getLastItem(cRoot);
+				NV_ListItem_convertUnknownToKnown(vRoot, lastItem);
+				NV_ListItem_unbox(lastItem);
+				lastData = NV_ListItem_getData(lastItem);
+				if(!NV_E_isNullPointer(lastData)){
+					printf("= ");
+					NV_printElement(lastData);
+					printf("\n");
+				}
+			}
+		}
+	}
+	if(excFlag & NV_EXC_FLAG_EXIT) return 1;
 	return 0;
 }
 

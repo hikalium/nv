@@ -1,0 +1,28 @@
+for{#i = 1}{i < 100}{i += 1}{
+	/*
+		this is a block + comment.
+		// of course, line comment can be in block comment.
+		/*
+			it can be nested!
+		*/
+	*/
+	if{i % 15 == 0 /* this is a equivalent of (i % 3 == 0 && i % 5 == 0) */ }{
+		// Fizz Buzz!
+		print "Fizz Buzz"
+	}
+	{i % 3 == 0}{
+		print "Fizz"
+	}
+	{i % 5 == 0}{
+		print "Buzz"
+	}
+	{
+		// default
+		print i
+	}
+	/*
+	{
+		// extra codeblock !!!
+	}
+	*/
+}
