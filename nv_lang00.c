@@ -64,6 +64,19 @@ NV_LANG00_execSentence
 	return;
 }
 
+void
+NV_LANG00_execSentenceInNewScope
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer sentenceRootItem)
+{
+	NV_Pointer subScope;
+	//
+	subScope = NV_Variable_allocNewScope(vDict);
+	NV_LANG00_execSentence(excFlag, lang, subScope, sentenceRootItem);
+	NV_List_convertAllToKnownUnboxed(
+		subScope, NV_ListItem_getData(sentenceRootItem));
+	NV_E_free(&subScope);
+}
+
 
 void
 NV_LANG00_execSentenceScalar
@@ -382,12 +395,14 @@ NV_LANG00_Op_precedentBlock
 	NV_ListItem_unbox(itemBeforeBlock);
 	f = NV_ListItem_getData(itemBeforeBlock);
 	if(NV_E_isType(f, EList)){
+		// call func
 		tmp = NV_ListItem_getNext(itemBeforeBlock);
 		NV_E_free(&tmp);
 		NV_ListItem_setData(itemBeforeBlock, NV_E_autorelease(NV_E_clone(f)));
-		NV_LANG00_execSentence(excFlag, lang, vDict, itemBeforeBlock);
+		NV_LANG00_execSentenceInNewScope(excFlag, lang, vDict, itemBeforeBlock);
 		return itemBeforeBlock;
 	}
+	// precedent block
 	NV_List_insertDataAfterItem(
 		itemBeforeBlock,
 		NV_Lang_getOperatorFromString(lang, "builtin_exec_scalar")

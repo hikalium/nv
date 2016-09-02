@@ -44,6 +44,8 @@
 #define NV_EXC_FLAG_AUTO_PRINT		0x0002
 #define NV_EXC_FLAG_FAILED			0x0004
 
+#define NV_VARIABLE_PARENT_SCOPE_NAME	"parentScope"
+
 typedef enum	NV_ELEMENT_TYPE NV_ElementType;
 typedef enum	NV_ELEMENT_FLAG NV_ElementFlag;
 typedef enum	NV_BIN_OP_TYPE	NV_BinOpType;
@@ -228,6 +230,7 @@ void NV_List_insertDataBeforeItem(NV_Pointer itemInList, NV_Pointer newData);
 void NV_List_insertDataAfterIndex(NV_Pointer root, int index, NV_Pointer newData);
 NV_Pointer NV_List_getDataByIndex(NV_Pointer rootItem, int i);
 int NV_List_indexOfData(NV_Pointer root, NV_Pointer data);
+void NV_List_convertAllToKnownUnboxed(NV_Pointer scope, NV_Pointer root);
 void NV_List_printAll(NV_Pointer root, const char *prefix, const char *delimiter, const char *suffix);
 
 // @nv_operator.c
@@ -250,6 +253,9 @@ void NV_String_print(NV_Pointer t);
 
 // @nv_var.c
 NV_Pointer NV_Variable_clone(NV_Pointer p);
+NV_Pointer NV_Variable_allocNewScope(NV_Pointer baseScope);
+int NV_Variable_isExisted(NV_Pointer vDict, NV_Pointer key);
+NV_Pointer NV_Variable_allocExistedByStr(NV_Pointer vDict, NV_Pointer key);
 NV_Pointer NV_Variable_allocByStr(NV_Pointer vDict, NV_Pointer str);
 NV_Pointer NV_Variable_allocByCStr(NV_Pointer vDict, const char *s);
 void NV_Variable_setTarget(NV_Pointer var, NV_Pointer target);

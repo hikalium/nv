@@ -5,6 +5,8 @@ struct NV_VARIABLE {
 };
 
 NV_Pointer NV_Variable_getTarget(NV_Pointer var);
+void NV_Variable_setParentScope(NV_Pointer vDict, NV_Pointer pDict);
+NV_Pointer NV_Variable_getParentScope(NV_Pointer vDict);
 
 //
 // NV_Element
@@ -39,16 +41,57 @@ NV_Pointer NV_Variable_clone(NV_Pointer p)
 	return c;
 }
 
+NV_Pointer NV_Variable_allocNewScope(NV_Pointer baseScope)
+{
+	NV_Pointer scope = NV_E_malloc_type(EDict);
+	NV_Variable_setParentScope(scope, baseScope);
+	return scope;
+}
+
+int NV_Variable_isExisted(NV_Pointer vDict, NV_Pointer key)
+{
+	NV_Pointer target;
+	//
+	target = NV_Dict_getItemByKey(vDict, key);
+	if(!NV_E_isNullPointer(target)){
+		// found target
+		return 1;
+	}
+	// search parent
+	target = NV_Variable_getParentScope(vDict);
+	if(NV_E_isType(target, EDict)){
+		return NV_Variable_isExisted(target, key);
+	}
+	return 0;
+}
+
+NV_Pointer NV_Variable_allocExistedByStr(NV_Pointer vDict, NV_Pointer key)
+{
+	NV_Pointer var, target;
+	//
+	target = NV_Dict_getItemByKey(vDict, key);
+	if(!NV_E_isNullPointer(target)){
+		// found target
+		var = NV_E_malloc_type(EVariable);
+		NV_Variable_setTarget(var, target);
+		return var;
+	}
+	// search parent
+	target = NV_Variable_getParentScope(vDict);
+	if(NV_E_isType(target, EDict)){
+		return NV_Variable_allocExistedByStr(target, key);
+	}
+	return NV_NullPointer;
+}
+
 NV_Pointer NV_Variable_allocByStr(NV_Pointer vDict, NV_Pointer key)
 {
-	NV_Pointer var = NV_E_malloc_type(EVariable);
-	//
-	NV_Pointer target = NV_Dict_getItemByKey(vDict, key);
-	if(NV_E_isNullPointer(target)){
+	NV_Pointer var;
+	var = NV_Variable_allocExistedByStr(vDict, key);
+	if(NV_E_isNullPointer(var)){
 		NV_Dict_add(vDict, key, NV_E_autorelease(NV_E_malloc_type(EString)));
-		target = NV_Dict_getItemByKey(vDict, key);
+		var = NV_Variable_allocExistedByStr(vDict, key);
 	}
-	NV_Variable_setTarget(var, target);
 	return var;
 }
 
@@ -141,5 +184,20 @@ NV_Pointer NV_Variable_getTarget(NV_Pointer var)
 	v = NV_E_getRawPointer(var, EVariable);
 	if(v) return v->target;
 	return NV_NullPointer;
+}
+
+void NV_Variable_setParentScope(NV_Pointer vDict, NV_Pointer pDict)
+{
+	NV_Pointer pKey = NV_String_alloc(NV_VARIABLE_PARENT_SCOPE_NAME);
+	NV_Dict_add(vDict, pKey, pDict);
+	NV_E_free(&pKey);
+}
+
+NV_Pointer NV_Variable_getParentScope(NV_Pointer vDict)
+{
+	NV_Pointer pKey = NV_String_alloc(NV_VARIABLE_PARENT_SCOPE_NAME);
+	NV_Pointer parent = NV_Dict_getValByKey(vDict, pKey);
+	NV_E_free(&pKey);
+	return parent;
 }
 

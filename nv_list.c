@@ -122,12 +122,12 @@ void NV_ListItem_convertUnknownToKnown(NV_Pointer vDict, NV_Pointer item)
 	data = NV_ListItem_getData(item);
 	if(!NV_E_isType(data, EString) ||
 		!NV_E_checkFlag(data, EFUnknownToken) ||
-		NV_E_isNullPointer(NV_Dict_getItemByKey(vDict, data))){
+		!NV_Variable_isExisted(vDict, data)){
 NV_DbgInfo("%s", "not converted");
 		NV_E_clearFlag(data, EFUnknownToken);
 	} else{
 NV_DbgInfo("%s", "converted to variable");
-		new = NV_Variable_allocByStr(vDict, data);
+		new = NV_Variable_allocExistedByStr(vDict, data);
 		NV_ListItem_setData(item, NV_E_autorelease(new));
 	}
 }
@@ -182,8 +182,6 @@ NV_Pointer NV_List_clone(NV_Pointer p)
 	}
 	return c;
 }
-
-
 
 NV_Pointer NV_List_getItemByIndex(NV_Pointer rootItem, int i)
 {
@@ -353,6 +351,16 @@ int NV_List_indexOfData(NV_Pointer root, NV_Pointer data)
 	}
 	if(NV_E_isNullPointer(li)) return -1;
 	return i;
+}
+
+void NV_List_convertAllToKnownUnboxed(NV_Pointer scope, NV_Pointer root)
+{
+	NV_Pointer li;
+	li = NV_ListItem_getNext(root);
+	for(; !NV_E_isNullPointer(li); li = NV_ListItem_getNext(li)){
+		NV_ListItem_convertUnknownToKnown(scope, li);
+		NV_ListItem_unbox(li);
+	}
 }
 
 //
