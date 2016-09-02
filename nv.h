@@ -64,16 +64,16 @@ typedef struct	NV_VARIABLE		NV_Variable;
 typedef NV_Pointer(*NV_OpFunc)(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisTerm);
 
 enum NV_ELEMENT_TYPE {
-	ENone,
-	EList,		// complex
-	EListItem,	// complex (can't be a pool)
-	EDict,		// complex
-	EDictItem,	// complex (can't be a pool)
-	EVariable,	// complex
-	ELang,
-	EOperator,	// primitive
-	EInteger,	// primitive
-	EString,	// primitive
+	ENone,		//								X
+	EList,		// complex						L
+	EListItem,	// complex (can't be a pool)	
+	EDict,		// complex						D
+	EDictItem,	// complex (can't be a pool)	
+	EVariable,	// complex						V
+	ELang,										
+	EOperator,	// primitive					O
+	EInteger,	// primitive					N
+	EString,	// primitive					S
 };
 
 enum NV_ELEMENT_FLAG {
@@ -91,6 +91,7 @@ enum NV_BIN_OP_TYPE {
 	BOpLogicAND,
 	BOpBitOR,
 	BOpBitAND,
+	BOpBitXOR,
 	BOpCmpEq,
 	BOpCmpNEq,
 	BOpCmpLt,

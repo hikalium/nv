@@ -4,5 +4,3 @@ print sum;
 print i * i - i;
 if {sum == (i*i-i)/2}{print OK}{print BAD}
 
-for {#i = 1}{i <= 1000}{i++}{if {i == 100}{break;}}
-print i;

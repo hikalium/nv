@@ -98,6 +98,7 @@ NV_LANG00_getBinOpTypeFromString
 	else if(strcmp("&&",	s) == 0)	return BOpLogicAND;
 	else if(strcmp("|",		s) == 0)	return BOpBitOR;
 	else if(strcmp("&", 	s) == 0)	return BOpBitAND;
+	else if(strcmp("^", 	s) == 0)	return BOpBitXOR;
 	else if(strcmp("==", 	s) == 0)	return BOpCmpEq;
 	else if(strcmp("!=", 	s) == 0)	return BOpCmpNEq;
 	else if(strcmp("<", 	s) == 0)	return BOpCmpLt;
@@ -161,8 +162,7 @@ NV_LANG00_Op_assign
 
 NV_Pointer
 NV_LANG00_Op_compoundAssign
-(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
-{
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem){
 	NV_Operator *op;
 	NV_Pointer var, prevItem;
 	char s[2];
@@ -400,6 +400,7 @@ NV_Pointer
 NV_LANG00_Op_builtin_get_item
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	// vpa*']'
 	// []
 	NV_Pointer prev, next, prevData, nextData, target, var;
 	int index;
@@ -745,38 +746,45 @@ NV_Pointer NV_allocLang00()
 	NV_Lang_addOp(lang, 1000,  "for", NV_LANG00_Op_for);
 	//
 	NV_Lang_addOp(lang, 800,	"#", NV_LANG00_Op_declareVariable);
-	//
+	// Postfix
 	NV_Lang_addOp(lang, 702,	"++", NV_LANG00_Op_unaryOperator_varSuffix);
 	NV_Lang_addOp(lang, 702,	"--", NV_LANG00_Op_unaryOperator_varSuffix);
-	//
+	// Unary
 	NV_Lang_addOp(lang, 701,	"+", NV_LANG00_Op_unaryOperator_prefix);
 	NV_Lang_addOp(lang, 701,	"-", NV_LANG00_Op_unaryOperator_prefix);
 	NV_Lang_addOp(lang, 701,	"!", NV_LANG00_Op_unaryOperator_prefix);
-	//
+	// Multiplicative
 	NV_Lang_addOp(lang, 600,	"*", NV_LANG00_Op_binaryOperator);
 	NV_Lang_addOp(lang, 600,	"/", NV_LANG00_Op_binaryOperator);
 	NV_Lang_addOp(lang, 600,	"%", NV_LANG00_Op_binaryOperator);
-	//
+	// Additive
 	NV_Lang_addOp(lang, 500,	"+", NV_LANG00_Op_binaryOperator);
 	NV_Lang_addOp(lang, 500,	"-", NV_LANG00_Op_binaryOperator);
-	//
+	// Relational
 	NV_Lang_addOp(lang, 400,	"<", NV_LANG00_Op_binaryOperator);	
 	NV_Lang_addOp(lang, 400,	">", NV_LANG00_Op_binaryOperator);
 	NV_Lang_addOp(lang, 400,	"<=", NV_LANG00_Op_binaryOperator);
 	NV_Lang_addOp(lang, 400,	">=", NV_LANG00_Op_binaryOperator);
+	// Equality
 	NV_Lang_addOp(lang, 400,	"==", NV_LANG00_Op_binaryOperator);
 	NV_Lang_addOp(lang, 400,	"!=", NV_LANG00_Op_binaryOperator);
-	//
+	// Bitwise AND
+	NV_Lang_addOp(lang, 340,	"&", NV_LANG00_Op_binaryOperator);
+	// Bitwise XOR
+	NV_Lang_addOp(lang, 330,	"^", NV_LANG00_Op_binaryOperator);
+	// Bitwise OR
+	NV_Lang_addOp(lang, 320,	"|", NV_LANG00_Op_binaryOperator);
+	// Logical AND
+	NV_Lang_addOp(lang, 310,	"&&", NV_LANG00_Op_binaryOperator);
+	// Logical OR
 	NV_Lang_addOp(lang, 300,	"||", NV_LANG00_Op_binaryOperator);
-	NV_Lang_addOp(lang, 300,	"&&", NV_LANG00_Op_binaryOperator);
-	//
-	NV_Lang_addOp(lang, 200,	"+=", NV_LANG00_Op_compoundAssign);
-	NV_Lang_addOp(lang, 200,	"-=", NV_LANG00_Op_compoundAssign);
-	NV_Lang_addOp(lang, 200,	"*=", NV_LANG00_Op_compoundAssign);
-	NV_Lang_addOp(lang, 200,	"/=", NV_LANG00_Op_compoundAssign);
-	NV_Lang_addOp(lang, 200,	"%=", NV_LANG00_Op_compoundAssign);
-	//
-	NV_Lang_addOp(lang, 101,	"=", NV_LANG00_Op_assign);
+	// Assignment
+	NV_Lang_addOp(lang, 201,	"+=", NV_LANG00_Op_compoundAssign);
+	NV_Lang_addOp(lang, 201,	"-=", NV_LANG00_Op_compoundAssign);
+	NV_Lang_addOp(lang, 201,	"*=", NV_LANG00_Op_compoundAssign);
+	NV_Lang_addOp(lang, 201,	"/=", NV_LANG00_Op_compoundAssign);
+	NV_Lang_addOp(lang, 201,	"%=", NV_LANG00_Op_compoundAssign);
+	NV_Lang_addOp(lang, 201,	"=", NV_LANG00_Op_assign);
 	//
 	NV_Lang_addOp(lang, 50,	"print", NV_LANG00_Op_print);
 	NV_Lang_addOp(lang, 52,	"showop", NV_LANG00_Op_showOpList);

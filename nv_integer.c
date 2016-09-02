@@ -81,6 +81,7 @@ NV_Pointer NV_Integer_evalBinOp(NV_Pointer vL, NV_Pointer vR, NV_BinOpType type)
 	else if(type == BOpLogicAND)	rv = ivL && ivR;
 	else if(type == BOpBitOR)		rv = ivL | ivR;
 	else if(type == BOpBitAND)		rv = ivL & ivR;
+	else if(type == BOpBitXOR)		rv = ivL ^ ivR;
 	else if(type == BOpCmpEq)		rv = ivL == ivR;
 	else if(type == BOpCmpNEq)		rv = ivL != ivR;
 	else if(type == BOpCmpLt)		rv = ivL < ivR;

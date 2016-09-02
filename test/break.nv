@@ -1,2 +1,2 @@
-#a = 0; for{}{1}{}{break a = 1}; print a
 #a = 0; for{}{1}{}{break; a = 1}; print a
+if{a == 0}{print OK}{print BAD}
