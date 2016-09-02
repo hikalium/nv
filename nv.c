@@ -114,6 +114,7 @@ int NV_convertLiteral(NV_Pointer root, NV_Pointer lang)
 	const char *termStr;
 	char *p;
 	int32_t tmpNum;
+	int commentBlockCount = 0;
 	//
 	if(!NV_E_isType(root, EList)) return 1;
 	item = root;
@@ -131,6 +132,17 @@ int NV_convertLiteral(NV_Pointer root, NV_Pointer lang)
 			NV_Error("%s", "termStr is NULL!!!");
 			return 1;
 		}
+		if(commentBlockCount){
+			if(strcmp(termStr, "/*") == 0){
+				commentBlockCount++;
+			} else if(strcmp(termStr, "*/") == 0){
+				commentBlockCount--;
+			}
+			t = NV_ListItem_getPrev(item);
+			NV_E_free(&item);
+			item = t;
+			continue;
+		}
 		if(!NV_E_isNullPointer(strLiteral)){
 			if(termStr[0] == '"'){
 				// end of string literal
@@ -141,6 +153,7 @@ int NV_convertLiteral(NV_Pointer root, NV_Pointer lang)
 			} else{
 				// body of string literal
 				NV_String_concatenateCStr(strLiteral, termStr);
+				//
 				t = NV_ListItem_getPrev(item);
 				NV_E_free(&item);
 				item = t;
@@ -152,7 +165,16 @@ int NV_convertLiteral(NV_Pointer root, NV_Pointer lang)
 			t = NV_ListItem_getPrev(item);
 			NV_E_free(&item);
 			item = t;
+			//
 			strLiteral = NV_E_malloc_type(EString);
+			continue;
+		}
+		if(strcmp(termStr, "/*") == 0){
+			// begin of comment block
+			t = NV_ListItem_getPrev(item);
+			NV_E_free(&item);
+			item = t;
+			commentBlockCount = 1;
 			continue;
 		}
 		// check operator	
@@ -169,6 +191,10 @@ int NV_convertLiteral(NV_Pointer root, NV_Pointer lang)
 			NV_ListItem_setData(item, NV_E_autorelease(t));
 			continue;
 		}
+	}
+	if(commentBlockCount){
+		NV_Error("%s", "Missing end of comment block.");
+		return 1;
 	}
 	if(!NV_E_isNullPointer(strLiteral)){
 		NV_Error("%s", "Missing end of string literal.");
