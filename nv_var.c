@@ -84,6 +84,20 @@ NV_Pointer NV_Variable_allocExistedByStr(NV_Pointer vDict, NV_Pointer key)
 	return NV_NullPointer;
 }
 
+NV_Pointer NV_Variable_allocExistedByStrInCurrentScope(NV_Pointer vDict, NV_Pointer key)
+{
+	NV_Pointer var, target;
+	//
+	target = NV_Dict_getItemByKey(vDict, key);
+	if(!NV_E_isNullPointer(target)){
+		// found target
+		var = NV_E_malloc_type(EVariable);
+		NV_Variable_setTarget(var, target);
+		return var;
+	}
+	return NV_NullPointer;
+}
+
 NV_Pointer NV_Variable_allocByStr(NV_Pointer vDict, NV_Pointer key)
 {
 	NV_Pointer var;
@@ -94,6 +108,18 @@ NV_Pointer NV_Variable_allocByStr(NV_Pointer vDict, NV_Pointer key)
 	}
 	return var;
 }
+
+NV_Pointer NV_Variable_allocByStrInCurrentScope(NV_Pointer vDict, NV_Pointer key)
+{
+	NV_Pointer var;
+	var = NV_Variable_allocExistedByStrInCurrentScope(vDict, key);
+	if(NV_E_isNullPointer(var)){
+		NV_Dict_add(vDict, key, NV_E_autorelease(NV_E_malloc_type(EString)));
+		var = NV_Variable_allocExistedByStr(vDict, key);
+	}
+	return var;
+}
+
 
 NV_Pointer NV_Variable_allocByCStr(NV_Pointer vDict, const char *s)
 {

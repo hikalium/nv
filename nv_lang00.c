@@ -208,7 +208,7 @@ NV_LANG00_Op_declareVariable
 	NV_Pointer var;
 	if(!NV_ListItem_isDataType(next, EString)) return NV_NullPointer;
 	//
-	var = NV_Variable_allocByStr(vDict, NV_ListItem_getData(next));
+	var = NV_Variable_allocByStrInCurrentScope(vDict, NV_ListItem_getData(next));
 	//
 	NV_E_free(&next);
 	NV_ListItem_setData(thisItem, NV_E_autorelease(var));

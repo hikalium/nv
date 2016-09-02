@@ -1,0 +1,4 @@
+#a = 3;
+#i = a;
+{#i = 1234}();
+if{i == a}{print OK}{print BAD}
