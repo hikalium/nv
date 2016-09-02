@@ -115,6 +115,7 @@ int NV_convertLiteral(NV_Pointer root, NV_Pointer lang)
 	char *p;
 	int32_t tmpNum;
 	int commentBlockCount = 0;
+	int isInLineComment = 0;
 	//
 	if(!NV_E_isType(root, EList)) return 1;
 	item = root;
@@ -143,13 +144,22 @@ int NV_convertLiteral(NV_Pointer root, NV_Pointer lang)
 			item = t;
 			continue;
 		}
+		if(isInLineComment){
+			if(termStr[0] == '\n'){
+				// end of line comment.
+				isInLineComment = 0;
+			}
+			t = NV_ListItem_getPrev(item);
+			NV_E_free(&item);
+			item = t;
+			continue;
+		}
 		if(!NV_E_isNullPointer(strLiteral)){
 			if(termStr[0] == '"'){
 				// end of string literal
 				NV_ListItem_setData(item, strLiteral);
 				NV_E_free(&strLiteral);
 				strLiteral = NV_NullPointer;
-				continue;
 			} else{
 				// body of string literal
 				NV_String_concatenateCStr(strLiteral, termStr);
@@ -157,8 +167,8 @@ int NV_convertLiteral(NV_Pointer root, NV_Pointer lang)
 				t = NV_ListItem_getPrev(item);
 				NV_E_free(&item);
 				item = t;
-				continue;
 			}
+			continue;
 		}
 		if(termStr[0] == '"'){
 			// begin of str literal
@@ -167,6 +177,14 @@ int NV_convertLiteral(NV_Pointer root, NV_Pointer lang)
 			item = t;
 			//
 			strLiteral = NV_E_malloc_type(EString);
+			continue;
+		}
+		if(strcmp(termStr, "//") == 0){
+			// begin of comment block
+			t = NV_ListItem_getPrev(item);
+			NV_E_free(&item);
+			item = t;
+			isInLineComment = 1;
 			continue;
 		}
 		if(strcmp(termStr, "/*") == 0){
