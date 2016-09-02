@@ -1,4 +1,4 @@
-for{#i = 1}{i < 100}{i += 1}{
+for{`int #i = 1}{i < 100}{i += 1}{
 	/*
 		this is a block + comment.
 		// of course, line comment can be in block comment.

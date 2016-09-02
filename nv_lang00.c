@@ -754,7 +754,7 @@ NV_Pointer NV_allocLang00()
 	//
 	NV_Lang_setCharList(lang, 0, " \t\r\n");
 	NV_Lang_setCharList(lang, 1, "#!%&-=^~|+*:.<>/");
-	NV_Lang_setCharList(lang, 2, "(){}[],;\"");
+	NV_Lang_setCharList(lang, 2, "(){}[],;\"`");
 
 	// based on http://www.tutorialspoint.com/cprogramming/c_operators.htm
 	NV_Lang_addOp(lang, 100050,	"{", NV_LANG00_Op_sentenceBlock);

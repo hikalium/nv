@@ -139,6 +139,7 @@ int NV_convertLiteral(NV_Pointer root, NV_Pointer lang)
 	int32_t tmpNum;
 	int commentBlockCount = 0;
 	int isInLineComment = 0;
+	int isInSingleTermComment = 0;
 	//
 	if(!NV_E_isType(root, EList)) return 1;
 	item = root;
@@ -177,8 +178,16 @@ int NV_convertLiteral(NV_Pointer root, NV_Pointer lang)
 			item = t;
 			continue;
 		}
+		if(isInSingleTermComment){
+			isInSingleTermComment = 0;
+			//
+			t = NV_ListItem_getPrev(item);
+			NV_E_free(&item);
+			item = t;
+			continue;
+		}
 		if(!NV_E_isNullPointer(strLiteral)){
-			if(termStr[0] == '"'){
+			if(strcmp(termStr, "\"") == 0){
 				// end of string literal
 				NV_ListItem_setData(item, strLiteral);
 				NV_E_free(&strLiteral);
@@ -193,13 +202,21 @@ int NV_convertLiteral(NV_Pointer root, NV_Pointer lang)
 			}
 			continue;
 		}
-		if(termStr[0] == '"'){
+		if(strcmp(termStr, "\"") == 0){
 			// begin of str literal
 			t = NV_ListItem_getPrev(item);
 			NV_E_free(&item);
 			item = t;
 			//
 			strLiteral = NV_E_malloc_type(EString);
+			continue;
+		}
+		if(strcmp(termStr, "`") == 0){
+			// prefix of single term comment
+			t = NV_ListItem_getPrev(item);
+			NV_E_free(&item);
+			item = t;
+			isInSingleTermComment = 1;
 			continue;
 		}
 		if(strcmp(termStr, "//") == 0){
