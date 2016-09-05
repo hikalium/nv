@@ -111,11 +111,12 @@ struct NV_OPERATOR {
 	char name[MAX_TOKEN_LEN];
 	int precedence;		// do not change after adding.
 	NV_OpFunc nativeFunc;
-	// retv: Last of Result Term
-	// thisTerm.type == EList
+	//
+	NV_Pointer body;
 };
 
 extern int32_t NV_debugFlag;
+extern NV_Pointer sysRoot;
 
 // @nv.c
 //

@@ -573,6 +573,18 @@ NV_Pointer NV_LANG00_Op_showVarList(int32_t *excFlag, NV_Pointer lang, NV_Pointe
 	return prevItem;
 }
 
+NV_Pointer NV_LANG00_Op_ls(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
+{
+	NV_Pointer prevItem = NV_ListItem_getPrev(thisItem);
+	//
+	NV_Dict_printAll(
+		sysRoot, "\n/ : [\n", ",\n", "\n]\n");
+	//
+	NV_E_free(&thisItem);
+	CLR_FLAG(*excFlag, NV_EXC_FLAG_AUTO_PRINT);
+	return prevItem;
+}
+
 NV_Pointer NV_LANG00_Op_mem(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
 	NV_Pointer memUsingSize = NV_E_malloc_type(EInteger);
@@ -742,6 +754,7 @@ NV_Pointer NV_allocLang00()
 	NV_Lang_addOp(lang, 50,	"exit", NV_LANG00_Op_exit);
 	NV_Lang_addOp(lang, 50,	"continue", NV_LANG00_Op_continue);
 	NV_Lang_addOp(lang, 50,	"break", NV_LANG00_Op_break);
+	NV_Lang_addOp(lang, 50,	"ls", NV_LANG00_Op_ls);
 	//
 	
 	//

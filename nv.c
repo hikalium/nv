@@ -1,16 +1,19 @@
 #include "nv.h"
 
+int NV_runInteractive(NV_Pointer lang, NV_Pointer vRoot);
+int NV_runFile(NV_Pointer lang, NV_Pointer vRoot, const char *fname);
 int NV_run(NV_Pointer lang, NV_Pointer vRoot, NV_Pointer cRoot);
 
 int32_t NV_debugFlag;
+
+NV_Pointer sysRoot;
+
 int main(int argc, char *argv[])
 {
 	int i;
-	char line[MAX_INPUT_LEN];
-	NV_Pointer root, lang, vDict;
+	NV_Pointer lang, vDict;
 	clock_t t0 = clock();
 	const char *fname = NULL;
-	FILE *fp;
 	// get interpreter args
 	for(i = 1; i < argc; i++){
 #ifdef DEBUG
@@ -23,40 +26,60 @@ int main(int argc, char *argv[])
 #ifdef DEBUG
 	if(NV_debugFlag & NV_DBG_FLAG_MEM) NV_E_printMemStat();
 #endif
+	sysRoot = NV_E_malloc_type(EDict);
 	lang = NV_allocDefaultLang();
 	vDict = NV_E_malloc_type(EDict);
 	if(!fname){
-		// interaction mode main loop
-		while(NV_gets(line, sizeof(line)) != NULL){
-			root = NV_E_malloc_type(EList);
-			// init flag
-			//
-			NV_tokenize(lang, root, line);
-			if(NV_run(lang, vDict, root)) break;
-			NV_E_free(&root);
-		}
+		NV_runInteractive(lang, vDict);
 	} else{
-		fp = fopen(fname, "rb");
-		if(!fp){
-			NV_Error("File not found. [%s]", fname);
-		} else{
-			root = NV_E_malloc_type(EList);
-			while(fgets(line, sizeof(line), fp)){
-				NV_tokenize(lang, root, line);
-			}
-			NV_run(lang, vDict, root);
-			NV_E_free(&root);
-		}
+		NV_runFile(lang, vDict, fname);
 	}
 	// cleanup
-	NV_E_free(&lang);
 	NV_E_free(&vDict);
+	NV_E_free(&lang);
+	NV_E_free(&sysRoot);
 #ifdef DEBUG
 	if(NV_debugFlag & NV_DBG_FLAG_MEM)
 		NV_E_printMemStat();
 	if(NV_debugFlag & NV_DBG_FLAG_TIME)
 		printf("Processed in %f seconds.\n", (double)(clock() - t0) / CLOCKS_PER_SEC);
 #endif
+	return 0;
+}
+
+int NV_runInteractive(NV_Pointer lang, NV_Pointer vRoot)
+{
+	char line[MAX_INPUT_LEN];
+	NV_Pointer cRoot;
+	//
+	while(NV_gets(line, sizeof(line)) != NULL){
+		cRoot = NV_E_malloc_type(EList);
+		NV_tokenize(lang, cRoot, line);
+		if(NV_run(lang, vRoot, cRoot)) break;;
+		NV_E_free(&cRoot);
+	}
+	NV_E_free(&cRoot);
+	return 0;
+}
+
+int NV_runFile(NV_Pointer lang, NV_Pointer vRoot, const char *fname)
+{
+	char line[MAX_INPUT_LEN];
+	FILE *fp;
+	NV_Pointer cRoot;
+	//
+	fp = fopen(fname, "rb");
+	if(!fp){
+		NV_Error("File not found. [%s]", fname);
+		return 1;
+	} else{
+		cRoot = NV_E_malloc_type(EList);
+		while(fgets(line, sizeof(line), fp)){
+			NV_tokenize(lang, cRoot, line);
+		}
+		NV_run(lang, vRoot, cRoot);
+		NV_E_free(&cRoot);
+	}
 	return 0;
 }
 

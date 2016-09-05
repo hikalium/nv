@@ -9,7 +9,7 @@ NV_Operator *NV_E_allocOperator()
 	t->name[0] = 0;
 	t->precedence = 0;
 	t->nativeFunc = NULL;
-
+	t->body = NV_NullPointer;
 	return t;
 }
 
@@ -25,8 +25,9 @@ void NV_Operator_print(NV_Pointer t)
 	NV_Operator *op;
 	op = NV_E_getRawPointer(t, EOperator);
 	if(op){
-		//printf("Op %s : %d @ %p", op->name, op->precedence, op->nativeFunc);
-		printf("(%s/%d)", op->name, op->precedence);
+		if(op->nativeFunc){
+			printf("(%s/%d: native@%p)", op->name, op->precedence, op->nativeFunc);
+		}
 	}
 }
 
@@ -59,7 +60,10 @@ NV_Operator_exec
 {
 	NV_Operator *opData;
 	opData = NV_E_getRawPointer(op, EOperator);
-	if(opData) return opData->nativeFunc(excFlag, lang, vDict, thisTerm);
-	NV_Error("%s", "opData is null");
+	if(opData){
+		return opData->nativeFunc(excFlag, lang, vDict, thisTerm);
+	} else{
+		NV_Error("%s", "dynamic op!");
+	}
 	return NV_NullPointer;
 }
