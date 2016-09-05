@@ -108,8 +108,8 @@ struct NV_POINTER {
 };
 
 struct NV_OPERATOR {
-	char name[MAX_TOKEN_LEN];
-	int precedence;		// do not change after adding.
+	NV_Pointer name;
+	NV_Pointer precedence;		// do not change after adding.
 	NV_OpFunc nativeFunc;
 	//
 	NV_Pointer body;
@@ -261,6 +261,8 @@ void NV_String_concatenateCStr(NV_Pointer str1, const char *s2);
 int NV_String_isEqualToCStr(NV_Pointer str, const char *cstr);
 int NV_String_isEqual(NV_Pointer str0, NV_Pointer str1);
 const char *NV_String_getCStr(NV_Pointer s);
+char NV_String_charAt(NV_Pointer strItem, int index);
+char *NV_String_strchr(NV_Pointer strItem, char c);
 void NV_String_print(NV_Pointer t);
 
 // @nv_var.c

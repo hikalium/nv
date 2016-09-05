@@ -8,9 +8,9 @@
 
 struct NV_LANG {
 	// interpreter params
-	const char *charList[NV_LANG_CHAR_LIST_LEN]; // should be terminated with 0
-	NV_Pointer opList;
-	NV_Pointer pool;
+	NV_Pointer charList;	// EList
+	NV_Pointer opList;		// EList
+	NV_Pointer pool;		// EList
 };
 
 //
@@ -20,13 +20,15 @@ struct NV_LANG {
 NV_Lang *NV_E_allocLang()
 {
 	NV_Lang *t;
+	int i;
 
 	t = NV_malloc(sizeof(NV_Lang));
 	//
-	t->charList[0] = NULL;
-	t->charList[1] = NULL;
-	t->charList[2] = NULL;
-	//
+	t->charList = NV_List_allocRoot();
+	for(i = 0; i < NV_LANG_CHAR_LIST_LEN; i++){
+		NV_List_push(t->charList, NV_E_autorelease(NV_E_malloc_type(EString)));
+	}
+
 	t->opList = NV_List_allocRoot();
 	t->pool = NV_List_allocRoot();
 
@@ -56,7 +58,7 @@ int NV_Lang_getCharType(NV_Pointer lang, char c)
 	int i;
 	if(!t || c == '\0') return -1;
 	for(i = 0; i < NV_LANG_CHAR_LIST_LEN; i++){
-		if(strchr(t->charList[i], c)) break;
+		if(NV_String_strchr(NV_List_getDataByIndex(t->charList, i), c)) break;
 	}
 	return i;
 }
@@ -65,8 +67,10 @@ void NV_Lang_setCharList(NV_Pointer lang, int type, const char *s)
 {
 	// s should be pointing a static string.
 	NV_Lang *t = NV_E_getRawPointer(lang, ELang);
+	NV_Pointer item;	// EListItem
 	if(!t || type < 0 || NV_LANG_CHAR_LIST_LEN <= type) return;
-	t->charList[type] = s;
+	item = NV_List_getItemByIndex(t->charList, type);
+	NV_ListItem_setData(item, NV_E_autorelease(NV_String_alloc(s)));
 }
 
 NV_Pointer NV_Lang_getOpList(NV_Pointer lang)
@@ -83,7 +87,7 @@ NV_Pointer NV_Lang_getOperatorFromString(NV_Pointer lang, const char *termStr)
 	p = NV_ListItem_getNext(NV_Lang_getOpList(lang));
 	for(; !NV_E_isNullPointer(p); p = NV_ListItem_getNext(p)){
 		op = NV_ListItem_getRawData(p, EOperator);
-		if(op && strcmp(op->name, termStr) == 0){
+		if(op && NV_String_isEqualToCStr(op->name, termStr)){
 			return NV_ListItem_getData(p);
 		}
 	}
@@ -106,7 +110,7 @@ NV_Pointer NV_Lang_getFallbackOperator(NV_Pointer lang, NV_Pointer baseOp)
 	}
 	for(; !NV_E_isNullPointer(p); p = NV_ListItem_getNext(p)){
 		op = NV_ListItem_getRawData(p, EOperator);
-		if(strcmp(op->name, rawBaseOp->name) == 0){
+		if(NV_E_isEqual(op->name, rawBaseOp->name)){
 			return NV_ListItem_getData(p);
 		}
 	}

@@ -134,7 +134,7 @@ NV_LANG00_Op_compoundAssign
 	//
 	op = NV_ListItem_getRawData(thisItem, EOperator);
 	if(!op) return NV_NullPointer;
-	s[0] = op->name[0];
+	s[0] = NV_String_charAt(op->name, 0);
 	s[1] = 0;
 	//
 	NV_ListItem_setData(thisItem, NV_Lang_getOperatorFromString(lang, "="));
@@ -166,6 +166,7 @@ NV_LANG00_Op_unaryOperator_prefix
 	NV_Pointer next = NV_ListItem_getNext(thisItem);
 	NV_Pointer data;
 	NV_Operator *op = NV_ListItem_getRawData(thisItem, EOperator);
+	const char *opCStr = NV_String_getCStr(op->name);
 	int32_t val;
 	// type check
 	if(NV_E_isNullPointer(next)) return NV_NullPointer;
@@ -177,18 +178,18 @@ NV_LANG00_Op_unaryOperator_prefix
 	// process
 	if(NV_E_isType(data, EInteger)){
 		val = NV_Integer_getImm32(data);
-		if(strcmp("+", op->name) == 0){
+		if(strcmp("+", opCStr) == 0){
 			val = + val;
-		} else if(strcmp("-", op->name) == 0){
+		} else if(strcmp("-", opCStr) == 0){
 			val = - val;
 		}
 		// comparison operators
-		else if(strcmp("!", op->name) == 0){
+		else if(strcmp("!", opCStr) == 0){
 			val = ! val;
 		} else{
 #ifdef DEBUG
 			if(NV_debugFlag & NV_DBG_FLAG_VERBOSE)
-				NV_Error("Not implemented %s\n", op->name);
+				NV_Error("Not implemented %s\n", opCStr);
 #endif
 			return NV_NullPointer;
 		}
@@ -222,7 +223,7 @@ NV_LANG00_Op_unaryOperator_varSuffix
 	//
 	op = NV_ListItem_getRawData(thisItem, EOperator);
 	if(!op) return NV_NullPointer;
-	s[0] = op->name[0];
+	s[0] = NV_String_charAt(op->name, 0);
 	s[1] = 0;
 	//
 	cint = NV_E_malloc_type(EInteger);
@@ -265,7 +266,7 @@ NV_LANG00_Op_binaryOperator
 	vL = NV_E_retain(NV_ListItem_getData(prev)); NV_E_free(&prev);
 	vR = NV_E_retain(NV_ListItem_getData(next)); NV_E_free(&next);
 	//
-	opType = NV_LANG00_getBinOpTypeFromString(op->name);
+	opType = NV_LANG00_getBinOpTypeFromString(NV_String_getCStr(op->name));
 	// process
 	resultData = NV_Integer_evalBinOp(vL, vR, opType);
 	if(NV_E_isNullPointer(resultData)){
@@ -297,7 +298,7 @@ NV_LANG00_Op_sentenceSeparator
 		if(NV_E_isType(t, EList)) break;
 		if(!NV_ListItem_isDataType(t, EOperator)) continue;
 		tOp = NV_ListItem_getRawData(t, EOperator);
-		if(strcmp(tOp->name, ";;") == 0){
+		if(strcmp(NV_String_getCStr(tOp->name), ";;") == 0){
 			t = NV_ListItem_getPrev(t);
 			tmp = NV_ListItem_getNext(t);
 			NV_E_free(&tmp);

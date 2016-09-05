@@ -6,8 +6,8 @@ NV_Operator *NV_E_allocOperator()
 
 	t = NV_malloc(sizeof(NV_Operator));
 	//
-	t->name[0] = 0;
-	t->precedence = 0;
+	t->name = NV_NullPointer;
+	t->precedence = NV_NullPointer;
 	t->nativeFunc = NULL;
 	t->body = NV_NullPointer;
 	return t;
@@ -26,7 +26,10 @@ void NV_Operator_print(NV_Pointer t)
 	op = NV_E_getRawPointer(t, EOperator);
 	if(op){
 		if(op->nativeFunc){
-			printf("(%s/%d: native@%p)", op->name, op->precedence, op->nativeFunc);
+			printf("(");
+			NV_printElement(op->name);
+			printf("/%d: native@%p)", 
+				NV_Integer_getImm32(op->precedence), op->nativeFunc);
 		}
 	}
 }
@@ -39,19 +42,21 @@ NV_Pointer NV_Operator_alloc(int precedence, const char *name, NV_OpFunc nativeF
 	opData = NV_E_malloc_type(EOperator);
 	opRawData = NV_E_getRawPointer(opData, EOperator);
 	//
-	NV_strncpy(opRawData->name, name, sizeof(opRawData->name), strlen(name));
-	opRawData->precedence = precedence;
+	opRawData->name = NV_String_alloc(name);
+	opRawData->precedence = NV_Integer_alloc(precedence);
 	opRawData->nativeFunc = nativeFunc;
 	//
 	return opData;
 }
+
+//NV_Pointer NV_Operator_allocWithBody(int precedence, const cha *name, )
 
 int NV_getOperatorPrecedence(NV_Pointer op)
 {
 	NV_Operator *opData;
 	opData = NV_E_getRawPointer(op, EOperator);
 	if(!opData) return -1;
-	return opData->precedence;
+	return NV_Integer_getImm32(opData->precedence);
 }
 
 NV_Pointer

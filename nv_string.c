@@ -98,6 +98,20 @@ const char *NV_String_getCStr(NV_Pointer s)
 	return v->s; 
 }
 
+char NV_String_charAt(NV_Pointer strItem, int index)
+{
+	NV_String *v = NV_E_getRawPointer(strItem, EString);
+	if(!v || !v->s || index >= strlen(v->s)) return 0;
+	return v->s[index];
+}
+
+char *NV_String_strchr(NV_Pointer strItem, char c)
+{
+	NV_String *v = NV_E_getRawPointer(strItem, EString);
+	if(!v || !v->s) return NULL;
+	return strchr(v->s, c);
+}
+
 void NV_String_print(NV_Pointer strItem)
 {
 	NV_String *v = NV_E_getRawPointer(strItem, EString);
