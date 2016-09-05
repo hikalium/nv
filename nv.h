@@ -112,8 +112,6 @@ struct NV_POINTER {
 struct NV_OPERATOR {
 	NV_Pointer name;
 	NV_Pointer precedence;		// do not change after adding.
-	NV_Pointer nativeFunc;
-	//
 	NV_Pointer body;
 };
 

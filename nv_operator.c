@@ -8,7 +8,6 @@ NV_Operator *NV_E_allocOperator()
 	//
 	t->name = NV_NullPointer;
 	t->precedence = NV_NullPointer;
-	t->nativeFunc = NV_NullPointer;
 	t->body = NV_NullPointer;
 	return t;
 }
@@ -27,7 +26,7 @@ void NV_Operator_print(NV_Pointer t)
 
 	op = NV_E_getRawPointer(t, EOperator);
 	if(op){
-		nf = NV_Blob_getDataAsCPointer(op->nativeFunc);
+		nf = NV_Blob_getDataAsCPointer(op->body);
 		if(nf){
 			printf("(");
 			NV_printElement(op->name);
@@ -47,7 +46,7 @@ NV_Pointer NV_Operator_alloc(int precedence, const char *name, NV_OpFunc nativeF
 	//
 	opRawData->name = NV_String_alloc(name);
 	opRawData->precedence = NV_Integer_alloc(precedence);
-	opRawData->nativeFunc = NV_Blob_allocForCPointer(nativeFunc);
+	opRawData->body = NV_Blob_allocForCPointer(nativeFunc);
 	//
 	return opData;
 }
@@ -70,10 +69,14 @@ NV_Operator_exec
 	NV_OpFunc nf;
 	opData = NV_E_getRawPointer(op, EOperator);
 	if(opData){
-		nf = NV_Blob_getDataAsCPointer(opData->nativeFunc);
-		return nf(excFlag, lang, vDict, thisTerm);
+		nf = NV_Blob_getDataAsCPointer(opData->body);
+		if(nf){
+			return nf(excFlag, lang, vDict, thisTerm);
+		} else{
+			NV_Error("%s", "Dynamic op!");
+		}
 	} else{
-		NV_Error("%s", "dynamic op!");
+		NV_Error("%s", "opData is NULL!");
 	}
 	return NV_NullPointer;
 }
