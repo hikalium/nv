@@ -61,6 +61,7 @@ typedef struct	NV_ENV			NV_Env;
 typedef struct	NV_OPERATOR 	NV_Operator;
 typedef struct	NV_INTEGER		NV_Integer;
 typedef struct	NV_STRING		NV_String;
+typedef struct	NV_BLOB			NV_Blob;
 typedef struct	NV_VARIABLE		NV_Variable;
 
 typedef NV_Pointer(*NV_OpFunc)(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisTerm);
@@ -76,6 +77,7 @@ enum NV_ELEMENT_TYPE {
 	EOperator,	// primitive					O
 	EInteger,	// primitive					N
 	EString,	// primitive					S
+	EBlob,
 };
 
 enum NV_ELEMENT_FLAG {
@@ -110,7 +112,7 @@ struct NV_POINTER {
 struct NV_OPERATOR {
 	NV_Pointer name;
 	NV_Pointer precedence;		// do not change after adding.
-	NV_OpFunc nativeFunc;
+	NV_Pointer nativeFunc;
 	//
 	NV_Pointer body;
 };
@@ -126,6 +128,14 @@ int NV_convertLiteral(NV_Pointer root, NV_Pointer lang);
 //
 void NV_evaluateSentence(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer root);
 NV_Pointer NV_tryExecOp(int32_t *excFlag, NV_Pointer lang, NV_Pointer t, NV_Pointer vDict, NV_Pointer root);
+
+// @nv_blob.c
+NV_Pointer NV_Blob_clone(NV_Pointer p);
+NV_Pointer NV_Blob_allocForCPointer(void *p);
+void NV_Blob_copyRawData(NV_Pointer dst, void *src, int copySize);
+void *NV_Blob_getDataAsCPointer(NV_Pointer p);
+void NV_Blob_setDataSize(NV_Pointer blob, int size);
+void NV_Blob_print(NV_Pointer blob);
 
 // @nv_builtin.c
 int NV_Util_execItem(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer sentenceRootItem);

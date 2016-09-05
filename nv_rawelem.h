@@ -1,3 +1,6 @@
+// @nv_blob.c
+NV_Blob *NV_E_allocBlob();
+void NV_E_free_internal_Blob(NV_Pointer p);
 // @nv_dict.c
 NV_DictItem *NV_E_allocDictItem();
 void NV_E_free_internal_DictItem(NV_Pointer item);

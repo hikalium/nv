@@ -45,6 +45,8 @@ NV_Pointer NV_E_malloc_type(NV_ElementType type)
 			return NV_E_malloc_internal(EInteger, 	NV_E_allocInteger());
 		case EString:
 			return NV_E_malloc_internal(EString, 	NV_E_allocString());
+		case EBlob:
+			return NV_E_malloc_internal(EBlob, 		NV_E_allocBlob());
 		default:
 			NV_Error("Unknown element type %d\n", type);
 			p = NV_NullPointer;
@@ -89,6 +91,8 @@ void NV_E_free_raw(NV_Pointer *p)
 			NV_E_free_internal_Lang(*p);
 		} else if(NV_E_isType(*p, EString)){
 			NV_E_free_internal_String(*p);
+		} else if(NV_E_isType(*p, EBlob)){
+			NV_E_free_internal_Blob(*p);
 		}
 		//
 		if(e->type < NV_ELEMENT_TYPES) NV_E_NumOfElements[e->type]--;
@@ -233,6 +237,8 @@ NV_Pointer NV_E_clone(NV_Pointer p)
 		c = NV_Dict_clone(p);
 	} else if(NV_E_isType(p, EVariable)){
 		c = NV_Variable_clone(p);
+	} else if(NV_E_isType(p, EBlob)){
+		c = NV_Blob_clone(p);
 	}
 	if(NV_E_isNullPointer(c)){
 		NV_Error("%s", "Failed to cloning following element.");
