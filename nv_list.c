@@ -149,6 +149,12 @@ void NV_ListItem_unbox(NV_Pointer item)
 	NV_ListItem_unbox(item);
 }
 
+void NV_ListItem_convertToKnownUnboxed(NV_Pointer vDict, NV_Pointer item)
+{
+	NV_ListItem_convertUnknownToKnown(vDict, item);
+	NV_ListItem_unbox(item);
+}
+
 void NV_ListItem_print(NV_Pointer t)
 {
 	NV_ListItem *li;

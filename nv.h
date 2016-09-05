@@ -126,6 +126,16 @@ int NV_convertLiteral(NV_Pointer root, NV_Pointer lang);
 void NV_evaluateSentence(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer root);
 NV_Pointer NV_tryExecOp(int32_t *excFlag, NV_Pointer lang, NV_Pointer t, NV_Pointer vDict, NV_Pointer root);
 
+// @nv_builtin.c
+int NV_Util_execItem(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer sentenceRootItem);
+int NV_Util_execItemScalar(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer sentenceRootItem);
+//
+NV_Pointer NV_Op_builtin_exec(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
+NV_Pointer NV_Op_builtin_exec_scalar(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
+NV_Pointer NV_Op_builtin_pop(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
+NV_Pointer NV_Op_builtin_get_item(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
+
+
 // @nv_dict.c
 NV_Pointer NV_Dict_allocRoot();
 NV_Pointer NV_Dict_clone(NV_Pointer p);
@@ -211,6 +221,7 @@ void *NV_ListItem_getRawData(NV_Pointer item, NV_ElementType et);
 int NV_ListItem_isDataType(NV_Pointer item, NV_ElementType et);
 void NV_ListItem_convertUnknownToKnown(NV_Pointer vDict, NV_Pointer item);
 void NV_ListItem_unbox(NV_Pointer item);
+void NV_ListItem_convertToKnownUnboxed(NV_Pointer vDict, NV_Pointer item);
 void NV_ListItem_print(NV_Pointer t);
 // ---- List ----
 NV_Pointer NV_List_allocRoot();

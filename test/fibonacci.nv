@@ -1,0 +1,2 @@
+#f = {#c = a + b; print c; if{c > 1000000000}{break;}; f(#a = b; #b = c)};
+f(#a = 0; #b = 1);
