@@ -230,7 +230,7 @@ NV_LANG00_Op_unaryOperator_prefix
 		!NV_E_isType(prev, EList)) return NV_NullPointer;
 	NV_ListItem_convertUnknownToKnown(vDict, next);
 	NV_ListItem_unbox(next);
-	data = NV_ListItem_getData(next);
+	data = NV_E_clone(NV_ListItem_getData(next));
 	// process
 	if(NV_E_isType(data, EInteger)){
 		val = NV_Integer_getImm32(data);
@@ -251,6 +251,7 @@ NV_LANG00_Op_unaryOperator_prefix
 		}
 		NV_Integer_setImm32(data, val);
 		NV_E_free(&thisItem);
+		NV_ListItem_setData(next, NV_E_autorelease(data));
 		return next;
 	}
 #ifdef DEBUG
@@ -762,6 +763,33 @@ NV_LANG00_Op_genKeyValue
 	NV_E_free(&nextItem);
 	return dictItem;
 }
+/*
+NV_Pointer
+NV_LANG00_Op_box
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
+{
+	NV_Pointer dictItem, prevItem, nextItem, dict;
+	prevItem = NV_ListItem_getPrev(thisItem);
+	dictItem = NV_ListItem_getPrev(prevItem);
+	nextItem = NV_ListItem_getNext(thisItem);
+	if(NV_E_isNullPointer(prevItem) || NV_E_isNullPointer(nextItem) ||
+		NV_E_isType(prevItem, EList)){	// Root Item
+		NV_Error("%s", "Operand mismatched.");
+		return NV_NullPointer;
+	}
+	if(!NV_ListItem_isDataType(dictItem, EDict)){
+		dict = NV_E_autorelease(NV_E_malloc_type(EDict));
+		NV_List_insertDataAfterItem(dictItem, dict);
+		dictItem = NV_ListItem_getNext(dictItem);
+	}
+	dict = NV_ListItem_getData(dictItem);
+	NV_Dict_add(dict, NV_ListItem_getData(prevItem), NV_ListItem_getData(nextItem));
+	NV_E_free(&prevItem);
+	NV_E_free(&thisItem);
+	NV_E_free(&nextItem);
+	return dictItem;
+}
+*/
 
 NV_Pointer NV_allocLang00()
 {
@@ -773,7 +801,8 @@ NV_Pointer NV_allocLang00()
 
 	// based on http://www.tutorialspoint.com/cprogramming/c_operators.htm
 	NV_Lang_addOp(lang, 100050,	"{", NV_LANG00_Op_sentenceBlock);
-	NV_Lang_addOp(lang, 100030,	"(", NV_LANG00_Op_precedentBlock);
+	NV_Lang_addOp(lang, 100040,	"(", NV_LANG00_Op_precedentBlock);
+	//NV_Lang_addOp(lang, 100030, "?", NV_LANG00_Op_box);
 	NV_Lang_addOp(lang, 100020,	"builtin_exec", NV_LANG00_Op_builtin_exec);
 	NV_Lang_addOp(lang, 100020,	"builtin_exec_scalar", NV_LANG00_Op_builtin_exec_scalar);
 	NV_Lang_addOp(lang, 100010,	";", NV_LANG00_Op_sentenceSeparator);

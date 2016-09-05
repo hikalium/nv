@@ -19,6 +19,7 @@ debug: $(SRCS) $(HEADERS) Makefile
 
 clean:
 	-rm nv
+	-rm -rf ./nv.dSYM
 
 log:
 	git log --pretty=format:" - %s %n   http://github.com/hikalium/nv/commit/%H" --since=10hour
