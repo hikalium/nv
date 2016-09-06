@@ -12,7 +12,9 @@ int main(int argc, char *argv[])
 {
 	int i;
 	NV_Pointer lang, vDict;
+#ifdef DEBUG
 	clock_t t0 = clock();
+#endif
 	const char *fname = NULL;
 	// get interpreter args
 	for(i = 1; i < argc; i++){
@@ -166,11 +168,14 @@ int NV_convertLiteral(NV_Pointer root, NV_Pointer lang)
 	//
 	if(!NV_E_isType(root, EList)) return 1;
 	item = root;
-	NV_DbgInfo("%s", "start");
+	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
+		NV_DbgInfo("%s", "start");
+	}
 	for(;;){
 #ifdef DEBUG
-		if(NV_debugFlag & NV_DBG_FLAG_VERBOSE)
+		if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
 			NV_List_printAll(root, NULL, NULL, "]\n");
+		}
 #endif
 		item = NV_ListItem_getNext(item);
 		if(NV_E_isNullPointer(item)) break;
@@ -307,8 +312,8 @@ void NV_evaluateSentence(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV
 		last = NV_NullPointer;
 		for(; !NV_E_isNullPointer(t); t = NV_ListItem_getNext(t)){
 #ifdef DEBUG
-			NV_DbgInfo("%s", "check(1)");
 			if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
+				NV_DbgInfo("%s", "check(1)");
 				NV_printElement(t);
 			}
 #endif
@@ -329,22 +334,34 @@ void NV_evaluateSentence(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV
 			break;
 		}
 		if(NV_E_isNullPointer(last)){
-			NV_DbgInfo("%s", "Evaluate end (no more op)");
+
+#ifdef DEBUG
+			if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
+				NV_DbgInfo("%s", "Evaluate end (no more op)");
+			}
+#endif
 			return;
 		}
-		t = NV_tryExecOp(excFlag, lang, last, vDict, root);
-		if(NV_E_isNullPointer(t)){
-			NV_DbgInfo("%s", "Evaluate end (Op Mismatched)");
-			SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
+		NV_tryExecOp(excFlag, lang, last, vDict, root);
+		if(*excFlag & NV_EXC_FLAG_FAILED){
+#ifdef DEBUG
+			if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
+				NV_DbgInfo("%s", "Evaluate end (Op Mismatched)");
+			}
+#endif
 			return;
 		}
 		if(*excFlag & NV_EXC_FLAG_EXIT){
-			NV_DbgInfo("%s", "Evaluate end (End flag)");
+#ifdef DEBUG
+			if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
+				NV_DbgInfo("%s", "Evaluate end (End flag)");
+			}
+#endif
 			return;
 		}
 #ifdef DEBUG
-		NV_DbgInfo("%s", "Continue from:");
 		if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
+			NV_DbgInfo("%s", "Continue from:");
 			NV_printElement(t);
 			NV_printElement(root);
 		}
@@ -353,7 +370,7 @@ void NV_evaluateSentence(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV
 	return;
 }
 
-NV_Pointer NV_tryExecOp(int32_t *excFlag, NV_Pointer lang, NV_Pointer thisTerm, NV_Pointer vDict, NV_Pointer root)
+void NV_tryExecOp(int32_t *excFlag, NV_Pointer lang, NV_Pointer thisTerm, NV_Pointer vDict, NV_Pointer root)
 {
 	NV_Pointer fallbackOp, op;
 	NV_Pointer orgTerm = thisTerm;
@@ -365,29 +382,36 @@ NV_Pointer NV_tryExecOp(int32_t *excFlag, NV_Pointer lang, NV_Pointer thisTerm, 
 		NV_Operator_print(op); putchar('\n');
 	}
 #endif
-	thisTerm = NV_Operator_exec(op, excFlag, lang, vDict, thisTerm);
+	NV_Operator_exec(op, excFlag, lang, vDict, thisTerm);
 #ifdef DEBUG
 	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
 		NV_DbgInfo("%s", "End native op:");
 		NV_Operator_print(op); putchar('\n');
 	}
 #endif
-	if(NV_E_isNullPointer(thisTerm)){
+	if(*excFlag & NV_EXC_FLAG_FAILED){
 		// try fallback
 		fallbackOp = NV_Lang_getFallbackOperator(lang, op);
 		if(NV_E_isNullPointer(fallbackOp)){
 			NV_Error("%s", "Operator mismatched: ");
 			NV_Operator_print(op); putchar('\n');
 			NV_List_printAll(root, NULL, NULL, "]\n");
-			return NV_NullPointer;
+			return;
 		}
+#ifdef DEBUG
+	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
+		NV_DbgInfo("%s", "Fallback found:");
+		NV_Operator_print(fallbackOp); putchar('\n');
+	}
+#endif
+		CLR_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
 		NV_ListItem_setData(orgTerm, fallbackOp);
 		thisTerm = orgTerm;
 	}
 #ifdef DEBUG
-	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE)
+	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
 		NV_List_printAll(root, NULL, NULL, "]\n");
+	}
 #endif
-	return thisTerm;
 }
 

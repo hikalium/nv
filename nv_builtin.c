@@ -49,7 +49,7 @@ NV_Util_execItemScalar
 // builtin operators
 //
 
-NV_Pointer
+void
 NV_Op_builtin_exec
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
@@ -57,14 +57,11 @@ NV_Op_builtin_exec
 	// -> [EList]
 	NV_Pointer nextItem;
 	nextItem = NV_ListItem_getNext(thisItem);
-	NV_Util_execItem(excFlag, lang, vDict, nextItem);
-	if(*excFlag & NV_EXC_FLAG_FAILED)
-		return NV_NullPointer;
 	NV_E_free(&thisItem);
-	return nextItem;
+	NV_Util_execItem(excFlag, lang, vDict, nextItem);
 }
 
-NV_Pointer
+void
 NV_Op_builtin_exec_scalar
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
@@ -72,13 +69,11 @@ NV_Op_builtin_exec_scalar
 	// -> [Item]
 	NV_Pointer nextItem;
 	nextItem = NV_ListItem_getNext(thisItem);
-	if(NV_Util_execItemScalar(excFlag, lang, vDict, nextItem))
-		 return NV_NullPointer;
 	NV_E_free(&thisItem);
-	return nextItem;
+	NV_Util_execItemScalar(excFlag, lang, vDict, nextItem);
 }
 
-NV_Pointer
+void
 NV_Op_builtin_pop
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
@@ -88,14 +83,36 @@ NV_Op_builtin_pop
 	NV_ListItem_convertToKnownUnboxed(vDict, nextItem);
 	if(!NV_ListItem_isDataType(nextItem, EList)){
 		SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
-		return NV_NullPointer;
+		return;
 	}
 	NV_ListItem_setData(nextItem, NV_List_pop(NV_ListItem_getData(nextItem)));
 	NV_E_free(&thisItem);
-	return nextItem;
 }
 
-NV_Pointer
+void
+NV_Op_builtin_del_index
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
+{
+	// del_index [EList] [EInteger]
+	// -> nothing
+	NV_Pointer listItem = NV_ListItem_getNext(thisItem);
+	NV_Pointer indexItem = NV_ListItem_getNext(listItem);
+	NV_Pointer list, index, item;
+	NV_ListItem_convertToKnownUnboxed(vDict, listItem);
+	if(!NV_ListItem_isDataType(listItem, EList)){
+		SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
+		return;
+	}
+	list = NV_ListItem_getData(listItem);
+	index = NV_ListItem_getData(indexItem);
+	item = NV_List_getItemByIndex(list, NV_Integer_getImm32(index));
+	NV_E_free(&item);
+	NV_E_free(&thisItem);
+	NV_E_free(&listItem);
+	NV_E_free(&indexItem);
+}
+
+void
 NV_Op_builtin_get_item
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
@@ -118,8 +135,9 @@ NV_Op_builtin_get_item
 			index = NV_Integer_getImm32(nextData);
 			target = NV_List_getItemByIndex(prevData, index);
 		} else{
+			SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
 			NV_Error("%s", "Can't use this type of index.");
-			return NV_NullPointer;
+			return;
 		}
 	} else if(NV_E_isType(prevData, EDict)){
 		target = NV_Dict_getItemByKey(prevData, nextData);
@@ -129,8 +147,9 @@ NV_Op_builtin_get_item
 			target = NV_Dict_getItemByKey(prevData, nextData);
 		}
 	} else{
+		SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
 		NV_Error("%s", "data is not enumerable.");
-		return NV_NullPointer;
+		return;
 	}
 	var = NV_E_malloc_type(EVariable);
 	NV_Variable_setTarget(var, target);
@@ -138,6 +157,45 @@ NV_Op_builtin_get_item
 	NV_ListItem_setData(thisItem, NV_E_autorelease(var));
 	NV_E_free(&prev);
 	NV_E_free(&next);
-	return thisItem;
+}
+
+void
+NV_Op_builtin_var_dump
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
+{
+	// dump [object]
+	// -> nothing
+	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);
+	NV_Pointer nextData;
+	//
+	NV_ListItem_convertUnknownToKnown(vDict, nextItem);
+	nextData = NV_ListItem_getData(nextItem);
+	if(NV_E_isType(nextData, EVariable)){
+		nextData = NV_Variable_getData(nextData);
+	}
+	NV_printElement(nextData);
+	printf("\n");
+	NV_E_free(&thisItem);
+	NV_E_free(&nextItem);
+	CLR_FLAG(*excFlag, NV_EXC_FLAG_AUTO_PRINT);
+}
+
+void
+NV_Op_builtin_remove_item
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
+{
+	// dump [object]
+	// -> nothing
+	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);
+	NV_Pointer nextData;
+	//
+	NV_ListItem_convertUnknownToKnown(vDict, nextItem);
+	nextData = NV_ListItem_getData(nextItem);
+	if(NV_E_isType(nextData, EVariable)){
+		nextData = NV_Variable_getData(nextData);
+	}
+	NV_List_removeItem(nextData);
+	NV_E_free(&thisItem);
+	NV_E_free(&nextItem);
 }
 

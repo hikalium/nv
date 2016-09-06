@@ -98,7 +98,10 @@ void NV_E_free_raw(NV_Pointer *p)
 		if(e->type < NV_ELEMENT_TYPES) NV_E_NumOfElements[e->type]--;
 		NV_E_NumOfElementsUsing--;
 #ifdef DEBUG
-		NV_DbgInfo(ESC_ANSI_YERROW("free")" elem! (type: %d, @%p)", e->type, e->data);
+		if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
+			NV_DbgInfo(ESC_ANSI_YERROW("free")" elem! (type: %d, @%p)", 
+				e->type, e->data);
+		}
 #endif
 		e->token = rand();
 		e->type = ENone;
@@ -110,7 +113,9 @@ void NV_E_free_raw(NV_Pointer *p)
 		*p = NV_NullPointer;
 	} else{
 #ifdef DEBUG
-		NV_DbgInfo("release elem! (type: %d, @%p)", e->type, e->data);
+		if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
+			NV_DbgInfo("release elem! (type: %d, @%p)", e->type, e->data);
+		}
 #endif
 	}
 }

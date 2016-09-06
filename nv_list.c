@@ -123,10 +123,18 @@ void NV_ListItem_convertUnknownToKnown(NV_Pointer vDict, NV_Pointer item)
 	if(!NV_E_isType(data, EString) ||
 		!NV_E_checkFlag(data, EFUnknownToken) ||
 		!NV_Variable_isExisted(vDict, data)){
-NV_DbgInfo("%s", "not converted");
+#ifdef DEBUG
+		if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
+			NV_DbgInfo("%s", "not converted");
+		}
+#endif
 		NV_E_clearFlag(data, EFUnknownToken);
 	} else{
-NV_DbgInfo("%s", "converted to variable");
+#ifdef DEBUG
+		if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
+			NV_DbgInfo("%s", "converted to variable");
+		}
+#endif
 		new = NV_Variable_allocExistedByStr(vDict, data);
 		NV_ListItem_setData(item, NV_E_autorelease(new));
 	}
@@ -367,6 +375,12 @@ void NV_List_convertAllToKnownUnboxed(NV_Pointer scope, NV_Pointer root)
 		NV_ListItem_convertUnknownToKnown(scope, li);
 		NV_ListItem_unbox(li);
 	}
+}
+
+void NV_List_removeItem(NV_Pointer item)
+{
+	NV_ListItem_clearLink(item);
+	NV_E_free(&item);
 }
 
 //

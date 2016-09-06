@@ -135,7 +135,13 @@ void NV_Lang_registerOperator(NV_Pointer lang, NV_Pointer op)
 	}
 }
 
-void NV_Lang_addOp(NV_Pointer lang, int pr, const char *name, NV_OpFunc f)
+void NV_Lang_addOpN(NV_Pointer lang, int pr, const char *name, NV_OpFunc f)
+{
+	NV_Lang_registerOperator(lang, 
+		NV_E_autorelease(NV_Operator_allocNative(pr, name, f)));
+}
+
+void NV_Lang_addOp(NV_Pointer lang, NV_Pointer pr, NV_Pointer name, NV_Pointer f)
 {
 	NV_Lang_registerOperator(lang, 
 		NV_E_autorelease(NV_Operator_alloc(pr, name, f)));

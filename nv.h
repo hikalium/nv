@@ -25,7 +25,7 @@
 
 #define NV_Error(fmt, ...)	printf(ESC_ANSI_RED("\nError: %s: %d: ")fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
 #define NV_DbgInfo(fmt, ...) \
-	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE) printf("\nInfo : %s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
+	printf("\nInfo : %s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
 
 #ifdef NV_DEBUG_MEMORY
 	#define NV_E_retain(p)		NV_E_retainWithInfo(p, __FUNCTION__)
@@ -64,7 +64,7 @@ typedef struct	NV_STRING		NV_String;
 typedef struct	NV_BLOB			NV_Blob;
 typedef struct	NV_VARIABLE		NV_Variable;
 
-typedef NV_Pointer(*NV_OpFunc)(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisTerm);
+typedef void (*NV_OpFunc)(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisTerm);
 
 enum NV_ELEMENT_TYPE {
 	ENone,		//								X
@@ -125,7 +125,7 @@ void NV_tokenize(NV_Pointer langDef, NV_Pointer termRoot, const char *input);
 int NV_convertLiteral(NV_Pointer root, NV_Pointer lang);
 //
 void NV_evaluateSentence(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer root);
-NV_Pointer NV_tryExecOp(int32_t *excFlag, NV_Pointer lang, NV_Pointer t, NV_Pointer vDict, NV_Pointer root);
+void NV_tryExecOp(int32_t *excFlag, NV_Pointer lang, NV_Pointer t, NV_Pointer vDict, NV_Pointer root);
 
 // @nv_blob.c
 NV_Pointer NV_Blob_clone(NV_Pointer p);
@@ -139,10 +139,13 @@ void NV_Blob_print(NV_Pointer blob);
 int NV_Util_execItem(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer sentenceRootItem);
 int NV_Util_execItemScalar(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer sentenceRootItem);
 //
-NV_Pointer NV_Op_builtin_exec(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
-NV_Pointer NV_Op_builtin_exec_scalar(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
-NV_Pointer NV_Op_builtin_pop(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
-NV_Pointer NV_Op_builtin_get_item(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
+void NV_Op_builtin_exec(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
+void NV_Op_builtin_exec_scalar(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
+void NV_Op_builtin_pop(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
+void NV_Op_builtin_get_item(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
+void NV_Op_builtin_del_index(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
+void NV_Op_builtin_var_dump(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
+void NV_Op_builtin_remove_item(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
 
 
 // @nv_dict.c
@@ -215,7 +218,8 @@ NV_Pointer NV_Lang_getOpList(NV_Pointer lang);
 NV_Pointer NV_Lang_getOperatorFromString(NV_Pointer lang, const char *termStr);
 NV_Pointer NV_Lang_getFallbackOperator(NV_Pointer lang, NV_Pointer baseP);
 void NV_Lang_registerOperator(NV_Pointer lang, NV_Pointer op);
-void NV_Lang_addOp(NV_Pointer lang, int pr, const char *name, NV_OpFunc f);
+void NV_Lang_addOpN(NV_Pointer lang, int pr, const char *name, NV_OpFunc f);
+void NV_Lang_addOp(NV_Pointer lang, NV_Pointer pr, NV_Pointer name, NV_Pointer f);
 
 // @nv_lang00.c
 NV_Pointer NV_allocLang00();
@@ -251,15 +255,16 @@ void NV_List_insertDataAfterIndex(NV_Pointer root, int index, NV_Pointer newData
 NV_Pointer NV_List_getDataByIndex(NV_Pointer rootItem, int i);
 int NV_List_indexOfData(NV_Pointer root, NV_Pointer data);
 void NV_List_convertAllToKnownUnboxed(NV_Pointer scope, NV_Pointer root);
+void NV_List_removeItem(NV_Pointer item);
 void NV_List_printAll(NV_Pointer root, const char *prefix, const char *delimiter, const char *suffix);
 
 // @nv_operator.c
-NV_Pointer NV_Operator_alloc(int precedence, const char *name, NV_OpFunc nativeFunc);
+NV_Pointer NV_Operator_allocNative(int precedence, const char *name, NV_OpFunc nativeFunc);
+NV_Pointer NV_Operator_alloc(NV_Pointer prec, NV_Pointer name, NV_Pointer body);
 NV_Pointer NV_Operator_clone(NV_Pointer p);
 void NV_Operator_print(NV_Pointer t);
 int NV_getOperatorPrecedence(NV_Pointer op);
-NV_Pointer NV_Operator_exec
-	(NV_Pointer op, int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisTerm);
+void NV_Operator_exec(NV_Pointer op, int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisTerm);
 
 // @nv_string.c
 NV_Pointer NV_String_alloc(const char *cs);
