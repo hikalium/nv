@@ -5,12 +5,18 @@
 // (only to disappear)
 // sequences of type 1 chars make tokens.
 // type 2 chars make token separately.
-
+/*
+Directory Lang {
+	
+	"opIdentifier": [
+		[opIdentifier]
+	]
+}
+*/
 struct NV_LANG {
 	// interpreter params
-	NV_Pointer charList;	// EList
-	NV_Pointer opList;		// EList
-	NV_Pointer pool;		// EList
+	NV_Pointer charList;	// EList<EString>
+	NV_Pointer opList;		// EList<EOperator>
 };
 
 //
@@ -30,7 +36,6 @@ NV_Lang *NV_E_allocLang()
 	}
 
 	t->opList = NV_List_allocRoot();
-	t->pool = NV_List_allocRoot();
 
 	return t;
 	
@@ -40,7 +45,6 @@ void NV_E_free_internal_Lang(NV_Pointer p)
 {
 	NV_Lang *t = NV_E_getRawPointer(p, ELang);
 	NV_E_free(&t->opList);
-	NV_E_free(&t->pool);
 }
 
 //

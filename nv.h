@@ -141,6 +141,7 @@ int NV_Util_execItemScalar(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, 
 //
 void NV_Op_builtin_exec(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
 void NV_Op_builtin_exec_scalar(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
+void NV_Op_builtin_push(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
 void NV_Op_builtin_pop(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
 void NV_Op_builtin_get_item(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
 void NV_Op_builtin_del_index(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
@@ -273,6 +274,7 @@ void NV_String_setString(NV_Pointer t, const char *s);
 void NV_String_concatenateCStr(NV_Pointer str1, const char *s2);
 int NV_String_isEqualToCStr(NV_Pointer str, const char *cstr);
 int NV_String_isEqual(NV_Pointer str0, NV_Pointer str1);
+void NV_String_convertFromEscaped(NV_Pointer s);
 const char *NV_String_getCStr(NV_Pointer s);
 char NV_String_charAt(NV_Pointer strItem, int index);
 char *NV_String_strchr(NV_Pointer strItem, char c);

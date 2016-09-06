@@ -74,6 +74,26 @@ NV_Op_builtin_exec_scalar
 }
 
 void
+NV_Op_builtin_push
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
+{
+	// builtin_push [EList] [Data]
+	// -> (nothing)
+	NV_Pointer listItem = NV_ListItem_getNext(thisItem);
+	NV_Pointer dataItem = NV_ListItem_getNext(listItem);
+	NV_ListItem_convertToKnownUnboxed(vDict, listItem);
+	NV_ListItem_convertToKnownUnboxed(vDict, dataItem);
+	if(!NV_ListItem_isDataType(listItem, EList)){
+		SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
+		return;
+	}
+	NV_List_push(NV_ListItem_getData(listItem), NV_ListItem_getData(dataItem));
+	NV_E_free(&thisItem);
+	NV_E_free(&listItem);
+	NV_E_free(&dataItem);
+}
+
+void
 NV_Op_builtin_pop
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
@@ -149,6 +169,7 @@ NV_Op_builtin_get_item
 	} else{
 		SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
 		NV_Error("%s", "data is not enumerable.");
+		NV_printElement(prevData);
 		return;
 	}
 	var = NV_E_malloc_type(EVariable);

@@ -165,6 +165,7 @@ int NV_convertLiteral(NV_Pointer root, NV_Pointer lang)
 	int commentBlockCount = 0;
 	int isInLineComment = 0;
 	int isInSingleTermComment = 0;
+	int isEscSeq = 0;
 	//
 	if(!NV_E_isType(root, EList)) return 1;
 	item = root;
@@ -215,12 +216,18 @@ int NV_convertLiteral(NV_Pointer root, NV_Pointer lang)
 			continue;
 		}
 		if(!NV_E_isNullPointer(strLiteral)){
-			if(strcmp(termStr, "\"") == 0){
+			if(strcmp(termStr, "\"") == 0 && !isEscSeq){
 				// end of string literal
+				NV_String_convertFromEscaped(strLiteral);
 				NV_ListItem_setData(item, strLiteral);
 				NV_E_free(&strLiteral);
 				strLiteral = NV_NullPointer;
 			} else{
+				if(strcmp(termStr, "\\") == 0 && isEscSeq == 0){
+					isEscSeq = 1;
+				} else{
+					isEscSeq = 0;
+				}
 				// body of string literal
 				NV_String_concatenateCStr(strLiteral, termStr);
 				//

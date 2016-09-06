@@ -91,6 +91,43 @@ int NV_String_isEqual(NV_Pointer str0, NV_Pointer str1)
 	return (strcmp(v0->s, v1->s) == 0);
 }
 
+void NV_String_convertFromEscaped(NV_Pointer s)
+{
+	NV_String *v = NV_E_getRawPointer(s, EString);
+	const char *pr;
+	char *pw;
+	if(!v) return;
+	pr = v->s;
+	pw = v->s;
+	while(*pr){
+		if(*pr == '\\'){
+			pr++;
+			if(*pr == '\\'){
+				*pw = '\\';
+			} else if(*pr == '"'){
+				*pw = '"';
+			} else if(*pr == 'b'){
+				*pw = 0x08;
+			} else if(*pr == 't'){
+				*pw = 0x09;
+			} else if(*pr == 'n'){
+				*pw = 0x0a;
+			} else if(*pr == 'r'){
+				*pw = 0x0d;
+			} else{
+				NV_Error("Invalid esc seq in [%s]", v->s);
+				break;
+			}
+		} else{
+			*pw = *pr;
+		}
+		pw++;
+		pr++;
+	}
+	*pw = 0;
+	return; 
+}
+
 const char *NV_String_getCStr(NV_Pointer s)
 {
 	NV_String *v = NV_E_getRawPointer(s, EString);

@@ -1,0 +1,5 @@
+#b = ("charList":{});
+builtin_push (b builtin_get_item "charList") " \t\r\n";
+builtin_push (b builtin_get_item "charList") "#!%&-=^~|+*:.<>/";
+builtin_push (b builtin_get_item "charList") "(){}[],;\"`\\";
+b

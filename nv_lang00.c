@@ -709,7 +709,7 @@ NV_Pointer NV_allocLang00()
 	//
 	NV_Lang_setCharList(lang, 0, " \t\r\n");
 	NV_Lang_setCharList(lang, 1, "#!%&-=^~|+*:.<>/");
-	NV_Lang_setCharList(lang, 2, "(){}[],;\"`");
+	NV_Lang_setCharList(lang, 2, "(){}[],;\"`\\");
 
 	// based on http://www.tutorialspoint.com/cprogramming/c_operators.htm
 	NV_Lang_addOpN(lang, 100060,	"{", NV_LANG00_Op_sentenceBlock);
@@ -717,7 +717,6 @@ NV_Pointer NV_allocLang00()
 	//NV_Lang_addOpN(lang, 100030, "?", NV_LANG00_Op_box);
 	NV_Lang_addOpN(lang, 100040,	"builtin_exec", NV_Op_builtin_exec);
 	NV_Lang_addOpN(lang, 100030,	"builtin_exec_scalar", NV_Op_builtin_exec_scalar);
-	NV_Lang_addOpN(lang, 100020,	"builtin_pop", NV_Op_builtin_pop);
 	NV_Lang_addOpN(lang, 100010,	";", NV_LANG00_Op_sentenceSeparator);
 	//
 	NV_Lang_addOpN(lang, 100000,	"mem", NV_LANG00_Op_mem);
@@ -736,6 +735,8 @@ NV_Pointer NV_allocLang00()
 	NV_Lang_addOpN(lang, 2000,	"builtin_del_item", NV_Op_builtin_del_index);	
 	NV_Lang_addOpN(lang, 2000,	"builtin_var_dump", NV_Op_builtin_var_dump);
 	NV_Lang_addOpN(lang, 2000,	"builtin_remove_item", NV_Op_builtin_remove_item);
+	NV_Lang_addOpN(lang, 2000,	"builtin_pop", NV_Op_builtin_pop);
+	NV_Lang_addOpN(lang, 2000,	"builtin_push", NV_Op_builtin_push);
 	//
 	NV_Lang_addOpN(lang, 1000,  "if", NV_LANG00_Op_if);
 	NV_Lang_addOpN(lang, 1000,  "for", NV_LANG00_Op_for);
