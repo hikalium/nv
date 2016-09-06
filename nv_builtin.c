@@ -43,7 +43,29 @@ NV_Util_execItemScalar
 	return 0;
 }
 
-
+int
+NV_Util_doItemAndFlatten
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer sentenceRootItem)
+{
+	NV_Pointer sentenceRoot;
+	//
+	if(!NV_ListItem_isDataType(sentenceRootItem, EList)){
+		NV_Error("%s", "sentenceRootItem is not EList");
+		NV_printElement(sentenceRootItem);
+		SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
+		return 1;
+	}
+	sentenceRoot = NV_ListItem_getData(sentenceRootItem);
+	//
+	NV_evaluateSentence(excFlag, lang, vDict, sentenceRoot);
+	if(*excFlag & NV_EXC_FLAG_FAILED){
+		NV_Error("%s", "Exec failed.");
+		return 1;
+	}
+	NV_List_insertAllAfter(sentenceRootItem, sentenceRoot);
+	NV_E_free(&sentenceRootItem);
+	return 0;
+}
 
 //
 // builtin operators
@@ -71,6 +93,18 @@ NV_Op_builtin_exec_scalar
 	nextItem = NV_ListItem_getNext(thisItem);
 	NV_E_free(&thisItem);
 	NV_Util_execItemScalar(excFlag, lang, vDict, nextItem);
+}
+
+void
+NV_Op_builtin_do_and_flatten
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
+{
+	// builtin_do_flatten [EList]
+	// -> expanded
+	NV_Pointer nextItem;
+	nextItem = NV_ListItem_getNext(thisItem);
+	NV_E_free(&thisItem);
+	NV_Util_doItemAndFlatten(excFlag, lang, vDict, nextItem);
 }
 
 void
@@ -184,7 +218,7 @@ void
 NV_Op_builtin_var_dump
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
-	// dump [object]
+	// builtin_var_dump [object]
 	// -> nothing
 	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);
 	NV_Pointer nextData;
@@ -196,6 +230,30 @@ NV_Op_builtin_var_dump
 	}
 	NV_printElement(nextData);
 	printf("\n");
+	NV_E_free(&thisItem);
+	NV_E_free(&nextItem);
+	CLR_FLAG(*excFlag, NV_EXC_FLAG_AUTO_PRINT);
+}
+
+void
+NV_Op_builtin_target_dump
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
+{
+	// builtin_target_dump [object]
+	// -> nothing
+	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);
+	NV_Pointer nextData;
+	//
+	NV_ListItem_convertUnknownToKnown(vDict, nextItem);
+	nextData = NV_ListItem_getData(nextItem);
+	if(NV_E_isType(nextData, EVariable)){
+		nextData = NV_Variable_getTarget(nextData);
+		NV_printElement(nextData); putchar('\n');
+	} else{
+		NV_Error("%s", "object is not a Variable.");
+		SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
+		return;
+	}
 	NV_E_free(&thisItem);
 	NV_E_free(&nextItem);
 	CLR_FLAG(*excFlag, NV_EXC_FLAG_AUTO_PRINT);
@@ -215,7 +273,33 @@ NV_Op_builtin_remove_item
 	if(NV_E_isType(nextData, EVariable)){
 		nextData = NV_Variable_getData(nextData);
 	}
-	NV_List_removeItem(nextData);
+	if(NV_E_isType(nextData, EListItem)){
+		NV_List_removeItem(nextData);
+	} else if(NV_E_isType(nextData, EDictItem)){
+		NV_Dict_removeItem(nextData);
+	}
+	NV_E_free(&thisItem);
+	NV_E_free(&nextItem);
+}
+
+void
+NV_Op_builtin_remove_target
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
+{
+	// dump [object]
+	// -> nothing
+	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);
+	NV_Pointer nextData;
+	//
+	NV_ListItem_convertUnknownToKnown(vDict, nextItem);
+	nextData = NV_ListItem_getData(nextItem);
+	if(!NV_E_isType(nextData, EVariable)){
+		NV_Error("%s", "object is not a Variable.");
+		SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
+		return;
+	}
+	nextData = NV_Variable_getTarget(nextData);
+	NV_E_free(&nextData);
 	NV_E_free(&thisItem);
 	NV_E_free(&nextItem);
 }

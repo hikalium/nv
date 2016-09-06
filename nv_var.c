@@ -4,7 +4,6 @@ struct NV_VARIABLE {
 	NV_Pointer target;
 };
 
-NV_Pointer NV_Variable_getTarget(NV_Pointer var);
 void NV_Variable_setParentScope(NV_Pointer vDict, NV_Pointer pDict);
 NV_Pointer NV_Variable_getParentScope(NV_Pointer vDict);
 
@@ -131,6 +130,14 @@ NV_Pointer NV_Variable_allocByCStr(NV_Pointer vDict, const char *s)
 	return var;
 }
 
+NV_Pointer NV_Variable_getTarget(NV_Pointer var)
+{
+	NV_Variable *v;
+	v = NV_E_getRawPointer(var, EVariable);
+	if(v) return v->target;
+	return NV_NullPointer;
+}
+
 void NV_Variable_setTarget(NV_Pointer var, NV_Pointer target)
 {
 	// retains target.
@@ -203,14 +210,6 @@ void NV_Variable_print(NV_Pointer p)
 //
 // internal func
 //
-
-NV_Pointer NV_Variable_getTarget(NV_Pointer var)
-{
-	NV_Variable *v;
-	v = NV_E_getRawPointer(var, EVariable);
-	if(v) return v->target;
-	return NV_NullPointer;
-}
 
 void NV_Variable_setParentScope(NV_Pointer vDict, NV_Pointer pDict)
 {

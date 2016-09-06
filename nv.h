@@ -138,15 +138,19 @@ void NV_Blob_print(NV_Pointer blob);
 // @nv_builtin.c
 int NV_Util_execItem(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer sentenceRootItem);
 int NV_Util_execItemScalar(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer sentenceRootItem);
+int NV_Util_doItemAndFlatten(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer sentenceRootItem);
 //
 void NV_Op_builtin_exec(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
 void NV_Op_builtin_exec_scalar(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
+void NV_Op_builtin_do_and_flatten(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
 void NV_Op_builtin_push(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
 void NV_Op_builtin_pop(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
 void NV_Op_builtin_get_item(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
 void NV_Op_builtin_del_index(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
 void NV_Op_builtin_var_dump(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
+void NV_Op_builtin_target_dump(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
 void NV_Op_builtin_remove_item(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
+void NV_Op_builtin_remove_target(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
 
 
 // @nv_dict.c
@@ -154,6 +158,7 @@ NV_Pointer NV_Dict_allocRoot();
 NV_Pointer NV_Dict_clone(NV_Pointer p);
 //
 int NV_Dict_add(NV_Pointer dict, NV_Pointer key, NV_Pointer val);
+void NV_Dict_removeItem(NV_Pointer item);
 NV_Pointer NV_Dict_getItemByKey(NV_Pointer dict, NV_Pointer key);
 NV_Pointer NV_Dict_getValByKey(NV_Pointer dict, NV_Pointer key);
 //
@@ -288,6 +293,7 @@ NV_Pointer NV_Variable_allocExistedByStr(NV_Pointer vDict, NV_Pointer key);
 NV_Pointer NV_Variable_allocByStrInCurrentScope(NV_Pointer vDict, NV_Pointer str);
 NV_Pointer NV_Variable_allocByStr(NV_Pointer vDict, NV_Pointer str);
 NV_Pointer NV_Variable_allocByCStr(NV_Pointer vDict, const char *s);
+NV_Pointer NV_Variable_getTarget(NV_Pointer var);
 void NV_Variable_setTarget(NV_Pointer var, NV_Pointer target);
 void NV_Variable_assignData(NV_Pointer var, NV_Pointer data);
 NV_Pointer NV_Variable_getData(NV_Pointer var);

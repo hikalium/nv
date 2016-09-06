@@ -382,7 +382,7 @@ NV_LANG00_Op_precedentBlock
 	// precedent block
 	NV_List_insertDataAfterItem(
 		itemBeforeBlock,
-		NV_Lang_getOperatorFromString(lang, "builtin_exec_scalar")
+		NV_Lang_getOperatorFromString(lang, "builtin_do_and_flatten")
 	);
 }
 
@@ -716,7 +716,10 @@ NV_Pointer NV_allocLang00()
 	NV_Lang_addOpN(lang, 100050,	"(", NV_LANG00_Op_precedentBlock);
 	//NV_Lang_addOpN(lang, 100030, "?", NV_LANG00_Op_box);
 	NV_Lang_addOpN(lang, 100040,	"builtin_exec", NV_Op_builtin_exec);
-	NV_Lang_addOpN(lang, 100030,	"builtin_exec_scalar", NV_Op_builtin_exec_scalar);
+	NV_Lang_addOpN(lang, 100030,	"builtin_exec_scalar",
+		NV_Op_builtin_exec_scalar);
+	NV_Lang_addOpN(lang, 100030,	"builtin_do_and_flatten",
+		NV_Op_builtin_do_and_flatten);
 	NV_Lang_addOpN(lang, 100010,	";", NV_LANG00_Op_sentenceSeparator);
 	//
 	NV_Lang_addOpN(lang, 100000,	"mem", NV_LANG00_Op_mem);
@@ -732,9 +735,11 @@ NV_Pointer NV_allocLang00()
 	//
 	NV_Lang_addOpN(lang, 2010,	"[", NV_LANG00_Op_structureAccessor);	
 	NV_Lang_addOpN(lang, 2000,	"builtin_get_item", NV_Op_builtin_get_item);	
-	NV_Lang_addOpN(lang, 2000,	"builtin_del_item", NV_Op_builtin_del_index);	
+	NV_Lang_addOpN(lang, 2000,	"builtin_del_index", NV_Op_builtin_del_index);	
+	NV_Lang_addOpN(lang, 2000,	"builtin_target_dump", NV_Op_builtin_target_dump);
 	NV_Lang_addOpN(lang, 2000,	"builtin_var_dump", NV_Op_builtin_var_dump);
 	NV_Lang_addOpN(lang, 2000,	"builtin_remove_item", NV_Op_builtin_remove_item);
+	NV_Lang_addOpN(lang, 2000,	"builtin_remove_target", NV_Op_builtin_remove_target);
 	NV_Lang_addOpN(lang, 2000,	"builtin_pop", NV_Op_builtin_pop);
 	NV_Lang_addOpN(lang, 2000,	"builtin_push", NV_Op_builtin_push);
 	//

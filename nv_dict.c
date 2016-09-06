@@ -113,6 +113,12 @@ int NV_Dict_add(NV_Pointer dict, NV_Pointer key, NV_Pointer val)
 	return 0;
 }
 
+void NV_Dict_removeItem(NV_Pointer item)
+{
+	NV_DictItem_unlink(item);
+	NV_E_free(&item);
+}
+
 NV_Pointer NV_Dict_getItemByKey(NV_Pointer dict, NV_Pointer key)
 {
 	NV_Pointer di;
