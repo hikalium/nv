@@ -166,9 +166,8 @@ void NV_DictItem_setVal(NV_Pointer item, NV_Pointer val);
 void NV_DictItem_print(NV_Pointer item);
 void NV_Dict_printAll(NV_Pointer dict, const char *prefix, const char *delimiter, const char *suffix);
 
-// @nv_envdep.c
+// @nv_driver.c
 char *NV_gets(char *str, int size);
-void NV_prinitf(const char *format, ...);
 
 // @nv_element.c
 extern const NV_Pointer NV_NullPointer;

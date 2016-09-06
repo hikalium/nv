@@ -11,15 +11,6 @@ char *NV_gets(char *str, int size)
 	return fgets(str, size, stdin);
 }
 
-void NV_printf(const char *format, ...)
-{
-	va_list args;
-	va_start(args, format);
-	vprintf(format, args);
-	va_end(args);
-	return;
-}
-
 #endif
 
 #ifdef NV_ENV_TERM_UNIX
@@ -112,15 +103,6 @@ char *NV_gets(char *str, int size)
 	if(c == 0x04) return NULL;
 	str[useLen] = 0;
 	return str;
-}
-
-void NV_printf(const char *format, ...)
-{
-	va_list args;
-	va_start(args, format);
-	vprintf(format, args);
-	va_end(args);
-	return;
 }
 
 #endif
