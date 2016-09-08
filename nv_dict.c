@@ -136,6 +136,16 @@ NV_Pointer NV_Dict_getValByKey(NV_Pointer dict, NV_Pointer key)
 	return NV_DictItem_getVal(NV_Dict_getItemByKey(dict, key));
 }
 
+NV_Pointer NV_Dict_getValByKeyCStr(NV_Pointer dict, const char *kc)
+{
+	NV_Pointer key, val;
+	key = NV_String_alloc(kc);
+	val = NV_Dict_getValByKey(dict, key);
+	NV_E_free(&key);
+	//
+	return val;
+}
+
 NV_Pointer NV_DictItem_getKey(NV_Pointer item)
 {
 	NV_DictItem *di = NV_DictItem_getRawDictItem(item);

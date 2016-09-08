@@ -1,5 +1,11 @@
 #include "nv.h"
 
+struct NV_OPERATOR {
+	NV_Pointer name;
+	NV_Pointer precedence;		// do not change after adding.
+	NV_Pointer body;
+};
+
 NV_Operator *NV_E_allocOperator()
 {
 	NV_Operator *t;
@@ -96,6 +102,14 @@ int NV_getOperatorPrecedence(NV_Pointer op)
 	opData = NV_E_getRawPointer(op, EOperator);
 	if(!opData) return -1;
 	return NV_Integer_getImm32(opData->precedence);
+}
+
+NV_Pointer NV_Operator_getName(NV_Pointer op)
+{
+	NV_Operator *opData;
+	opData = NV_E_getRawPointer(op, EOperator);
+	if(!opData) return NV_NullPointer;
+	return opData->name;
 }
 
 void

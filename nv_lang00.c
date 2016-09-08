@@ -124,7 +124,7 @@ void
 NV_LANG00_Op_compoundAssign
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
-	NV_Operator *op;
+	NV_Pointer op;
 	NV_Pointer var, prevItem;
 	char s[2];
 	//
@@ -141,12 +141,12 @@ NV_LANG00_Op_compoundAssign
 		return;
 	}
 	//
-	op = NV_ListItem_getRawData(thisItem, EOperator);
-	if(!op){
+	op = NV_ListItem_getData(thisItem);
+	if(NV_E_isNullPointer(op)){
 		SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
 		return;
 	}
-	s[0] = NV_String_charAt(op->name, 0);
+	s[0] = NV_String_charAt(NV_Operator_getName(op), 0);
 	s[1] = 0;
 	//
 	NV_ListItem_setData(thisItem, NV_Lang_getOperatorFromString(lang, "="));
@@ -182,8 +182,8 @@ NV_LANG00_Op_unaryOperator_prefix
 	NV_Pointer prev = NV_ListItem_getPrev(thisItem);
 	NV_Pointer next = NV_ListItem_getNext(thisItem);
 	NV_Pointer data;
-	NV_Operator *op = NV_ListItem_getRawData(thisItem, EOperator);
-	const char *opCStr = NV_String_getCStr(op->name);
+	NV_Pointer op = NV_ListItem_getData(thisItem);
+	const char *opCStr = NV_String_getCStr(NV_Operator_getName(op));
 	int32_t val;
 	// type check
 	if(NV_E_isNullPointer(next)){
@@ -234,8 +234,7 @@ NV_LANG00_Op_unaryOperator_varSuffix
 {
 	PARAM_UNUSED(lang);
 	//
-	NV_Operator *op;
-	NV_Pointer var, cint, prevItem;
+	NV_Pointer op, var, cint, prevItem;
 	char s[2];
 	//
 	if(!NV_ListItem_isDataType(thisItem, EOperator)){
@@ -250,12 +249,12 @@ NV_LANG00_Op_unaryOperator_varSuffix
 		return;
 	}
 	//
-	op = NV_ListItem_getRawData(thisItem, EOperator);
-	if(!op){
+	op = NV_ListItem_getData(thisItem);
+	if(NV_E_isNullPointer(op)){
 		SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
 		return;
 	}
-	s[0] = NV_String_charAt(op->name, 0);
+	s[0] = NV_String_charAt(NV_Operator_getName(op), 0);
 	s[1] = 0;
 	//
 	cint = NV_E_malloc_type(EInteger);
@@ -276,7 +275,7 @@ NV_LANG00_Op_binaryOperator
 	// for Integer values only.
 	NV_Pointer prev = NV_ListItem_getPrev(thisItem);
 	NV_Pointer next = NV_ListItem_getNext(thisItem);
-	NV_Operator *op = NV_ListItem_getRawData(thisItem, EOperator);
+	NV_Pointer op = NV_ListItem_getData(thisItem);
 	NV_Pointer resultData;
 	NV_Pointer vL, vR;
 	NV_BinOpType opType;
@@ -286,7 +285,7 @@ NV_LANG00_Op_binaryOperator
 		SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
 		return;
 	}
-	if(!op){
+	if(NV_E_isNullPointer(op)){
 		NV_Error("%s", "op is NULL!");
 		SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
 		return;
@@ -301,7 +300,8 @@ NV_LANG00_Op_binaryOperator
 	vL = NV_E_retain(NV_ListItem_getData(prev)); NV_E_free(&prev);
 	vR = NV_E_retain(NV_ListItem_getData(next)); NV_E_free(&next);
 	//
-	opType = NV_LANG00_getBinOpTypeFromString(NV_String_getCStr(op->name));
+	opType = NV_LANG00_getBinOpTypeFromString(
+		NV_String_getCStr(NV_Operator_getName(op)));
 	// process
 	resultData = NV_Integer_evalBinOp(vL, vR, opType);
 	if(NV_E_isNullPointer(resultData)){
@@ -333,14 +333,13 @@ NV_LANG00_Op_sentenceSeparator
 	PARAM_UNUSED(excFlag);
 	PARAM_UNUSED(vDict);
 	//
-	NV_Pointer t, sentenceRoot, remRoot, tmp;
-	NV_Operator *tOp;
+	NV_Pointer t, sentenceRoot, remRoot, tmp, tOp;
 	t = NV_ListItem_getPrev(thisItem);
 	for(; !NV_E_isNullPointer(t); t = NV_ListItem_getPrev(t)){
 		if(NV_E_isType(t, EList)) break;
 		if(!NV_ListItem_isDataType(t, EOperator)) continue;
-		tOp = NV_ListItem_getRawData(t, EOperator);
-		if(strcmp(NV_String_getCStr(tOp->name), ";;") == 0){
+		tOp = NV_ListItem_getData(t);
+		if(strcmp(NV_String_getCStr(NV_Operator_getName(tOp)), ";;") == 0){
 			t = NV_ListItem_getPrev(t);
 			tmp = NV_ListItem_getNext(t);
 			NV_E_free(&tmp);
@@ -769,6 +768,7 @@ int NV_Op_cf(NV_Pointer a, NV_Pointer b)
 
 NV_Pointer NV_allocLang00()
 {
+
 	NV_Pointer lang = NV_E_malloc_type(ELang);
 	//
 	NV_Lang_setCharList(lang, 0, " \t\r\n");
@@ -874,7 +874,7 @@ NV_Pointer NV_allocLang00()
 	NV_Lang_addOp(lang, prec, name, body);
 	//
 */
-
+/*
 	NV_Pointer langRoot;
 	NV_Pointer opRoot;
 	NV_Pointer tokenTypeStrRoot;
@@ -897,17 +897,14 @@ NV_Pointer NV_allocLang00()
 	NV_List_push(tokenTypeStrRoot, NV_E_autorelease(NV_String_alloc(
 		"(){}[],;\"`\\")));
 	//
-	NV_List_push(opRoot, NV_E_autorelease(NV_Operator_allocNativeStruct(
-		50,  "showop", NV_LANG00_Op_showOpList)));
-	NV_List_push(opRoot, NV_E_autorelease(NV_Operator_allocNativeStruct(
-		30,  "ccccccc", NV_LANG00_Op_showOpList)));
-	NV_List_push(opRoot, NV_E_autorelease(NV_Operator_allocNativeStruct(
-		1000,  "efrbehr", NV_LANG00_Op_showOpList)));
+	NV_Lang_addNativeOp(langRoot, 50,  "showop", NV_LANG00_Op_showOpList);
+	NV_Lang_addNativeOp(langRoot, 30,  "cc", NV_LANG00_Op_showOpList);
+	NV_Lang_addNativeOp(langRoot, 1000,  "xx", NV_LANG00_Op_showOpList);
 	//
 	NV_printElement(langRoot); putchar('\n');
-	NV_List_sortAsc(opRoot, NV_Op_cf);
+	NV_Lang_sortOpList(langRoot);
 	NV_printElement(langRoot); putchar('\n');
-
+*/
 #ifdef DEBUG
 	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE)
 		NV_List_printAll(NV_Lang_getOpList(lang), "\n[\n", ",\n", "\n]\n");

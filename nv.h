@@ -110,12 +110,6 @@ struct NV_POINTER {
 	NV_Element *data;	// Always exists
 };
 
-struct NV_OPERATOR {
-	NV_Pointer name;
-	NV_Pointer precedence;		// do not change after adding.
-	NV_Pointer body;
-};
-
 extern int32_t NV_debugFlag;
 extern NV_Pointer sysRoot;
 
@@ -163,6 +157,7 @@ int NV_Dict_add(NV_Pointer dict, NV_Pointer key, NV_Pointer val);
 void NV_Dict_removeItem(NV_Pointer item);
 NV_Pointer NV_Dict_getItemByKey(NV_Pointer dict, NV_Pointer key);
 NV_Pointer NV_Dict_getValByKey(NV_Pointer dict, NV_Pointer key);
+NV_Pointer NV_Dict_getValByKeyCStr(NV_Pointer dict, const char *key);
 //
 NV_Pointer NV_DictItem_getKey(NV_Pointer item);
 NV_Pointer NV_DictItem_getVal(NV_Pointer item);
@@ -227,7 +222,8 @@ NV_Pointer NV_Lang_getFallbackOperator(NV_Pointer lang, NV_Pointer baseP);
 void NV_Lang_registerOperator(NV_Pointer lang, NV_Pointer op);
 void NV_Lang_addOpN(NV_Pointer lang, int pr, const char *name, NV_OpFunc f);
 void NV_Lang_addOp(NV_Pointer lang, NV_Pointer pr, NV_Pointer name, NV_Pointer f);
-
+void NV_Lang_addNativeOp(NV_Pointer langRoot, int pr, const char *name, NV_OpFunc f);
+void NV_Lang_sortOpList(NV_Pointer langRoot);
 // @nv_lang00.c
 NV_Pointer NV_allocLang00();
 
@@ -275,6 +271,7 @@ NV_Pointer NV_Operator_alloc(NV_Pointer prec, NV_Pointer name, NV_Pointer body);
 NV_Pointer NV_Operator_clone(NV_Pointer p);
 void NV_Operator_print(NV_Pointer t);
 int NV_getOperatorPrecedence(NV_Pointer op);
+NV_Pointer NV_Operator_getName(NV_Pointer op);
 void NV_Operator_exec(NV_Pointer op, int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisTerm);
 
 // @nv_string.c

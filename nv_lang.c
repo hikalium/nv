@@ -86,12 +86,11 @@ NV_Pointer NV_Lang_getOpList(NV_Pointer lang)
 
 NV_Pointer NV_Lang_getOperatorFromString(NV_Pointer lang, const char *termStr)
 {
-	NV_Pointer p;
-	NV_Operator *op;
+	NV_Pointer p, op;
 	p = NV_ListItem_getNext(NV_Lang_getOpList(lang));
 	for(; !NV_E_isNullPointer(p); p = NV_ListItem_getNext(p)){
-		op = NV_ListItem_getRawData(p, EOperator);
-		if(op && NV_String_isEqualToCStr(op->name, termStr)){
+		op = NV_ListItem_getData(p);
+		if(NV_String_isEqualToCStr(NV_Operator_getName(op), termStr)){
 			return NV_ListItem_getData(p);
 		}
 	}
@@ -100,21 +99,19 @@ NV_Pointer NV_Lang_getOperatorFromString(NV_Pointer lang, const char *termStr)
 
 NV_Pointer NV_Lang_getFallbackOperator(NV_Pointer lang, NV_Pointer baseOp)
 {
-	NV_Pointer p;
-	NV_Operator *op = NULL;
-	NV_Operator *rawBaseOp = NV_E_getRawPointer(baseOp, EOperator);
+	NV_Pointer p, op;
 	//
 	p = NV_ListItem_getNext(NV_Lang_getOpList(lang));
 	for(; !NV_E_isNullPointer(p); p = NV_ListItem_getNext(p)){
-		op = NV_ListItem_getRawData(p, EOperator);
-		if(op == rawBaseOp){
+		op = NV_ListItem_getData(p);
+		if(NV_E_isSamePointer(op, baseOp)){
 			p = NV_ListItem_getNext(p);
 			break;
 		}
 	}
 	for(; !NV_E_isNullPointer(p); p = NV_ListItem_getNext(p)){
-		op = NV_ListItem_getRawData(p, EOperator);
-		if(NV_E_isEqual(op->name, rawBaseOp->name)){
+		op = NV_ListItem_getData(p);
+		if(NV_E_isEqual(NV_Operator_getName(op), NV_Operator_getName(baseOp))){
 			return NV_ListItem_getData(p);
 		}
 	}
