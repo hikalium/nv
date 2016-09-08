@@ -127,7 +127,7 @@ void NV_Lang_registerOperator(NV_Pointer lang, NV_Pointer op)
 	tOpItem = NV_ListItem_getNext(opList);
 	for(; !NV_E_isNullPointer(tOpItem); tOpItem = NV_ListItem_getNext(tOpItem)){
 		tOp = NV_ListItem_getData(tOpItem);
-		if(NV_getOperatorPrecedence(tOp) < NV_getOperatorPrecedence(op)) break;
+		if(NV_Operator_getPrecedence(tOp) < NV_Operator_getPrecedence(op)) break;
 	}
 	if(NV_E_isNullPointer(tOpItem)){
 		NV_List_push(opList, op);

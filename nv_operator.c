@@ -1,9 +1,7 @@
 #include "nv.h"
 
 struct NV_OPERATOR {
-	NV_Pointer name;
-	NV_Pointer precedence;		// do not change after adding.
-	NV_Pointer body;
+	NV_Pointer target;	// [name, prec, body]
 };
 
 NV_Operator *NV_E_allocOperator()
@@ -11,10 +9,7 @@ NV_Operator *NV_E_allocOperator()
 	NV_Operator *t;
 
 	t = NV_malloc(sizeof(NV_Operator));
-	//
-	t->name = NV_NullPointer;
-	t->precedence = NV_NullPointer;
-	t->body = NV_NullPointer;
+	t->target = NV_NullPointer;
 	return t;
 }
 
@@ -25,111 +20,106 @@ NV_Pointer NV_Operator_clone(NV_Pointer p)
 }
 
 
-void NV_Operator_print(NV_Pointer t)
+void NV_Operator_print(NV_Pointer op)
 {
-	NV_Operator *op;
-	NV_OpFunc nf;
-
-	op = NV_E_getRawPointer(t, EOperator);
-	if(op){
+	NV_Operator *t;
+	t = NV_E_getRawPointer(op, EOperator);
+	if(t){
 		printf("(%s/%d: ", 
-			NV_String_getCStr(op->name),
-			NV_Integer_getImm32(op->precedence));
-		
-		if(NV_E_isType(op->body, EBlob)){
-			nf = NV_Blob_getDataAsCPointer(op->body);
-			if(nf){
-				printf("native@%p)", nf);
-			}
-		} else if(NV_E_isType(op->body, EList)){
-			NV_printElement(op->body); printf(")");
-		}
+			NV_String_getCStr(NV_Operator_getName(op)),
+			NV_Operator_getPrecedence(op));
+			NV_printElement(t->target); printf(")");
 	}
 }
 
 NV_Pointer NV_Operator_allocNative(int precedence, const char *name, NV_OpFunc nativeFunc)
 {
-	NV_Pointer opData;
-	NV_Operator *opRawData;
+	NV_Pointer op;
+	NV_Operator *t;
 	//
-	opData = NV_E_malloc_type(EOperator);
-	opRawData = NV_E_getRawPointer(opData, EOperator);
+	op = NV_E_malloc_type(EOperator);
+	t = NV_E_getRawPointer(op, EOperator);
 	//
-	opRawData->name = NV_String_alloc(name);
-	opRawData->precedence = NV_Integer_alloc(precedence);
-	opRawData->body = NV_Blob_allocForCPointer(nativeFunc);
+	t->target = NV_Operator_allocNativeStruct(precedence, name, nativeFunc);
 	//
-	return opData;
+	return op;
 }
 
 NV_Pointer NV_Operator_allocNativeStruct(int precedence, const char *name, NV_OpFunc nativeFunc)
 {
-	NV_Pointer opData;
+	NV_Pointer opStruct;
 	//
-	opData = NV_E_malloc_type(EList);
+	opStruct = NV_E_malloc_type(EList);
 	//
-	NV_List_push(opData, NV_E_autorelease(NV_String_alloc(name)));
-	NV_List_push(opData, NV_E_autorelease(NV_Integer_alloc(precedence)));
-	NV_List_push(opData, NV_E_autorelease(NV_Blob_allocForCPointer(nativeFunc)));
+	NV_List_push(opStruct, NV_E_autorelease(NV_String_alloc(name)));
+	NV_List_push(opStruct, NV_E_autorelease(NV_Integer_alloc(precedence)));
+	NV_List_push(opStruct, NV_E_autorelease(NV_Blob_allocForCPointer(nativeFunc)));
 	//
-	return opData;
+	return opStruct;
 }
 
 NV_Pointer NV_Operator_alloc(NV_Pointer prec, NV_Pointer name, NV_Pointer body)
 {
-	NV_Pointer opData;
-	NV_Operator *opRawData;
+	NV_Pointer op;
+	NV_Operator *t;
 	//
-	if(	!NV_E_isType(prec, EInteger) || 
-		!NV_E_isType(name, EString) ||
-		!NV_E_isType(body, EList)){
-		NV_Error("%s", "Type check failed.");
-		return NV_NullPointer;
-	}
+	op = NV_E_malloc_type(EOperator);
+	t = NV_E_getRawPointer(op, EOperator);
 	//
-	opData = NV_E_malloc_type(EOperator);
-	opRawData = NV_E_getRawPointer(opData, EOperator);
-	opRawData->name			= NV_E_clone(name);
-	opRawData->precedence	= NV_E_clone(prec);
-	opRawData->body			= NV_E_clone(body);
+	t->target = NV_Operator_allocStruct(prec, name, body);
 	//
-	return opData;
+	return op;
 }
 
-int NV_getOperatorPrecedence(NV_Pointer op)
+NV_Pointer NV_Operator_allocStruct(NV_Pointer prec, NV_Pointer name, NV_Pointer body)
 {
-	NV_Operator *opData;
-	opData = NV_E_getRawPointer(op, EOperator);
-	if(!opData) return -1;
-	return NV_Integer_getImm32(opData->precedence);
+	NV_Pointer opStruct;
+	//
+	opStruct = NV_E_malloc_type(EList);
+	//
+	NV_List_push(opStruct, NV_E_autorelease(NV_E_clone(prec)));
+	NV_List_push(opStruct, NV_E_autorelease(NV_E_clone(name)));
+	NV_List_push(opStruct, NV_E_autorelease(NV_E_clone(body)));
+	//
+	return opStruct;
+}
+
+int NV_Operator_getPrecedence(NV_Pointer op)
+{
+	NV_Operator *t;
+	t = NV_E_getRawPointer(op, EOperator);
+	if(!t) return -1;
+	return NV_Integer_getImm32(NV_List_getDataByIndex(t->target, 1));
 }
 
 NV_Pointer NV_Operator_getName(NV_Pointer op)
 {
-	NV_Operator *opData;
-	opData = NV_E_getRawPointer(op, EOperator);
-	if(!opData) return NV_NullPointer;
-	return opData->name;
+	NV_Operator *t;
+	t = NV_E_getRawPointer(op, EOperator);
+	if(!t) return NV_NullPointer;
+	return NV_List_getDataByIndex(t->target, 0);
 }
 
 void
 NV_Operator_exec
 (NV_Pointer op, int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisTerm)
 {
-	NV_Operator *opData;
+	NV_Operator *t;
 	NV_OpFunc nf;
-	opData = NV_E_getRawPointer(op, EOperator);
-	if(opData){
-		if(NV_E_isType(opData->body, EBlob)){
-			nf = NV_Blob_getDataAsCPointer(opData->body);
+	NV_Pointer body;
+	t = NV_E_getRawPointer(op, EOperator);
+	if(t){
+		body = NV_List_getDataByIndex(t->target, 2);
+		if(NV_E_isType(body, EBlob)){
+			nf = NV_Blob_getDataAsCPointer(body);
 			if(nf){
 				nf(excFlag, lang, vDict, thisTerm);
 			} else{
 				NV_Error("%s", "naitive func is null!");
 			}
-		} else if(NV_E_isType(opData->body, EList)){
+		} else if(NV_E_isType(body, EList)){
 			NV_Pointer subScope, tmp;
-			NV_Pointer cRoot = NV_E_clone(opData->body);
+			NV_Pointer cRoot = NV_E_clone(body);
 			subScope = NV_Variable_allocNewScope(vDict);
 			//
 			tmp = NV_Variable_allocByCStr(subScope, "thisItem");

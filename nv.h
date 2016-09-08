@@ -268,9 +268,10 @@ void NV_List_printAll(NV_Pointer root, const char *prefix, const char *delimiter
 NV_Pointer NV_Operator_allocNative(int precedence, const char *name, NV_OpFunc nativeFunc);
 NV_Pointer NV_Operator_allocNativeStruct(int precedence, const char *name, NV_OpFunc nativeFunc);
 NV_Pointer NV_Operator_alloc(NV_Pointer prec, NV_Pointer name, NV_Pointer body);
+NV_Pointer NV_Operator_allocStruct(NV_Pointer prec, NV_Pointer name, NV_Pointer body);
 NV_Pointer NV_Operator_clone(NV_Pointer p);
 void NV_Operator_print(NV_Pointer t);
-int NV_getOperatorPrecedence(NV_Pointer op);
+int NV_Operator_getPrecedence(NV_Pointer op);
 NV_Pointer NV_Operator_getName(NV_Pointer op);
 void NV_Operator_exec(NV_Pointer op, int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisTerm);
 

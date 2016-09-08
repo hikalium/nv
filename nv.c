@@ -326,7 +326,7 @@ void NV_evaluateSentence(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV
 #endif
 			if(!NV_ListItem_isDataType(t, EOperator)) continue;
 			op = NV_ListItem_getData(t);
-			opPrec = NV_getOperatorPrecedence(op);
+			opPrec = NV_Operator_getPrecedence(op);
 			if(opPrec == -1){
 				NV_Error("%s", "Internal error: Op not found");
 				SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
