@@ -56,6 +56,19 @@ NV_Pointer NV_Operator_allocNative(int precedence, const char *name, NV_OpFunc n
 	return opData;
 }
 
+NV_Pointer NV_Operator_allocNativeStruct(int precedence, const char *name, NV_OpFunc nativeFunc)
+{
+	NV_Pointer opData;
+	//
+	opData = NV_E_malloc_type(EList);
+	//
+	NV_List_push(opData, NV_E_autorelease(NV_String_alloc(name)));
+	NV_List_push(opData, NV_E_autorelease(NV_Integer_alloc(precedence)));
+	NV_List_push(opData, NV_E_autorelease(NV_Blob_allocForCPointer(nativeFunc)));
+	//
+	return opData;
+}
+
 NV_Pointer NV_Operator_alloc(NV_Pointer prec, NV_Pointer name, NV_Pointer body)
 {
 	NV_Pointer opData;

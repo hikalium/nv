@@ -163,6 +163,23 @@ void NV_ListItem_convertToKnownUnboxed(NV_Pointer vDict, NV_Pointer item)
 	NV_ListItem_unbox(item);
 }
 
+void NV_ListItem_exchangeDataByIndex(NV_Pointer root, int i, int k)
+{
+	NV_Pointer a, b;
+	a = NV_List_getItemByIndex(root, i);
+	b = NV_List_getItemByIndex(root, k);
+	NV_ListItem_exchangeData(a, b);
+}
+
+void NV_ListItem_exchangeData(NV_Pointer a, NV_Pointer b)
+{
+	NV_Pointer tmp;
+	tmp = NV_E_retain(NV_ListItem_getData(a));
+	NV_ListItem_setData(a, NV_ListItem_getData(b));
+	NV_ListItem_setData(b, NV_E_autorelease(tmp));
+	return;
+}
+
 void NV_ListItem_print(NV_Pointer t)
 {
 	NV_ListItem *li;
@@ -383,6 +400,24 @@ void NV_List_removeItem(NV_Pointer item)
 	NV_E_free(&item);
 }
 
+void NV_List_sortAsc(NV_Pointer root, int (*cf)(NV_Pointer a, NV_Pointer b))
+{
+	// cf: b - a
+	NV_Pointer li, lk;
+	int i, k;
+	for(i = 0; ; i++){
+		li = NV_List_getItemByIndex(root, i);
+		if(NV_E_isNullPointer(li)) break;
+		for(k = i + 1; ; k++){
+			li = NV_List_getItemByIndex(root, i);
+			lk = NV_List_getItemByIndex(root, k);
+			if(NV_E_isNullPointer(lk)) break;
+			if(cf(NV_ListItem_getData(li), NV_ListItem_getData(lk)) < 0){
+				NV_ListItem_exchangeData(li, lk);
+			}
+		}
+	}
+}
 //
 // Print
 //

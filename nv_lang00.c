@@ -703,6 +703,14 @@ NV_LANG00_Op_box
 }
 */
 
+int NV_Op_cf(NV_Pointer a, NV_Pointer b)
+{
+	NV_Pointer precA, precB;
+	precA = NV_ListItem_getData(NV_List_getItemByIndex(a, 1));
+	precB = NV_ListItem_getData(NV_List_getItemByIndex(b, 1));
+	return NV_Integer_getImm32(precA) - NV_Integer_getImm32(precB);
+}
+
 NV_Pointer NV_allocLang00()
 {
 	NV_Pointer lang = NV_E_malloc_type(ELang);
@@ -739,7 +747,10 @@ NV_Pointer NV_allocLang00()
 	NV_Lang_addOpN(lang, 2000,	"builtin_target_dump", NV_Op_builtin_target_dump);
 	NV_Lang_addOpN(lang, 2000,	"builtin_var_dump", NV_Op_builtin_var_dump);
 	NV_Lang_addOpN(lang, 2000,	"builtin_remove_item", NV_Op_builtin_remove_item);
-	NV_Lang_addOpN(lang, 2000,	"builtin_remove_target", NV_Op_builtin_remove_target);
+	NV_Lang_addOpN(lang, 2000,	"builtin_remove_target", 
+		NV_Op_builtin_remove_target);
+	NV_Lang_addOpN(lang, 2000,	"builtin_set_op_to_val", 
+		NV_Op_builtin_set_op_to_val);
 	NV_Lang_addOpN(lang, 2000,	"builtin_pop", NV_Op_builtin_pop);
 	NV_Lang_addOpN(lang, 2000,	"builtin_push", NV_Op_builtin_push);
 	//
@@ -797,6 +808,7 @@ NV_Pointer NV_allocLang00()
 	NV_Lang_addOpN(lang, 50,	"break", NV_LANG00_Op_break);
 	NV_Lang_addOpN(lang, 50,	"ls", NV_LANG00_Op_ls);
 	//
+/*
 	NV_Pointer prec, name, body;
 	prec = NV_Integer_alloc(10000);
 	name = NV_String_alloc("$");
@@ -805,6 +817,41 @@ NV_Pointer NV_allocLang00()
 	NV_convertLiteral(body, lang);
 	NV_Lang_addOp(lang, prec, name, body);
 	//
+*/
+
+	NV_Pointer langRoot;
+	NV_Pointer opRoot;
+	NV_Pointer tokenTypeStrRoot;
+	NV_Pointer key = NV_E_malloc_type(EString);
+	//
+	langRoot = NV_E_malloc_type(EDict);
+	opRoot = NV_E_malloc_type(EList);
+	tokenTypeStrRoot = NV_E_malloc_type(EList);
+	//
+	NV_String_setString(key, "op");
+	NV_Dict_add(langRoot, key, NV_E_autorelease(opRoot));
+	//
+	NV_String_setString(key, "tokenType");
+	NV_Dict_add(langRoot, key, NV_E_autorelease(tokenTypeStrRoot));
+	//
+	NV_List_push(tokenTypeStrRoot, NV_E_autorelease(NV_String_alloc(
+		" \t\r\n")));
+	NV_List_push(tokenTypeStrRoot, NV_E_autorelease(NV_String_alloc(
+		"#!%&-=^~|+*:.<>/")));
+	NV_List_push(tokenTypeStrRoot, NV_E_autorelease(NV_String_alloc(
+		"(){}[],;\"`\\")));
+	//
+	NV_List_push(opRoot, NV_E_autorelease(NV_Operator_allocNativeStruct(
+		50,  "showop", NV_LANG00_Op_showOpList)));
+	NV_List_push(opRoot, NV_E_autorelease(NV_Operator_allocNativeStruct(
+		30,  "ccccccc", NV_LANG00_Op_showOpList)));
+	NV_List_push(opRoot, NV_E_autorelease(NV_Operator_allocNativeStruct(
+		1000,  "efrbehr", NV_LANG00_Op_showOpList)));
+	//
+	NV_printElement(langRoot); putchar('\n');
+	NV_List_sortAsc(opRoot, NV_Op_cf);
+	NV_printElement(langRoot); putchar('\n');
+
 #ifdef DEBUG
 	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE)
 		NV_List_printAll(NV_Lang_getOpList(lang), "\n[\n", ",\n", "\n]\n");

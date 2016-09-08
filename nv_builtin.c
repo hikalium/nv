@@ -228,8 +228,7 @@ NV_Op_builtin_var_dump
 	if(NV_E_isType(nextData, EVariable)){
 		nextData = NV_Variable_getData(nextData);
 	}
-	NV_printElement(nextData);
-	printf("\n");
+	NV_printElement(nextData); putchar('\n');
 	NV_E_free(&thisItem);
 	NV_E_free(&nextItem);
 	CLR_FLAG(*excFlag, NV_EXC_FLAG_AUTO_PRINT);
@@ -263,7 +262,7 @@ void
 NV_Op_builtin_remove_item
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
-	// dump [object]
+	// builtin_remove_item [object]
 	// -> nothing
 	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);
 	NV_Pointer nextData;
@@ -286,7 +285,7 @@ void
 NV_Op_builtin_remove_target
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
-	// dump [object]
+	// builtin_remove_target [object]
 	// -> nothing
 	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);
 	NV_Pointer nextData;
@@ -299,6 +298,43 @@ NV_Op_builtin_remove_target
 		return;
 	}
 	nextData = NV_Variable_getTarget(nextData);
+	NV_E_free(&nextData);
+	NV_E_free(&thisItem);
+	NV_E_free(&nextItem);
+}
+
+void
+NV_Op_builtin_set_op_to_val
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
+{
+	// NV_Op_builtin_set_op_to_val String Variable
+	// -> nothing
+	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);
+	NV_Pointer varItem = NV_ListItem_getNext(nextItem);
+	NV_Pointer nextData, op, var;
+	//
+	nextData = NV_ListItem_getData(nextItem);
+	if(!NV_E_isType(nextData, EString)){
+		NV_Error("%s", "object is not a String.");
+		SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
+		return;
+	}
+	op = NV_Lang_getOperatorFromString(lang, NV_String_getCStr(nextData));
+	if(NV_E_isNullPointer(op)){
+		NV_Error("%s", "op not found named:");
+		NV_printElement(nextData); putchar('\n');
+		SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
+		return;
+	}
+	NV_ListItem_convertUnknownToKnown(vDict, varItem);
+	var = NV_ListItem_getData(varItem);
+	if(!NV_E_isType(var, EVariable)){
+		NV_Error("%s", "object is not a Variable.");
+		SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
+		return;
+	}
+	NV_Variable_assignData(var, op);
+
 	NV_E_free(&nextData);
 	NV_E_free(&thisItem);
 	NV_E_free(&nextItem);

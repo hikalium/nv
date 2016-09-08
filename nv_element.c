@@ -273,6 +273,8 @@ void NV_printElement(NV_Pointer p)
 			NV_Dict_printAll(p, NULL, NULL, NULL);
 		} else if(NV_E_isType(p, EVariable)){
 			NV_Variable_print(p);
+		} else if(NV_E_isType(p, EBlob)){
+			NV_Blob_print(p);
 		} else{
 			printf("(type: %d)", p.data->type);
 		}

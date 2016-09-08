@@ -1,17 +1,18 @@
 
 SRCS=nv.c nv_blob.c nv_builtin.c nv_dict.c nv_driver.c nv_element.c nv_fix.c nv_integer.c nv_lang.c nv_lang00.c nv_list.c nv_operator.c nv_string.c nv_var.c
 HEADERS=nv.h nv_rawelem.h
+CFLAGS=-Wall -Wextra -lncurses -Wunused-function
 
 nv : $(SRCS) $(HEADERS) Makefile
-	cc -Wall -lncurses -Wunused-function -ferror-limit=5 -Os -o nv  $(SRCS)
+	cc $(CFLAGS) -Os -o nv  $(SRCS)
 	strip nv
 	upx -9 nv
 
 fastbin : $(SRCS) $(HEADERS) Makefile
-	cc -Wall -lncurses -Wunused-function -ferror-limit=5 -O3 -o nv  $(SRCS)
+	cc $(CFLAGS) -Ofast -O3 -o nv  $(SRCS)
 
 debugbin : $(SRCS) $(HEADERS) Makefile
-	cc -g -Wall -lncurses -Wunused-function -ferror-limit=5 -o nv  $(SRCS)
+	cc $(CFLAGS) -g3 -o nv  $(SRCS)
 
 debug: $(SRCS) $(HEADERS) Makefile
 	make debugbin

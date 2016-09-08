@@ -151,6 +151,7 @@ void NV_Op_builtin_var_dump(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict,
 void NV_Op_builtin_target_dump(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
 void NV_Op_builtin_remove_item(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
 void NV_Op_builtin_remove_target(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
+void NV_Op_builtin_set_op_to_val(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
 
 
 // @nv_dict.c
@@ -240,6 +241,8 @@ int NV_ListItem_isDataType(NV_Pointer item, NV_ElementType et);
 void NV_ListItem_convertUnknownToKnown(NV_Pointer vDict, NV_Pointer item);
 void NV_ListItem_unbox(NV_Pointer item);
 void NV_ListItem_convertToKnownUnboxed(NV_Pointer vDict, NV_Pointer item);
+void NV_ListItem_exchangeDataByIndex(NV_Pointer root, int i, int k);
+void NV_ListItem_exchangeData(NV_Pointer a, NV_Pointer b);
 void NV_ListItem_print(NV_Pointer t);
 // ---- List ----
 NV_Pointer NV_List_allocRoot();
@@ -261,10 +264,12 @@ NV_Pointer NV_List_getDataByIndex(NV_Pointer rootItem, int i);
 int NV_List_indexOfData(NV_Pointer root, NV_Pointer data);
 void NV_List_convertAllToKnownUnboxed(NV_Pointer scope, NV_Pointer root);
 void NV_List_removeItem(NV_Pointer item);
+void NV_List_sortAsc(NV_Pointer root, int (*cf)(NV_Pointer a, NV_Pointer b));
 void NV_List_printAll(NV_Pointer root, const char *prefix, const char *delimiter, const char *suffix);
 
 // @nv_operator.c
 NV_Pointer NV_Operator_allocNative(int precedence, const char *name, NV_OpFunc nativeFunc);
+NV_Pointer NV_Operator_allocNativeStruct(int precedence, const char *name, NV_OpFunc nativeFunc);
 NV_Pointer NV_Operator_alloc(NV_Pointer prec, NV_Pointer name, NV_Pointer body);
 NV_Pointer NV_Operator_clone(NV_Pointer p);
 void NV_Operator_print(NV_Pointer t);
