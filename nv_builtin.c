@@ -111,6 +111,7 @@ void
 NV_Op_builtin_push
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(lang);
 	// builtin_push [EList] [Data]
 	// -> (nothing)
 	NV_Pointer listItem = NV_ListItem_getNext(thisItem);
@@ -131,6 +132,7 @@ void
 NV_Op_builtin_pop
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(lang);
 	// builtin_pop [EList]
 	// -> [Item]
 	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);
@@ -147,6 +149,7 @@ void
 NV_Op_builtin_del_index
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(lang);
 	// del_index [EList] [EInteger]
 	// -> nothing
 	NV_Pointer listItem = NV_ListItem_getNext(thisItem);
@@ -170,6 +173,7 @@ void
 NV_Op_builtin_get_item
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(lang);
 	// [EList | EDict] builtin_get_item [Item]
 	// -> [Item]
 	NV_Pointer prev, next, prevData, nextData, target, var;
@@ -218,6 +222,7 @@ void
 NV_Op_builtin_var_dump
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(lang);
 	// builtin_var_dump [object]
 	// -> nothing
 	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);
@@ -238,6 +243,7 @@ void
 NV_Op_builtin_target_dump
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(lang);
 	// builtin_target_dump [object]
 	// -> nothing
 	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);
@@ -262,6 +268,8 @@ void
 NV_Op_builtin_remove_item
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(excFlag);
+	PARAM_UNUSED(lang);
 	// builtin_remove_item [object]
 	// -> nothing
 	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);
@@ -285,6 +293,7 @@ void
 NV_Op_builtin_remove_target
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(lang);
 	// builtin_remove_target [object]
 	// -> nothing
 	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);

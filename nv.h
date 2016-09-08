@@ -39,6 +39,7 @@
 
 #define malloc(s)	DO_NOT_USE_MALLOC(s)
 #define free(p)		DO_NOT_USE_FREE(p)
+#define PARAM_UNUSED(x)	((void)x)
 
 #define NV_EXC_FLAG_EXIT			0x0001
 #define NV_EXC_FLAG_AUTO_PRINT		0x0002
@@ -285,7 +286,7 @@ int NV_String_isEqualToCStr(NV_Pointer str, const char *cstr);
 int NV_String_isEqual(NV_Pointer str0, NV_Pointer str1);
 void NV_String_convertFromEscaped(NV_Pointer s);
 const char *NV_String_getCStr(NV_Pointer s);
-char NV_String_charAt(NV_Pointer strItem, int index);
+char NV_String_charAt(NV_Pointer strItem, size_t index);
 char *NV_String_strchr(NV_Pointer strItem, char c);
 void NV_String_print(NV_Pointer t);
 

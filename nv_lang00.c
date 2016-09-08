@@ -86,6 +86,8 @@ void
 NV_LANG00_Op_assign
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(lang);
+	//
 	NV_Pointer srcData;
 	NV_Pointer dstData;
 	{
@@ -120,7 +122,8 @@ NV_LANG00_Op_assign
 
 void
 NV_LANG00_Op_compoundAssign
-(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem){
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
+{
 	NV_Operator *op;
 	NV_Pointer var, prevItem;
 	char s[2];
@@ -155,6 +158,8 @@ void
 NV_LANG00_Op_declareVariable
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(lang);
+	//
 	NV_Pointer next = NV_ListItem_getNext(thisItem);
 	NV_Pointer var;
 	if(!NV_ListItem_isDataType(next, EString)){
@@ -172,6 +177,8 @@ void
 NV_LANG00_Op_unaryOperator_prefix
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(lang);
+	//
 	NV_Pointer prev = NV_ListItem_getPrev(thisItem);
 	NV_Pointer next = NV_ListItem_getNext(thisItem);
 	NV_Pointer data;
@@ -225,6 +232,8 @@ void
 NV_LANG00_Op_unaryOperator_varSuffix
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(lang);
+	//
 	NV_Operator *op;
 	NV_Pointer var, cint, prevItem;
 	char s[2];
@@ -262,6 +271,8 @@ void
 NV_LANG00_Op_binaryOperator
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(lang);
+	//
 	// for Integer values only.
 	NV_Pointer prev = NV_ListItem_getPrev(thisItem);
 	NV_Pointer next = NV_ListItem_getNext(thisItem);
@@ -308,6 +319,10 @@ void
 NV_LANG00_Op_nothingButDisappear
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(excFlag);
+	PARAM_UNUSED(lang);
+	PARAM_UNUSED(vDict);
+	//
 	NV_E_free(&thisItem);
 }
 
@@ -315,6 +330,9 @@ void
 NV_LANG00_Op_sentenceSeparator
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(excFlag);
+	PARAM_UNUSED(vDict);
+	//
 	NV_Pointer t, sentenceRoot, remRoot, tmp;
 	NV_Operator *tOp;
 	t = NV_ListItem_getPrev(thisItem);
@@ -344,6 +362,10 @@ void
 NV_LANG00_Op_sentenceBlock
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(lang);
+	PARAM_UNUSED(vDict);
+	PARAM_UNUSED(excFlag);
+	//
 	NV_LANG00_makeBlock(thisItem, "}");
 }
 
@@ -390,6 +412,11 @@ void
 NV_LANG00_Op_structureAccessor
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(excFlag);
+	PARAM_UNUSED(lang);
+	PARAM_UNUSED(vDict);
+	PARAM_UNUSED(thisItem);
+	//
 	NV_Pointer itemBeforeBlock;
 	itemBeforeBlock = NV_LANG00_makeBlock(thisItem, "]");
 
@@ -569,7 +596,10 @@ NV_LANG00_Op_for
 void
 NV_LANG00_Op_print
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
-{	
+{
+	PARAM_UNUSED(lang);
+	PARAM_UNUSED(vDict);
+	//
 	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);
 	NV_Pointer nextData;
 	NV_ListItem_convertUnknownToKnown(vDict, nextItem);
@@ -586,6 +616,8 @@ void
 NV_LANG00_Op_showOpList
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(vDict);
+	//
 	NV_List_printAll(
 		NV_Lang_getOpList(lang), "\nOpList: [\n", ",\n", "\n]\n");
 	//
@@ -597,6 +629,8 @@ void
 NV_LANG00_Op_showVarList
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(lang);
+	//
 	NV_Dict_printAll(
 		vDict, "\nVarList: [\n", ",\n", "\n]\n");
 	//
@@ -608,6 +642,9 @@ void
 NV_LANG00_Op_ls
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(lang);
+	PARAM_UNUSED(vDict);
+	//
 	NV_Dict_printAll(
 		sysRoot, "\n/ : [\n", ",\n", "\n]\n");
 	//
@@ -619,6 +656,10 @@ void
 NV_LANG00_Op_mem
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(excFlag);
+	PARAM_UNUSED(lang);
+	PARAM_UNUSED(vDict);
+	//
 	NV_Pointer memUsingSize = NV_E_malloc_type(EInteger);
 	NV_Integer_setImm32(memUsingSize, NV_getMallocCount());
 	NV_ListItem_setData(thisItem, NV_E_autorelease(memUsingSize));
@@ -628,6 +669,10 @@ void
 NV_LANG00_Op_exit
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(lang);
+	PARAM_UNUSED(vDict);
+	PARAM_UNUSED(thisItem);
+	//
 	SET_FLAG(*excFlag, NV_EXC_FLAG_EXIT);
 	CLR_FLAG(*excFlag, NV_EXC_FLAG_AUTO_PRINT);
 }
@@ -636,6 +681,10 @@ void
 NV_LANG00_Op_continue
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(lang);
+	PARAM_UNUSED(vDict);
+	PARAM_UNUSED(thisItem);
+	//
 	SET_FLAG(*excFlag, NV_EXC_FLAG_EXIT);
 	CLR_FLAG(*excFlag, NV_EXC_FLAG_AUTO_PRINT);
 	SET_FLAG(*excFlag, NV_EXC_FLAG_LANG00_EXIT_BY_CONTINUE);
@@ -645,6 +694,10 @@ void
 NV_LANG00_Op_break
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(lang);
+	PARAM_UNUSED(vDict);
+	PARAM_UNUSED(thisItem);
+	//
 	SET_FLAG(*excFlag, NV_EXC_FLAG_EXIT);
 	CLR_FLAG(*excFlag, NV_EXC_FLAG_AUTO_PRINT);
 	SET_FLAG(*excFlag, NV_EXC_FLAG_LANG00_EXIT_BY_BREAK);
@@ -654,6 +707,9 @@ void
 NV_LANG00_Op_genKeyValue
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
+	PARAM_UNUSED(lang);
+	PARAM_UNUSED(vDict);
+	//
 	NV_Pointer dictItem, prevItem, nextItem, dict;
 	prevItem = NV_ListItem_getPrev(thisItem);
 	dictItem = NV_ListItem_getPrev(prevItem);

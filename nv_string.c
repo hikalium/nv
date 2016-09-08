@@ -17,7 +17,7 @@ NV_String *NV_E_allocString()
 	return t;
 }
 
-void NV_E_free_internal_String(NV_Pointer p, NV_Pointer pool)
+void NV_E_free_internal_String(NV_Pointer p)
 {
 	NV_String *v;
 	v = NV_E_getRawPointer(p, EString);
@@ -135,7 +135,7 @@ const char *NV_String_getCStr(NV_Pointer s)
 	return v->s; 
 }
 
-char NV_String_charAt(NV_Pointer strItem, int index)
+char NV_String_charAt(NV_Pointer strItem, size_t index)
 {
 	NV_String *v = NV_E_getRawPointer(strItem, EString);
 	if(!v || !v->s || index >= strlen(v->s)) return 0;
