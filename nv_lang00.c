@@ -809,6 +809,7 @@ NV_Pointer NV_allocLang00()
 		NV_Op_builtin_set_op_to_val);
 	NV_Lang_addOpN(lang, 2000,	"builtin_pop", NV_Op_builtin_pop);
 	NV_Lang_addOpN(lang, 2000,	"builtin_push", NV_Op_builtin_push);
+	NV_Lang_addOpN(lang, 2000,	"builtin_add_op", NV_Op_builtin_add_op);
 	//
 	NV_Lang_addOpN(lang, 1000,  "if", NV_LANG00_Op_if);
 	NV_Lang_addOpN(lang, 1000,  "for", NV_LANG00_Op_for);

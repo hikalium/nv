@@ -316,7 +316,7 @@ void
 NV_Op_builtin_set_op_to_val
 (int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
 {
-	// NV_Op_builtin_set_op_to_val String Variable
+	// builtin_set_op_to_val String Variable
 	// -> nothing
 	NV_Pointer nextItem = NV_ListItem_getNext(thisItem);
 	NV_Pointer varItem = NV_ListItem_getNext(nextItem);
@@ -347,5 +347,40 @@ NV_Op_builtin_set_op_to_val
 	NV_E_free(&nextData);
 	NV_E_free(&thisItem);
 	NV_E_free(&nextItem);
+}
+
+void
+NV_Op_builtin_add_op
+(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem)
+{
+	// builtin_add_op String Integer CodeBlock
+	// -> nothing
+	NV_Pointer nameItem = NV_ListItem_getNext(thisItem);
+	NV_Pointer precItem = NV_ListItem_getNext(nameItem);
+	NV_Pointer bodyItem = NV_ListItem_getNext(precItem);
+	NV_Pointer name, prec, body;
+	//
+	NV_ListItem_convertToKnownUnboxed(vDict, nameItem);
+	NV_ListItem_convertToKnownUnboxed(vDict, precItem);
+	NV_ListItem_convertToKnownUnboxed(vDict, bodyItem);
+	//
+	name = NV_ListItem_getData(nameItem);
+	prec = NV_ListItem_getData(precItem);
+	body = NV_ListItem_getData(bodyItem);
+	//
+	if(	!NV_E_isType(name, EString) ||
+		!NV_E_isType(prec, EInteger) ||
+		!NV_E_isType(body, EList)){
+		NV_Error("%s", "operand type mismatched.");
+		SET_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
+		return;
+	}
+	//
+	NV_Lang_addOp(lang, name, prec, body);
+	//
+	NV_E_free(&thisItem);
+	NV_E_free(&nameItem);
+	NV_E_free(&precItem);
+	NV_E_free(&bodyItem);
 }
 

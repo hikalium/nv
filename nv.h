@@ -147,6 +147,7 @@ void NV_Op_builtin_target_dump(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDi
 void NV_Op_builtin_remove_item(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
 void NV_Op_builtin_remove_target(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
 void NV_Op_builtin_set_op_to_val(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
+void NV_Op_builtin_add_op(int32_t *excFlag, NV_Pointer lang, NV_Pointer vDict, NV_Pointer thisItem);
 
 
 // @nv_dict.c
