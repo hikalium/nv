@@ -88,3 +88,27 @@ NV_ElementID NV_Node_getConnectedFrom(NV_ElementID from, NV_ElementID rel)
 	}
 	return NODEID_NULL;
 }
+
+void NV_Node_dump(NV_Node *n)
+{
+	if(!n){
+		printf("(null)");
+		return;
+	}
+	printf("%08X %d ", n->id.d[0], n->type);
+	if(n->type == kString){
+		printf("%s", n->data);
+	}
+}
+
+void NV_Node_printPrimVal(NV_Node *n)
+{
+	if(!n){
+		printf("(null)");
+		return;
+	}
+	if(n->type == kString){
+		printf("\"%s\"", n->data);
+	}
+}
+

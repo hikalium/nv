@@ -34,38 +34,6 @@ void NV_Graph_init()
 	NV_Node_setStrToID(id, "relPointerTarget");
 }
 
-void NV_Graph_dumpNode(NV_Node *n)
-{
-	if(!n){
-		printf("(null)");
-		return;
-	}
-	printf("%08X %d ", n->id.d[0], n->type);
-	if(n->type == kString){
-		printf("%s", n->data);
-	}
-}
-
-void NV_Graph_printNodePrimVal(NV_Node *n)
-{
-	if(!n){
-		printf("(null)");
-		return;
-	}
-	if(n->type == kString){
-		printf("\"%s\"", n->data);
-	}
-}
-
-void NV_Graph_dumpEdge(NV_Edge *e)
-{
-	if(!e){
-		printf("(null)");
-		return;
-	}
-	printf("%08X %08X -- %08X -> %08X", e->id.d[0], e->from.d[0], e->rel.d[0], e->to.d[0]);
-}
-
 void NV_Graph_dump()
 {
 	NV_Node *n;
@@ -73,11 +41,11 @@ void NV_Graph_dump()
 	//
 	puts("Node:");
 	for(n = nodeRoot; n; n = n->next){
-		NV_Graph_dumpNode(n); putchar('\n');
+		NV_Node_dump(n); putchar('\n');
 	}
 	puts("Edge:");
 	for(e = edgeRoot; e; e = e->next){
-		NV_Graph_dumpEdge(e); putchar('\n');
+		NV_Edge_dump(e); putchar('\n');
 	}
 }
 
@@ -106,7 +74,8 @@ int main(int argc, char *argv[])
 	//
 	id = NV_Node_add();
 	NV_Node_setStrToID(id, "World");
-	id = NV_Node_clone(id);
+	NV_Node_clone(id);
+	NV_Node_setStrToID(id, "World2");
 	//
 	id = NV_Array_create();
 	NV_Array_print(id);

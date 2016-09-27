@@ -49,3 +49,13 @@ NV_ElementID NV_Edge_getConnectedFrom(NV_ElementID from, NV_ElementID rel)
 	}
 	return NODEID_NULL;
 }
+
+void NV_Edge_dump(NV_Edge *e)
+{
+	if(!e){
+		printf("(null)");
+		return;
+	}
+	printf("%08X %08X -- %08X -> %08X", e->id.d[0], e->from.d[0], e->rel.d[0], e->to.d[0]);
+}
+

@@ -31,9 +31,9 @@ void NV_Variable_print(NV_ElementID vid)
 	}
 	targetID = NV_Node_getConnectedFrom(vid, RELID_VARIABLE_DATA);
 	printf("Variable ");
-	NV_Graph_dumpNode(NV_Node_getByID(vid));
+	NV_Node_dump(NV_Node_getByID(vid));
 	printf(" = ");
-	NV_Graph_dumpNode(NV_Node_getByID(targetID));
+	NV_Node_dump(NV_Node_getByID(targetID));
 	putchar('\n');
 }
 
@@ -45,6 +45,6 @@ void NV_Variable_printiPrimVal(NV_ElementID vid)
 		return;
 	}
 	targetID = NV_Node_getConnectedFrom(vid, RELID_VARIABLE_DATA);
-	NV_Graph_printNodePrimVal(NV_Node_getByID(targetID));
+	NV_Node_printPrimVal(NV_Node_getByID(targetID));
 }
 

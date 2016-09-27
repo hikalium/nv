@@ -39,10 +39,6 @@ struct NV_EDGE {
 extern NV_Node *nodeRoot;
 extern NV_Edge *edgeRoot;
 void NV_Graph_init();
-void NV_Graph_dumpNode(NV_Node *n);
-void NV_Graph_printNodePrimVal(NV_Node *n);
-void NV_Graph_dumpEdge(NV_Edge *e);
-void NV_Graph_dumpEdge(NV_Edge *e);
 void NV_Graph_dump();
 int NV_isTreeType(NV_ElementID node, NV_ElementID tType);
 
@@ -56,6 +52,7 @@ NV_Edge *NV_Edge_getByID(NV_ElementID id);
 NV_ElementID NV_Edge_add(NV_ElementID from, NV_ElementID rel, NV_ElementID to);
 void NV_Edge_update(NV_ElementID eid, NV_ElementID from, NV_ElementID rel, NV_ElementID to);
 NV_ElementID NV_Edge_getConnectedFrom(NV_ElementID from, NV_ElementID rel);
+void NV_Edge_dump(NV_Edge *e);
 
 // @nv_id.c
 NV_ElementID NV_ElementID_generateRandom();
@@ -69,6 +66,8 @@ NV_ElementID NV_Node_clone(NV_ElementID baseID);
 void NV_Node_resetDataOfID(NV_ElementID id);
 void NV_Node_setStrToID(NV_ElementID id, const char *s);
 NV_ElementID NV_Node_getConnectedFrom(NV_ElementID from, NV_ElementID rel);
+void NV_Node_dump(NV_Node *n);
+void NV_Node_printPrimVal(NV_Node *n);
 
 // @nv_static.c
 extern const NV_ElementID NODEID_NULL;
