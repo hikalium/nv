@@ -1,1 +1,4 @@
 *.swp
+a.out*
+nv
+nv.dSYM/*
