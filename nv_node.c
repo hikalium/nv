@@ -78,6 +78,20 @@ void NV_Node_setStrToID(NV_ElementID id, const char *s)
 	}
 }
 
+void NV_Node_setInt32ToID(NV_ElementID id, int32_t v)
+{
+	NV_Node *n;
+	//
+	n = NV_Node_getByID(id);
+	if(n){
+		if(n->type != kNone) NV_Node_resetDataOfID(id);
+		n->type = kInteger;
+		n->size = sizeof(int32_t);
+		n->data = malloc(n->size);
+		*((int32_t *)n->data) = v;
+	}
+}
+
 NV_ElementID NV_Node_getConnectedFrom(NV_ElementID from, NV_ElementID rel)
 {
 	NV_Edge *e;
@@ -98,6 +112,10 @@ void NV_Node_dump(NV_Node *n)
 	printf("%08X %d ", n->id.d[0], n->type);
 	if(n->type == kString){
 		printf("%s", n->data);
+	} else if(n->type == kInteger){
+		if(n->size == sizeof(int32_t)){
+			printf("%d", *((int32_t *)n->data));
+		}
 	}
 }
 
@@ -109,6 +127,10 @@ void NV_Node_printPrimVal(NV_Node *n)
 	}
 	if(n->type == kString){
 		printf("\"%s\"", n->data);
+	} else if(n->type == kInteger){
+		if(n->size == sizeof(int32_t)){
+			printf("%d", *((int32_t *)n->data));
+		}
 	}
 }
 

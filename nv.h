@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,6 +12,7 @@ typedef struct NV_ELEMENT_ID NV_ElementID;
 enum NV_NODE_TYPE {
 	kNone,
 	kString,
+	kInteger,
 };
 
 struct NV_ELEMENT_ID {
@@ -65,6 +67,7 @@ NV_ElementID NV_Node_add();
 NV_ElementID NV_Node_clone(NV_ElementID baseID);
 void NV_Node_resetDataOfID(NV_ElementID id);
 void NV_Node_setStrToID(NV_ElementID id, const char *s);
+void NV_Node_setInt32ToID(NV_ElementID id, int32_t v);
 NV_ElementID NV_Node_getConnectedFrom(NV_ElementID from, NV_ElementID rel);
 void NV_Node_dump(NV_Node *n);
 void NV_Node_printPrimVal(NV_Node *n);

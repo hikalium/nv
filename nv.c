@@ -64,7 +64,7 @@ int NV_isTreeType(NV_ElementID node, NV_ElementID tType)
 
 int main(int argc, char *argv[])
 {
-	NV_ElementID id, id2;
+	NV_ElementID id, id2, id3;
 	//
 	srand(time(NULL));
 	NV_Graph_init();
@@ -77,11 +77,14 @@ int main(int argc, char *argv[])
 	NV_Node_clone(id);
 	NV_Node_setStrToID(id, "World2");
 	//
+	id3 = NV_Node_add();
+	NV_Node_setInt32ToID(id3, 12345);
+	//
 	id = NV_Array_create();
 	NV_Array_print(id);
 	NV_Array_push(id, id2);
 	NV_Array_print(id);
-	NV_Array_push(id, id2);
+	NV_Array_push(id, id3);
 	NV_Array_print(id);
 	NV_Array_push(id, id2);
 	NV_Array_print(id);

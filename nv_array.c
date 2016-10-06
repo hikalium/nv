@@ -14,6 +14,7 @@ NV_ElementID NV_Array_create()
 
 NV_ElementID NV_Array_push(NV_ElementID array, NV_ElementID data)
 {
+	// Always copy data element.
 	NV_ElementID v, t, next;
 	//
 	v = NV_Variable_create();
