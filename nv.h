@@ -4,6 +4,17 @@
 #include <string.h>
 #include <time.h>
 
+#define malloc(s)			DO_NOT_USE_THIS_FUNC(s)
+#define free(p)				DO_NOT_USE_THIS_FUNC(p)
+// #define strncpy(p, q, r)		DO_NOT_USE_THIS_FUNC(p)
+// #define strcpy(p, q)			DO_NOT_USE_THIS_FUNC(p)
+
+#define PARAM_UNUSED(x)	((void)x)
+
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define SET_FLAG(f, d)	f |= (d)
+#define CLR_FLAG(f, d) f &= ~(d)
+
 typedef struct NV_NODE NV_Node;
 typedef struct NV_EDGE NV_Edge;
 typedef enum NV_NODE_TYPE NV_NodeType;
@@ -55,6 +66,12 @@ NV_ElementID NV_Edge_add(NV_ElementID from, NV_ElementID rel, NV_ElementID to);
 void NV_Edge_update(NV_ElementID eid, NV_ElementID from, NV_ElementID rel, NV_ElementID to);
 NV_ElementID NV_Edge_getConnectedFrom(NV_ElementID from, NV_ElementID rel);
 void NV_Edge_dump(NV_Edge *e);
+
+// @nv_fix.c
+char *NV_strncpy(char *dst, const char *src, size_t dst_size, size_t copy_size);
+int NV_getMallocCount();
+void *NV_malloc(size_t size);
+void NV_free(void *p);
 
 // @nv_id.c
 NV_ElementID NV_ElementID_generateRandom();

@@ -14,7 +14,7 @@ NV_Node *NV_Node_getByID(NV_ElementID id)
 
 NV_ElementID NV_Node_addWithID(NV_ElementID id)
 {
-	NV_Node *n = malloc(sizeof(NV_Node));
+	NV_Node *n = NV_malloc(sizeof(NV_Node));
 	if(!n) exit(EXIT_FAILURE);
 	//
 	n->id = id;
@@ -41,7 +41,7 @@ NV_ElementID NV_Node_clone(NV_ElementID baseID)
 	base = NV_Node_getByID(baseID);
 	new->type = base->type;
 	if(base->data){
-		new->data = malloc(base->size);
+		new->data = NV_malloc(base->size);
 		new->size = base->size;
 		memcpy(new->data, base->data, new->size);
 	}
@@ -56,7 +56,7 @@ void NV_Node_resetDataOfID(NV_ElementID id)
 	if(n){
 		n->type = kNone;
 		if(n->data){
-			free(n->data);
+			NV_free(n->data);
 			n->data = NULL;
 			n->size = 0;
 		}
@@ -72,8 +72,8 @@ void NV_Node_setStrToID(NV_ElementID id, const char *s)
 		if(n->type != kNone) NV_Node_resetDataOfID(id);
 		n->type = kString;
 		n->size = strlen(s) + 1;
-		n->data = malloc(n->size);
-		strncpy(n->data, s, n->size - 1);
+		n->data = NV_malloc(n->size);
+		NV_strncpy(n->data, s, n->size, strlen(s));
 		((char *)n->data)[n->size - 1] = 0;
 	}
 }
@@ -87,7 +87,7 @@ void NV_Node_setInt32ToID(NV_ElementID id, int32_t v)
 		if(n->type != kNone) NV_Node_resetDataOfID(id);
 		n->type = kInteger;
 		n->size = sizeof(int32_t);
-		n->data = malloc(n->size);
+		n->data = NV_malloc(n->size);
 		*((int32_t *)n->data) = v;
 	}
 }
