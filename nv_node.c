@@ -92,18 +92,71 @@ void NV_Node_setInt32ToID(NV_ElementID id, int32_t v)
 	}
 }
 
-NV_ElementID NV_Node_getConnectedFrom(NV_ElementID from, NV_ElementID rel)
+void NV_Node_setRelation(NV_ElementID relnid, NV_ElementID from, NV_ElementID rel, NV_ElementID to)
 {
-	NV_Edge *e;
-	for(e = edgeRoot; e; e = e->next){
-		if(	NV_ElementID_isEqual(e->from, from) && 
-			NV_ElementID_isEqual(e->rel , rel))
-			return e->to;
+	NV_Node *n;
+	NV_Relation *reld;
+	//
+	n = NV_Node_getByID(relnid);
+	if(n){
+		if(n->type != kNone) NV_Node_resetDataOfID(relnid);
+		n->type = kRelation;
+		n->size = sizeof(NV_Relation);
+		n->data = NV_malloc(n->size);
+		//:
+		reld = n->data;
+		reld->from = from;
+		reld->rel = rel;
+		reld->to = to;
+	}
+}
+
+void NV_Node_updateRelationTo(NV_ElementID relnid, NV_ElementID to)
+{
+	NV_Node *n;
+	NV_Relation *reld;
+	//
+	n = NV_Node_getByID(relnid);
+	if(n){
+		if(n->type != kRelation) return;
+		reld = n->data;
+		reld->to = to;
+	}
+}
+
+NV_ElementID NV_Node_getRelationFrom(NV_ElementID from, NV_ElementID rel)
+{
+	const NV_Node *n;
+	const NV_Relation *reld;
+	for(n = nodeRoot; n; n = n->next){
+		if(n->type == kRelation){
+			reld = n->data;
+			if(	NV_ElementID_isEqual(reld->from, from) && 
+				NV_ElementID_isEqual(reld->rel, rel)){
+				return n->id;
+			}
+		}
 	}
 	return NODEID_NULL;
 }
 
-void NV_Node_dump(NV_Node *n)
+NV_ElementID NV_Node_getRelatedNodeFrom(NV_ElementID from, NV_ElementID rel)
+{
+	const NV_Node *n;
+	const NV_Relation *reld;
+	for(n = nodeRoot; n; n = n->next){
+		if(n->type == kRelation){
+			reld = n->data;
+			if(	NV_ElementID_isEqual(reld->from, from) &&
+				NV_ElementID_isEqual(reld->rel, rel)){
+				return reld->to;
+			}
+		}
+	}
+	return NODEID_NULL;
+}
+
+void NV_Node_dump(const NV_Node *n)
 {
 	if(!n){
 		printf("(null)");
@@ -116,6 +169,10 @@ void NV_Node_dump(NV_Node *n)
 		if(n->size == sizeof(int32_t)){
 			printf("%d", *((int32_t *)n->data));
 		}
+	} else if(n->type == kRelation){
+		const NV_Relation *e = n->data;
+		printf("%08X %08X -- %08X -> %08X",
+			n->id.d[0], e->from.d[0], e->rel.d[0], e->to.d[0]);
 	}
 }
 

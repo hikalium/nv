@@ -67,6 +67,7 @@ int main(int argc, char *argv[])
 	NV_ElementID id, id2, id3;
 	//
 	srand(time(NULL));
+	printf("mem: %d\n", NV_getMallocCount());
 	NV_Graph_init();
 	//
 	id2 = NV_Node_add();
@@ -97,6 +98,8 @@ NV_Variable_print(id);
 NV_Variable_print(id);
 	//
 	NV_Graph_dump();
+	//
+	printf("mem: %d\n", NV_getMallocCount());
 
 	return 0;
 }

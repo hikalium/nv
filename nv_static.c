@@ -2,6 +2,9 @@
 
 const NV_ElementID NODEID_NULL
 	= {{0x00000000, 0, 0, 0}};
+const NV_ElementID NODEID_REL_MASTERLINK
+	= {{0xffffffff, 0, 0, 0}};
+
 const NV_ElementID NODEID_TREE_TYPE_ARRAY
 	= {{0xBA7C82D7, 0, 0, 0}};
 const NV_ElementID NODEID_TREE_TYPE_VARIABLE
