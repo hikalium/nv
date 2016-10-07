@@ -4,13 +4,11 @@
 // Graph
 //
 NV_Node *nodeRoot;
-NV_Edge *edgeRoot;
 
 void NV_Graph_init()
 {
 	NV_ElementID id;
 	nodeRoot = NULL;
-	edgeRoot = NULL;
 	//
 	id = NV_Node_addWithID(NODEID_NULL);
 	NV_Node_setStrToID(id, "NullElement");
@@ -37,22 +35,18 @@ void NV_Graph_init()
 void NV_Graph_dump()
 {
 	NV_Node *n;
-	NV_Edge *e;
 	//
-	puts("Node:");
 	for(n = nodeRoot; n; n = n->next){
 		NV_Node_dump(n); putchar('\n');
-	}
-	puts("Edge:");
-	for(e = edgeRoot; e; e = e->next){
-		NV_Edge_dump(e); putchar('\n');
 	}
 }
 
 int NV_isTreeType(NV_ElementID node, NV_ElementID tType)
 {
 	return NV_ElementID_isEqual(
-		NV_Node_getConnectedFrom(node, RELID_TREE_TYPE), tType);
+		NV_Node_getRelatedNodeFrom(node, RELID_TREE_TYPE),
+		tType
+	);
 }
 
 

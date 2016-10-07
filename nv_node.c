@@ -33,6 +33,13 @@ NV_ElementID NV_Node_add()
 	return NV_Node_addWithID(NV_ElementID_generateRandom());
 }
 
+NV_ElementID NV_Node_addRelation(NV_ElementID from, NV_ElementID rel, NV_ElementID to)
+{
+	NV_ElementID r = NV_Node_add();
+	NV_Node_setRelation(r, from, rel, to);
+	return r;
+}
+
 NV_ElementID NV_Node_clone(NV_ElementID baseID)
 {
 	NV_Node *base, *new;

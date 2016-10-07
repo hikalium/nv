@@ -72,6 +72,7 @@ int NV_ElementID_isEqual(NV_ElementID a, NV_ElementID b);
 NV_Node *NV_Node_getByID(NV_ElementID id);
 NV_ElementID NV_Node_addWithID(NV_ElementID id);
 NV_ElementID NV_Node_add();
+NV_ElementID NV_Node_addRelation(NV_ElementID from, NV_ElementID rel, NV_ElementID to);
 NV_ElementID NV_Node_clone(NV_ElementID baseID);
 void NV_Node_resetDataOfID(NV_ElementID id);
 void NV_Node_setStrToID(NV_ElementID id, const char *s);
