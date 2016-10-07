@@ -2,22 +2,22 @@
 //
 // Node
 //
-NV_Node *NV_Node_getByID(NV_ElementID id)
+NV_Node *NV_Node_getByID(const NV_ElementID *id)
 {
 	NV_Node *n;
 	//
 	for(n = nodeRoot; n; n = n->next){
-		if(NV_ElementID_isEqual(n->id, id)) return n;
+		if(NV_ElementID_isEqual(&n->id, id)) return n;
 	}
 	return NULL;
 }
 
-NV_ElementID NV_Node_addWithID(NV_ElementID id)
+NV_ElementID NV_Node_addWithID(const NV_ElementID *id)
 {
 	NV_Node *n = NV_malloc(sizeof(NV_Node));
 	if(!n) exit(EXIT_FAILURE);
 	//
-	n->id = id;
+	n->id = *id;
 	n->type = kNone;
 	n->data = NULL;
 	n->size = 0;
@@ -30,21 +30,23 @@ NV_ElementID NV_Node_addWithID(NV_ElementID id)
 
 NV_ElementID NV_Node_add()
 {
-	return NV_Node_addWithID(NV_ElementID_generateRandom());
+	NV_ElementID id = NV_ElementID_generateRandom();
+	return NV_Node_addWithID(&id);
 }
 
-NV_ElementID NV_Node_addRelation(NV_ElementID from, NV_ElementID rel, NV_ElementID to)
+NV_ElementID NV_Node_addRelation
+(const NV_ElementID *from, const NV_ElementID *rel, const NV_ElementID *to)
 {
 	NV_ElementID r = NV_Node_add();
-	NV_Node_setRelation(r, from, rel, to);
+	NV_Node_setRelation(&r, from, rel, to);
 	return r;
 }
 
-NV_ElementID NV_Node_clone(NV_ElementID baseID)
+NV_ElementID NV_Node_clone(const NV_ElementID *baseID)
 {
 	NV_Node *base, *new;
 	NV_ElementID newID = NV_Node_add();
-	new = NV_Node_getByID(newID);
+	new = NV_Node_getByID(&newID);
 	base = NV_Node_getByID(baseID);
 	new->type = base->type;
 	if(base->data){
@@ -55,7 +57,7 @@ NV_ElementID NV_Node_clone(NV_ElementID baseID)
 	return newID;
 }
 
-void NV_Node_resetDataOfID(NV_ElementID id)
+void NV_Node_resetDataOfID(const NV_ElementID *id)
 {
 	NV_Node *n;
 	//
@@ -70,7 +72,7 @@ void NV_Node_resetDataOfID(NV_ElementID id)
 	}
 }
 
-void NV_Node_setStrToID(NV_ElementID id, const char *s)
+void NV_Node_setStrToID(const NV_ElementID *id, const char *s)
 {
 	NV_Node *n;
 	//
@@ -85,7 +87,7 @@ void NV_Node_setStrToID(NV_ElementID id, const char *s)
 	}
 }
 
-void NV_Node_setInt32ToID(NV_ElementID id, int32_t v)
+void NV_Node_setInt32ToID(const NV_ElementID *id, int32_t v)
 {
 	NV_Node *n;
 	//
@@ -99,7 +101,8 @@ void NV_Node_setInt32ToID(NV_ElementID id, int32_t v)
 	}
 }
 
-void NV_Node_setRelation(NV_ElementID relnid, NV_ElementID from, NV_ElementID rel, NV_ElementID to)
+void NV_Node_setRelation
+(const NV_ElementID *relnid, const NV_ElementID *from, const NV_ElementID *rel, const NV_ElementID *to)
 {
 	NV_Node *n;
 	NV_Relation *reld;
@@ -112,13 +115,13 @@ void NV_Node_setRelation(NV_ElementID relnid, NV_ElementID from, NV_ElementID re
 		n->data = NV_malloc(n->size);
 		//:
 		reld = n->data;
-		reld->from = from;
-		reld->rel = rel;
-		reld->to = to;
+		reld->from = *from;
+		reld->rel = *rel;
+		reld->to = *to;
 	}
 }
 
-void NV_Node_updateRelationTo(NV_ElementID relnid, NV_ElementID to)
+void NV_Node_updateRelationTo(const NV_ElementID *relnid, const NV_ElementID *to)
 {
 	NV_Node *n;
 	NV_Relation *reld;
@@ -127,19 +130,19 @@ void NV_Node_updateRelationTo(NV_ElementID relnid, NV_ElementID to)
 	if(n){
 		if(n->type != kRelation) return;
 		reld = n->data;
-		reld->to = to;
+		reld->to = *to;
 	}
 }
 
-NV_ElementID NV_Node_getRelationFrom(NV_ElementID from, NV_ElementID rel)
+NV_ElementID NV_Node_getRelationFrom(const NV_ElementID *from, const NV_ElementID *rel)
 {
 	const NV_Node *n;
 	const NV_Relation *reld;
 	for(n = nodeRoot; n; n = n->next){
 		if(n->type == kRelation){
 			reld = n->data;
-			if(	NV_ElementID_isEqual(reld->from, from) && 
-				NV_ElementID_isEqual(reld->rel, rel)){
+			if(	NV_ElementID_isEqual(&reld->from, from) && 
+				NV_ElementID_isEqual(&reld->rel, rel)){
 				return n->id;
 			}
 		}
@@ -147,15 +150,15 @@ NV_ElementID NV_Node_getRelationFrom(NV_ElementID from, NV_ElementID rel)
 	return NODEID_NULL;
 }
 
-NV_ElementID NV_Node_getRelatedNodeFrom(NV_ElementID from, NV_ElementID rel)
+NV_ElementID NV_Node_getRelatedNodeFrom(const NV_ElementID *from, const NV_ElementID *rel)
 {
 	const NV_Node *n;
 	const NV_Relation *reld;
 	for(n = nodeRoot; n; n = n->next){
 		if(n->type == kRelation){
 			reld = n->data;
-			if(	NV_ElementID_isEqual(reld->from, from) &&
-				NV_ElementID_isEqual(reld->rel, rel)){
+			if(	NV_ElementID_isEqual(&reld->from, from) &&
+				NV_ElementID_isEqual(&reld->rel, rel)){
 				return reld->to;
 			}
 		}
@@ -183,7 +186,7 @@ void NV_Node_dump(const NV_Node *n)
 	}
 }
 
-void NV_Node_printPrimVal(NV_Node *n)
+void NV_Node_printPrimVal(const NV_Node *n)
 {
 	if(!n){
 		printf("(null)");

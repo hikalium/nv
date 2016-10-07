@@ -13,11 +13,11 @@ NV_ElementID NV_ElementID_generateRandom()
 	return id;
 }
 
-int NV_ElementID_isEqual(NV_ElementID a, NV_ElementID b)
+int NV_ElementID_isEqual(const NV_ElementID *a, const NV_ElementID *b)
 {
 	int i;
 	for(i = 0; i < 4; i++){
-		if(a.d[i] != b.d[i]) return 0;
+		if(a->d[i] != b->d[i]) return 0;
 	}
 	return 1;
 }
