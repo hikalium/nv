@@ -55,36 +55,21 @@ NV_ElementID NV_putDataToPath(const NV_ElementID *base, const char s[], const NV
 	
 }
 */
-//
-// main
-//
-int main(int argc, char *argv[])
+
+void NV_Test_Memory()
 {
+	int memcount0;
 	NV_ElementID id, id2, id3;
 	//
-	srand(time(NULL));
-	printf("mem: %d\n", NV_getMallocCount());
-	NV_Graph_init();
+	memcount0 = NV_getMallocCount();
 	//
-
-printf("mem: %d\n", NV_getMallocCount());
-	id = NV_Node_create();
-	NV_Node_setStrToID(&id, "Hello, world!");
-printf("mem: %d\n", NV_getMallocCount());
-	NV_Node_remove(&id);
-printf("mem: %d\n", NV_getMallocCount());
-	//
-	
-/*
-	id2 = NV_Node_add();
+	id2 = NV_Node_create();
 	NV_Node_setStrToID(&id2, "Hello");
 	//
-	id = NV_Node_add();
+	id = NV_Node_create();
 	NV_Node_setStrToID(&id, "World");
-	NV_Node_clone(&id);
-	NV_Node_setStrToID(&id, "World2");
 	//
-	id3 = NV_Node_add();
+	id3 = NV_Node_create();
 	NV_Node_setInt32ToID(&id3, 12345);
 	//
 	id = NV_Array_create();
@@ -93,20 +78,24 @@ printf("mem: %d\n", NV_getMallocCount());
 	NV_Array_print(&id);
 	NV_Array_push(&id, &id3);
 	NV_Array_print(&id);
+	//
+	NV_Node_setStrToID(&id2, "World");
 	NV_Array_push(&id, &id2);
 	NV_Array_print(&id);
 	//
-	id = NV_Variable_create();
-NV_Variable_print(&id);
-	NV_Node_setStrToID(&id, "var1");
-NV_Variable_print(&id);
-	NV_Variable_assign(&id, &id2);
-NV_Variable_print(&id);
-	//
-*/	
+	printf("mem not freed: %d\n", NV_getMallocCount() - memcount0);
+}
 
-	NV_Graph_dump();
-	printf("mem: %d\n", NV_getMallocCount());
+//
+// main
+//
+int main(int argc, char *argv[])
+{
+	srand(time(NULL));
+	NV_Graph_init();
+	//
+	NV_Test_Memory();
+	//
 	return 0;
 }
 

@@ -15,10 +15,11 @@ NV_ElementID NV_Array_create()
 NV_ElementID NV_Array_push(const NV_ElementID *array, const NV_ElementID *data)
 {
 	// Always copy data element.
-	NV_ElementID v, t, next;
+	NV_ElementID v, t, next, d;
 	//
 	v = NV_Variable_create();
-	NV_Variable_assign(&v, data);
+	d = NV_Node_clone(data);
+	NV_Variable_assign(&v, &d);
 	//
 	t = *array;
 	for(;;){
