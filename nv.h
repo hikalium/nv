@@ -24,6 +24,7 @@ typedef struct NV_RELATION NV_Relation;
 enum NV_NODE_TYPE {
 	kNone,
 	kRelation,
+	kWeakRelation,
 	kString,
 	kInteger,
 };
@@ -35,9 +36,11 @@ struct NV_ELEMENT_ID {
 struct NV_NODE {
 	NV_ElementID id;
 	void *data;
+	NV_Node *prev;
 	NV_Node *next;
 	NV_NodeType type;
 	int size;	// size of data, bytes.
+	int refCount;
 };
 
 struct NV_RELATION {
@@ -47,7 +50,7 @@ struct NV_RELATION {
 };
 
 // @nv.c
-extern NV_Node *nodeRoot;
+extern NV_Node nodeRoot;
 void NV_Graph_init();
 void NV_Graph_dump();
 int NV_isTreeType(const NV_ElementID *node, const NV_ElementID *tType);
@@ -69,11 +72,12 @@ int NV_ElementID_isEqual(const NV_ElementID *a, const NV_ElementID *b);
 
 // @nv_node.c
 NV_Node *NV_Node_getByID(const NV_ElementID *id);
-NV_ElementID NV_Node_addWithID(const NV_ElementID *id);
-NV_ElementID NV_Node_add();
-NV_ElementID NV_Node_addRelation
+NV_ElementID NV_Node_createWithID(const NV_ElementID *id);
+NV_ElementID NV_Node_create();
+NV_ElementID NV_Node_createRelation
 	(const NV_ElementID *from, const NV_ElementID *rel, const NV_ElementID *to);
 NV_ElementID NV_Node_clone(const NV_ElementID *baseID);
+void NV_Node_remove(const NV_ElementID *id);
 void NV_Node_resetDataOfID(const NV_ElementID *id);
 void NV_Node_setStrToID(const NV_ElementID *id, const char *s);
 void NV_Node_setInt32ToID(const NV_ElementID *id, int32_t v);

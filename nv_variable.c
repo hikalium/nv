@@ -4,15 +4,12 @@
 //
 NV_ElementID NV_Variable_create()
 {
-	NV_ElementID v, rel;
+	NV_ElementID v;
 	//
-	v = NV_Node_add();
+	v = NV_Node_create();
 	//
-	rel = NV_Node_add();
-	NV_Node_setRelation(&rel, &v, &RELID_TREE_TYPE, &NODEID_TREE_TYPE_VARIABLE);
-	//
-	rel = NV_Node_add();
-	NV_Node_setRelation(&rel, &v, &RELID_VARIABLE_DATA, &NODEID_NULL);
+	NV_Node_createRelation(&v, &RELID_TREE_TYPE, &NODEID_TREE_TYPE_VARIABLE);
+	NV_Node_createRelation(&v, &RELID_VARIABLE_DATA, &NODEID_NULL);
 	return v;
 }
 

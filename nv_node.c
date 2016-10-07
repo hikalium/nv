@@ -6,13 +6,13 @@ NV_Node *NV_Node_getByID(const NV_ElementID *id)
 {
 	NV_Node *n;
 	//
-	for(n = nodeRoot; n; n = n->next){
+	for(n = nodeRoot.next; n; n = n->next){
 		if(NV_ElementID_isEqual(&n->id, id)) return n;
 	}
 	return NULL;
 }
 
-NV_ElementID NV_Node_addWithID(const NV_ElementID *id)
+NV_ElementID NV_Node_createWithID(const NV_ElementID *id)
 {
 	NV_Node *n = NV_malloc(sizeof(NV_Node));
 	if(!n) exit(EXIT_FAILURE);
@@ -22,22 +22,24 @@ NV_ElementID NV_Node_addWithID(const NV_ElementID *id)
 	n->data = NULL;
 	n->size = 0;
 	//
-	n->next = nodeRoot;
-	nodeRoot = n;
+	n->next = nodeRoot.next;
+	if(n->next) n->next->prev = n;
+	n->prev = &nodeRoot;
+	if(n->prev) n->prev->next = n;
 	//
 	return n->id;
 }
 
-NV_ElementID NV_Node_add()
+NV_ElementID NV_Node_create()
 {
 	NV_ElementID id = NV_ElementID_generateRandom();
-	return NV_Node_addWithID(&id);
+	return NV_Node_createWithID(&id);
 }
 
-NV_ElementID NV_Node_addRelation
+NV_ElementID NV_Node_createRelation
 (const NV_ElementID *from, const NV_ElementID *rel, const NV_ElementID *to)
 {
-	NV_ElementID r = NV_Node_add();
+	NV_ElementID r = NV_Node_create();
 	NV_Node_setRelation(&r, from, rel, to);
 	return r;
 }
@@ -45,7 +47,7 @@ NV_ElementID NV_Node_addRelation
 NV_ElementID NV_Node_clone(const NV_ElementID *baseID)
 {
 	NV_Node *base, *new;
-	NV_ElementID newID = NV_Node_add();
+	NV_ElementID newID = NV_Node_create();
 	new = NV_Node_getByID(&newID);
 	base = NV_Node_getByID(baseID);
 	new->type = base->type;
@@ -55,6 +57,20 @@ NV_ElementID NV_Node_clone(const NV_ElementID *baseID)
 		memcpy(new->data, base->data, new->size);
 	}
 	return newID;
+}
+
+void NV_Node_remove(const NV_ElementID *id)
+{
+	NV_Node *n;
+	//
+	n = NV_Node_getByID(id);
+	if(n){
+		if(n->type != kNone) NV_Node_resetDataOfID(id);
+		if(n->prev) n->prev->next = n->next;
+		if(n->next) n->next->prev = n->prev;
+		NV_free(n);
+	}
+
 }
 
 void NV_Node_resetDataOfID(const NV_ElementID *id)
@@ -138,7 +154,7 @@ NV_ElementID NV_Node_getRelationFrom(const NV_ElementID *from, const NV_ElementI
 {
 	const NV_Node *n;
 	const NV_Relation *reld;
-	for(n = nodeRoot; n; n = n->next){
+	for(n = nodeRoot.next; n; n = n->next){
 		if(n->type == kRelation){
 			reld = n->data;
 			if(	NV_ElementID_isEqual(&reld->from, from) && 
@@ -154,7 +170,7 @@ NV_ElementID NV_Node_getRelatedNodeFrom(const NV_ElementID *from, const NV_Eleme
 {
 	const NV_Node *n;
 	const NV_Relation *reld;
-	for(n = nodeRoot; n; n = n->next){
+	for(n = nodeRoot.next; n; n = n->next){
 		if(n->type == kRelation){
 			reld = n->data;
 			if(	NV_ElementID_isEqual(&reld->from, from) &&

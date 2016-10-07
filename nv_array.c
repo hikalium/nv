@@ -6,9 +6,9 @@
 NV_ElementID NV_Array_create()
 {
 	NV_ElementID arrayRoot;
-	arrayRoot = NV_Node_add();
-	NV_Node_addRelation(&arrayRoot, &RELID_TREE_TYPE, &NODEID_TREE_TYPE_ARRAY);
-	NV_Node_addRelation(&arrayRoot, &RELID_ARRAY_NEXT, &NODEID_NULL);
+	arrayRoot = NV_Node_create();
+	NV_Node_createRelation(&arrayRoot, &RELID_TREE_TYPE, &NODEID_TREE_TYPE_ARRAY);
+	NV_Node_createRelation(&arrayRoot, &RELID_ARRAY_NEXT, &NODEID_NULL);
 	return arrayRoot;
 }
 
@@ -26,7 +26,7 @@ NV_ElementID NV_Array_push(const NV_ElementID *array, const NV_ElementID *data)
 		if(NV_ElementID_isEqual(&next, &NODEID_NULL)) break;
 		t = next;
 	}
-	NV_Node_addRelation(&t, &RELID_ARRAY_NEXT, &v);
+	NV_Node_createRelation(&t, &RELID_ARRAY_NEXT, &v);
 	return v;
 }
 
