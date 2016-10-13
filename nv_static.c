@@ -18,3 +18,13 @@ const NV_ElementID RELID_POINTER_TARGET
 const NV_ElementID RELID_TREE_TYPE
 	= {{0xE804DE81, 0, 0, 0}};
 
+const NV_ElementID NODEID_NV_STATIC_ROOT
+	= {{0xB257ACBF, 0x5D434C81, 0x8D79C638, 0xA2BF94B3}};
+
+const char *NV_NodeTypeList[kNodeTypeCount] = {
+	"None",
+	"Relation",
+	"WeakRelation",
+	"String",
+	"Integer",
+};

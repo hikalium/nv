@@ -1,7 +1,43 @@
 #include "nv.h"
+
+void NV_Node_resetData(NV_Node *n)
+{
+	if(n){
+		if(n->data){
+			if(n->type == kRelation){
+				NV_Relation *reld = n->data;
+				NV_Node_release(&reld->from);
+				NV_Node_release(&reld->to);
+			}
+			NV_DbgInfo("Free Data type: %s", NV_NodeTypeList[n->type]);
+			NV_free(n->data);
+			n->data = NULL;
+			n->size = 0;
+		}
+		n->type = kNone;
+	}
+}
+
+void NV_Node_remove(NV_Node *n)
+{
+	if(n){
+		NV_DbgInfo("Free Node type: %s", NV_NodeTypeList[n->type]);
+		if(n->type != kNone) NV_Node_resetData(n);
+		if(n->prev) n->prev->next = n->next;
+		if(n->next) n->next->prev = n->prev;
+		NV_free(n);
+	}
+}
+
 //
 // Node
 //
+
+int NV_Node_existsID(const NV_ElementID *id)
+{
+	return NV_Node_getByID(id) != NULL;
+}
+
 NV_Node *NV_Node_getByID(const NV_ElementID *id)
 {
 	NV_Node *n;
@@ -21,6 +57,7 @@ NV_ElementID NV_Node_createWithID(const NV_ElementID *id)
 	n->type = kNone;
 	n->data = NULL;
 	n->size = 0;
+	n->refCount = 0;
 	//
 	n->next = nodeRoot.next;
 	if(n->next) n->next->prev = n;
@@ -59,33 +96,55 @@ NV_ElementID NV_Node_clone(const NV_ElementID *baseID)
 	return newID;
 }
 
-void NV_Node_remove(const NV_ElementID *id)
+void NV_Node_retain(const NV_ElementID *id)
 {
 	NV_Node *n;
 	//
 	n = NV_Node_getByID(id);
 	if(n){
-		if(n->type != kNone) NV_Node_resetDataOfID(id);
-		if(n->prev) n->prev->next = n->next;
-		if(n->next) n->next->prev = n->prev;
-		NV_free(n);
+		n->refCount++;
+		NV_DbgInfo("retain type: %s, refCount becomes: %d",
+			NV_NodeTypeList[n->type],
+			n->refCount);
 	}
+}
 
+void NV_Node_release(const NV_ElementID *id)
+{
+	NV_Node *n;
+	//
+	n = NV_Node_getByID(id);
+	if(n){
+		n->refCount--;
+		NV_DbgInfo("release type: %s, refCount becomes: %d",
+			NV_NodeTypeList[n->type],
+			n->refCount);
+	}
+}
+
+void NV_Node_cleanup()
+{
+	/*
+	メモリ解放戦略：
+		そのNodeがRelationで、
+			どちらか片方でもNodeが見つからなかった場合、解放する。
+		それ以外の場合で、
+			参照カウントが0になった場合は、解放する。
+	*/
+	NV_Node **n;
+	//
+	for(n = &nodeRoot.next; *n;){
+		if((*n)->refCount == 0){
+			NV_Node_remove(*n);
+			continue;
+		}
+		n = &(*n)->next;
+	}
 }
 
 void NV_Node_resetDataOfID(const NV_ElementID *id)
 {
-	NV_Node *n;
-	//
-	n = NV_Node_getByID(id);
-	if(n){
-		n->type = kNone;
-		if(n->data){
-			NV_free(n->data);
-			n->data = NULL;
-			n->size = 0;
-		}
-	}
+	NV_Node_resetData(NV_Node_getByID(id));
 }
 
 void NV_Node_setStrToID(const NV_ElementID *id, const char *s)
@@ -120,9 +179,13 @@ void NV_Node_setInt32ToID(const NV_ElementID *id, int32_t v)
 void NV_Node_setRelation
 (const NV_ElementID *relnid, const NV_ElementID *from, const NV_ElementID *rel, const NV_ElementID *to)
 {
+	// retains from, to.
 	NV_Node *n;
 	NV_Relation *reld;
 	//
+	if(!NV_Node_existsID(from) || !NV_Node_existsID(rel) || !NV_Node_existsID(to)){
+		return;
+	}
 	n = NV_Node_getByID(relnid);
 	if(n){
 		if(n->type != kNone) NV_Node_resetDataOfID(relnid);
@@ -134,6 +197,11 @@ void NV_Node_setRelation
 		reld->from = *from;
 		reld->rel = *rel;
 		reld->to = *to;
+		//
+		NV_Node_retain(from);
+		NV_Node_retain(to);
+		//
+		n->refCount += 2;
 	}
 }
 
@@ -188,7 +256,7 @@ void NV_Node_dump(const NV_Node *n)
 		printf("(null)");
 		return;
 	}
-	printf("%08X %d ", n->id.d[0], n->type);
+	printf("%08X %d %3d ", n->id.d[0], n->type, n->refCount);
 	if(n->type == kString){
 		printf("%s", n->data);
 	} else if(n->type == kInteger){

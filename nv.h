@@ -15,6 +15,15 @@
 #define SET_FLAG(f, d)	f |= (d)
 #define CLR_FLAG(f, d) f &= ~(d)
 
+#define ESC_ANSI_RED(s)		"\033[31m"s"\033[39m"
+#define ESC_ANSI_GREEN(s)	"\033[32m"s"\033[39m"
+#define ESC_ANSI_YERROW(s)	"\033[33m"s"\033[39m"
+#define ESC_ANSI_CYAN(s)	"\033[36m"s"\033[39m"
+
+#define NV_Error(fmt, ...)	printf(ESC_ANSI_RED("\nError: %s: %d: ")fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
+#define NV_DbgInfo(fmt, ...) \
+	printf("\nInfo : %s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
+
 typedef struct NV_NODE NV_Node;
 typedef enum NV_NODE_TYPE NV_NodeType;
 typedef struct NV_ELEMENT_ID NV_ElementID;
@@ -27,6 +36,8 @@ enum NV_NODE_TYPE {
 	kWeakRelation,
 	kString,
 	kInteger,
+	//
+	kNodeTypeCount,
 };
 
 struct NV_ELEMENT_ID {
@@ -71,13 +82,15 @@ NV_ElementID NV_ElementID_generateRandom();
 int NV_ElementID_isEqual(const NV_ElementID *a, const NV_ElementID *b);
 
 // @nv_node.c
+int NV_Node_existsID(const NV_ElementID *id);
 NV_Node *NV_Node_getByID(const NV_ElementID *id);
 NV_ElementID NV_Node_createWithID(const NV_ElementID *id);
 NV_ElementID NV_Node_create();
-NV_ElementID NV_Node_createRelation
-	(const NV_ElementID *from, const NV_ElementID *rel, const NV_ElementID *to);
+NV_ElementID NV_Node_createRelation(const NV_ElementID *from, const NV_ElementID *rel,  const NV_ElementID *to);
 NV_ElementID NV_Node_clone(const NV_ElementID *baseID);
-void NV_Node_remove(const NV_ElementID *id);
+void NV_Node_retain(const NV_ElementID *id);
+void NV_Node_release(const NV_ElementID *id);
+void NV_Node_cleanup();
 void NV_Node_resetDataOfID(const NV_ElementID *id);
 void NV_Node_setStrToID(const NV_ElementID *id, const char *s);
 void NV_Node_setInt32ToID(const NV_ElementID *id, int32_t v);
@@ -98,7 +111,8 @@ extern const NV_ElementID RELID_ARRAY_NEXT;
 extern const NV_ElementID RELID_VARIABLE_DATA;
 extern const NV_ElementID RELID_POINTER_TARGET;
 extern const NV_ElementID RELID_TREE_TYPE;
-
+extern const NV_ElementID NODEID_NV_STATIC_ROOT;
+const char *NV_NodeTypeList[kNodeTypeCount];
 
 // @nv_variable.c
 NV_ElementID NV_Variable_create();
