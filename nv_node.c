@@ -1,12 +1,16 @@
 #include "nv.h"
 
+
+void NV_Node_resetData(NV_Node *n);
+void NV_Node_remove(NV_Node *n);
+void NV_Node_removeAllRelationFrom(const NV_ElementID *from);
+
 void NV_Node_resetData(NV_Node *n)
 {
 	if(n){
 		if(n->data){
 			if(n->type == kRelation){
 				NV_Relation *reld = n->data;
-				NV_Node_release(&reld->from);
 				NV_Node_release(&reld->to);
 			}
 			NV_DbgInfo("Free Data type: %s", NV_NodeTypeList[n->type]);
@@ -21,11 +25,29 @@ void NV_Node_resetData(NV_Node *n)
 void NV_Node_remove(NV_Node *n)
 {
 	if(n){
+		NV_Node_removeAllRelationFrom(&n->id);
 		NV_DbgInfo("Free Node type: %s", NV_NodeTypeList[n->type]);
 		if(n->type != kNone) NV_Node_resetData(n);
 		if(n->prev) n->prev->next = n->next;
 		if(n->next) n->next->prev = n->prev;
 		NV_free(n);
+	}
+}
+
+void NV_Node_removeAllRelationFrom(const NV_ElementID *from)
+{
+	NV_Node *n, *t;
+	const NV_Relation *reld;
+	for(n = nodeRoot.next; n;){
+		if(n->type == kRelation){
+			reld = n->data;
+			if(	NV_ElementID_isEqual(&reld->from, from)){
+				t = n->next;
+				NV_Node_remove(n);
+				n = t;
+			}
+		}
+		n = n->next;
 	}
 }
 
@@ -179,7 +201,9 @@ void NV_Node_setInt32ToID(const NV_ElementID *id, int32_t v)
 void NV_Node_setRelation
 (const NV_ElementID *relnid, const NV_ElementID *from, const NV_ElementID *rel, const NV_ElementID *to)
 {
-	// retains from, to.
+	// retains to.
+	// Relationはtoを保持し、
+	// fromはRelationを保持する。
 	NV_Node *n;
 	NV_Relation *reld;
 	//
@@ -198,10 +222,9 @@ void NV_Node_setRelation
 		reld->rel = *rel;
 		reld->to = *to;
 		//
-		NV_Node_retain(from);
 		NV_Node_retain(to);
 		//
-		n->refCount += 2;
+		n->refCount++;
 	}
 }
 
