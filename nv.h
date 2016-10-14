@@ -22,7 +22,11 @@
 
 #define NV_Error(fmt, ...)	printf(ESC_ANSI_RED("\nError: %s: %d: ")fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
 #define NV_DbgInfo(fmt, ...) \
-	printf("\nInfo : %s: %d: " fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
+	printf("\nInfo : %3d:%s: " fmt "\n", __LINE__, __FUNCTION__, __VA_ARGS__)
+#define NV_DbgInfo0(s) \
+	printf("\nInfo : %3d:%s: %s\n", __LINE__, __FUNCTION__, s)
+#define NV_DbgInfo_mem(n, s) \
+	printf("Info : Mem: %08X: %2d %s %s\n", n->id.d[0], n->type, NV_NodeTypeList[n->type], s);
 
 typedef struct NV_NODE NV_Node;
 typedef enum NV_NODE_TYPE NV_NodeType;
@@ -86,21 +90,24 @@ int NV_Node_existsID(const NV_ElementID *id);
 NV_Node *NV_Node_getByID(const NV_ElementID *id);
 NV_ElementID NV_Node_createWithID(const NV_ElementID *id);
 NV_ElementID NV_Node_create();
-NV_ElementID NV_Node_createRelation(const NV_ElementID *from, const NV_ElementID *rel,  const NV_ElementID *to);
 NV_ElementID NV_Node_clone(const NV_ElementID *baseID);
 void NV_Node_retain(const NV_ElementID *id);
 void NV_Node_release(const NV_ElementID *id);
 void NV_Node_cleanup();
 void NV_Node_resetDataOfID(const NV_ElementID *id);
-void NV_Node_setStrToID(const NV_ElementID *id, const char *s);
-void NV_Node_setInt32ToID(const NV_ElementID *id, int32_t v);
+void NV_Node_dump(const NV_Node *n);
+void NV_Node_printPrimVal(const NV_Node *n);
+//
+NV_ElementID NV_Node_createRelation(const NV_ElementID *from, const NV_ElementID *rel,  const NV_ElementID *to);
 void NV_Node_setRelation
 	(const NV_ElementID *relnid, const NV_ElementID *from, const NV_ElementID *rel, const NV_ElementID *to);
 void NV_Node_updateRelationTo(const NV_ElementID *relnid, const NV_ElementID *to);
 NV_ElementID NV_Node_getRelationFrom(const NV_ElementID *from, const NV_ElementID *rel);
 NV_ElementID NV_Node_getRelatedNodeFrom(const NV_ElementID *from, const NV_ElementID *rel);
-void NV_Node_dump(const NV_Node *n);
-void NV_Node_printPrimVal(const NV_Node *n);
+//
+void NV_Node_setStrToID(const NV_ElementID *id, const char *s);
+//
+void NV_Node_setInt32ToID(const NV_ElementID *id, int32_t v);
 
 // @nv_static.c
 extern const NV_ElementID NODEID_NULL;

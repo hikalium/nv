@@ -68,6 +68,7 @@ void NV_Test_Memory()
 	id3 = NV_Node_create();
 	NV_Node_setInt32ToID(&id3, 12345);
 	//
+
 	id = NV_Array_create();
 	NV_Array_print(&id);
 	NV_Array_push(&id, &id2);
@@ -82,6 +83,14 @@ void NV_Test_Memory()
 	//NV_Node_retain(&id);
 	//
 	NV_Graph_dump();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
 	NV_Node_cleanup();
 	NV_Graph_dump();
 
