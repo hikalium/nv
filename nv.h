@@ -4,6 +4,8 @@
 #include <string.h>
 #include <time.h>
 
+#define MAX_INPUT_LEN		1024
+
 #define malloc(s)			DO_NOT_USE_THIS_FUNC(s)
 #define free(p)				DO_NOT_USE_THIS_FUNC(p)
 // #define strncpy(p, q, r)		DO_NOT_USE_THIS_FUNC(p)
@@ -30,7 +32,7 @@
 
 typedef struct NV_NODE NV_Node;
 typedef enum NV_NODE_TYPE NV_NodeType;
-typedef struct NV_ELEMENT_ID NV_ElementID;
+typedef struct NV_ELEMENT_ID NV_ID;
 
 typedef struct NV_RELATION NV_Relation;
 
@@ -49,7 +51,7 @@ struct NV_ELEMENT_ID {
 };
 
 struct NV_NODE {
-	NV_ElementID id;
+	NV_ID id;
 	void *data;
 	NV_Node *prev;
 	NV_Node *next;
@@ -59,21 +61,31 @@ struct NV_NODE {
 };
 
 struct NV_RELATION {
-	NV_ElementID from;
-	NV_ElementID rel;
-	NV_ElementID to;
+	NV_ID from;
+	NV_ID rel;
+	NV_ID to;
 };
 
 // @nv.c
 extern NV_Node nodeRoot;
 void NV_Graph_init();
 void NV_Graph_dump();
-int NV_isTreeType(const NV_ElementID *node, const NV_ElementID *tType);
+int NV_isTreeType(const NV_ID *node, const NV_ID *tType);
+int NV_runInteractive(const NV_ID *envRoot);
 
 // @nv_array.c
-NV_ElementID NV_Array_create();
-NV_ElementID NV_Array_push(const NV_ElementID *array, const NV_ElementID *data);
-void NV_Array_print(const NV_ElementID *array);
+NV_ID NV_Array_create();
+NV_ID NV_Array_push(const NV_ID *array, const NV_ID *data);
+void NV_Array_print(const NV_ID *array);
+
+// @nv_dict.c
+NV_ID NV_Dict_add(const NV_ID *root, const NV_ID *key, const NV_ID *value);
+NV_ID NV_Dict_addByStringKey(const NV_ID *root, const char *key, const NV_ID *value);
+NV_ID NV_Dict_get(const NV_ID *root, const NV_ID *key);
+void NV_Dict_print(const NV_ID *root);
+
+// @nv_driver.c
+char *NV_gets(char *str, int size);
 
 // @nv_fix.c
 char *NV_strncpy(char *dst, const char *src, size_t dst_size, size_t copy_size);
@@ -82,48 +94,53 @@ void *NV_malloc(size_t size);
 void NV_free(void *p);
 
 // @nv_id.c
-NV_ElementID NV_ElementID_generateRandom();
-int NV_ElementID_isEqual(const NV_ElementID *a, const NV_ElementID *b);
+NV_ID NV_ID_generateRandom();
+int NV_ID_isEqual(const NV_ID *a, const NV_ID *b);
+int NV_ID_isEqualInValue(const NV_ID *a, const NV_ID *b);
+void NV_ID_printPrimVal(const NV_ID *id);
 
 // @nv_node.c
-int NV_Node_existsID(const NV_ElementID *id);
-NV_Node *NV_Node_getByID(const NV_ElementID *id);
-NV_ElementID NV_Node_createWithID(const NV_ElementID *id);
-NV_ElementID NV_Node_create();
-NV_ElementID NV_Node_clone(const NV_ElementID *baseID);
-void NV_Node_retain(const NV_ElementID *id);
-void NV_Node_release(const NV_ElementID *id);
+int NV_Node_existsID(const NV_ID *id);
+NV_Node *NV_Node_getByID(const NV_ID *id);
+int NV_Node_isEqualInValue(const NV_Node *na, const NV_Node *nb);
+NV_ID NV_Node_createWithID(const NV_ID *id);
+NV_ID NV_Node_create();
+NV_ID NV_Node_clone(const NV_ID *baseID);
+void NV_Node_retain(const NV_ID *id);
+void NV_Node_release(const NV_ID *id);
 void NV_Node_cleanup();
-void NV_Node_resetDataOfID(const NV_ElementID *id);
+void NV_Node_resetDataOfID(const NV_ID *id);
 void NV_Node_dump(const NV_Node *n);
 void NV_Node_printPrimVal(const NV_Node *n);
 //
-NV_ElementID NV_Node_createRelation(const NV_ElementID *from, const NV_ElementID *rel,  const NV_ElementID *to);
+NV_ID NV_Node_createRelation(const NV_ID *from, const NV_ID *rel,  const NV_ID *to);
 void NV_Node_setRelation
-	(const NV_ElementID *relnid, const NV_ElementID *from, const NV_ElementID *rel, const NV_ElementID *to);
-void NV_Node_updateRelationTo(const NV_ElementID *relnid, const NV_ElementID *to);
-NV_ElementID NV_Node_getRelationFrom(const NV_ElementID *from, const NV_ElementID *rel);
-NV_ElementID NV_Node_getRelatedNodeFrom(const NV_ElementID *from, const NV_ElementID *rel);
+	(const NV_ID *relnid, const NV_ID *from, const NV_ID *rel, const NV_ID *to);
+void NV_Node_updateRelationTo(const NV_ID *relnid, const NV_ID *to);
+NV_ID NV_Node_getRelationFrom(const NV_ID *from, const NV_ID *rel);
+NV_ID NV_Node_getRelatedNodeFrom(const NV_ID *from, const NV_ID *rel);
 //
-void NV_Node_setStrToID(const NV_ElementID *id, const char *s);
+NV_ID NV_Node_createWithString(const char *s);
+void NV_Node_setStrToID(const NV_ID *id, const char *s);
+int NV_Node_String_compare(const NV_Node *na, const NV_Node *nb);
 //
-void NV_Node_setInt32ToID(const NV_ElementID *id, int32_t v);
+void NV_Node_setInt32ToID(const NV_ID *id, int32_t v);
 
 // @nv_static.c
-extern const NV_ElementID NODEID_NULL;
-extern const NV_ElementID NODEID_REL_MASTERLINK;
-extern const NV_ElementID NODEID_TREE_TYPE_ARRAY;
-extern const NV_ElementID NODEID_TREE_TYPE_VARIABLE;
-extern const NV_ElementID RELID_ARRAY_NEXT;
-extern const NV_ElementID RELID_VARIABLE_DATA;
-extern const NV_ElementID RELID_POINTER_TARGET;
-extern const NV_ElementID RELID_TREE_TYPE;
-extern const NV_ElementID NODEID_NV_STATIC_ROOT;
+extern const NV_ID NODEID_NULL;
+extern const NV_ID NODEID_REL_MASTERLINK;
+extern const NV_ID NODEID_TREE_TYPE_ARRAY;
+extern const NV_ID NODEID_TREE_TYPE_VARIABLE;
+extern const NV_ID RELID_ARRAY_NEXT;
+extern const NV_ID RELID_VARIABLE_DATA;
+extern const NV_ID RELID_POINTER_TARGET;
+extern const NV_ID RELID_TREE_TYPE;
+extern const NV_ID NODEID_NV_STATIC_ROOT;
 const char *NV_NodeTypeList[kNodeTypeCount];
 
 // @nv_variable.c
-NV_ElementID NV_Variable_create();
-void NV_Variable_assign(const NV_ElementID *vid, const NV_ElementID *data);
-void NV_Variable_print(const NV_ElementID *vid);
-void NV_Variable_printiPrimVal(const NV_ElementID *vid);
+NV_ID NV_Variable_create();
+void NV_Variable_assign(const NV_ID *vid, const NV_ID *data);
+void NV_Variable_print(const NV_ID *vid);
+void NV_Variable_printiPrimVal(const NV_ID *vid);
 

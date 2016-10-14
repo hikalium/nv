@@ -2,9 +2,9 @@
 //
 // Variable
 //
-NV_ElementID NV_Variable_create()
+NV_ID NV_Variable_create()
 {
-	NV_ElementID v;
+	NV_ID v;
 	//
 	v = NV_Node_create();
 	//
@@ -13,17 +13,17 @@ NV_ElementID NV_Variable_create()
 	return v;
 }
 
-void NV_Variable_assign(const NV_ElementID *vid, const NV_ElementID *data)
+void NV_Variable_assign(const NV_ID *vid, const NV_ID *data)
 {
-	NV_ElementID eid;
+	NV_ID eid;
 	//
 	eid = NV_Node_getRelationFrom(vid, &RELID_VARIABLE_DATA);
 	NV_Node_updateRelationTo(&eid, data);
 }
 
-void NV_Variable_print(const NV_ElementID *vid)
+void NV_Variable_print(const NV_ID *vid)
 {
-	NV_ElementID targetID;
+	NV_ID targetID;
 	if(!NV_isTreeType(vid, &NODEID_TREE_TYPE_VARIABLE)){
 		printf("id: %08X is not Variable.", vid->d[0]);
 		return;
@@ -36,9 +36,9 @@ void NV_Variable_print(const NV_ElementID *vid)
 	putchar('\n');
 }
 
-void NV_Variable_printiPrimVal(const NV_ElementID *vid)
+void NV_Variable_printiPrimVal(const NV_ID *vid)
 {
-	NV_ElementID targetID;
+	NV_ID targetID;
 	if(!NV_isTreeType(vid, &NODEID_TREE_TYPE_VARIABLE)){
 		printf("id: %08X is not Variable.", vid->d[0]);
 		return;

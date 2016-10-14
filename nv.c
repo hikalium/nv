@@ -4,7 +4,7 @@
 //
 NV_Node nodeRoot;
 
-void NV_Graph_addStaticNode(const NV_ElementID *id, const char *s){
+void NV_Graph_addStaticNode(const NV_ID *id, const char *s){
 	NV_Node_createWithID(id);
 	NV_Node_setStrToID(id, s);
 	NV_Node_createRelation(&NODEID_NV_STATIC_ROOT, &NODEID_NULL, id);
@@ -12,6 +12,8 @@ void NV_Graph_addStaticNode(const NV_ElementID *id, const char *s){
 
 void NV_Graph_init()
 {
+	srand(time(NULL));
+	//
 	nodeRoot.prev = NULL;
 	nodeRoot.next = NULL;
 	nodeRoot.data = NULL;
@@ -40,13 +42,13 @@ void NV_Graph_dump()
 	}
 }
 
-int NV_isTreeType(const NV_ElementID *node, const NV_ElementID *tType)
+int NV_isTreeType(const NV_ID *node, const NV_ID *tType)
 {
-	NV_ElementID typeID = NV_Node_getRelatedNodeFrom(node, &RELID_TREE_TYPE);
-	return NV_ElementID_isEqual(&typeID, tType);
+	NV_ID typeID = NV_Node_getRelatedNodeFrom(node, &RELID_TREE_TYPE);
+	return NV_ID_isEqual(&typeID, tType);
 }
 /*
-NV_ElementID NV_putDataToPath(const NV_ElementID *base, const char s[], const NV_ElementID *data)
+NV_ID NV_putDataToPath(const NV_ID *base, const char s[], const NV_ID *data)
 {
 	
 }
@@ -55,7 +57,7 @@ NV_ElementID NV_putDataToPath(const NV_ElementID *base, const char s[], const NV
 void NV_Test_Memory()
 {
 	int memcount0;
-	NV_ElementID id, id2, id3;
+	NV_ID id, id2, id3;
 	//
 	memcount0 = NV_getMallocCount();
 	//
@@ -98,16 +100,98 @@ void NV_Test_Memory()
 	printf("mem not freed: %d\n", NV_getMallocCount() - memcount0);
 }
 
+void NV_Test_Dict()
+{
+	int memcount0;
+	NV_ID root, k, v;
+	//
+	memcount0 = NV_getMallocCount();
+	//
+	root = NV_Node_create();
+	NV_Node_setStrToID(&root, "testDict");
+	k = NV_Node_createWithString("hello");
+	v = NV_Node_createWithString("world");
+	NV_Dict_add(&root, &k, &v);
+	NV_Dict_add(&root, &v, &k);
+	//
+	NV_Dict_print(&root);
+	//
+	NV_Node_retain(&root);
+	//
+	NV_Graph_dump();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Graph_dump();
+	NV_Dict_print(&root);
+
+	//
+	printf("mem not freed: %d\n", NV_getMallocCount() - memcount0);
+}
+
+void NV_Test_Data()
+{
+	int memcount0;
+	NV_ID id, id2;
+	//
+	memcount0 = NV_getMallocCount();
+	//
+	id2 = NV_Node_create();
+	NV_Node_setStrToID(&id2, "");
+	//
+	id = NV_Node_create();
+	NV_Node_setStrToID(&id, "World");
+	printf("%d %d\n",
+		NV_ID_isEqualInValue(&id, &id2),
+		NV_ID_isEqual(&id, &id2));
+	NV_Node_setStrToID(&id, "");
+	printf("%d %d\n",
+		NV_ID_isEqualInValue(&id, &id2),
+		NV_ID_isEqual(&id, &id2));
+	//
+	//NV_Node_retain(&id);
+	//
+	NV_Graph_dump();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Node_cleanup();
+	NV_Graph_dump();
+
+	//
+	printf("mem not freed: %d\n", NV_getMallocCount() - memcount0);
+}
+
+int NV_runInteractive(const NV_ID *envRoot)
+{
+	char line[MAX_INPUT_LEN];
+	//
+	while(NV_gets(line, sizeof(line)) != NULL){
+		
+	}
+	return 0;
+}
+
 //
 // main
 //
+int32_t NV_debugFlag;
 int main(int argc, char *argv[])
 {
-	srand(time(NULL));
 	NV_Graph_init();
-	//
-	NV_Test_Memory();
-	//
+	//NV_Test_Data();
+	NV_Test_Dict();
 	return 0;
 }
 
