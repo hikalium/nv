@@ -188,24 +188,32 @@ void NV_Node_resetDataOfID(const NV_ID *id)
 	NV_Node_resetData(NV_Node_getByID(id));
 }
 
-void NV_Node_dump(const NV_Node *n)
+void NV_Node_fdump(FILE *fp, const NV_Node *n)
 {
 	if(!n){
-		printf("(null)");
+		fprintf(fp, "(null)");
 		return;
 	}
-	printf("%08X %d %3d ", n->id.d[0], n->type, n->refCount);
+	fprintf(fp, "%08X%08X%08X%08X %d %d ", n->id.d[0], n->id.d[1], n->id.d[2], n->id.d[3], n->type, n->refCount);
 	if(n->type == kString){
-		printf("%s", n->data);
+		fprintf(fp, "%s", n->data);
 	} else if(n->type == kInteger){
 		if(n->size == sizeof(int32_t)){
-			printf("%d", *((int32_t *)n->data));
+			fprintf(fp, "%d", *((int32_t *)n->data));
 		}
 	} else if(n->type == kRelation){
 		const NV_Relation *e = n->data;
-		printf("%08X %08X -- %08X -> %08X",
-			n->id.d[0], e->from.d[0], e->rel.d[0], e->to.d[0]);
+		fprintf(fp, "%08X%08X%08X%08X -- %08X%08X%08X%08X -> %08X%08X%08X%08X",
+			e->from.d[0],e->from.d[1],e->from.d[2],e->from.d[3], 
+			e->rel.d[0],e->rel.d[1],e->rel.d[2],e->rel.d[3],
+			e->to.d[0],e->to.d[1],e->to.d[2],e->to.d[3]
+		);
 	}
+}
+
+void NV_Node_dump(const NV_Node *n)
+{
+	NV_Node_fdump(stdout, n);
 }
 
 void NV_Node_printPrimVal(const NV_Node *n)
@@ -363,6 +371,12 @@ int NV_Node_String_compare(const NV_Node *na, const NV_Node *nb)
 	// "" == "" -> true
 	if(!na || !nb || na->type != kString || nb->type != kString) return -1;
 	return strcmp(na->data, nb->data);
+}
+
+char *NV_Node_String_strchr(const NV_Node *ns, char c)
+{
+	if(!ns || ns->type != kString) return NULL;;
+	return strchr(ns->data, c);
 }
 
 //

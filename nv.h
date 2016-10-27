@@ -5,6 +5,7 @@
 #include <time.h>
 
 #define MAX_INPUT_LEN		1024
+#define MAX_TOKEN_LEN		256
 
 #define malloc(s)			DO_NOT_USE_THIS_FUNC(s)
 #define free(p)				DO_NOT_USE_THIS_FUNC(p)
@@ -71,11 +72,13 @@ extern NV_Node nodeRoot;
 void NV_Graph_init();
 void NV_Graph_dump();
 int NV_isTreeType(const NV_ID *node, const NV_ID *tType);
-int NV_runInteractive(const NV_ID *envRoot);
+int NV_runInteractive(const NV_ID *cTypeList);
+NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
 
 // @nv_array.c
 NV_ID NV_Array_create();
 NV_ID NV_Array_push(const NV_ID *array, const NV_ID *data);
+NV_ID NV_Array_getByIndex(const NV_ID *array, int index);
 void NV_Array_print(const NV_ID *array);
 
 // @nv_dict.c
@@ -110,6 +113,7 @@ void NV_Node_retain(const NV_ID *id);
 void NV_Node_release(const NV_ID *id);
 void NV_Node_cleanup();
 void NV_Node_resetDataOfID(const NV_ID *id);
+void NV_Node_fdump(FILE *fp, const NV_Node *n);
 void NV_Node_dump(const NV_Node *n);
 void NV_Node_printPrimVal(const NV_Node *n);
 //
@@ -123,6 +127,7 @@ NV_ID NV_Node_getRelatedNodeFrom(const NV_ID *from, const NV_ID *rel);
 NV_ID NV_Node_createWithString(const char *s);
 void NV_Node_setStrToID(const NV_ID *id, const char *s);
 int NV_Node_String_compare(const NV_Node *na, const NV_Node *nb);
+char *NV_Node_String_strchr(const NV_Node *ns, char c);
 //
 void NV_Node_setInt32ToID(const NV_ID *id, int32_t v);
 
@@ -141,6 +146,7 @@ const char *NV_NodeTypeList[kNodeTypeCount];
 // @nv_variable.c
 NV_ID NV_Variable_create();
 void NV_Variable_assign(const NV_ID *vid, const NV_ID *data);
+NV_ID NV_Variable_getData(const NV_ID *vid);
 void NV_Variable_print(const NV_ID *vid);
 void NV_Variable_printiPrimVal(const NV_ID *vid);
 

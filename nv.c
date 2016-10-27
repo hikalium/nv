@@ -42,6 +42,17 @@ void NV_Graph_dump()
 	}
 }
 
+void NV_Graph_saveToFileName(const char *fname)
+{
+	FILE *fp = fopen(fname, "wb");
+	NV_Node *n;
+	if(!fp) return;
+	for(n = nodeRoot.next; n; n = n->next){
+		NV_Node_dump(n); putchar('\n');
+	}
+	fclose(fp);
+}
+
 int NV_isTreeType(const NV_ID *node, const NV_ID *tType)
 {
 	NV_ID typeID = NV_Node_getRelatedNodeFrom(node, &RELID_TREE_TYPE);
@@ -173,25 +184,98 @@ void NV_Test_Data()
 	printf("mem not freed: %d\n", NV_getMallocCount() - memcount0);
 }
 
-int NV_runInteractive(const NV_ID *envRoot)
+int NV_runInteractive(const NV_ID *cTypeList)
 {
 	char line[MAX_INPUT_LEN];
 	//
 	while(NV_gets(line, sizeof(line)) != NULL){
-		
+		NV_tokenize(cTypeList, line);
 	}
 	return 0;
 }
 
+#define NV_LANG_CHAR_LIST_LEN 3
+int NV_Lang_getCharType(const NV_ID *cTypeList, char c)
+{
+	NV_ID t;
+	int i;
+	if(c == '\0') return -1;
+	for(i = 0; i < NV_LANG_CHAR_LIST_LEN; i++){
+		t = NV_Array_getByIndex(cTypeList, i);
+		if(NV_Node_String_strchr(NV_Node_getByID(&t), c)) break;
+	}
+	return i;
+}
+
+
+NV_ID NV_createCharTypeList()
+{
+	NV_ID ns;
+	NV_ID cList = NV_Array_create();
+	//
+	ns = NV_Node_createWithString(" \t\r\n");
+	NV_Array_push(&cList, &ns);
+	ns = NV_Node_createWithString("#!%&-=^~|+*:.<>/");
+	NV_Array_push(&cList, &ns);
+	ns = NV_Node_createWithString("(){}[],;\"`\\");
+	NV_Array_push(&cList, &ns);
+	//
+	return cList;
+}
+
+NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input)
+{
+	// retv: tokenized str array
+	const char *p;
+	int i, lastCType, cType;
+	char buf[MAX_TOKEN_LEN];
+	NV_ID tokenList = NV_Array_create();
+	NV_ID ns;
+	lastCType = 0;
+	p = input;
+	for(i = 0; ; i++){
+		cType = NV_Lang_getCharType(cTypeList, input[i]);
+		if(cType != lastCType ||
+			cType == 2 || lastCType == 2 || cType == 0 || lastCType == 0){
+			if(input + i - p != 0){
+				if((input + i - p) > MAX_TOKEN_LEN){
+					NV_Error("%s", "Too long token.");
+					exit(EXIT_FAILURE);
+				}
+				NV_strncpy(buf, p, MAX_TOKEN_LEN, input + i - p);
+				//
+				ns = NV_Node_createWithString(buf);
+				NV_Array_push(&tokenList, &ns);
+				//NV_E_setFlag(t, EFUnknownToken);
+			}
+			p = input + i;
+		}
+		lastCType = cType;
+		if(input[i] == 0) break;
+		
+	}
+#ifdef DEBUG
+	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE)
+		NV_List_printAll(termRoot, NULL, NULL, "]\n");
+#endif
+	NV_Array_print(&tokenList);
+	return tokenList;
+}
 //
 // main
 //
 int32_t NV_debugFlag;
 int main(int argc, char *argv[])
 {
+	NV_ID cTypeList;
 	NV_Graph_init();
+	//
+	cTypeList = NV_createCharTypeList();
+	NV_Node_retain(&cTypeList);
 	//NV_Test_Data();
-	NV_Test_Dict();
+	//NV_Test_Dict();
+	NV_runInteractive(&cTypeList);
+	//NV_tokenize(&cTypeList, "test 123");
 	return 0;
 }
 

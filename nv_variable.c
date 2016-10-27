@@ -21,6 +21,11 @@ void NV_Variable_assign(const NV_ID *vid, const NV_ID *data)
 	NV_Node_updateRelationTo(&eid, data);
 }
 
+NV_ID NV_Variable_getData(const NV_ID *vid)
+{
+	return NV_Node_getRelatedNodeFrom(vid, &RELID_VARIABLE_DATA);
+}
+
 void NV_Variable_print(const NV_ID *vid)
 {
 	NV_ID targetID;
