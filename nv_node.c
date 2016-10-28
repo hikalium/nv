@@ -375,8 +375,27 @@ int NV_Node_String_compare(const NV_Node *na, const NV_Node *nb)
 
 char *NV_Node_String_strchr(const NV_Node *ns, char c)
 {
-	if(!ns || ns->type != kString) return NULL;;
+	if(!ns || ns->type != kString) return NULL;
 	return strchr(ns->data, c);
+}
+
+long NV_Node_String_strtol(const NV_Node *ns, int *endptrindex, int base)
+{
+	long v;
+	char *ep;
+	if(!ns || ns->type != kString){
+		if(endptrindex) *endptrindex = 0; 
+		return 0;
+	}
+	v = strtol(ns->data, &ep, base);
+	if(endptrindex) *endptrindex = ep - (char *)ns->data;
+	return v;
+}
+
+size_t NV_Node_String_strlen(const NV_Node *ns)
+{
+	if(!ns || ns->type != kString) return 0;
+	return strlen(ns->data);
 }
 
 //

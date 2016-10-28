@@ -187,9 +187,12 @@ void NV_Test_Data()
 int NV_runInteractive(const NV_ID *cTypeList)
 {
 	char line[MAX_INPUT_LEN];
+	NV_ID tokenList;
 	//
 	while(NV_gets(line, sizeof(line)) != NULL){
-		NV_tokenize(cTypeList, line);
+		tokenList = NV_tokenize(cTypeList, line);
+		NV_convertLiteral(&tokenList);
+		NV_Array_print(&tokenList);
 	}
 	return 0;
 }
@@ -261,6 +264,184 @@ NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input)
 	NV_Array_print(&tokenList);
 	return tokenList;
 }
+/*
+int NV_run(const NV_ID *tokenizedList)
+{
+	int32_t excFlag = NV_EXC_FLAG_AUTO_PRINT;
+	NV_Pointer lastItem, lastData;
+	//
+	if(NV_convertLiteral(cRoot, lang)){
+		NV_Error("%s\n", "Literal conversion failed.");
+	} else{
+		NV_evaluateSentence(&excFlag, lang, vRoot, cRoot);
+		if(excFlag & NV_EXC_FLAG_FAILED){
+			// Ended with error
+			NV_Error("%s\n", "Bad Syntax");
+		} else{
+			// Ended with Success
+			if(excFlag & NV_EXC_FLAG_AUTO_PRINT){
+				lastItem = NV_List_getLastItem(cRoot);
+				NV_ListItem_convertUnknownToKnown(vRoot, lastItem);
+				NV_ListItem_unbox(lastItem);
+				lastData = NV_ListItem_getData(lastItem);
+				if(!NV_E_isNullPointer(lastData)){
+					printf("= ");
+					NV_printElement(lastData);
+					printf("\n");
+				}
+			}
+		}
+	}
+	if(excFlag & NV_EXC_FLAG_EXIT) return 1;
+	return 0;
+}
+*/
+int NV_convertLiteral(const NV_ID *tokenizedList)
+{
+	// retv: converted token list
+	//NV_Pointer item, t, strLiteral = NV_NullPointer;
+	const char *termStr;
+	int pIndex;
+	int32_t tmpNum;
+	int commentBlockCount = 0;
+	int isInLineComment = 0;
+	int isInSingleTermComment = 0;
+	int isEscSeq = 0;
+	NV_ID itemID;
+	NV_Node *item;
+	int i;
+	//
+	//if(!NV_E_isType(root, EList)) return 1;
+	//item = root;
+	/*
+	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
+		NV_DbgInfo("%s", "start");
+	}
+	*/
+	for(i = 0; ; i++){
+		itemID = NV_Array_getByIndex(tokenizedList, i);
+		if(NV_ID_isEqual(&itemID, &NODEID_NULL)) break;
+		item = NV_Node_getByID(&itemID);
+		//item = NV_ListItem_getNext(item);
+#if 0
+		if(NV_E_isNullPointer(item)) break;
+		// get CStr
+#endif
+#if 0
+		if(commentBlockCount){
+			if(strcmp(termStr, "/*") == 0){
+				commentBlockCount++;
+			} else if(strcmp(termStr, "*/") == 0){
+				commentBlockCount--;
+			}
+			t = NV_ListItem_getPrev(item);
+			NV_E_free(&item);
+			item = t;
+			continue;
+		}
+		if(isInLineComment){
+			if(termStr[0] == '\n'){
+				// end of line comment.
+				isInLineComment = 0;
+			}
+			t = NV_ListItem_getPrev(item);
+			NV_E_free(&item);
+			item = t;
+			continue;
+		}
+		if(isInSingleTermComment){
+			isInSingleTermComment = 0;
+			//
+			t = NV_ListItem_getPrev(item);
+			NV_E_free(&item);
+			item = t;
+			continue;
+		}
+		if(!NV_E_isNullPointer(strLiteral)){
+			if(strcmp(termStr, "\"") == 0 && !isEscSeq){
+				// end of string literal
+				NV_String_convertFromEscaped(strLiteral);
+				NV_ListItem_setData(item, strLiteral);
+				NV_E_free(&strLiteral);
+				strLiteral = NV_NullPointer;
+			} else{
+				if(strcmp(termStr, "\\") == 0 && isEscSeq == 0){
+					isEscSeq = 1;
+				} else{
+					isEscSeq = 0;
+				}
+				// body of string literal
+				NV_String_concatenateCStr(strLiteral, termStr);
+				//
+				t = NV_ListItem_getPrev(item);
+				NV_E_free(&item);
+				item = t;
+			}
+			continue;
+		}
+		if(strcmp(termStr, "\"") == 0){
+			// begin of str literal
+			t = NV_ListItem_getPrev(item);
+			NV_E_free(&item);
+			item = t;
+			//
+			strLiteral = NV_E_malloc_type(EString);
+			continue;
+		}
+		if(strcmp(termStr, "`") == 0){
+			// prefix of single term comment
+			t = NV_ListItem_getPrev(item);
+			NV_E_free(&item);
+			item = t;
+			isInSingleTermComment = 1;
+			continue;
+		}
+		if(strcmp(termStr, "//") == 0){
+			// begin of comment block
+			t = NV_ListItem_getPrev(item);
+			NV_E_free(&item);
+			item = t;
+			isInLineComment = 1;
+			continue;
+		}
+		if(strcmp(termStr, "/*") == 0){
+			// begin of comment block
+			t = NV_ListItem_getPrev(item);
+			NV_E_free(&item);
+			item = t;
+			commentBlockCount = 1;
+			continue;
+		}
+#endif
+		// check operator
+/*
+		t = NV_Lang_getOperatorFromString(lang, termStr);
+		if(!NV_E_isNullPointer(t)){
+			NV_ListItem_setData(item, t);
+			continue;
+		}
+*/
+		// check Integer
+		tmpNum = NV_Node_String_strtol(item, &pIndex, 0);
+		if(pIndex != 0 && NV_Node_String_strlen(item) == pIndex){
+			// converted entire string to number.
+			NV_Node_setInt32ToID(&itemID, tmpNum);
+			continue;
+		}
+	}
+/*
+	if(commentBlockCount){
+		NV_Error("%s", "Missing end of comment block.");
+		return 1;
+	}
+	if(!NV_E_isNullPointer(strLiteral)){
+		NV_Error("%s", "Missing end of string literal.");
+		return 1;
+	}
+*/
+	return 0;
+}
+
 //
 // main
 //
@@ -272,10 +453,9 @@ int main(int argc, char *argv[])
 	//
 	cTypeList = NV_createCharTypeList();
 	NV_Node_retain(&cTypeList);
-	//NV_Test_Data();
-	//NV_Test_Dict();
+	//
 	NV_runInteractive(&cTypeList);
-	//NV_tokenize(&cTypeList, "test 123");
+	//
 	return 0;
 }
 

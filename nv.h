@@ -74,6 +74,7 @@ void NV_Graph_dump();
 int NV_isTreeType(const NV_ID *node, const NV_ID *tType);
 int NV_runInteractive(const NV_ID *cTypeList);
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
+int NV_convertLiteral(const NV_ID *tokenizedList);
 
 // @nv_array.c
 NV_ID NV_Array_create();
@@ -128,6 +129,8 @@ NV_ID NV_Node_createWithString(const char *s);
 void NV_Node_setStrToID(const NV_ID *id, const char *s);
 int NV_Node_String_compare(const NV_Node *na, const NV_Node *nb);
 char *NV_Node_String_strchr(const NV_Node *ns, char c);
+long NV_Node_String_strtol(const NV_Node *ns, int *endptrindex, int base);
+size_t NV_Node_String_strlen(const NV_Node *ns);
 //
 void NV_Node_setInt32ToID(const NV_ID *id, int32_t v);
 
