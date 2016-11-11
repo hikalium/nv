@@ -72,20 +72,22 @@ extern NV_Node nodeRoot;
 void NV_Graph_init();
 void NV_Graph_dump();
 int NV_isTreeType(const NV_ID *node, const NV_ID *tType);
-int NV_runInteractive(const NV_ID *cTypeList);
+int NV_runInteractive(const NV_ID *cTypeList, const NV_ID *opList);
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
-int NV_convertLiteral(const NV_ID *tokenizedList);
+int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList);
 
 // @nv_array.c
 NV_ID NV_Array_create();
 NV_ID NV_Array_push(const NV_ID *array, const NV_ID *data);
 NV_ID NV_Array_getByIndex(const NV_ID *array, int index);
+void NV_Array_writeToIndex(const NV_ID *array, int index, const NV_ID *data);
 void NV_Array_print(const NV_ID *array);
 
 // @nv_dict.c
 NV_ID NV_Dict_add(const NV_ID *root, const NV_ID *key, const NV_ID *value);
 NV_ID NV_Dict_addByStringKey(const NV_ID *root, const char *key, const NV_ID *value);
 NV_ID NV_Dict_get(const NV_ID *root, const NV_ID *key);
+NV_ID NV_Dict_getByStringKey(const NV_ID *root, const char *key);
 void NV_Dict_print(const NV_ID *root);
 
 // @nv_driver.c
@@ -132,19 +134,27 @@ char *NV_Node_String_strchr(const NV_Node *ns, char c);
 long NV_Node_String_strtol(const NV_Node *ns, int *endptrindex, int base);
 size_t NV_Node_String_strlen(const NV_Node *ns);
 //
+NV_ID NV_Node_createWithInt32(int32_t v);
 void NV_Node_setInt32ToID(const NV_ID *id, int32_t v);
+int32_t NV_Node_getInt32FromID(const NV_ID *id);
 
 // @nv_static.c
 extern const NV_ID NODEID_NULL;
 extern const NV_ID NODEID_REL_MASTERLINK;
 extern const NV_ID NODEID_TREE_TYPE_ARRAY;
 extern const NV_ID NODEID_TREE_TYPE_VARIABLE;
+extern const NV_ID NODEID_TREE_TYPE_OP;
 extern const NV_ID RELID_ARRAY_NEXT;
 extern const NV_ID RELID_VARIABLE_DATA;
 extern const NV_ID RELID_POINTER_TARGET;
+extern const NV_ID RELID_OP_PRECEDENCE;
+extern const NV_ID RELID_OP_FUNC;
 extern const NV_ID RELID_TREE_TYPE;
 extern const NV_ID NODEID_NV_STATIC_ROOT;
 const char *NV_NodeTypeList[kNodeTypeCount];
+
+// @nv_test.c
+
 
 // @nv_variable.c
 NV_ID NV_Variable_create();

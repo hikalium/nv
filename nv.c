@@ -26,6 +26,7 @@ void NV_Graph_init()
 	NV_Graph_addStaticNode(&NODEID_NULL, "NullElement");
 	NV_Graph_addStaticNode(&NODEID_TREE_TYPE_ARRAY, "TreeType(Array)");
 	NV_Graph_addStaticNode(&NODEID_TREE_TYPE_VARIABLE, "TreeType(Variable)");
+	NV_Graph_addStaticNode(&NODEID_TREE_TYPE_OP, "TreeType(Op)");
 	NV_Graph_addStaticNode(&RELID_TREE_TYPE, "relTreeType");
 	NV_Graph_addStaticNode(&RELID_ARRAY_NEXT, "relArrayNext");
 	NV_Graph_addStaticNode(&RELID_VARIABLE_DATA, "relVariableData");
@@ -58,140 +59,15 @@ int NV_isTreeType(const NV_ID *node, const NV_ID *tType)
 	NV_ID typeID = NV_Node_getRelatedNodeFrom(node, &RELID_TREE_TYPE);
 	return NV_ID_isEqual(&typeID, tType);
 }
-/*
-NV_ID NV_putDataToPath(const NV_ID *base, const char s[], const NV_ID *data)
-{
-	
-}
-*/
 
-void NV_Test_Memory()
-{
-	int memcount0;
-	NV_ID id, id2, id3;
-	//
-	memcount0 = NV_getMallocCount();
-	//
-	id2 = NV_Node_create();
-	NV_Node_setStrToID(&id2, "Hello");
-	//
-	id = NV_Node_create();
-	NV_Node_setStrToID(&id, "World");
-	//
-	id3 = NV_Node_create();
-	NV_Node_setInt32ToID(&id3, 12345);
-	//
-
-	id = NV_Array_create();
-	NV_Array_print(&id);
-	NV_Array_push(&id, &id2);
-	NV_Array_print(&id);
-	NV_Array_push(&id, &id3);
-	NV_Array_print(&id);
-	//
-	NV_Node_setStrToID(&id2, "World");
-	NV_Array_push(&id, &id2);
-	NV_Array_print(&id);
-	//
-	//NV_Node_retain(&id);
-	//
-	NV_Graph_dump();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Graph_dump();
-
-	//
-	printf("mem not freed: %d\n", NV_getMallocCount() - memcount0);
-}
-
-void NV_Test_Dict()
-{
-	int memcount0;
-	NV_ID root, k, v;
-	//
-	memcount0 = NV_getMallocCount();
-	//
-	root = NV_Node_create();
-	NV_Node_setStrToID(&root, "testDict");
-	k = NV_Node_createWithString("hello");
-	v = NV_Node_createWithString("world");
-	NV_Dict_add(&root, &k, &v);
-	NV_Dict_add(&root, &v, &k);
-	//
-	NV_Dict_print(&root);
-	//
-	NV_Node_retain(&root);
-	//
-	NV_Graph_dump();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Graph_dump();
-	NV_Dict_print(&root);
-
-	//
-	printf("mem not freed: %d\n", NV_getMallocCount() - memcount0);
-}
-
-void NV_Test_Data()
-{
-	int memcount0;
-	NV_ID id, id2;
-	//
-	memcount0 = NV_getMallocCount();
-	//
-	id2 = NV_Node_create();
-	NV_Node_setStrToID(&id2, "");
-	//
-	id = NV_Node_create();
-	NV_Node_setStrToID(&id, "World");
-	printf("%d %d\n",
-		NV_ID_isEqualInValue(&id, &id2),
-		NV_ID_isEqual(&id, &id2));
-	NV_Node_setStrToID(&id, "");
-	printf("%d %d\n",
-		NV_ID_isEqualInValue(&id, &id2),
-		NV_ID_isEqual(&id, &id2));
-	//
-	//NV_Node_retain(&id);
-	//
-	NV_Graph_dump();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Node_cleanup();
-	NV_Graph_dump();
-
-	//
-	printf("mem not freed: %d\n", NV_getMallocCount() - memcount0);
-}
-
-int NV_runInteractive(const NV_ID *cTypeList)
+int NV_runInteractive(const NV_ID *cTypeList, const NV_ID *opList)
 {
 	char line[MAX_INPUT_LEN];
 	NV_ID tokenList;
 	//
 	while(NV_gets(line, sizeof(line)) != NULL){
 		tokenList = NV_tokenize(cTypeList, line);
-		NV_convertLiteral(&tokenList);
+		NV_convertLiteral(&tokenList, opList);
 		NV_Array_print(&tokenList);
 	}
 	return 0;
@@ -224,6 +100,49 @@ NV_ID NV_createCharTypeList()
 	NV_Array_push(&cList, &ns);
 	//
 	return cList;
+}
+
+void NV_addOp(const NV_ID *opList, const char *token, int32_t prec, const NV_ID *func)
+{
+	NV_ID opEntry;
+	NV_ID ePrec;
+	opEntry = NV_Node_create();
+	NV_Node_createRelation(
+		&opEntry, &RELID_TREE_TYPE, &NODEID_TREE_TYPE_OP);
+	ePrec = NV_Node_createWithInt32(prec);
+	NV_Node_createRelation(
+		&opEntry, &RELID_OP_PRECEDENCE, &ePrec);
+	NV_Node_createRelation(
+		&opEntry, &RELID_OP_FUNC, func);
+	
+	//
+	NV_Dict_addByStringKey(opList, token, &opEntry);
+}
+
+NV_ID NV_createOpList()
+{
+	NV_ID nv;
+	NV_ID opList = NV_Node_createWithString("NV_OpList");
+	//
+	nv = NV_Node_createWithString("NV_Op_add");
+	NV_addOp(&opList, "+", 100, &nv);
+	//
+	nv = NV_Node_createWithString("NV_Op_sub");
+	NV_addOp(&opList, "-", 100, &nv);
+	//
+	nv = NV_Node_createWithString("NV_Op_mul");
+	NV_addOp(&opList, "*", 200, &nv);
+	//
+	nv = NV_Node_createWithString("NV_Op_div");
+	NV_addOp(&opList, "/", 200, &nv);
+	//
+	nv = NV_Node_createWithString("NV_Op_mod");
+	NV_addOp(&opList, "%", 200, &nv);
+	//
+	nv = NV_Node_createWithString("NV_Op_nothing");
+	NV_addOp(&opList, " ", 300, &nv);
+	//
+	return opList;
 }
 
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input)
@@ -264,197 +183,148 @@ NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input)
 	NV_Array_print(&tokenList);
 	return tokenList;
 }
-/*
-int NV_run(const NV_ID *tokenizedList)
-{
-	int32_t excFlag = NV_EXC_FLAG_AUTO_PRINT;
-	NV_Pointer lastItem, lastData;
-	//
-	if(NV_convertLiteral(cRoot, lang)){
-		NV_Error("%s\n", "Literal conversion failed.");
-	} else{
-		NV_evaluateSentence(&excFlag, lang, vRoot, cRoot);
-		if(excFlag & NV_EXC_FLAG_FAILED){
-			// Ended with error
-			NV_Error("%s\n", "Bad Syntax");
-		} else{
-			// Ended with Success
-			if(excFlag & NV_EXC_FLAG_AUTO_PRINT){
-				lastItem = NV_List_getLastItem(cRoot);
-				NV_ListItem_convertUnknownToKnown(vRoot, lastItem);
-				NV_ListItem_unbox(lastItem);
-				lastData = NV_ListItem_getData(lastItem);
-				if(!NV_E_isNullPointer(lastData)){
-					printf("= ");
-					NV_printElement(lastData);
-					printf("\n");
-				}
-			}
-		}
-	}
-	if(excFlag & NV_EXC_FLAG_EXIT) return 1;
-	return 0;
-}
-*/
-int NV_convertLiteral(const NV_ID *tokenizedList)
+
+
+int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList)
 {
 	// retv: converted token list
-	//NV_Pointer item, t, strLiteral = NV_NullPointer;
-	const char *termStr;
 	int pIndex;
 	int32_t tmpNum;
-	int commentBlockCount = 0;
-	int isInLineComment = 0;
-	int isInSingleTermComment = 0;
-	int isEscSeq = 0;
-	NV_ID itemID;
+	NV_ID itemID, opID;
 	NV_Node *item;
 	int i;
 	//
-	//if(!NV_E_isType(root, EList)) return 1;
-	//item = root;
-	/*
-	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
-		NV_DbgInfo("%s", "start");
-	}
-	*/
 	for(i = 0; ; i++){
 		itemID = NV_Array_getByIndex(tokenizedList, i);
 		if(NV_ID_isEqual(&itemID, &NODEID_NULL)) break;
 		item = NV_Node_getByID(&itemID);
-		//item = NV_ListItem_getNext(item);
-#if 0
-		if(NV_E_isNullPointer(item)) break;
-		// get CStr
-#endif
-#if 0
-		if(commentBlockCount){
-			if(strcmp(termStr, "/*") == 0){
-				commentBlockCount++;
-			} else if(strcmp(termStr, "*/") == 0){
-				commentBlockCount--;
-			}
-			t = NV_ListItem_getPrev(item);
-			NV_E_free(&item);
-			item = t;
-			continue;
-		}
-		if(isInLineComment){
-			if(termStr[0] == '\n'){
-				// end of line comment.
-				isInLineComment = 0;
-			}
-			t = NV_ListItem_getPrev(item);
-			NV_E_free(&item);
-			item = t;
-			continue;
-		}
-		if(isInSingleTermComment){
-			isInSingleTermComment = 0;
-			//
-			t = NV_ListItem_getPrev(item);
-			NV_E_free(&item);
-			item = t;
-			continue;
-		}
-		if(!NV_E_isNullPointer(strLiteral)){
-			if(strcmp(termStr, "\"") == 0 && !isEscSeq){
-				// end of string literal
-				NV_String_convertFromEscaped(strLiteral);
-				NV_ListItem_setData(item, strLiteral);
-				NV_E_free(&strLiteral);
-				strLiteral = NV_NullPointer;
-			} else{
-				if(strcmp(termStr, "\\") == 0 && isEscSeq == 0){
-					isEscSeq = 1;
-				} else{
-					isEscSeq = 0;
-				}
-				// body of string literal
-				NV_String_concatenateCStr(strLiteral, termStr);
-				//
-				t = NV_ListItem_getPrev(item);
-				NV_E_free(&item);
-				item = t;
-			}
-			continue;
-		}
-		if(strcmp(termStr, "\"") == 0){
-			// begin of str literal
-			t = NV_ListItem_getPrev(item);
-			NV_E_free(&item);
-			item = t;
-			//
-			strLiteral = NV_E_malloc_type(EString);
-			continue;
-		}
-		if(strcmp(termStr, "`") == 0){
-			// prefix of single term comment
-			t = NV_ListItem_getPrev(item);
-			NV_E_free(&item);
-			item = t;
-			isInSingleTermComment = 1;
-			continue;
-		}
-		if(strcmp(termStr, "//") == 0){
-			// begin of comment block
-			t = NV_ListItem_getPrev(item);
-			NV_E_free(&item);
-			item = t;
-			isInLineComment = 1;
-			continue;
-		}
-		if(strcmp(termStr, "/*") == 0){
-			// begin of comment block
-			t = NV_ListItem_getPrev(item);
-			NV_E_free(&item);
-			item = t;
-			commentBlockCount = 1;
-			continue;
-		}
-#endif
 		// check operator
-/*
-		t = NV_Lang_getOperatorFromString(lang, termStr);
-		if(!NV_E_isNullPointer(t)){
-			NV_ListItem_setData(item, t);
+		opID = NV_Dict_get(opList, &itemID);
+		if(!NV_ID_isEqual(&opID, &NODEID_NULL)){
+			NV_Array_writeToIndex(tokenizedList, i, &opID);
 			continue;
 		}
-*/
 		// check Integer
 		tmpNum = NV_Node_String_strtol(item, &pIndex, 0);
-		if(pIndex != 0 && NV_Node_String_strlen(item) == pIndex){
+		if(pIndex != 0 && (int)NV_Node_String_strlen(item) == pIndex){
 			// converted entire string to number.
 			NV_Node_setInt32ToID(&itemID, tmpNum);
 			continue;
 		}
 	}
-/*
-	if(commentBlockCount){
-		NV_Error("%s", "Missing end of comment block.");
-		return 1;
-	}
-	if(!NV_E_isNullPointer(strLiteral)){
-		NV_Error("%s", "Missing end of string literal.");
-		return 1;
-	}
-*/
 	return 0;
 }
 
+//
+// Evaluate
+//
+/*
+void NV_evaluateSentence(const NV_ID *tokenizedList)
+{
+	int pIndex;
+	int32_t tmpNum;
+	NV_ID itemID, opID, opPrecID, lastOpID;
+	NV_Node *item;
+	int i;
+	int lastOpPrec, opPrec, d;
+	//
+	for(;;){
+		lastOpPrec = -1;
+		lastOpID = NODEID_NULL;
+		for(i = 0; ; i++){
+			itemID = NV_Array_getByIndex(tokenizedList, i);
+			if(NV_ID_isEqual(&itemID, &NODEID_NULL)) break;
+			item = NV_Node_getByID(&itemID);
+			// check operator
+			if(!NV_isTreeType(&itemID, &NODEID_TREE_TYPE_OP)) continue;
+			opPrecID = NV_Dict_get(&itemID, &RELID_OP_PRECEDENCE);
+			opPrec = NV_Node_getInt32FromID(&opPrecID);
+			if(lastOpPrec & 1 ? lastOpPrec <= opPrec : lastOpPrec < opPrec){
+				lastOpPrec = opPrec;
+				lastOpID = itemID;
+				continue;
+			}
+			// found. lastOpID is target op.
+			break;
+		}
+		if(NV_E_isNullPointer(last)){
+			// no more op
+			return;
+		}
+		NV_tryExecOp(excFlag, lang, last, vDict, root);
+		if(*excFlag & NV_EXC_FLAG_FAILED){
+			// op mismatched
+			return;
+		}
+		if(*excFlag & NV_EXC_FLAG_EXIT){
+			// end flag
+			return;
+		}
+	}
+}
+*/
+/*
+void NV_tryExecOp(int32_t *excFlag, NV_Pointer lang, NV_Pointer thisTerm, NV_Pointer vDict, NV_Pointer root)
+{
+	NV_Pointer fallbackOp, op;
+	NV_Pointer orgTerm = thisTerm;
+	//
+	op = NV_ListItem_getData(thisTerm);	
+#ifdef DEBUG
+	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
+		NV_DbgInfo("%s", "Begin native op: ");
+		NV_Operator_print(op); putchar('\n');
+	}
+#endif
+	NV_Operator_exec(op, excFlag, lang, vDict, thisTerm);
+#ifdef DEBUG
+	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
+		NV_DbgInfo("%s", "End native op:");
+		NV_Operator_print(op); putchar('\n');
+	}
+#endif
+	if(*excFlag & NV_EXC_FLAG_FAILED){
+		// try fallback
+		fallbackOp = NV_Lang_getFallbackOperator(lang, op);
+		if(NV_E_isNullPointer(fallbackOp)){
+			NV_Error("%s", "Operator mismatched: ");
+			NV_Operator_print(op); putchar('\n');
+			NV_List_printAll(root, NULL, NULL, "]\n");
+			return;
+		}
+#ifdef DEBUG
+	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
+		NV_DbgInfo("%s", "Fallback found:");
+		NV_Operator_print(fallbackOp); putchar('\n');
+	}
+#endif
+		CLR_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
+		NV_ListItem_setData(orgTerm, fallbackOp);
+		thisTerm = orgTerm;
+	}
+#ifdef DEBUG
+	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
+		NV_List_printAll(root, NULL, NULL, "]\n");
+	}
+#endif
+}
+*/
 //
 // main
 //
 int32_t NV_debugFlag;
 int main(int argc, char *argv[])
 {
-	NV_ID cTypeList;
+	NV_ID cTypeList, opList;
 	NV_Graph_init();
 	//
 	cTypeList = NV_createCharTypeList();
 	NV_Node_retain(&cTypeList);
 	//
-	NV_runInteractive(&cTypeList);
+	opList = NV_createOpList();
+	NV_Node_retain(&opList);
+	//
+	NV_runInteractive(&cTypeList, &opList);
 	//
 	return 0;
 }

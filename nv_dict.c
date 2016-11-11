@@ -43,6 +43,13 @@ NV_ID NV_Dict_get(const NV_ID *root, const NV_ID *key)
 	return NODEID_NULL;
 }
 
+NV_ID NV_Dict_getByStringKey
+(const NV_ID *root, const char *key)
+{
+	NV_ID strid = NV_Node_createWithString(key);
+	return NV_Dict_get(root, &strid);
+}
+
 void NV_Dict_print(const NV_ID *root)
 {
 	const NV_Node *n;

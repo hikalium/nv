@@ -44,6 +44,19 @@ NV_ID NV_Array_getByIndex(const NV_ID *array, int index)
 	return NV_Variable_getData(&t);
 }
 
+void NV_Array_writeToIndex(const NV_ID *array, int index, const NV_ID *data)
+{
+	NV_ID t;
+	if(index < 0) return;
+	t = NV_Node_getRelatedNodeFrom(array, &RELID_ARRAY_NEXT);
+	for(; index; index--){
+		if(index == 0) break;
+		t = NV_Node_getRelatedNodeFrom(&t, &RELID_ARRAY_NEXT);
+		if(NV_ID_isEqual(&t, &NODEID_NULL)) return;
+	}
+	NV_Variable_assign(&t, data);
+}
+
 void NV_Array_print(const NV_ID *array)
 {
 	NV_ID t;

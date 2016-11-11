@@ -402,6 +402,14 @@ size_t NV_Node_String_strlen(const NV_Node *ns)
 // Integer
 //
 
+NV_ID NV_Node_createWithInt32(int32_t v)
+{
+	NV_ID id;
+	id = NV_Node_create();
+	NV_Node_setInt32ToID(&id, v);
+	return id;
+}
+
 void NV_Node_setInt32ToID(const NV_ID *id, int32_t v)
 {
 	NV_Node *n;
@@ -414,5 +422,13 @@ void NV_Node_setInt32ToID(const NV_ID *id, int32_t v)
 		n->data = NV_malloc(n->size);
 		*((int32_t *)n->data) = v;
 	}
+}
+int32_t NV_Node_getInt32FromID(const NV_ID *id)
+{
+	NV_Node *n;
+	//
+	n = NV_Node_getByID(id);
+	if(!n || n->type != kInteger) return -1;
+	return *((int32_t *)n->data);
 }
 
