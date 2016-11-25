@@ -80,6 +80,37 @@ int32_t NV_getOpPrecAt(const NV_ID *tList, int index)
 	return NV_Node_getInt32FromID(&ePrec);
 }
 
+void NV_Op_ExecBuiltinInfix(const NV_ID *tList, int index, int func)
+{
+	NV_ID nL, nR, ans;
+	int vL, vR, v;
+	nL = NV_Array_getByIndex(tList, index - 1);
+	nR = NV_Array_getByIndex(tList, index + 1);
+	if(!NV_Node_isInteger(&nL) || !NV_Node_isInteger(&nR)){
+		NV_ID errObj = NV_Node_createWithString(
+			"Error: Invalid Operand Type.");
+		NV_Array_writeToIndex(tList, index, &errObj);
+		return;
+	}
+	vL = NV_Node_getInt32FromID(&nL);
+	vR = NV_Node_getInt32FromID(&nR);
+	//
+	index--;
+	NV_Array_removeIndex(tList, index);
+	NV_Array_removeIndex(tList, index);
+	//
+	switch(func){
+		case 0: v = vL + vR; break;
+		case 1: v = vL - vR; break;
+		case 2: v = vL * vR; break;
+		case 3: v = vL / vR; break;
+		case 4: v = vL % vR; break;
+	}
+	//
+	ans = NV_Node_createWithInt32(v);
+	NV_Array_writeToIndex(tList, index, &ans);
+}
+
 void NV_tryExecOpAt(const NV_ID *tList, int index)
 {
 	NV_ID op = NV_Array_getByIndex(tList, index);
@@ -91,46 +122,19 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 		NV_Array_removeIndex(tList, index);
 	} else if(NV_Node_String_compareWithCStr(
 		NV_Node_getByID(&func), "NV_Op_add") == 0){
-		NV_ID nL, nR, ans;
-		int vL, vR;
-		nL = NV_Array_getByIndex(tList, index - 1);
-		nR = NV_Array_getByIndex(tList, index + 1);
-		if(!NV_Node_isInteger(&nL) || !NV_Node_isInteger(&nR)){
-			NV_ID errObj = NV_Node_createWithString(
-				"Error: Invalid Operand Type.");
-			NV_Array_writeToIndex(tList, index, &errObj);
-			return;
-		}
-		vL = NV_Node_getInt32FromID(&nL);
-		vR = NV_Node_getInt32FromID(&nR);
-		//
-		index--;
-		NV_Array_removeIndex(tList, index);
-		NV_Array_removeIndex(tList, index);
-		//
-		ans = NV_Node_createWithInt32(vL + vR);
-		NV_Array_writeToIndex(tList, index, &ans);
+		NV_Op_ExecBuiltinInfix(tList, index, 0);
+	} else if(NV_Node_String_compareWithCStr(
+		NV_Node_getByID(&func), "NV_Op_sub") == 0){
+		NV_Op_ExecBuiltinInfix(tList, index, 1);
 	} else if(NV_Node_String_compareWithCStr(
 		NV_Node_getByID(&func), "NV_Op_mul") == 0){
-		NV_ID nL, nR, ans;
-		int vL, vR;
-		nL = NV_Array_getByIndex(tList, index - 1);
-		nR = NV_Array_getByIndex(tList, index + 1);
-		if(!NV_Node_isInteger(&nL) || !NV_Node_isInteger(&nR)){
-			NV_ID errObj = NV_Node_createWithString(
-				"Error: Invalid Operand Type.");
-			NV_Array_writeToIndex(tList, index, &errObj);
-			return;
-		}
-		vL = NV_Node_getInt32FromID(&nL);
-		vR = NV_Node_getInt32FromID(&nR);
-		//
-		index--;
-		NV_Array_removeIndex(tList, index);
-		NV_Array_removeIndex(tList, index);
-		//
-		ans = NV_Node_createWithInt32(vL * vR);
-		NV_Array_writeToIndex(tList, index, &ans);
+		NV_Op_ExecBuiltinInfix(tList, index, 2);
+	} else if(NV_Node_String_compareWithCStr(
+		NV_Node_getByID(&func), "NV_Op_div") == 0){
+		NV_Op_ExecBuiltinInfix(tList, index, 3);
+	} else if(NV_Node_String_compareWithCStr(
+		NV_Node_getByID(&func), "NV_Op_mod") == 0){
+		NV_Op_ExecBuiltinInfix(tList, index, 4);
 	} else{
 		NV_ID errObj = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");
