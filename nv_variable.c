@@ -41,7 +41,7 @@ void NV_Variable_print(const NV_ID *vid)
 	putchar('\n');
 }
 
-void NV_Variable_printiPrimVal(const NV_ID *vid)
+void NV_Variable_printPrimVal(const NV_ID *vid)
 {
 	NV_ID targetID;
 	if(!NV_isTreeType(vid, &NODEID_TREE_TYPE_VARIABLE)){
@@ -49,6 +49,6 @@ void NV_Variable_printiPrimVal(const NV_ID *vid)
 		return;
 	}
 	targetID = NV_Node_getRelatedNodeFrom(vid, &RELID_VARIABLE_DATA);
-	NV_Node_printPrimVal(NV_Node_getByID(&targetID));
+	NV_printNode(NV_Node_getByID(&targetID));
 }
 

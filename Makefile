@@ -1,6 +1,6 @@
 
-SRCS= 	nv.c nv_array.c nv_dict.c nv_driver.c \
-		nv_fix.c nv_id.c nv_node.c nv_static.c \
+SRCS= 	nv.c nv_array.c nv_dict.c nv_driver.c nv_enode.c \
+		nv_fix.c nv_id.c nv_node.c nv_op.c nv_static.c \
 		nv_test.c nv_variable.c
 HEADERS=nv.h
 CFLAGS=-Wall -Wextra -lncurses -Wunused-function

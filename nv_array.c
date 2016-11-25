@@ -63,7 +63,7 @@ void NV_Array_print(const NV_ID *array)
 	printf("[");
 	t = NV_Node_getRelatedNodeFrom(array, &RELID_ARRAY_NEXT);
 	for(;!NV_ID_isEqual(&t, &NODEID_NULL);){
-		NV_Variable_printiPrimVal(&t);
+		NV_printNodeByID(&t);
 		t = NV_Node_getRelatedNodeFrom(&t, &RELID_ARRAY_NEXT);
 		if(!NV_ID_isEqual(&t, &NODEID_NULL)){
 			printf(",");
@@ -71,3 +71,4 @@ void NV_Array_print(const NV_ID *array)
 	}
 	printf("]\n");
 }
+

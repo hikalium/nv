@@ -27,10 +27,13 @@ void NV_Graph_init()
 	NV_Graph_addStaticNode(&NODEID_TREE_TYPE_ARRAY, "TreeType(Array)");
 	NV_Graph_addStaticNode(&NODEID_TREE_TYPE_VARIABLE, "TreeType(Variable)");
 	NV_Graph_addStaticNode(&NODEID_TREE_TYPE_OP, "TreeType(Op)");
+	//
 	NV_Graph_addStaticNode(&RELID_TREE_TYPE, "relTreeType");
 	NV_Graph_addStaticNode(&RELID_ARRAY_NEXT, "relArrayNext");
 	NV_Graph_addStaticNode(&RELID_VARIABLE_DATA, "relVariableData");
 	NV_Graph_addStaticNode(&RELID_POINTER_TARGET, "relPointerTarget");
+	NV_Graph_addStaticNode(&RELID_OP_PRECEDENCE, "relPointerTarget");
+	NV_Graph_addStaticNode(&RELID_OP_FUNC, "relPointerTarget");
 }
 
 
@@ -68,82 +71,12 @@ int NV_runInteractive(const NV_ID *cTypeList, const NV_ID *opList)
 	while(NV_gets(line, sizeof(line)) != NULL){
 		tokenList = NV_tokenize(cTypeList, line);
 		NV_convertLiteral(&tokenList, opList);
-		NV_Array_print(&tokenList);
+		NV_printNodeByID(&tokenList);
+		
 	}
 	return 0;
 }
 
-#define NV_LANG_CHAR_LIST_LEN 3
-int NV_Lang_getCharType(const NV_ID *cTypeList, char c)
-{
-	NV_ID t;
-	int i;
-	if(c == '\0') return -1;
-	for(i = 0; i < NV_LANG_CHAR_LIST_LEN; i++){
-		t = NV_Array_getByIndex(cTypeList, i);
-		if(NV_Node_String_strchr(NV_Node_getByID(&t), c)) break;
-	}
-	return i;
-}
-
-
-NV_ID NV_createCharTypeList()
-{
-	NV_ID ns;
-	NV_ID cList = NV_Array_create();
-	//
-	ns = NV_Node_createWithString(" \t\r\n");
-	NV_Array_push(&cList, &ns);
-	ns = NV_Node_createWithString("#!%&-=^~|+*:.<>/");
-	NV_Array_push(&cList, &ns);
-	ns = NV_Node_createWithString("(){}[],;\"`\\");
-	NV_Array_push(&cList, &ns);
-	//
-	return cList;
-}
-
-void NV_addOp(const NV_ID *opList, const char *token, int32_t prec, const NV_ID *func)
-{
-	NV_ID opEntry;
-	NV_ID ePrec;
-	opEntry = NV_Node_create();
-	NV_Node_createRelation(
-		&opEntry, &RELID_TREE_TYPE, &NODEID_TREE_TYPE_OP);
-	ePrec = NV_Node_createWithInt32(prec);
-	NV_Node_createRelation(
-		&opEntry, &RELID_OP_PRECEDENCE, &ePrec);
-	NV_Node_createRelation(
-		&opEntry, &RELID_OP_FUNC, func);
-	
-	//
-	NV_Dict_addByStringKey(opList, token, &opEntry);
-}
-
-NV_ID NV_createOpList()
-{
-	NV_ID nv;
-	NV_ID opList = NV_Node_createWithString("NV_OpList");
-	//
-	nv = NV_Node_createWithString("NV_Op_add");
-	NV_addOp(&opList, "+", 100, &nv);
-	//
-	nv = NV_Node_createWithString("NV_Op_sub");
-	NV_addOp(&opList, "-", 100, &nv);
-	//
-	nv = NV_Node_createWithString("NV_Op_mul");
-	NV_addOp(&opList, "*", 200, &nv);
-	//
-	nv = NV_Node_createWithString("NV_Op_div");
-	NV_addOp(&opList, "/", 200, &nv);
-	//
-	nv = NV_Node_createWithString("NV_Op_mod");
-	NV_addOp(&opList, "%", 200, &nv);
-	//
-	nv = NV_Node_createWithString("NV_Op_nothing");
-	NV_addOp(&opList, " ", 300, &nv);
-	//
-	return opList;
-}
 
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input)
 {
@@ -218,6 +151,16 @@ int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList)
 //
 // Evaluate
 //
+/*
+void NV_evaluateSetence(const NV_ID *tokenizedList)
+{
+	int i;
+	NV_ID t;
+	for(i = 0;;){
+		t = 
+	}
+}
+*/
 /*
 void NV_evaluateSentence(const NV_ID *tokenizedList)
 {

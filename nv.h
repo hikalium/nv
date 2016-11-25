@@ -72,8 +72,8 @@ extern NV_Node nodeRoot;
 void NV_Graph_init();
 void NV_Graph_dump();
 int NV_isTreeType(const NV_ID *node, const NV_ID *tType);
-int NV_runInteractive(const NV_ID *cTypeList, const NV_ID *opList);
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
+int NV_runInteractive(const NV_ID *cTypeList, const NV_ID *opList);
 int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList);
 
 // @nv_array.c
@@ -92,6 +92,10 @@ void NV_Dict_print(const NV_ID *root);
 
 // @nv_driver.c
 char *NV_gets(char *str, int size);
+
+// @nv_enode.c
+void NV_printNodeByID(const NV_ID *id);
+void NV_printNode(const NV_Node *n);
 
 // @nv_fix.c
 char *NV_strncpy(char *dst, const char *src, size_t dst_size, size_t copy_size);
@@ -138,6 +142,13 @@ NV_ID NV_Node_createWithInt32(int32_t v);
 void NV_Node_setInt32ToID(const NV_ID *id, int32_t v);
 int32_t NV_Node_getInt32FromID(const NV_ID *id);
 
+// nv_op.c
+int NV_Lang_getCharType(const NV_ID *cTypeList, char c);
+NV_ID NV_createCharTypeList();
+void NV_addOp(const NV_ID *opList, const char *token, int32_t prec, const NV_ID *func);
+NV_ID NV_createOpList();
+void NV_Op_print(const NV_ID *op);
+
 // @nv_static.c
 extern const NV_ID NODEID_NULL;
 extern const NV_ID NODEID_REL_MASTERLINK;
@@ -161,5 +172,5 @@ NV_ID NV_Variable_create();
 void NV_Variable_assign(const NV_ID *vid, const NV_ID *data);
 NV_ID NV_Variable_getData(const NV_ID *vid);
 void NV_Variable_print(const NV_ID *vid);
-void NV_Variable_printiPrimVal(const NV_ID *vid);
+void NV_Variable_printPrimVal(const NV_ID *vid);
 

@@ -64,7 +64,7 @@ void NV_Dict_print(const NV_ID *root)
 				printf("|--- ");
 				NV_ID_printPrimVal(&reld->rel);
 				printf(": ");
-				NV_ID_printPrimVal(&reld->to);
+				NV_printNodeByID(&reld->to);
 				printf("\n");
 			}
 		}
