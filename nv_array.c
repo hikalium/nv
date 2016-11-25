@@ -44,6 +44,25 @@ NV_ID NV_Array_getByIndex(const NV_ID *array, int index)
 	return NV_Variable_getData(&t);
 }
 
+void NV_Array_removeIndex(const NV_ID *array, int index)
+{
+	NV_ID t, tn, tnn, r;
+	if(index < 0) return;
+	t = *array;
+	for(; index; index--){
+		if(index == 0) break;
+		t = NV_Node_getRelatedNodeFrom(&t, &RELID_ARRAY_NEXT);
+		if(NV_ID_isEqual(&t, &NODEID_NULL)) break;
+	}
+	// tのnextが削除対象。これをtnとおく。
+	if(!NV_ID_isEqual(&t, &NODEID_NULL)){
+		tn = NV_Node_getRelatedNodeFrom(&t, &RELID_ARRAY_NEXT);
+		tnn = NV_Node_getRelatedNodeFrom(&tn, &RELID_ARRAY_NEXT);
+		r = NV_Node_getRelationFrom(&t, &RELID_ARRAY_NEXT);
+		NV_Node_updateRelationTo(&r, &tnn);
+	}
+}
+
 void NV_Array_writeToIndex(const NV_ID *array, int index, const NV_ID *data)
 {
 	NV_ID t;

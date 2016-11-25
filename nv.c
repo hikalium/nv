@@ -72,7 +72,8 @@ int NV_runInteractive(const NV_ID *cTypeList, const NV_ID *opList)
 		tokenList = NV_tokenize(cTypeList, line);
 		NV_convertLiteral(&tokenList, opList);
 		NV_printNodeByID(&tokenList);
-		
+		NV_evaluateSetence(&tokenList);
+		NV_printNodeByID(&tokenList);
 	}
 	return 0;
 }
@@ -151,16 +152,32 @@ int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList)
 //
 // Evaluate
 //
-/*
 void NV_evaluateSetence(const NV_ID *tokenizedList)
 {
-	int i;
-	NV_ID t;
-	for(i = 0;;){
-		t = 
+	int i, lastOpIndex;
+	int32_t lastOpPrec, opPrec;
+	NV_ID t, lastOp;
+	for(;;){
+		lastOpPrec = -1;
+		for(i = 0; ; i++){
+			t = NV_Array_getByIndex(tokenizedList, i);
+			if(NV_ID_isEqual(&t, &NODEID_NULL)) break;
+			if(!NV_isTreeType(&t, &NODEID_TREE_TYPE_OP)) continue;
+			opPrec = NV_getOpPrecAt(tokenizedList, i);
+			if(lastOpPrec & 1 ? lastOpPrec <= opPrec : lastOpPrec < opPrec){
+				// continue searching
+				lastOpIndex = i;
+				lastOpPrec = opPrec;
+				lastOp = t;
+				continue;
+			}
+			// found. lastOpID is target op.
+			break;
+		}
+		if(lastOpPrec == -1) break;	// no more op
+		NV_tryExecOpAt(tokenizedList, lastOpIndex);
 	}
 }
-*/
 /*
 void NV_evaluateSentence(const NV_ID *tokenizedList)
 {
@@ -204,52 +221,6 @@ void NV_evaluateSentence(const NV_ID *tokenizedList)
 			return;
 		}
 	}
-}
-*/
-/*
-void NV_tryExecOp(int32_t *excFlag, NV_Pointer lang, NV_Pointer thisTerm, NV_Pointer vDict, NV_Pointer root)
-{
-	NV_Pointer fallbackOp, op;
-	NV_Pointer orgTerm = thisTerm;
-	//
-	op = NV_ListItem_getData(thisTerm);	
-#ifdef DEBUG
-	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
-		NV_DbgInfo("%s", "Begin native op: ");
-		NV_Operator_print(op); putchar('\n');
-	}
-#endif
-	NV_Operator_exec(op, excFlag, lang, vDict, thisTerm);
-#ifdef DEBUG
-	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
-		NV_DbgInfo("%s", "End native op:");
-		NV_Operator_print(op); putchar('\n');
-	}
-#endif
-	if(*excFlag & NV_EXC_FLAG_FAILED){
-		// try fallback
-		fallbackOp = NV_Lang_getFallbackOperator(lang, op);
-		if(NV_E_isNullPointer(fallbackOp)){
-			NV_Error("%s", "Operator mismatched: ");
-			NV_Operator_print(op); putchar('\n');
-			NV_List_printAll(root, NULL, NULL, "]\n");
-			return;
-		}
-#ifdef DEBUG
-	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
-		NV_DbgInfo("%s", "Fallback found:");
-		NV_Operator_print(fallbackOp); putchar('\n');
-	}
-#endif
-		CLR_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
-		NV_ListItem_setData(orgTerm, fallbackOp);
-		thisTerm = orgTerm;
-	}
-#ifdef DEBUG
-	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
-		NV_List_printAll(root, NULL, NULL, "]\n");
-	}
-#endif
 }
 */
 //

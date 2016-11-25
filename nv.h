@@ -75,11 +75,13 @@ int NV_isTreeType(const NV_ID *node, const NV_ID *tType);
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
 int NV_runInteractive(const NV_ID *cTypeList, const NV_ID *opList);
 int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList);
+void NV_evaluateSetence(const NV_ID *tokenizedList);
 
 // @nv_array.c
 NV_ID NV_Array_create();
 NV_ID NV_Array_push(const NV_ID *array, const NV_ID *data);
 NV_ID NV_Array_getByIndex(const NV_ID *array, int index);
+void NV_Array_removeIndex(const NV_ID *array, int index);
 void NV_Array_writeToIndex(const NV_ID *array, int index, const NV_ID *data);
 void NV_Array_print(const NV_ID *array);
 
@@ -134,10 +136,12 @@ NV_ID NV_Node_getRelatedNodeFrom(const NV_ID *from, const NV_ID *rel);
 NV_ID NV_Node_createWithString(const char *s);
 void NV_Node_setStrToID(const NV_ID *id, const char *s);
 int NV_Node_String_compare(const NV_Node *na, const NV_Node *nb);
+int NV_Node_String_compareWithCStr(const NV_Node *na, const char *s);
 char *NV_Node_String_strchr(const NV_Node *ns, char c);
 long NV_Node_String_strtol(const NV_Node *ns, int *endptrindex, int base);
 size_t NV_Node_String_strlen(const NV_Node *ns);
 //
+int NV_Node_isInteger(const NV_ID *id);
 NV_ID NV_Node_createWithInt32(int32_t v);
 void NV_Node_setInt32ToID(const NV_ID *id, int32_t v);
 int32_t NV_Node_getInt32FromID(const NV_ID *id);
@@ -147,6 +151,8 @@ int NV_Lang_getCharType(const NV_ID *cTypeList, char c);
 NV_ID NV_createCharTypeList();
 void NV_addOp(const NV_ID *opList, const char *token, int32_t prec, const NV_ID *func);
 NV_ID NV_createOpList();
+int32_t NV_getOpPrecAt(const NV_ID *tList, int index);
+void NV_tryExecOpAt(const NV_ID *tList, int index);
 void NV_Op_print(const NV_ID *op);
 
 // @nv_static.c

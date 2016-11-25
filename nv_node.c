@@ -373,6 +373,15 @@ int NV_Node_String_compare(const NV_Node *na, const NV_Node *nb)
 	return strcmp(na->data, nb->data);
 }
 
+int NV_Node_String_compareWithCStr(const NV_Node *na, const char *s)
+{
+	// compatible with strcmp
+	// but if node->data is null, returns -1.
+	// "" == "" -> true
+	if(!na || !s || na->type != kString) return -1;
+	return strcmp(na->data, s);
+}
+
 char *NV_Node_String_strchr(const NV_Node *ns, char c)
 {
 	if(!ns || ns->type != kString) return NULL;
@@ -401,6 +410,15 @@ size_t NV_Node_String_strlen(const NV_Node *ns)
 //
 // Integer
 //
+
+int NV_Node_isInteger(const NV_ID *id)
+{
+	NV_Node *n;
+	//
+	n = NV_Node_getByID(id);
+	if(!n || n->type != kInteger) return 0;
+	return 1;
+}
 
 NV_ID NV_Node_createWithInt32(int32_t v)
 {
