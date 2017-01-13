@@ -45,8 +45,8 @@ void NV_Graph_dump()
 		NV_Node_dump(n); putchar('\n');
 	}
 }
-
-void NV_Graph_saveToFileName(const char *fname)
+/*
+void NV_Graph_dumpToFile(const char *fname)
 {
 	FILE *fp = fopen(fname, "wb");
 	NV_Node *n;
@@ -55,6 +55,15 @@ void NV_Graph_saveToFileName(const char *fname)
 		NV_Node_dump(n); putchar('\n');
 	}
 	fclose(fp);
+}
+*/
+void NV_Graph_dumpToFile(FILE *fp)
+{
+	NV_Node *n;
+	if(!fp) return;
+	for(n = nodeRoot.next; n; n = n->next){
+		NV_Node_fdump(fp, n); fputc('\n', fp);
+	}
 }
 
 int NV_isTreeType(const NV_ID *node, const NV_ID *tType)

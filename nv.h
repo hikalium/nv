@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <stdarg.h>
 
 #define MAX_INPUT_LEN		1024
 #define MAX_TOKEN_LEN		256
@@ -71,6 +72,7 @@ struct NV_RELATION {
 extern NV_Node nodeRoot;
 void NV_Graph_init();
 void NV_Graph_dump();
+void NV_Graph_dumpToFile(FILE *fp);
 int NV_isTreeType(const NV_ID *node, const NV_ID *tType);
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
 int NV_runInteractive(const NV_ID *cTypeList, const NV_ID *opList);
@@ -125,22 +127,24 @@ void NV_Node_resetDataOfID(const NV_ID *id);
 void NV_Node_fdump(FILE *fp, const NV_Node *n);
 void NV_Node_dump(const NV_Node *n);
 void NV_Node_printPrimVal(const NV_Node *n);
-//
+// Relation
 NV_ID NV_Node_createRelation(const NV_ID *from, const NV_ID *rel,  const NV_ID *to);
 void NV_Node_setRelation
 	(const NV_ID *relnid, const NV_ID *from, const NV_ID *rel, const NV_ID *to);
 void NV_Node_updateRelationTo(const NV_ID *relnid, const NV_ID *to);
 NV_ID NV_Node_getRelationFrom(const NV_ID *from, const NV_ID *rel);
 NV_ID NV_Node_getRelatedNodeFrom(const NV_ID *from, const NV_ID *rel);
-//
+// String
+int NV_Node_isString(const NV_ID *id);
 NV_ID NV_Node_createWithString(const char *s);
+const char *NV_Node_getCStr(const NV_ID *id);
 void NV_Node_setStrToID(const NV_ID *id, const char *s);
 int NV_Node_String_compare(const NV_Node *na, const NV_Node *nb);
 int NV_Node_String_compareWithCStr(const NV_Node *na, const char *s);
 char *NV_Node_String_strchr(const NV_Node *ns, char c);
 long NV_Node_String_strtol(const NV_Node *ns, int *endptrindex, int base);
 size_t NV_Node_String_strlen(const NV_Node *ns);
-//
+// Integer
 int NV_Node_isInteger(const NV_ID *id);
 NV_ID NV_Node_createWithInt32(int32_t v);
 void NV_Node_setInt32ToID(const NV_ID *id, int32_t v);
@@ -152,6 +156,8 @@ NV_ID NV_createCharTypeList();
 void NV_addOp(const NV_ID *opList, const char *token, int32_t prec, const NV_ID *func);
 NV_ID NV_createOpList();
 int32_t NV_getOpPrecAt(const NV_ID *tList, int index);
+void NV_getOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, NV_ID *idBuf, int count);
+void NV_removeOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, int count);
 void NV_tryExecOpAt(const NV_ID *tList, int index);
 void NV_Op_print(const NV_ID *op);
 

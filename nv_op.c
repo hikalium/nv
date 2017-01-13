@@ -51,6 +51,9 @@ NV_ID NV_createOpList()
 	NV_ID nv;
 	NV_ID opList = NV_Node_createWithString("NV_OpList");
 	//
+	nv = NV_Node_createWithString("NV_Op_save");
+	NV_addOp(&opList, "save", 0, &nv);
+	//
 	nv = NV_Node_createWithString("NV_Op_add");
 	NV_addOp(&opList, "+", 100, &nv);
 	//
@@ -78,6 +81,23 @@ int32_t NV_getOpPrecAt(const NV_ID *tList, int index)
 	NV_ID op = NV_Array_getByIndex(tList, index);
 	NV_ID ePrec = NV_Node_getRelatedNodeFrom(&op, &RELID_OP_PRECEDENCE);
 	return NV_Node_getInt32FromID(&ePrec);
+}
+
+void NV_getOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, NV_ID *idBuf, int count)
+{
+	int i;
+	for(i = 0; i < count; i++){
+		idBuf[i] = NV_Array_getByIndex(tList,  baseIndex + relIndexList[i]);
+	}
+}
+
+void NV_removeOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, int count)
+{
+	// relIndexListが昇順にソートされていると仮定している．
+	int i;
+	for(i = count - 1; i >= 0; i--){
+		NV_Array_removeIndex(tList, relIndexList[i] + baseIndex);
+	}
 }
 
 void NV_Op_ExecBuiltinInfix(const NV_ID *tList, int index, int func)
@@ -111,6 +131,42 @@ void NV_Op_ExecBuiltinInfix(const NV_ID *tList, int index, int func)
 	NV_Array_writeToIndex(tList, index, &ans);
 }
 
+void NV_Op_save(const NV_ID *tList, int index)
+{
+	const int operandCount = 1;
+	NV_ID operand[operandCount];
+	int operandIndex[operandCount] = {1};
+	const char *fname;
+	NV_ID ans;
+	//
+	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
+	if(!NV_Node_isString(&operand[0])){
+		NV_ID errObj = NV_Node_createWithString(
+			"Error: Invalid Operand Type.");
+		NV_Array_writeToIndex(tList, index, &errObj);
+		return;
+	}
+	fname = NV_Node_getCStr(&operand[0]);
+	if(!fname){
+		NV_ID errObj = NV_Node_createWithString(
+			"fname is null");
+		NV_Array_writeToIndex(tList, index, &errObj);
+	}
+	//
+	NV_removeOperandByList(tList, index, operandIndex, operandCount);
+	//
+	FILE *fp = fopen(fname, "wb");
+	if(!fp){
+		NV_ID errObj = NV_Node_createWithString(
+			"fopen failed");
+		NV_Array_writeToIndex(tList, index, &errObj);
+	}
+	ans = NV_Node_createWithInt32(0);
+	NV_Graph_dumpToFile(fp);
+	fclose(fp);
+	NV_Array_writeToIndex(tList, index, &ans);
+}
+
 void NV_tryExecOpAt(const NV_ID *tList, int index)
 {
 	NV_ID op = NV_Array_getByIndex(tList, index);
@@ -135,6 +191,9 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 	} else if(NV_Node_String_compareWithCStr(
 		NV_Node_getByID(&func), "NV_Op_mod") == 0){
 		NV_Op_ExecBuiltinInfix(tList, index, 4);
+	} else if(NV_Node_String_compareWithCStr(
+		NV_Node_getByID(&func), "NV_Op_save") == 0){
+		NV_Op_save(tList, index);
 	} else{
 		NV_ID errObj = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");
