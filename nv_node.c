@@ -93,7 +93,15 @@ int NV_Node_isLiveNode(NV_Node *n)
 */
 NV_ID NV_Node_createWithID(const NV_ID *id)
 {
-	NV_Node *n = NV_malloc(sizeof(NV_Node));
+	// すでに存在するIDについては，新たに確保せず，既存の内容をリセットする．
+	NV_Node *n;
+	n = NV_Node_getByID(id);
+	if(n){
+		NV_Node_resetData(n);
+		return n->id;
+	}
+	// 新規作成
+	n = NV_malloc(sizeof(NV_Node));
 	if(!n) exit(EXIT_FAILURE);
 	//
 	n->id = *id;
@@ -188,6 +196,11 @@ void NV_Node_resetDataOfID(const NV_ID *id)
 	NV_Node_resetData(NV_Node_getByID(id));
 }
 
+void NV_Node_restoreFromCStr(const char *s)
+{
+	
+}
+
 void NV_Node_fdump(FILE *fp, const NV_Node *n)
 {
 	if(!n){
@@ -197,12 +210,13 @@ void NV_Node_fdump(FILE *fp, const NV_Node *n)
 	fprintf(fp, "%08X%08X%08X%08X %d ", n->id.d[0], n->id.d[1], n->id.d[2], n->id.d[3], n->type);
 	if(n->type == kString){
 		int i;
+		fprintf(fp, "%d ", n->size);
 		for(i = 0; ((const char *)n->data)[i]; i++){
 			fprintf(fp, "%02X", ((const char *)n->data)[i]);
 		}
 	} else if(n->type == kInteger){
 		if(n->size == sizeof(int32_t)){
-			fprintf(fp, "%d", *((int32_t *)n->data));
+			fprintf(fp, "%d %08X", n->size, *((int32_t *)n->data));
 		}
 	} else if(n->type == kRelation){
 		const NV_Relation *e = n->data;
