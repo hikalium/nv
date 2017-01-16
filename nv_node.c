@@ -196,11 +196,6 @@ void NV_Node_resetDataOfID(const NV_ID *id)
 	NV_Node_resetData(NV_Node_getByID(id));
 }
 
-void NV_Node_restoreFromCStr(const char *s)
-{
-	
-}
-
 void NV_Node_fdump(FILE *fp, const NV_Node *n)
 {
 	if(!n){

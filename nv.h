@@ -4,6 +4,7 @@
 #include <string.h>
 #include <time.h>
 #include <stdarg.h>
+#include <ctype.h>
 
 #define MAX_INPUT_LEN		1024
 #define MAX_TOKEN_LEN		256
@@ -49,7 +50,7 @@ enum NV_NODE_TYPE {
 };
 
 struct NV_ELEMENT_ID {
-	int32_t d[4];
+	uint32_t d[4];
 };
 
 struct NV_NODE {
@@ -73,6 +74,7 @@ extern NV_Node nodeRoot;
 void NV_Graph_init();
 void NV_Graph_dump();
 void NV_Graph_dumpToFile(FILE *fp);
+void NV_Graph_restoreFromFile(FILE *fp);
 int NV_isTreeType(const NV_ID *node, const NV_ID *tType);
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
 int NV_runInteractive(const NV_ID *cTypeList, const NV_ID *opList);
@@ -109,7 +111,9 @@ void NV_free(void *p);
 
 // @nv_id.c
 NV_ID NV_ID_generateRandom();
+int NV_ID_setFromString(NV_ID *id, const char *s);
 int NV_ID_isEqual(const NV_ID *a, const NV_ID *b);
+void NV_ID_dumpIDToFile(const NV_ID *id, FILE *fp);
 int NV_ID_isEqualInValue(const NV_ID *a, const NV_ID *b);
 void NV_ID_printPrimVal(const NV_ID *id);
 

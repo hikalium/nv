@@ -54,8 +54,8 @@ NV_ID NV_createOpList()
 	nv = NV_Node_createWithString("NV_Op_save");
 	NV_addOp(&opList, "save", 0, &nv);
 	//
-	nv = NV_Node_createWithString("NV_Op_load");
-	NV_addOp(&opList, "load", 0, &nv);
+	nv = NV_Node_createWithString("NV_Op_restore");
+	NV_addOp(&opList, "restore", 0, &nv);
 	//
 	nv = NV_Node_createWithString("NV_Op_add");
 	NV_addOp(&opList, "+", 100, &nv);
@@ -171,7 +171,7 @@ void NV_Op_save(const NV_ID *tList, int index)
 	NV_Array_writeToIndex(tList, index, &ans);
 }
 
-void NV_Op_load(const NV_ID *tList, int index)
+void NV_Op_restore(const NV_ID *tList, int index)
 {
 	const int operandCount = 1;
 	NV_ID operand[operandCount];
@@ -202,8 +202,8 @@ void NV_Op_load(const NV_ID *tList, int index)
 		NV_Array_writeToIndex(tList, index, &errObj);
 		return;
 	}
-	ans = NV_Node_createWithString("load test");
-	//NV_Graph_dumpToFile(fp);
+	ans = NV_Node_createWithString("restore");
+	NV_Graph_restoreFromFile(fp);
 	fclose(fp);
 	NV_Array_writeToIndex(tList, index, &ans);
 }
@@ -236,8 +236,8 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 		NV_Node_getByID(&func), "NV_Op_save") == 0){
 		NV_Op_save(tList, index);
 	} else if(NV_Node_String_compareWithCStr(
-		NV_Node_getByID(&func), "NV_Op_load") == 0){
-		NV_Op_load(tList, index);
+		NV_Node_getByID(&func), "NV_Op_restore") == 0){
+		NV_Op_restore(tList, index);
 	} else{
 		NV_ID errObj = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");

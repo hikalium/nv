@@ -45,6 +45,7 @@ void NV_Graph_dump()
 		NV_Node_dump(n); putchar('\n');
 	}
 }
+
 /*
 void NV_Graph_dumpToFile(const char *fname)
 {
@@ -65,6 +66,34 @@ void NV_Graph_dumpToFile(FILE *fp)
 		NV_Node_fdump(fp, n); fputc('\n', fp);
 	}
 }
+
+void NV_Graph_restoreFromFile(FILE *fp)
+{
+	char s[128], c;
+	int i;
+	NV_ID id;
+
+	for(;;){
+		s[0] = fgetc(fp);
+		if(s[0] == EOF) break;
+		for(i = 1; i < 32; i++){
+			s[i] = fgetc(fp);
+		}
+		s[i] = 0;
+		if(NV_ID_setFromString(&id, s)){
+			printf("Invalid id format.\n");
+			return;
+		}
+		NV_ID_dumpIDToFile(&id, stdout);
+		putchar('\n');
+		//
+		for(;;){
+			c = fgetc(fp);
+			if(c == EOF || c == '\n') break;
+		}
+	}
+}
+
 
 int NV_isTreeType(const NV_ID *node, const NV_ID *tType)
 {
