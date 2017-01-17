@@ -69,27 +69,65 @@ void NV_Graph_dumpToFile(FILE *fp)
 
 void NV_Graph_restoreFromFile(FILE *fp)
 {
-	char s[128], c;
-	int i;
+	static char sTable[0x100];
+	char s[4096], *p;
+	int n, i;
 	NV_ID id;
+	NV_ID from, rel, to;
+	for(i = 0; i < 10; i++){
+		sTable[i + '0'] = i;
+	}
+	for(i = 0; i < 6; i++){
+		sTable[i + 'a'] = i + 0x0a;
+		sTable[i + 'A'] = i + 0x0a;
+	}
 
-	for(;;){
-		s[0] = fgetc(fp);
-		if(s[0] == EOF) break;
-		for(i = 1; i < 32; i++){
-			s[i] = fgetc(fp);
-		}
-		s[i] = 0;
+	while(fgets(s, sizeof(s), fp)){
 		if(NV_ID_setFromString(&id, s)){
 			printf("Invalid id format.\n");
 			return;
 		}
 		NV_ID_dumpIDToFile(&id, stdout);
 		putchar('\n');
+		NV_Node_createWithID(&id);
 		//
-		for(;;){
-			c = fgetc(fp);
-			if(c == EOF || c == '\n') break;
+		p = &s[32];
+		n = strtol(p, &p, 10);
+		switch(n){
+			case kString:
+				n = strtol(p, &p, 10);
+				p++;
+				for(i = 0; i < n - 1; i++){
+					s[i] = sTable[(int)*(p++)];
+					s[i] <<= 4;
+					s[i] |= sTable[(int)*(p++)];
+				}
+				s[i] = 0;
+				printf("str %d %s\n", n, s);
+				NV_Node_setStrToID(&id, s);
+				break;
+			case kInteger:
+				n = strtol(p, &p, 10);
+				printf("int %d\n", n);
+				//
+				n = strtol(p, &p, 16);
+				printf("%d\n", n);
+				NV_Node_setInt32ToID(&id, n);
+				break;
+			case kRelation:
+				NV_ID_setFromString(&from, &p[1]);
+				NV_ID_setFromString(&rel, &p[ 1 + 32 + 1]);
+				NV_ID_setFromString(&to, &p[1 + 32 + 1 + 32 + 1]);
+				printf("rel\n");
+				printf(" ");
+				NV_ID_dumpIDToFile(&from, stdout);
+				printf(" ");
+				NV_ID_dumpIDToFile(&rel, stdout);
+				printf(" ");
+				NV_ID_dumpIDToFile(&to, stdout);
+				printf("\n");
+				NV_Node_setRelation(&id, &from, &rel, &to);
+				break;
 		}
 	}
 }
