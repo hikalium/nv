@@ -22,7 +22,7 @@
 
 #define ESC_ANSI_RED(s)		"\033[31m"s"\033[39m"
 #define ESC_ANSI_GREEN(s)	"\033[32m"s"\033[39m"
-#define ESC_ANSI_YERROW(s)	"\033[33m"s"\033[39m"
+#define ESC_ANSI_YELLOW(s)	"\033[33m"s"\033[39m"
 #define ESC_ANSI_CYAN(s)	"\033[36m"s"\033[39m"
 
 #define NV_Error(fmt, ...)	printf(ESC_ANSI_RED("\nError: %s: %d: ")fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
