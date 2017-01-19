@@ -13,6 +13,13 @@ NV_ID NV_Variable_create()
 	return v;
 }
 
+NV_ID NV_Variable_createWithName(const NV_ID *parentNode, const NV_ID *nameNode)
+{
+	NV_ID v = NV_Variable_create();
+	NV_Node_createRelation(parentNode, nameNode, &v);
+	return v;
+}
+
 void NV_Variable_assign(const NV_ID *vid, const NV_ID *data)
 {
 	NV_ID eid;

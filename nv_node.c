@@ -202,7 +202,11 @@ void NV_Node_fdump(FILE *fp, const NV_Node *n)
 		fprintf(fp, "(null)");
 		return;
 	}
-	fprintf(fp, "%08X%08X%08X%08X %d ", n->id.d[0], n->id.d[1], n->id.d[2], n->id.d[3], n->type);
+	// n->id
+	NV_ID_dumpIDToFile(&n->id, fp);
+	// n->type
+	fprintf(fp, " %d ", n->type);
+	// n->data
 	if(n->type == kString){
 		int i;
 		fprintf(fp, "%d ", n->size);
@@ -215,11 +219,11 @@ void NV_Node_fdump(FILE *fp, const NV_Node *n)
 		}
 	} else if(n->type == kRelation){
 		const NV_Relation *e = n->data;
-		fprintf(fp, "%08X%08X%08X%08X %08X%08X%08X%08X %08X%08X%08X%08X",
-			e->from.d[0],e->from.d[1],e->from.d[2],e->from.d[3], 
-			e->rel.d[0],e->rel.d[1],e->rel.d[2],e->rel.d[3],
-			e->to.d[0],e->to.d[1],e->to.d[2],e->to.d[3]
-		);
+		NV_ID_dumpIDToFile(&e->from, fp);
+		fputc(' ', fp);
+		NV_ID_dumpIDToFile(&e->rel, fp);
+		fputc(' ', fp);
+		NV_ID_dumpIDToFile(&e->to, fp);
 	}
 }
 

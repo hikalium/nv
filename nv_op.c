@@ -60,9 +60,10 @@ typedef struct NV_BUILTIN_OP_TAG {
 } NV_BuiltinOpTag;
 
 NV_BuiltinOpTag builtinOpList[] = {
-	{"showop",	0,		"NV_Op_showop"},
+	{"ls",		0,		"NV_Op_ls"},
 	{"save",	0,		"NV_Op_save"},
 	{"restore",	0,		"NV_Op_restore"},
+	{"=",		0,		"NV_Op_assign"},
 	{"+",		100,	"NV_Op_add"},
 	{"-",		100,	"NV_Op_sub"},
 	{"*",		200,	"NV_Op_mul"},
@@ -216,40 +217,25 @@ void NV_Op_restore(const NV_ID *tList, int index)
 	NV_Array_writeToIndex(tList, index, &ans);
 }
 
-void NV_Op_showop(const NV_ID *tList, int index)
+void NV_Op_ls(const NV_ID *tList, int index)
 {
-	const int operandCount = 1;
-	NV_ID operand[operandCount];
-	int operandIndex[operandCount] = {1};
-	const char *fname;
 	NV_ID ans;
 	//
-	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
-	if(!NV_Node_isString(&operand[0])){
-		NV_ID errObj = NV_Node_createWithString(
-			"Error: Invalid Operand Type.");
-		NV_Array_writeToIndex(tList, index, &errObj);
-		return;
-	}
-	fname = NV_Node_getCStr(&operand[0]);
-	if(!fname){
-		NV_ID errObj = NV_Node_createWithString(
-			"fname is null");
-		NV_Array_writeToIndex(tList, index, &errObj);
-	}
+	NV_Dict_print(&NODEID_NULL);
 	//
-	NV_removeOperandByList(tList, index, operandIndex, operandCount);
+	ans = NV_Node_createWithInt32(0);
+	NV_Array_writeToIndex(tList, index, &ans);
+}
+
+void NV_Op_assign(const NV_ID *tList, int index)
+{
+	NV_ID ans;
+	NV_ID v, name;
 	//
-	FILE *fp = fopen(fname, "rb");
-	if(!fp){
-		NV_ID errObj = NV_Node_createWithString(
-			"fopen failed");
-		NV_Array_writeToIndex(tList, index, &errObj);
-		return;
-	}
-	ans = NV_Node_createWithString("restore");
-	NV_Graph_restoreFromFile(fp);
-	fclose(fp);
+	name = NV_Node_createWithString("testVar");
+	v = NV_Variable_createWithName(&NODEID_NULL, &name);
+	//
+	ans = NV_Node_createWithInt32(0);
 	NV_Array_writeToIndex(tList, index, &ans);
 }
 
@@ -257,8 +243,11 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 {
 	NV_ID op = NV_Array_getByIndex(tList, index);
 	NV_ID func = NV_Node_getRelatedNodeFrom(&op, &RELID_OP_FUNC);
-	puts("begin op");
+	//
+	printf("begin op ");
 	NV_printNodeByID(&op);
+	putchar('\n');
+	//
 	if(NV_Node_String_compareWithCStr(
 		NV_Node_getByID(&func), "NV_Op_nothing") == 0){
 		NV_Array_removeIndex(tList, index);
@@ -284,13 +273,20 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 		NV_Node_getByID(&func), "NV_Op_restore") == 0){
 		NV_Op_restore(tList, index);
 	} else if(NV_Node_String_compareWithCStr(
-		NV_Node_getByID(&func), "NV_Op_showop") == 0){
-		NV_Op_showop(tList, index);
+		NV_Node_getByID(&func), "NV_Op_ls") == 0){
+		NV_Op_ls(tList, index);
+	} else if(NV_Node_String_compareWithCStr(
+		NV_Node_getByID(&func), "NV_Op_assign") == 0){
+		NV_Op_assign(tList, index);
 	} else{
 		NV_ID errObj = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");
 		NV_Array_writeToIndex(tList, index, &errObj);
 	}
+	//
+	printf("end op ");
+	NV_printNodeByID(&op);
+	putchar('\n');
 }
 
 /*
