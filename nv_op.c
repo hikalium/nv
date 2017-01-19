@@ -46,34 +46,42 @@ void NV_addOp(const NV_ID *opList, const char *token, int32_t prec, const NV_ID 
 	NV_Dict_addByStringKey(opList, token, &opEntry);
 }
 
+void NV_addBuiltinOp(const NV_ID *opList, const char *token, int32_t prec, const char *funcStr)
+{
+	NV_ID funcStrID;
+	funcStrID = NV_Node_createWithString(funcStr);
+	NV_addOp(opList, token, prec, &funcStrID);
+}
+
+typedef struct NV_BUILTIN_OP_TAG {
+	const char *token;
+	int prec;
+	const char *funcStr;
+} NV_BuiltinOpTag;
+
+NV_BuiltinOpTag builtinOpList[] = {
+	{"showop",	0,		"NV_Op_showop"},
+	{"save",	0,		"NV_Op_save"},
+	{"restore",	0,		"NV_Op_restore"},
+	{"+",		100,	"NV_Op_add"},
+	{"-",		100,	"NV_Op_sub"},
+	{"*",		200,	"NV_Op_mul"},
+	{"/",		200,	"NV_Op_div"},
+	{"%",		200,	"NV_Op_mod"},
+	{" ",		300,	"NV_Op_nothing"},
+	//
+	{"", -1, ""}	// terminate tag
+};
+
 NV_ID NV_createOpList()
 {
-	NV_ID nv;
 	NV_ID opList = NV_Node_createWithString("NV_OpList");
 	//
-	nv = NV_Node_createWithString("NV_Op_save");
-	NV_addOp(&opList, "save", 0, &nv);
-	//
-	nv = NV_Node_createWithString("NV_Op_restore");
-	NV_addOp(&opList, "restore", 0, &nv);
-	//
-	nv = NV_Node_createWithString("NV_Op_add");
-	NV_addOp(&opList, "+", 100, &nv);
-	//
-	nv = NV_Node_createWithString("NV_Op_sub");
-	NV_addOp(&opList, "-", 100, &nv);
-	//
-	nv = NV_Node_createWithString("NV_Op_mul");
-	NV_addOp(&opList, "*", 200, &nv);
-	//
-	nv = NV_Node_createWithString("NV_Op_div");
-	NV_addOp(&opList, "/", 200, &nv);
-	//
-	nv = NV_Node_createWithString("NV_Op_mod");
-	NV_addOp(&opList, "%", 200, &nv);
-	//
-	nv = NV_Node_createWithString("NV_Op_nothing");
-	NV_addOp(&opList, " ", 300, &nv);
+	int i;
+	for(i = 0; builtinOpList[i].prec >= 0; i++){
+		NV_addBuiltinOp(&opList,
+			builtinOpList[i].token, builtinOpList[i].prec, builtinOpList[i].funcStr);
+	}
 	//
 	NV_Dict_print(&opList);
 	return opList;
@@ -208,6 +216,43 @@ void NV_Op_restore(const NV_ID *tList, int index)
 	NV_Array_writeToIndex(tList, index, &ans);
 }
 
+void NV_Op_showop(const NV_ID *tList, int index)
+{
+	const int operandCount = 1;
+	NV_ID operand[operandCount];
+	int operandIndex[operandCount] = {1};
+	const char *fname;
+	NV_ID ans;
+	//
+	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
+	if(!NV_Node_isString(&operand[0])){
+		NV_ID errObj = NV_Node_createWithString(
+			"Error: Invalid Operand Type.");
+		NV_Array_writeToIndex(tList, index, &errObj);
+		return;
+	}
+	fname = NV_Node_getCStr(&operand[0]);
+	if(!fname){
+		NV_ID errObj = NV_Node_createWithString(
+			"fname is null");
+		NV_Array_writeToIndex(tList, index, &errObj);
+	}
+	//
+	NV_removeOperandByList(tList, index, operandIndex, operandCount);
+	//
+	FILE *fp = fopen(fname, "rb");
+	if(!fp){
+		NV_ID errObj = NV_Node_createWithString(
+			"fopen failed");
+		NV_Array_writeToIndex(tList, index, &errObj);
+		return;
+	}
+	ans = NV_Node_createWithString("restore");
+	NV_Graph_restoreFromFile(fp);
+	fclose(fp);
+	NV_Array_writeToIndex(tList, index, &ans);
+}
+
 void NV_tryExecOpAt(const NV_ID *tList, int index)
 {
 	NV_ID op = NV_Array_getByIndex(tList, index);
@@ -238,6 +283,9 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 	} else if(NV_Node_String_compareWithCStr(
 		NV_Node_getByID(&func), "NV_Op_restore") == 0){
 		NV_Op_restore(tList, index);
+	} else if(NV_Node_String_compareWithCStr(
+		NV_Node_getByID(&func), "NV_Op_showop") == 0){
+		NV_Op_showop(tList, index);
 	} else{
 		NV_ID errObj = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");
