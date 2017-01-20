@@ -282,9 +282,11 @@ void NV_Node_setRelation
 	NV_Node *n;
 	NV_Relation *reld;
 	//
+/*
 	if(!NV_Node_existsID(from) || !NV_Node_existsID(rel) || !NV_Node_existsID(to)){
 		return;
 	}
+*/
 	n = NV_Node_getByID(relnid);
 	if(n){
 		if(n->type != kNone) NV_Node_resetDataOfID(relnid);

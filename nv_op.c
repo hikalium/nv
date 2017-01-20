@@ -234,6 +234,8 @@ void NV_Op_assign(const NV_ID *tList, int index)
 	//
 	name = NV_Node_createWithString("testVar");
 	v = NV_Variable_createWithName(&NODEID_NULL, &name);
+	NV_Node_fdump(stdout, NV_Node_getByID(&name));
+	putchar('\n');
 	//
 	ans = NV_Node_createWithInt32(0);
 	NV_Array_writeToIndex(tList, index, &ans);
