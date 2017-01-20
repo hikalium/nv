@@ -185,6 +185,7 @@ void NV_Op_restore(const NV_ID *tList, int index)
 	const int operandCount = 1;
 	NV_ID operand[operandCount];
 	int operandIndex[operandCount] = {1};
+	//
 	const char *fname;
 	NV_ID ans;
 	//
@@ -229,16 +230,26 @@ void NV_Op_ls(const NV_ID *tList, int index)
 
 void NV_Op_assign(const NV_ID *tList, int index)
 {
-	NV_ID ans;
-	NV_ID v, name;
+	const int operandCount = 2;
+	NV_ID operand[operandCount];
+	int operandIndex[operandCount] = {-1, 1};
 	//
-	name = NV_Node_createWithString("testVar");
-	v = NV_Variable_createWithName(&NODEID_NULL, &name);
-	NV_Node_fdump(stdout, NV_Node_getByID(&name));
-	putchar('\n');
+	NV_ID v;
 	//
-	ans = NV_Node_createWithInt32(0);
-	NV_Array_writeToIndex(tList, index, &ans);
+	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
+	if(!NV_Node_isString(&operand[0])){
+		NV_ID errObj = NV_Node_createWithString(
+			"Error: Invalid Operand Type.");
+		NV_Array_writeToIndex(tList, index, &errObj);
+		return;
+	}
+	//
+	v = NV_Variable_createWithName(&NODEID_NULL, &operand[0]);
+	NV_Variable_assign(&v, &operand[1]);
+	//
+	NV_removeOperandByList(tList, index, operandIndex, operandCount);
+	//
+	NV_Array_writeToIndex(tList, index, &v);
 }
 
 void NV_tryExecOpAt(const NV_ID *tList, int index)
