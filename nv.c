@@ -53,10 +53,6 @@ NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input)
 		if(input[i] == 0) break;
 		
 	}
-#ifdef DEBUG
-	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE)
-		NV_List_printAll(termRoot, NULL, NULL, "]\n");
-#endif
 	NV_Array_print(&tokenList);
 	return tokenList;
 }
@@ -119,6 +115,7 @@ void NV_evaluateSetence(const NV_ID *tokenizedList)
 		}
 		if(lastOpPrec == -1) break;	// no more op
 		NV_tryExecOpAt(tokenizedList, lastOpIndex);
+		NV_Array_print(tokenizedList);
 	}
 }
 /*

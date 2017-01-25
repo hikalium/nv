@@ -249,7 +249,7 @@ void NV_Op_assign(const NV_ID *tList, int index)
 	//
 	NV_removeOperandByList(tList, index, operandIndex, operandCount);
 	//
-	NV_Array_writeToIndex(tList, index, &v);
+	NV_Array_writeToIndex(tList, index - 1, &v);
 }
 
 void NV_tryExecOpAt(const NV_ID *tList, int index)
