@@ -252,6 +252,11 @@ void NV_Op_assign(const NV_ID *tList, int index)
 	NV_Array_writeToIndex(tList, index - 1, &v);
 }
 
+int NV_isBuiltinOp(const NV_ID *term, const char *ident)
+{
+	return NV_Node_String_compareWithCStr(NV_Node_getByID(term), ident) == 0;
+}
+
 void NV_tryExecOpAt(const NV_ID *tList, int index)
 {
 	NV_ID op = NV_Array_getByIndex(tList, index);
@@ -261,35 +266,25 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 	NV_printNodeByID(&op);
 	putchar('\n');
 	//
-	if(NV_Node_String_compareWithCStr(
-		NV_Node_getByID(&func), "NV_Op_nothing") == 0){
+	if(NV_isBuiltinOp(&func, "NV_Op_nothing")){
 		NV_Array_removeIndex(tList, index);
-	} else if(NV_Node_String_compareWithCStr(
-		NV_Node_getByID(&func), "NV_Op_add") == 0){
+	} else if(NV_isBuiltinOp(&func, "NV_Op_add")){
 		NV_Op_ExecBuiltinInfix(tList, index, 0);
-	} else if(NV_Node_String_compareWithCStr(
-		NV_Node_getByID(&func), "NV_Op_sub") == 0){
+	} else if(NV_isBuiltinOp(&func, "NV_Op_sub")){
 		NV_Op_ExecBuiltinInfix(tList, index, 1);
-	} else if(NV_Node_String_compareWithCStr(
-		NV_Node_getByID(&func), "NV_Op_mul") == 0){
+	} else if(NV_isBuiltinOp(&func, "NV_Op_mul")){
 		NV_Op_ExecBuiltinInfix(tList, index, 2);
-	} else if(NV_Node_String_compareWithCStr(
-		NV_Node_getByID(&func), "NV_Op_div") == 0){
+	} else if(NV_isBuiltinOp(&func, "NV_Op_div")){
 		NV_Op_ExecBuiltinInfix(tList, index, 3);
-	} else if(NV_Node_String_compareWithCStr(
-		NV_Node_getByID(&func), "NV_Op_mod") == 0){
+	} else if(NV_isBuiltinOp(&func, "NV_Op_mod")){
 		NV_Op_ExecBuiltinInfix(tList, index, 4);
-	} else if(NV_Node_String_compareWithCStr(
-		NV_Node_getByID(&func), "NV_Op_save") == 0){
+	} else if(NV_isBuiltinOp(&func, "NV_Op_save")){
 		NV_Op_save(tList, index);
-	} else if(NV_Node_String_compareWithCStr(
-		NV_Node_getByID(&func), "NV_Op_restore") == 0){
+	} else if(NV_isBuiltinOp(&func, "NV_Op_restore")){
 		NV_Op_restore(tList, index);
-	} else if(NV_Node_String_compareWithCStr(
-		NV_Node_getByID(&func), "NV_Op_ls") == 0){
+	} else if(NV_isBuiltinOp(&func, "NV_Op_ls")){
 		NV_Op_ls(tList, index);
-	} else if(NV_Node_String_compareWithCStr(
-		NV_Node_getByID(&func), "NV_Op_assign") == 0){
+	} else if(NV_isBuiltinOp(&func, "NV_Op_assign")){
 		NV_Op_assign(tList, index);
 	} else{
 		NV_ID errObj = NV_Node_createWithString(
