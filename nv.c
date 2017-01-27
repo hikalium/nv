@@ -170,6 +170,10 @@ int32_t NV_debugFlag;
 int main(int argc, char *argv[])
 {
 	NV_ID cTypeList, opList;
+	//
+	printf("# nv interpreter\n# repository: https://github.com/hikalium/nv \n# commit: %s\n# commit date: %s\n", 
+		GIT_COMMIT_ID, GIT_COMMIT_DATE);
+	//
 	NV_Graph_init();
 	//
 	cTypeList = NV_createCharTypeList();

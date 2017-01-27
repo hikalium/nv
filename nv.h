@@ -26,12 +26,19 @@
 #define ESC_ANSI_CYAN(s)	"\033[36m"s"\033[39m"
 
 #define NV_Error(fmt, ...)	printf(ESC_ANSI_RED("\nError: %s: %d: ")fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
-#define NV_DbgInfo(fmt, ...) \
-	printf("\nInfo : %3d:%s: " fmt "\n", __LINE__, __FUNCTION__, __VA_ARGS__)
-#define NV_DbgInfo0(s) \
-	printf("\nInfo : %3d:%s: %s\n", __LINE__, __FUNCTION__, s)
-#define NV_DbgInfo_mem(n, s) \
-	printf("Info : Mem: %08X: %2d %s %s\n", n->id.d[0], n->type, NV_NodeTypeList[n->type], s);
+
+#if DEBUG
+	#define NV_DbgInfo(fmt, ...) \
+		printf("\nInfo : %3d:%s: " fmt "\n", __LINE__, __FUNCTION__, __VA_ARGS__)
+	#define NV_DbgInfo0(s) \
+		printf("\nInfo : %3d:%s: %s\n", __LINE__, __FUNCTION__, s)
+	#define NV_DbgInfo_mem(n, s) \
+		printf("Info : Mem: %08X: %2d %s %s\n", n->id.d[0], n->type, NV_NodeTypeList[n->type], s);
+#else
+	#define NV_DbgInfo(fmt, ...)
+	#define NV_DbgInfo0(s)
+	#define NV_DbgInfo_mem(n, s)
+#endif
 
 typedef struct NV_NODE NV_Node;
 typedef enum NV_NODE_TYPE NV_NodeType;

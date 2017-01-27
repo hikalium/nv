@@ -10,15 +10,8 @@ void NV_Graph_addStaticNode(const NV_ID *id, const char *s){
 	NV_Node_createRelation(&NODEID_NV_STATIC_ROOT, &NODEID_NULL, id);
 }
 
-void NV_Graph_init()
+void NV_Graph_initStaticNodes()
 {
-	srand(time(NULL));
-	//
-	nodeRoot.prev = NULL;
-	nodeRoot.next = NULL;
-	nodeRoot.data = NULL;
-	nodeRoot.type = kNone;
-	//
 	NV_Node_createWithID(&NODEID_NV_STATIC_ROOT);
 	NV_Node_setStrToID(&NODEID_NV_STATIC_ROOT, "NV_StaticRoot");
 	NV_Node_retain(&NODEID_NV_STATIC_ROOT);
@@ -34,6 +27,18 @@ void NV_Graph_init()
 	NV_Graph_addStaticNode(&RELID_POINTER_TARGET, "relPointerTarget");
 	NV_Graph_addStaticNode(&RELID_OP_PRECEDENCE, "relPointerTarget");
 	NV_Graph_addStaticNode(&RELID_OP_FUNC, "relPointerTarget");
+}
+
+void NV_Graph_init()
+{
+	srand(time(NULL));
+	//
+	nodeRoot.prev = NULL;
+	nodeRoot.next = NULL;
+	nodeRoot.data = NULL;
+	nodeRoot.type = kNone;
+	//
+	NV_Graph_initStaticNodes();
 }
 
 

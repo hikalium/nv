@@ -63,6 +63,7 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"ls",		0,		"NV_Op_ls"},
 	{"save",	0,		"NV_Op_save"},
 	{"restore",	0,		"NV_Op_restore"},
+	{"show",	0,		"NV_Op_convToVal"},
 	{"=",		0,		"NV_Op_assign"},
 	{"+",		100,	"NV_Op_add"},
 	{"-",		100,	"NV_Op_sub"},
@@ -252,6 +253,26 @@ void NV_Op_assign(const NV_ID *tList, int index)
 	NV_Array_writeToIndex(tList, index - 1, &v);
 }
 
+void NV_Op_convToVal(const NV_ID *tList, int index)
+{
+	const int operandCount = 1;
+	NV_ID operand[operandCount];
+	int operandIndex[operandCount] = {1};
+	//
+	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
+	//
+	NV_ID v;
+	v = operand[0];
+	if(NV_isTreeType(&v, &NODEID_TREE_TYPE_VARIABLE)){
+		// 右の項が変数だった
+		v = NV_Variable_getData(&v);
+	}
+	//
+	NV_removeOperandByList(tList, index, operandIndex, operandCount);
+	//
+	NV_Array_writeToIndex(tList, index, &v);
+}
+
 int NV_isBuiltinOp(const NV_ID *term, const char *ident)
 {
 	return NV_Node_String_compareWithCStr(NV_Node_getByID(term), ident) == 0;
@@ -286,6 +307,8 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 		NV_Op_ls(tList, index);
 	} else if(NV_isBuiltinOp(&func, "NV_Op_assign")){
 		NV_Op_assign(tList, index);
+	} else if(NV_isBuiltinOp(&func, "NV_Op_convToVal")){
+		NV_Op_convToVal(tList, index);
 	} else{
 		NV_ID errObj = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");
