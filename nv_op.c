@@ -21,7 +21,7 @@ NV_ID NV_createCharTypeList()
 	//
 	ns = NV_Node_createWithString(" \t\r\n");
 	NV_Array_push(&cList, &ns);
-	ns = NV_Node_createWithString("#!%&-=^~|+*:.<>/");
+	ns = NV_Node_createWithString("#!%&-=^~|+*:.<>/$");
 	NV_Array_push(&cList, &ns);
 	ns = NV_Node_createWithString("(){}[],;\"`\\");
 	NV_Array_push(&cList, &ns);
@@ -71,6 +71,7 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"/",		200,	"NV_Op_div"},
 	{"%",		200,	"NV_Op_mod"},
 	{" ",		300,	"NV_Op_nothing"},
+	{"$",		300,	"NV_Op_getVarNamed"},
 	//
 	{"", -1, ""}	// terminate tag
 };
@@ -273,6 +274,29 @@ void NV_Op_convToVal(const NV_ID *tList, int index)
 	NV_Array_writeToIndex(tList, index, &v);
 }
 
+void NV_Op_getVarNamed(const NV_ID *tList, int index)
+{
+	const int operandCount = 1;
+	NV_ID operand[operandCount];
+	int operandIndex[operandCount] = {1};
+	//
+	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
+	//
+	NV_ID v;
+	v = operand[0];
+	if(!NV_Node_isString(&operand[0])){
+		NV_ID errObj = NV_Node_createWithString(
+			"Error: Invalid Operand Type.");
+		NV_Array_writeToIndex(tList, index, &errObj);
+		return;
+	}
+	v = NV_Variable_getNamed(&NODEID_NULL, &v);
+	//
+	NV_removeOperandByList(tList, index, operandIndex, operandCount);
+	//
+	NV_Array_writeToIndex(tList, index, &v);
+}
+
 int NV_isBuiltinOp(const NV_ID *term, const char *ident)
 {
 	return NV_Node_String_compareWithCStr(NV_Node_getByID(term), ident) == 0;
@@ -309,6 +333,8 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 		NV_Op_assign(tList, index);
 	} else if(NV_isBuiltinOp(&func, "NV_Op_convToVal")){
 		NV_Op_convToVal(tList, index);
+	} else if(NV_isBuiltinOp(&func, "NV_Op_getVarNamed")){
+		NV_Op_getVarNamed(tList, index);
 	} else{
 		NV_ID errObj = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");

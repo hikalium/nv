@@ -354,6 +354,21 @@ NV_ID NV_Node_getRelatedNodeFrom(const NV_ID *from, const NV_ID *rel)
 	return NODEID_NULL;
 }
 
+NV_ID NV_Node_getEqRelatedNodeFrom(const NV_ID *from, const NV_ID *rel)
+{
+	const NV_Node *n;
+	const NV_Relation *reld;
+	for(n = nodeRoot.next; n; n = n->next){
+		if(n->type == kRelation){
+			reld = n->data;
+			if(	NV_ID_isEqual(&reld->from, from) &&
+				NV_ID_isEqualInValue(&reld->rel, rel)){
+				return reld->to;
+			}
+		}
+	}
+	return NODEID_NULL;
+}
 
 //
 // String
