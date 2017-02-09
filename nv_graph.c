@@ -17,11 +17,11 @@ void NV_Graph_initStaticNodes()
 	NV_Node_retain(&NODEID_NV_STATIC_ROOT);
 	//
 	NV_Graph_addStaticNode(&NODEID_NULL, "NullElement");
-	NV_Graph_addStaticNode(&NODEID_TREE_TYPE_ARRAY, "TreeType(Array)");
-	NV_Graph_addStaticNode(&NODEID_TREE_TYPE_VARIABLE, "TreeType(Variable)");
-	NV_Graph_addStaticNode(&NODEID_TREE_TYPE_OP, "TreeType(Op)");
+	NV_Graph_addStaticNode(&NODEID_TERM_TYPE_ARRAY, "TreeType(Array)");
+	NV_Graph_addStaticNode(&NODEID_TERM_TYPE_VARIABLE, "TreeType(Variable)");
+	NV_Graph_addStaticNode(&NODEID_TERM_TYPE_OP, "TreeType(Op)");
 	//
-	NV_Graph_addStaticNode(&RELID_TREE_TYPE, "relTreeType");
+	NV_Graph_addStaticNode(&RELID_TERM_TYPE, "relTreeType");
 	NV_Graph_addStaticNode(&RELID_ARRAY_NEXT, "relArrayNext");
 	NV_Graph_addStaticNode(&RELID_VARIABLE_DATA, "relVariableData");
 	NV_Graph_addStaticNode(&RELID_POINTER_TARGET, "relPointerTarget");

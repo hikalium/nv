@@ -49,7 +49,7 @@ typedef struct NV_RELATION NV_Relation;
 enum NV_NODE_TYPE {
 	kNone,
 	kRelation,
-	kWeakRelation,
+	kBLOB,
 	kString,
 	kInteger,
 	//
@@ -174,18 +174,18 @@ void NV_tryExecOpAt(const NV_ID *tList, int index);
 void NV_Op_print(const NV_ID *op);
 
 // @nv_static.c
+extern const NV_ID NODEID_NV_STATIC_ROOT;
 extern const NV_ID NODEID_NULL;
-extern const NV_ID NODEID_REL_MASTERLINK;
-extern const NV_ID NODEID_TREE_TYPE_ARRAY;
-extern const NV_ID NODEID_TREE_TYPE_VARIABLE;
-extern const NV_ID NODEID_TREE_TYPE_OP;
+extern const NV_ID NODEID_TERM_TYPE_ARRAY;
+extern const NV_ID NODEID_TERM_TYPE_VARIABLE;
+extern const NV_ID NODEID_TERM_TYPE_OP;
+//
 extern const NV_ID RELID_ARRAY_NEXT;
 extern const NV_ID RELID_VARIABLE_DATA;
 extern const NV_ID RELID_POINTER_TARGET;
 extern const NV_ID RELID_OP_PRECEDENCE;
 extern const NV_ID RELID_OP_FUNC;
-extern const NV_ID RELID_TREE_TYPE;
-extern const NV_ID NODEID_NV_STATIC_ROOT;
+extern const NV_ID RELID_TERM_TYPE;
 const char *NV_NodeTypeList[kNodeTypeCount];
 
 // @nv_test.c

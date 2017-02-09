@@ -2,7 +2,7 @@
 
 int NV_isTreeType(const NV_ID *node, const NV_ID *tType)
 {
-	NV_ID typeID = NV_Node_getRelatedNodeFrom(node, &RELID_TREE_TYPE);
+	NV_ID typeID = NV_Node_getRelatedNodeFrom(node, &RELID_TERM_TYPE);
 	return NV_ID_isEqual(&typeID, tType);
 }
 
@@ -101,7 +101,7 @@ void NV_evaluateSetence(const NV_ID *tokenizedList)
 		for(i = 0; ; i++){
 			t = NV_Array_getByIndex(tokenizedList, i);
 			if(NV_ID_isEqual(&t, &NODEID_NULL)) break;
-			if(!NV_isTreeType(&t, &NODEID_TREE_TYPE_OP)) continue;
+			if(!NV_isTreeType(&t, &NODEID_TERM_TYPE_OP)) continue;
 			opPrec = NV_getOpPrecAt(tokenizedList, i);
 			if(lastOpPrec & 1 ? lastOpPrec <= opPrec : lastOpPrec < opPrec){
 				// continue searching

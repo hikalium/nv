@@ -35,7 +35,7 @@ void NV_addOp(const NV_ID *opList, const char *token, int32_t prec, const NV_ID 
 	NV_ID ePrec;
 	opEntry = NV_Node_create();
 	NV_Node_createRelation(
-		&opEntry, &RELID_TREE_TYPE, &NODEID_TREE_TYPE_OP);
+		&opEntry, &RELID_TERM_TYPE, &NODEID_TERM_TYPE_OP);
 	ePrec = NV_Node_createWithInt32(prec);
 	NV_Node_createRelation(
 		&opEntry, &RELID_OP_PRECEDENCE, &ePrec);
@@ -264,7 +264,7 @@ void NV_Op_convToVal(const NV_ID *tList, int index)
 	//
 	NV_ID v;
 	v = operand[0];
-	if(NV_isTreeType(&v, &NODEID_TREE_TYPE_VARIABLE)){
+	if(NV_isTreeType(&v, &NODEID_TERM_TYPE_VARIABLE)){
 		// 右の項が変数だった
 		v = NV_Variable_getData(&v);
 	}
