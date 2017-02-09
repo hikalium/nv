@@ -12,11 +12,11 @@ void NV_printNode(const NV_Node *n)
 		printf("(null pointer node)");
 		return;
 	}
-	if(NV_isTreeType(&n->id, &NODEID_TERM_TYPE_ARRAY)){
+	if(NV_isTermType(&n->id, &NODEID_TERM_TYPE_ARRAY)){
 		NV_Array_print(&n->id);
-	} else if(NV_isTreeType(&n->id, &NODEID_TERM_TYPE_VARIABLE)){
-		NV_Variable_printPrimVal(&n->id);
-	} else if(NV_isTreeType(&n->id, &NODEID_TERM_TYPE_OP)){
+	} else if(NV_isTermType(&n->id, &NODEID_TERM_TYPE_VARIABLE)){
+		NV_Variable_print(&n->id);
+	} else if(NV_isTermType(&n->id, &NODEID_TERM_TYPE_OP)){
 		NV_Op_print(&n->id);
 	} else{
 		NV_Node_printPrimVal(n);

@@ -82,7 +82,7 @@ void NV_Graph_init();
 void NV_Graph_dump();
 void NV_Graph_dumpToFile(FILE *fp);
 void NV_Graph_restoreFromFile(FILE *fp);
-int NV_isTreeType(const NV_ID *node, const NV_ID *tType);
+int NV_isTermType(const NV_ID *node, const NV_ID *tType);
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
 int NV_runInteractive(const NV_ID *cTypeList, const NV_ID *opList);
 int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList);

@@ -1,6 +1,6 @@
 #include "nv.h"
 //
-// Array
+// TermType: Array
 //
 
 NV_ID NV_Array_create()
@@ -79,14 +79,13 @@ void NV_Array_writeToIndex(const NV_ID *array, int index, const NV_ID *data)
 void NV_Array_print(const NV_ID *array)
 {
 	NV_ID t;
+	int i;
 	printf("[");
-	t = NV_Node_getRelatedNodeFrom(array, &RELID_ARRAY_NEXT);
-	for(;!NV_ID_isEqual(&t, &NODEID_NULL);){
+	for(i = 0; ; i++){
+		t = NV_Array_getByIndex(array, i);
+		if(NV_ID_isEqual(&t, &NODEID_NULL)) break;
+		if(i != 0) printf(",");
 		NV_printNodeByID(&t);
-		t = NV_Node_getRelatedNodeFrom(&t, &RELID_ARRAY_NEXT);
-		if(!NV_ID_isEqual(&t, &NODEID_NULL)){
-			printf(",");
-		}
 	}
 	printf("]\n");
 }

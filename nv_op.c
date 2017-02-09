@@ -264,7 +264,7 @@ void NV_Op_convToVal(const NV_ID *tList, int index)
 	//
 	NV_ID v;
 	v = operand[0];
-	if(NV_isTreeType(&v, &NODEID_TERM_TYPE_VARIABLE)){
+	if(NV_isTermType(&v, &NODEID_TERM_TYPE_VARIABLE)){
 		// 右の項が変数だった
 		v = NV_Variable_getData(&v);
 	}

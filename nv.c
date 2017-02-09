@@ -1,6 +1,6 @@
 #include "nv.h"
 
-int NV_isTreeType(const NV_ID *node, const NV_ID *tType)
+int NV_isTermType(const NV_ID *node, const NV_ID *tType)
 {
 	NV_ID typeID = NV_Node_getRelatedNodeFrom(node, &RELID_TERM_TYPE);
 	return NV_ID_isEqual(&typeID, tType);
@@ -101,7 +101,7 @@ void NV_evaluateSetence(const NV_ID *tokenizedList)
 		for(i = 0; ; i++){
 			t = NV_Array_getByIndex(tokenizedList, i);
 			if(NV_ID_isEqual(&t, &NODEID_NULL)) break;
-			if(!NV_isTreeType(&t, &NODEID_TERM_TYPE_OP)) continue;
+			if(!NV_isTermType(&t, &NODEID_TERM_TYPE_OP)) continue;
 			opPrec = NV_getOpPrecAt(tokenizedList, i);
 			if(lastOpPrec & 1 ? lastOpPrec <= opPrec : lastOpPrec < opPrec){
 				// continue searching
@@ -166,7 +166,7 @@ void NV_evaluateSentence(const NV_ID *tokenizedList)
 //
 // main
 //
-int32_t NV_debugFlag;
+//int32_t NV_debugFlag;
 int main(int argc, char *argv[])
 {
 	NV_ID cTypeList, opList;

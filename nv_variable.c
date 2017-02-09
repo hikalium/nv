@@ -41,22 +41,22 @@ NV_ID NV_Variable_getData(const NV_ID *vid)
 void NV_Variable_print(const NV_ID *vid)
 {
 	NV_ID targetID;
-	if(!NV_isTreeType(vid, &NODEID_TERM_TYPE_VARIABLE)){
+	if(!NV_isTermType(vid, &NODEID_TERM_TYPE_VARIABLE)){
 		printf("id: %08X is not Variable.", vid->d[0]);
 		return;
 	}
 	targetID = NV_Node_getRelatedNodeFrom(vid, &RELID_VARIABLE_DATA);
-	printf("Variable ");
-	NV_Node_dump(NV_Node_getByID(vid));
+	printf("(Var ");
+	NV_ID_dumpIDToFile(vid, stdout);
 	printf(" = ");
-	NV_Node_dump(NV_Node_getByID(&targetID));
-	putchar('\n');
+	NV_printNode(NV_Node_getByID(&targetID));
+	printf(")");
 }
 
 void NV_Variable_printPrimVal(const NV_ID *vid)
 {
 	NV_ID targetID;
-	if(!NV_isTreeType(vid, &NODEID_TERM_TYPE_VARIABLE)){
+	if(!NV_isTermType(vid, &NODEID_TERM_TYPE_VARIABLE)){
 		printf("id: %08X is not Variable.", vid->d[0]);
 		return;
 	}
