@@ -137,7 +137,6 @@ NV_ID NV_Node_restoreFromString(const char *s);
 void NV_Node_retain(const NV_ID *id);
 void NV_Node_release(const NV_ID *id);
 void NV_Node_cleanup();
-void NV_Node_resetDataOfID(const NV_ID *id);
 void NV_Node_fdump(FILE *fp, const NV_Node *n);
 void NV_Node_dump(const NV_Node *n);
 void NV_Node_printPrimVal(const NV_Node *n);
