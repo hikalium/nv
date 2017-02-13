@@ -118,16 +118,18 @@ void NV_Op_ExecBuiltinInfix(const NV_ID *tList, int index, int func)
 {
 	NV_ID nL, nR, ans;
 	int vL, vR, v;
+	const NV_ID *ctx = &NODEID_NULL;
+	//
 	nL = NV_Array_getByIndex(tList, index - 1);
 	nR = NV_Array_getByIndex(tList, index + 1);
-	if(!NV_Node_isInteger(&nL) || !NV_Node_isInteger(&nR)){
+	if(!NV_Term_isInteger(&nL, ctx) || !NV_Term_isInteger(&nR, ctx)){
 		NV_ID errObj = NV_Node_createWithString(
 			"Error: Invalid Operand Type.");
 		NV_Array_writeToIndex(tList, index, &errObj);
 		return;
 	}
-	vL = NV_Node_getInt32FromID(&nL);
-	vR = NV_Node_getInt32FromID(&nR);
+	vL = NV_Term_getInt32(&nL, ctx);
+	vR = NV_Term_getInt32(&nR, ctx);
 	//
 	index--;
 	NV_Array_removeIndex(tList, index);
@@ -236,17 +238,22 @@ void NV_Op_assign(const NV_ID *tList, int index)
 	NV_ID operand[operandCount];
 	int operandIndex[operandCount] = {-1, 1};
 	//
+	const NV_ID *ctx = &NODEID_NULL;
 	NV_ID v = operand[0];
 	//
 	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
-	if(!NV_Term_isAssignable(&operand[0])){
+	if(NV_Term_isAssignable(&operand[0], ctx)){
+		// 既存変数への代入
+		v = NV_Term_getAssignableNode(&operand[0], ctx);
+	} else{
+		// 新規変数を作成して代入
 		if(!NV_Node_isString(&operand[0])){
 			NV_ID errObj = NV_Node_createWithString(
 				"Error: Invalid Operand Type.");
 			NV_Array_writeToIndex(tList, index, &errObj);
 			return;
 		}
-		v = NV_Variable_createWithName(&NODEID_NULL, &operand[0]);
+		v = NV_Variable_createWithName(ctx, &operand[0]);
 	}
 	//
 	NV_Variable_assign(&v, &operand[1]);	

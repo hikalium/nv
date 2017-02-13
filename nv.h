@@ -192,9 +192,10 @@ const char *NV_NodeTypeList[kNodeTypeCount];
 const char c2hexTable[0x100];
 
 // @nv_term.c
-int NV_Term_isInteger(NV_ID *id);
-int NV_Term_isAssignable(NV_ID *id);
-int32_t NV_Term_getInt32(NV_ID *id);
+int NV_Term_isInteger(const NV_ID *id, const NV_ID *ctx);
+int NV_Term_isAssignable(const NV_ID *id, const NV_ID *ctx);
+int32_t NV_Term_getInt32(const NV_ID *id, const NV_ID *ctx);
+NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *ctx);
 
 // @nv_test.c
 
