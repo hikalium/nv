@@ -81,7 +81,8 @@ int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList)
 		tmpNum = NV_Node_String_strtol(item, &pIndex, 0);
 		if(pIndex != 0 && (int)NV_Node_String_strlen(item) == pIndex){
 			// converted entire string to number.
-			NV_Node_setInt32ToID(&itemID, tmpNum);
+			itemID = NV_Node_createWithInt32(tmpNum);
+			NV_Array_writeToIndex(tokenizedList, i, &itemID);
 			continue;
 		}
 	}

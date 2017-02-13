@@ -8,6 +8,7 @@
 
 #define MAX_INPUT_LEN		1024
 #define MAX_TOKEN_LEN		256
+#define MAX_SAVE_DATA_ENTRY_SIZE	4096
 
 #define malloc(s)			DO_NOT_USE_THIS_FUNC(s)
 #define free(p)				DO_NOT_USE_THIS_FUNC(p)
@@ -112,6 +113,7 @@ void NV_printNode(const NV_Node *n);
 
 // @nv_fix.c
 char *NV_strncpy(char *dst, const char *src, size_t dst_size, size_t copy_size);
+long NV_strtolSeq(const char **restrict p, int base);
 int NV_getMallocCount();
 void *NV_malloc(size_t size);
 void NV_free(void *p);
@@ -131,6 +133,7 @@ int NV_Node_isEqualInValue(const NV_Node *na, const NV_Node *nb);
 NV_ID NV_Node_createWithID(const NV_ID *id);
 NV_ID NV_Node_create();
 NV_ID NV_Node_clone(const NV_ID *baseID);
+NV_ID NV_Node_restoreFromString(const char *s);
 void NV_Node_retain(const NV_ID *id);
 void NV_Node_release(const NV_ID *id);
 void NV_Node_cleanup();
@@ -149,8 +152,8 @@ NV_ID NV_Node_getEqRelatedNodeFrom(const NV_ID *from, const NV_ID *rel);
 // String
 int NV_Node_isString(const NV_ID *id);
 NV_ID NV_Node_createWithString(const char *s);
+void NV_Node_createWithIDAndString(const NV_ID *id, const char *s);
 const char *NV_Node_getCStr(const NV_ID *id);
-void NV_Node_setStrToID(const NV_ID *id, const char *s);
 int NV_Node_String_compare(const NV_Node *na, const NV_Node *nb);
 int NV_Node_String_compareWithCStr(const NV_Node *na, const char *s);
 char *NV_Node_String_strchr(const NV_Node *ns, char c);
@@ -159,7 +162,6 @@ size_t NV_Node_String_strlen(const NV_Node *ns);
 // Integer
 int NV_Node_isInteger(const NV_ID *id);
 NV_ID NV_Node_createWithInt32(int32_t v);
-void NV_Node_setInt32ToID(const NV_ID *id, int32_t v);
 int32_t NV_Node_getInt32FromID(const NV_ID *id);
 
 // nv_op.c
@@ -187,7 +189,7 @@ extern const NV_ID RELID_OP_PRECEDENCE;
 extern const NV_ID RELID_OP_FUNC;
 extern const NV_ID RELID_TERM_TYPE;
 const char *NV_NodeTypeList[kNodeTypeCount];
-
+const char c2hexTable[0x80];
 // @nv_test.c
 
 

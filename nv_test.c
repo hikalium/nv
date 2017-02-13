@@ -1,5 +1,5 @@
 #include "nv.h"
-
+/*
 void NV_Test_Memory()
 {
 	int memcount0;
@@ -13,8 +13,7 @@ void NV_Test_Memory()
 	id = NV_Node_create();
 	NV_Node_setStrToID(&id, "World");
 	//
-	id3 = NV_Node_create();
-	NV_Node_setInt32ToID(&id3, 12345);
+	id3 = NV_Node_createWithInt32(12345);
 	//
 
 	id = NV_Array_create();
@@ -118,4 +117,4 @@ void NV_Test_Data()
 	//
 	printf("mem not freed: %d\n", NV_getMallocCount() - memcount0);
 }
-
+*/

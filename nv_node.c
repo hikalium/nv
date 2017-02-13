@@ -7,6 +7,8 @@
 void NV_Node_resetData(NV_Node *n);
 void NV_Node_remove(NV_Node *n);
 void NV_Node_removeAllRelationFrom(const NV_ID *from);
+void NV_Node_Internal_setStrToID(const NV_ID *id, const char *s);
+void NV_Node_Internal_setInt32ToID(const NV_ID *id, int32_t v);
 
 void NV_Node_resetData(NV_Node *n)
 {
@@ -137,6 +139,67 @@ NV_ID NV_Node_clone(const NV_ID *baseID)
 		memcpy(new->data, base->data, new->size);
 	}
 	return newID;
+}
+
+NV_ID NV_Node_restoreFromString(const char *s)
+{
+	const char *p;
+	int n, i;
+	NV_ID id;
+	NV_ID from, rel, to;
+	char *buf;
+	//
+	if(NV_ID_setFromString(&id, s)){
+		printf("Invalid id format.\n");
+		return NODEID_NULL;
+	}
+	// NV_ID_dumpIDToFile(&id, stdout);
+	// putchar(' ');
+	NV_Node_createWithID(&id);
+	//
+	p = &s[32];
+	n = NV_strtolSeq(&p, 10);
+	switch(n){
+		case kString:
+			n = NV_strtolSeq(&p, 10);
+			p++;
+			buf = NV_malloc(n);
+			for(i = 0; i < n - 1; i++){
+				buf[i] = c2hexTable[(int)*(p++)];
+				buf[i] <<= 4;
+				buf[i] |= c2hexTable[(int)*(p++)];
+			}
+			buf[i] = 0;
+			//printf("str(%d) = %s\n", n, buf);
+			NV_Node_Internal_setStrToID(&id, buf);
+			NV_free(buf);
+			break;
+		case kInteger:
+			n = NV_strtolSeq(&p, 10);
+			// printf("int(%d) = ", n);
+			//
+			n = NV_strtolSeq(&p, 16);
+			// printf("%d\n", n);
+			NV_Node_Internal_setInt32ToID(&id, n);
+			break;
+		case kRelation:
+			NV_ID_setFromString(&from, &p[1]);
+			NV_ID_setFromString(&rel, &p[ 1 + 32 + 1]);
+			NV_ID_setFromString(&to, &p[1 + 32 + 1 + 32 + 1]);
+/*
+			printf("rel ");
+			printf(" ");
+			NV_ID_dumpIDToFile(&from, stdout);
+			printf(" ");
+			NV_ID_dumpIDToFile(&rel, stdout);
+			printf(" ");
+			NV_ID_dumpIDToFile(&to, stdout);
+			printf("\n");
+*/
+			NV_Node_setRelation(&id, &from, &rel, &to);
+			break;
+	}
+	return id;
 }
 
 void NV_Node_retain(const NV_ID *id)
@@ -387,8 +450,14 @@ NV_ID NV_Node_createWithString(const char *s)
 {
 	NV_ID id;
 	id = NV_Node_create();
-	NV_Node_setStrToID(&id, s);
+	NV_Node_Internal_setStrToID(&id, s);
 	return id;
+}
+
+void NV_Node_createWithIDAndString(const NV_ID *id, const char *s)
+{
+	NV_Node_createWithID(id);
+	NV_Node_Internal_setStrToID(id, s);
 }
 
 const char *NV_Node_getCStr(const NV_ID *id)
@@ -400,7 +469,7 @@ const char *NV_Node_getCStr(const NV_ID *id)
 	return n->data;
 }
 
-void NV_Node_setStrToID(const NV_ID *id, const char *s)
+void NV_Node_Internal_setStrToID(const NV_ID *id, const char *s)
 {
 	NV_Node *n;
 	//
@@ -471,15 +540,7 @@ int NV_Node_isInteger(const NV_ID *id)
 	return 1;
 }
 
-NV_ID NV_Node_createWithInt32(int32_t v)
-{
-	NV_ID id;
-	id = NV_Node_create();
-	NV_Node_setInt32ToID(&id, v);
-	return id;
-}
-
-void NV_Node_setInt32ToID(const NV_ID *id, int32_t v)
+void NV_Node_Internal_setInt32ToID(const NV_ID *id, int32_t v)
 {
 	NV_Node *n;
 	//
@@ -492,6 +553,16 @@ void NV_Node_setInt32ToID(const NV_ID *id, int32_t v)
 		*((int32_t *)n->data) = v;
 	}
 }
+
+NV_ID NV_Node_createWithInt32(int32_t v)
+{
+	NV_ID id;
+	id = NV_Node_create();
+	NV_Node_Internal_setInt32ToID(&id, v);
+	return id;
+}
+
+
 int32_t NV_Node_getInt32FromID(const NV_ID *id)
 {
 	NV_Node *n;

@@ -11,6 +11,15 @@ char *NV_strncpy(char *dst, const char *src, size_t dst_size, size_t copy_size)
 	return retv;
 }
 
+long NV_strtolSeq(const char **restrict p, int base)
+{
+	char *q;
+	long n;
+	n = strtol(*p, &q, base);
+	*p = q;
+	return n;
+}
+
 int mallocCount = 0;
 int NV_getMallocCount()
 {
