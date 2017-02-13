@@ -14,12 +14,10 @@ NV_ID NV_Array_create()
 
 NV_ID NV_Array_push(const NV_ID *array, const NV_ID *data)
 {
-	// Always copy data element.
-	NV_ID v, t, next, d;
+	NV_ID v, t, next;
 	//
 	v = NV_Variable_create();
-	d = NV_Node_clone(data);
-	NV_Variable_assign(&v, &d);
+	NV_Variable_assign(&v, data);
 	//
 	t = *array;
 	for(;;){
@@ -87,6 +85,6 @@ void NV_Array_print(const NV_ID *array)
 		if(i != 0) printf(",");
 		NV_printNodeByID(&t);
 	}
-	printf("]\n");
+	printf("]");
 }
 

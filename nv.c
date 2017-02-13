@@ -14,9 +14,9 @@ int NV_runInteractive(const NV_ID *cTypeList, const NV_ID *opList)
 	while(NV_gets(line, sizeof(line)) != NULL){
 		tokenList = NV_tokenize(cTypeList, line);
 		NV_convertLiteral(&tokenList, opList);
-		NV_printNodeByID(&tokenList);
+		NV_printNodeByID(&tokenList); putchar('\n');
 		NV_evaluateSetence(&tokenList);
-		NV_printNodeByID(&tokenList);
+		NV_printNodeByID(&tokenList); putchar('\n');
 	}
 	return 0;
 }
@@ -116,7 +116,7 @@ void NV_evaluateSetence(const NV_ID *tokenizedList)
 		}
 		if(lastOpPrec == -1) break;	// no more op
 		NV_tryExecOpAt(tokenizedList, lastOpIndex);
-		NV_Array_print(tokenizedList);
+		NV_Array_print(tokenizedList); putchar('\n');
 	}
 }
 

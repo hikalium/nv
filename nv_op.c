@@ -60,6 +60,7 @@ typedef struct NV_BUILTIN_OP_TAG {
 } NV_BuiltinOpTag;
 
 NV_BuiltinOpTag builtinOpList[] = {
+	{"}",		0,		"NV_Op_codeBlockClose"},
 	{"ls",		0,		"NV_Op_ls"},
 	{"save",	0,		"NV_Op_save"},
 	{"restore",	0,		"NV_Op_restore"},
@@ -72,9 +73,17 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"%",		200,	"NV_Op_mod"},
 	{" ",		300,	"NV_Op_nothing"},
 	{"$",		300,	"NV_Op_getVarNamed"},
+	{"{",		1000,	"NV_Op_codeBlock"},
 	//
 	{"", -1, ""}	// terminate tag
 };
+
+int NV_isBuiltinOp(const NV_ID *term, const char *ident)
+{
+	NV_ID func = NV_Node_getRelatedNodeFrom(term, &RELID_OP_FUNC);
+	return NV_Node_String_compareWithCStr(NV_Node_getByID(&func), ident) == 0;
+}
+
 
 NV_ID NV_createOpList()
 {
@@ -306,44 +315,66 @@ void NV_Op_getVarNamed(const NV_ID *tList, int index)
 	NV_Array_writeToIndex(tList, index, &v);
 }
 
-int NV_isBuiltinOp(const NV_ID *term, const char *ident)
+void NV_Op_codeBlock(const NV_ID *tList, int index)
 {
-	return NV_Node_String_compareWithCStr(NV_Node_getByID(term), ident) == 0;
+	NV_ID v;
+	//
+	NV_ID root;
+	//
+	root = NV_Array_create();
+	for(;;){
+		v = NV_Array_getByIndex(tList, index + 1);
+		if(NV_ID_isEqual(&v, &NODEID_NOT_FOUND)){
+			// おかしい
+			NV_ID errObj = NV_Node_createWithString(
+				"Error: Expected } but not found.");
+			NV_Array_writeToIndex(tList, index, &errObj);
+			return;
+		}
+		NV_Array_removeIndex(tList, index + 1);
+		if(NV_isBuiltinOp(&v, "NV_Op_codeBlockClose")){
+			// 終了
+			break;
+		}
+		NV_Array_push(&root, &v);
+	}
+	NV_Array_writeToIndex(tList, index, &root);
 }
 
 void NV_tryExecOpAt(const NV_ID *tList, int index)
 {
 	NV_ID op = NV_Array_getByIndex(tList, index);
-	NV_ID func = NV_Node_getRelatedNodeFrom(&op, &RELID_OP_FUNC);
 	//
 	printf("begin op ");
 	NV_printNodeByID(&op);
 	putchar('\n');
 	//
-	if(NV_isBuiltinOp(&func, "NV_Op_nothing")){
+	if(NV_isBuiltinOp(&op, "NV_Op_nothing")){
 		NV_Array_removeIndex(tList, index);
-	} else if(NV_isBuiltinOp(&func, "NV_Op_add")){
+	} else if(NV_isBuiltinOp(&op, "NV_Op_add")){
 		NV_Op_ExecBuiltinInfix(tList, index, 0);
-	} else if(NV_isBuiltinOp(&func, "NV_Op_sub")){
+	} else if(NV_isBuiltinOp(&op, "NV_Op_sub")){
 		NV_Op_ExecBuiltinInfix(tList, index, 1);
-	} else if(NV_isBuiltinOp(&func, "NV_Op_mul")){
+	} else if(NV_isBuiltinOp(&op, "NV_Op_mul")){
 		NV_Op_ExecBuiltinInfix(tList, index, 2);
-	} else if(NV_isBuiltinOp(&func, "NV_Op_div")){
+	} else if(NV_isBuiltinOp(&op, "NV_Op_div")){
 		NV_Op_ExecBuiltinInfix(tList, index, 3);
-	} else if(NV_isBuiltinOp(&func, "NV_Op_mod")){
+	} else if(NV_isBuiltinOp(&op, "NV_Op_mod")){
 		NV_Op_ExecBuiltinInfix(tList, index, 4);
-	} else if(NV_isBuiltinOp(&func, "NV_Op_save")){
+	} else if(NV_isBuiltinOp(&op, "NV_Op_save")){
 		NV_Op_save(tList, index);
-	} else if(NV_isBuiltinOp(&func, "NV_Op_restore")){
+	} else if(NV_isBuiltinOp(&op, "NV_Op_restore")){
 		NV_Op_restore(tList, index);
-	} else if(NV_isBuiltinOp(&func, "NV_Op_ls")){
+	} else if(NV_isBuiltinOp(&op, "NV_Op_ls")){
 		NV_Op_ls(tList, index);
-	} else if(NV_isBuiltinOp(&func, "NV_Op_assign")){
+	} else if(NV_isBuiltinOp(&op, "NV_Op_assign")){
 		NV_Op_assign(tList, index);
-	} else if(NV_isBuiltinOp(&func, "NV_Op_convToVal")){
+	} else if(NV_isBuiltinOp(&op, "NV_Op_convToVal")){
 		NV_Op_convToVal(tList, index);
-	} else if(NV_isBuiltinOp(&func, "NV_Op_getVarNamed")){
+	} else if(NV_isBuiltinOp(&op, "NV_Op_getVarNamed")){
 		NV_Op_getVarNamed(tList, index);
+	} else if(NV_isBuiltinOp(&op, "NV_Op_codeBlock")){
+		NV_Op_codeBlock(tList, index);
 	} else{
 		NV_ID errObj = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");

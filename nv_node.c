@@ -26,7 +26,7 @@ void NV_Node_Internal_resetData(NV_Node *n)
 		n->type = kNone;
 	}
 }
-
+/*
 void NV_Node_Internal_remove(NV_Node *n)
 {
 	if(n){
@@ -39,7 +39,8 @@ void NV_Node_Internal_remove(NV_Node *n)
 	}
 	NV_Node_Internal_removeAllRelationFrom(&n->id);
 }
-
+*/
+/*
 void NV_Node_Internal_removeAllRelationFrom(const NV_ID *from)
 {
 	NV_Node *n;
@@ -55,7 +56,7 @@ void NV_Node_Internal_removeAllRelationFrom(const NV_ID *from)
 		}
 	}
 }
-
+*/
 //
 // Node
 //
@@ -233,16 +234,14 @@ void NV_Node_release(const NV_ID *id)
 */
 	}
 }
-
+/*
 void NV_Node_cleanup()
 {
-	/*
-	メモリ解放戦略：
-		そのNodeがRelationで、
-			どちらか片方でもNodeが見つからなかった場合、解放する。
-		それ以外の場合で、
-			参照カウントが0になった場合は、解放する。
-	*/
+	// メモリ解放戦略：
+	// そのNodeがRelationで、
+	//		どちらか片方でもNodeが見つからなかった場合、解放する。
+	//	それ以外の場合で、
+	//		参照カウントが0になった場合は、解放する。
 	NV_Node **n;
 	//
 	for(n = &nodeRoot.next; *n;){
@@ -253,7 +252,7 @@ void NV_Node_cleanup()
 		n = &(*n)->next;
 	}
 }
-
+*/
 void NV_Node_fdump(FILE *fp, const NV_Node *n)
 {
 	if(!n){
