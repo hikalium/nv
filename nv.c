@@ -69,7 +69,7 @@ int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList)
 	//
 	for(i = 0; ; i++){
 		itemID = NV_Array_getByIndex(tokenizedList, i);
-		if(NV_ID_isEqual(&itemID, &NODEID_NULL)) break;
+		if(NV_ID_isEqual(&itemID, &NODEID_NOT_FOUND)) break;
 		item = NV_Node_getByID(&itemID);
 		// check operator
 		opID = NV_Dict_get(opList, &itemID);
@@ -101,7 +101,7 @@ void NV_evaluateSetence(const NV_ID *tokenizedList)
 		lastOpPrec = -1;
 		for(i = 0; ; i++){
 			t = NV_Array_getByIndex(tokenizedList, i);
-			if(NV_ID_isEqual(&t, &NODEID_NULL)) break;
+			if(NV_ID_isEqual(&t, &NODEID_NOT_FOUND)) break;
 			if(!NV_isTermType(&t, &NODEID_TERM_TYPE_OP)) continue;
 			opPrec = NV_getOpPrecAt(tokenizedList, i);
 			if(lastOpPrec & 1 ? lastOpPrec <= opPrec : lastOpPrec < opPrec){
@@ -119,51 +119,7 @@ void NV_evaluateSetence(const NV_ID *tokenizedList)
 		NV_Array_print(tokenizedList);
 	}
 }
-/*
-void NV_evaluateSentence(const NV_ID *tokenizedList)
-{
-	int pIndex;
-	int32_t tmpNum;
-	NV_ID itemID, opID, opPrecID, lastOpID;
-	NV_Node *item;
-	int i;
-	int lastOpPrec, opPrec, d;
-	//
-	for(;;){
-		lastOpPrec = -1;
-		lastOpID = NODEID_NULL;
-		for(i = 0; ; i++){
-			itemID = NV_Array_getByIndex(tokenizedList, i);
-			if(NV_ID_isEqual(&itemID, &NODEID_NULL)) break;
-			item = NV_Node_getByID(&itemID);
-			// check operator
-			if(!NV_isTreeType(&itemID, &NODEID_TREE_TYPE_OP)) continue;
-			opPrecID = NV_Dict_get(&itemID, &RELID_OP_PRECEDENCE);
-			opPrec = NV_Node_getInt32FromID(&opPrecID);
-			if(lastOpPrec & 1 ? lastOpPrec <= opPrec : lastOpPrec < opPrec){
-				lastOpPrec = opPrec;
-				lastOpID = itemID;
-				continue;
-			}
-			// found. lastOpID is target op.
-			break;
-		}
-		if(NV_E_isNullPointer(last)){
-			// no more op
-			return;
-		}
-		NV_tryExecOp(excFlag, lang, last, vDict, root);
-		if(*excFlag & NV_EXC_FLAG_FAILED){
-			// op mismatched
-			return;
-		}
-		if(*excFlag & NV_EXC_FLAG_EXIT){
-			// end flag
-			return;
-		}
-	}
-}
-*/
+
 //
 // main
 //

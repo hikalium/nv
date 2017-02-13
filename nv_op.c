@@ -236,18 +236,20 @@ void NV_Op_assign(const NV_ID *tList, int index)
 	NV_ID operand[operandCount];
 	int operandIndex[operandCount] = {-1, 1};
 	//
-	NV_ID v;
+	NV_ID v = operand[0];
 	//
 	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
-	if(!NV_Node_isString(&operand[0])){
-		NV_ID errObj = NV_Node_createWithString(
-			"Error: Invalid Operand Type.");
-		NV_Array_writeToIndex(tList, index, &errObj);
-		return;
+	if(!NV_Term_isAssignable(&operand[0])){
+		if(!NV_Node_isString(&operand[0])){
+			NV_ID errObj = NV_Node_createWithString(
+				"Error: Invalid Operand Type.");
+			NV_Array_writeToIndex(tList, index, &errObj);
+			return;
+		}
+		v = NV_Variable_createWithName(&NODEID_NULL, &operand[0]);
 	}
 	//
-	v = NV_Variable_createWithName(&NODEID_NULL, &operand[0]);
-	NV_Variable_assign(&v, &operand[1]);
+	NV_Variable_assign(&v, &operand[1]);	
 	//
 	NV_removeOperandByList(tList, index, operandIndex, operandCount);
 	//
