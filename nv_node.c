@@ -393,7 +393,7 @@ NV_ID NV_Node_getRelationFrom(const NV_ID *from, const NV_ID *rel)
 			}
 		}
 	}
-	return NODEID_NULL;
+	return NODEID_NOT_FOUND;
 }
 
 NV_ID NV_Node_getRelatedNodeFrom(const NV_ID *from, const NV_ID *rel)
@@ -409,7 +409,7 @@ NV_ID NV_Node_getRelatedNodeFrom(const NV_ID *from, const NV_ID *rel)
 			}
 		}
 	}
-	return NODEID_NULL;
+	return NODEID_NOT_FOUND;
 }
 
 NV_ID NV_Node_getEqRelatedNodeFrom(const NV_ID *from, const NV_ID *rel)
@@ -425,7 +425,7 @@ NV_ID NV_Node_getEqRelatedNodeFrom(const NV_ID *from, const NV_ID *rel)
 			}
 		}
 	}
-	return NODEID_NULL;
+	return NODEID_NOT_FOUND;
 }
 
 //

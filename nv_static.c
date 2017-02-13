@@ -4,6 +4,8 @@ const NV_ID NODEID_NV_STATIC_ROOT
 	= {{0xB257ACBF, 0x5D434C81, 0x8D79C638, 0xA2BF94B3}};
 const NV_ID NODEID_NULL
 	= {{0x00000000, 0, 0, 0}};
+const NV_ID NODEID_NOT_FOUND
+	= {{0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF}};
 const NV_ID NODEID_TERM_TYPE_ARRAY
 	= {{0xBA7C82D7, 0, 0, 0}};
 const NV_ID NODEID_TERM_TYPE_VARIABLE
@@ -32,7 +34,7 @@ const char *NV_NodeTypeList[kNodeTypeCount] = {
 	"Integer",
 };
 
-const char c2hexTable[0x80] = {
+const char c2hexTable[0x100] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

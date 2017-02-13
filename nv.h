@@ -177,6 +177,7 @@ void NV_Op_print(const NV_ID *op);
 // @nv_static.c
 extern const NV_ID NODEID_NV_STATIC_ROOT;
 extern const NV_ID NODEID_NULL;
+extern const NV_ID NODEID_NOT_FOUND;
 extern const NV_ID NODEID_TERM_TYPE_ARRAY;
 extern const NV_ID NODEID_TERM_TYPE_VARIABLE;
 extern const NV_ID NODEID_TERM_TYPE_OP;
@@ -188,7 +189,13 @@ extern const NV_ID RELID_OP_PRECEDENCE;
 extern const NV_ID RELID_OP_FUNC;
 extern const NV_ID RELID_TERM_TYPE;
 const char *NV_NodeTypeList[kNodeTypeCount];
-const char c2hexTable[0x80];
+const char c2hexTable[0x100];
+
+// @nv_term.c
+int NV_Term_isInteger(NV_ID *id);
+int NV_Term_isAssignable(NV_ID *id);
+int32_t NV_Term_getInt32(NV_ID *id);
+
 // @nv_test.c
 
 

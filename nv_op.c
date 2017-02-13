@@ -346,53 +346,6 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 	putchar('\n');
 }
 
-/*
-void NV_tryExecOp(int32_t *excFlag, NV_Pointer lang, NV_Pointer thisTerm, NV_Pointer vDict, NV_Pointer root)
-{
-	NV_Pointer fallbackOp, op;
-	NV_Pointer orgTerm = thisTerm;
-	//
-	op = NV_ListItem_getData(thisTerm);	
-#ifdef DEBUG
-	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
-		NV_DbgInfo("%s", "Begin native op: ");
-		NV_Operator_print(op); putchar('\n');
-	}
-#endif
-	NV_Operator_exec(op, excFlag, lang, vDict, thisTerm);
-#ifdef DEBUG
-	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
-		NV_DbgInfo("%s", "End native op:");
-		NV_Operator_print(op); putchar('\n');
-	}
-#endif
-	if(*excFlag & NV_EXC_FLAG_FAILED){
-		// try fallback
-		fallbackOp = NV_Lang_getFallbackOperator(lang, op);
-		if(NV_E_isNullPointer(fallbackOp)){
-			NV_Error("%s", "Operator mismatched: ");
-			NV_Operator_print(op); putchar('\n');
-			NV_List_printAll(root, NULL, NULL, "]\n");
-			return;
-		}
-#ifdef DEBUG
-	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
-		NV_DbgInfo("%s", "Fallback found:");
-		NV_Operator_print(fallbackOp); putchar('\n');
-	}
-#endif
-		CLR_FLAG(*excFlag, NV_EXC_FLAG_FAILED);
-		NV_ListItem_setData(orgTerm, fallbackOp);
-		thisTerm = orgTerm;
-	}
-#ifdef DEBUG
-	if(NV_debugFlag & NV_DBG_FLAG_VERBOSE){
-		NV_List_printAll(root, NULL, NULL, "]\n");
-	}
-#endif
-}
-*/
-
 void NV_Op_print(const NV_ID *op)
 {
 	NV_ID eFunc;
