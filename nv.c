@@ -9,8 +9,9 @@ int main(int argc, char *argv[])
 {
 	NV_ID cTypeList, opList;
 	int i;
-	//
+	// set signal handler
 	if(signal(SIGINT, NV_signalHandler) == SIG_ERR) return 1;
+	//
 	printf(
 		"# nv interpreter\n"
 		"# repository: https://github.com/hikalium/nv \n"

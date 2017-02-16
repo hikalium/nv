@@ -8,7 +8,7 @@ NV_ID NV_Array_create()
 	NV_ID arrayRoot;
 	arrayRoot = NV_Node_create();
 	NV_Node_createRelation(&arrayRoot, &RELID_TERM_TYPE, &NODEID_TERM_TYPE_ARRAY);
-	NV_Node_createRelation(&arrayRoot, &RELID_ARRAY_NEXT, &NODEID_NOT_FOUND);
+	//NV_Node_createRelation(&arrayRoot, &RELID_ARRAY_NEXT, &NODEID_NOT_FOUND);
 	return arrayRoot;
 }
 
