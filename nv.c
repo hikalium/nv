@@ -3,13 +3,14 @@
 // main
 //
 
-int32_t NV_globalExecFlag;
+volatile sig_atomic_t NV_globalExecFlag;
 
 int main(int argc, char *argv[])
 {
 	NV_ID cTypeList, opList;
 	int i;
 	//
+	if(signal(SIGINT, NV_signalHandler) == SIG_ERR) return 1;
 	printf(
 		"# nv interpreter\n"
 		"# repository: https://github.com/hikalium/nv \n"
@@ -130,6 +131,19 @@ NV_ID NV_evaluateSetence(const NV_ID *tokenizedList)
 	int32_t lastOpPrec, opPrec;
 	NV_ID t, lastOp;
 	for(;;){
+		if(NV_globalExecFlag & NV_EXEC_FLAG_INTERRUPT){
+			fprintf(stderr, "Saving env to `save.bin`...\n");
+			FILE *fp = fopen("save.bin", "wb");
+			if(!fp){
+				fprintf(stderr, "fopen failed.\n");
+			} else{
+				NV_Graph_dumpToFile(fp);
+				fclose(fp);
+				fprintf(stderr, "Saving env done.\n");
+				exit(EXIT_SUCCESS);
+			}
+			NV_globalExecFlag &= ~NV_EXEC_FLAG_INTERRUPT;
+		}
 		lastOpPrec = -1;
 		for(i = 0; ; i++){
 			t = NV_Array_getByIndex(tokenizedList, i);

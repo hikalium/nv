@@ -3,3 +3,4 @@ a.out*
 nv
 nv.dSYM/*
 test*
+*.bin

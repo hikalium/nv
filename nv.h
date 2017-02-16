@@ -5,6 +5,7 @@
 #include <time.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include <signal.h>
 
 #define MAX_INPUT_LEN		1024
 #define MAX_TOKEN_LEN		256
@@ -83,7 +84,8 @@ struct NV_RELATION {
 
 // @nv.c
 #define NV_EXEC_FLAG_VERBOSE	0x01
-extern int32_t NV_globalExecFlag;
+#define NV_EXEC_FLAG_INTERRUPT	0x02
+extern volatile sig_atomic_t NV_globalExecFlag;
 //
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
 int NV_runInteractive(const NV_ID *cTypeList, const NV_ID *opList);
@@ -186,6 +188,9 @@ void NV_getOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexL
 void NV_removeOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, int count);
 void NV_tryExecOpAt(const NV_ID *tList, int index);
 void NV_printOp(const NV_ID *op);
+
+// @nv_signal.c
+void NV_signalHandler(int signum);
 
 // @nv_static.c
 extern const NV_ID NODEID_NV_STATIC_ROOT;
