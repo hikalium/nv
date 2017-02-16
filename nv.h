@@ -192,6 +192,7 @@ const char *NV_NodeTypeList[kNodeTypeCount];
 const char c2hexTable[0x100];
 
 // @nv_term.c
+NV_ID NV_Term_tryConvertToVariable(const NV_ID *id, const NV_ID *ctx);
 int NV_Term_isInteger(const NV_ID *id, const NV_ID *ctx);
 int NV_Term_isAssignable(const NV_ID *id, const NV_ID *ctx);
 int NV_Term_isArray(const NV_ID *id, const NV_ID *ctx);

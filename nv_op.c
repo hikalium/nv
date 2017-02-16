@@ -66,18 +66,28 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"restore",	0,		"NV_Op_restore"},
 	{"show",	0,		"NV_Op_convToVal"},
 	{"print",	0,		"NV_Op_print"},
-	{"=",		0,		"NV_Op_assign"},
-	{"+",		100,	"NV_Op_add"},
-	{"-",		100,	"NV_Op_sub"},
-	{"*",		200,	"NV_Op_mul"},
-	{"/",		200,	"NV_Op_div"},
-	{"%",		200,	"NV_Op_mod"},
-	{" ",		300,	"NV_Op_nothing"},
-	{"$",		300,	"NV_Op_getVarNamed"},
+	{"=",		101,	"NV_Op_assign"},
 	//
-	{"if",		1000,	"NV_Op_if"},
+	{"<",		500,	"NV_Op_lt"},
+	{">=",		500,	"NV_Op_gte"},
+	{"<=",		500,	"NV_Op_lte"},
+	{">",		500,	"NV_Op_gt"},
+	{"==",		500,	"NV_Op_eq"},
+	{"!=",		500,	"NV_Op_neq"},
 	//
-	{"{",		2000,	"NV_Op_codeBlock"},
+	{"+",		1000,	"NV_Op_add"},
+	{"-",		1000,	"NV_Op_sub"},
+	{"*",		2000,	"NV_Op_mul"},
+	{"/",		2000,	"NV_Op_div"},
+	{"%",		2000,	"NV_Op_mod"},
+	//
+	//{"$",		3000,	"NV_Op_getVarNamed"},
+	//
+	{"if",		10000,	"NV_Op_if"},
+	//
+	{" ",		20000,	"NV_Op_nothing"},
+	//
+	{"{",		30000,	"NV_Op_codeBlock"},
 	//
 	{"", -1, ""}	// terminate tag
 };
@@ -155,11 +165,19 @@ void NV_Op_ExecBuiltinInfix(const NV_ID *tList, int index, int func)
 		return;
 	}
 	switch(func){
-		case 0: v = vL + vR; break;
-		case 1: v = vL - vR; break;
-		case 2: v = vL * vR; break;
-		case 3: v = vL / vR; break;
-		case 4: v = vL % vR; break;
+		//
+		case 0:		v = vL + vR; break;
+		case 1:		v = vL - vR; break;
+		case 2:		v = vL * vR; break;
+		case 3:		v = vL / vR; break;
+		case 4:		v = vL % vR; break;
+		//
+		case 10:	v = (vL < vR); break;
+		case 11:	v = (vL >= vR); break;
+		case 12:	v = (vL <= vR); break;
+		case 13:	v = (vL > vR); break;
+		case 14:	v = (vL == vR); break;
+		case 15:	v = (vL != vR); break;
 	}
 	//
 	ans = NV_Node_createWithInt32(v);
@@ -398,10 +416,13 @@ void NV_Op_print(const NV_ID *tList, int index)
 	NV_ID operand[operandCount];
 	int operandIndex[operandCount] = {1};
 	//
+	const NV_ID *ctx = &NODEID_NULL;
+	//
 	NV_ID ans;
 	//
 	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
 	//
+	operand[0] = NV_Term_tryConvertToVariable(&operand[0], ctx);
 	NV_printNodeByID(&operand[0]); putchar('\n');
 	//
 	NV_removeOperandByList(tList, index, operandIndex, operandCount);
@@ -430,6 +451,20 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 		NV_Op_ExecBuiltinInfix(tList, index, 3);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_mod")){
 		NV_Op_ExecBuiltinInfix(tList, index, 4);
+	//
+	} else if(NV_isBuiltinOp(&op, "NV_Op_lt")){
+		NV_Op_ExecBuiltinInfix(tList, index, 10);
+	} else if(NV_isBuiltinOp(&op, "NV_Op_gte")){
+		NV_Op_ExecBuiltinInfix(tList, index, 11);
+	} else if(NV_isBuiltinOp(&op, "NV_Op_lte")){
+		NV_Op_ExecBuiltinInfix(tList, index, 12);
+	} else if(NV_isBuiltinOp(&op, "NV_Op_gt")){
+		NV_Op_ExecBuiltinInfix(tList, index, 13);
+	} else if(NV_isBuiltinOp(&op, "NV_Op_eq")){
+		NV_Op_ExecBuiltinInfix(tList, index, 14);
+	} else if(NV_isBuiltinOp(&op, "NV_Op_neq")){
+		NV_Op_ExecBuiltinInfix(tList, index, 15);
+	//
 	} else if(NV_isBuiltinOp(&op, "NV_Op_save")){
 		NV_Op_save(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_restore")){
