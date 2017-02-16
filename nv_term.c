@@ -4,6 +4,12 @@
 //	Type checks
 //
 
+int NV_isTermType(const NV_ID *node, const NV_ID *tType)
+{
+	NV_ID typeID = NV_Node_getRelatedNodeFrom(node, &RELID_TERM_TYPE);
+	return NV_ID_isEqual(&typeID, tType);
+}
+
 NV_ID NV_Term_tryConvertToVariable(const NV_ID *id, const NV_ID *ctx)
 {
 	NV_ID vid;

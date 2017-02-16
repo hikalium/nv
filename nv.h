@@ -28,6 +28,10 @@
 
 #define NV_Error(fmt, ...)	printf(ESC_ANSI_RED("\nError: %s: %d: ")fmt "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
 
+#define IS_DEBUG_MODE()	(NV_globalExecFlag & NV_EXEC_FLAG_VERBOSE)
+
+#define DEBUG	1
+
 #if DEBUG
 	#define NV_DbgInfo(fmt, ...) \
 		printf("\nInfo : %3d:%s: " fmt "\n", __LINE__, __FUNCTION__, __VA_ARGS__)
@@ -78,12 +82,9 @@ struct NV_RELATION {
 };
 
 // @nv.c
-extern NV_Node nodeRoot;
-void NV_Graph_init();
-void NV_Graph_dump();
-void NV_Graph_dumpToFile(FILE *fp);
-void NV_Graph_restoreFromFile(FILE *fp);
-int NV_isTermType(const NV_ID *node, const NV_ID *tType);
+#define NV_EXEC_FLAG_VERBOSE	0x01
+extern int32_t NV_globalExecFlag;
+//
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
 int NV_runInteractive(const NV_ID *cTypeList, const NV_ID *opList);
 int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList);
@@ -119,6 +120,13 @@ int NV_getMallocCount();
 void *NV_malloc(size_t size);
 void NV_free(void *p);
 
+// @nv_graph.c
+extern NV_Node nodeRoot;
+void NV_Graph_init();
+void NV_Graph_dump();
+void NV_Graph_dumpToFile(FILE *fp);
+void NV_Graph_restoreFromFile(FILE *fp);
+
 // @nv_id.c
 NV_ID NV_ID_generateRandom();
 int NV_ID_setFromString(NV_ID *id, const char *s);
@@ -141,10 +149,14 @@ void NV_Node_cleanup();
 void NV_Node_fdump(FILE *fp, const NV_Node *n);
 void NV_Node_dump(const NV_Node *n);
 void NV_Node_printPrimVal(const NV_Node *n);
+void NV_Node_printForDebug(const NV_Node *n);
 // Relation
 NV_ID NV_Node_createRelation(const NV_ID *from, const NV_ID *rel,  const NV_ID *to);
 void NV_Node_setRelation
 	(const NV_ID *relnid, const NV_ID *from, const NV_ID *rel, const NV_ID *to);
+NV_Node *NV_Node_Relation_getLinkFrom(const NV_ID *relnid);
+NV_Node *NV_Node_Relation_getLinkTo(const NV_ID *relnid);
+NV_Node *NV_Node_Relation_getLinkRel(const NV_ID *relnid);
 void NV_Node_updateRelationTo(const NV_ID *relnid, const NV_ID *to);
 NV_ID NV_Node_getRelationFrom(const NV_ID *from, const NV_ID *rel);
 NV_ID NV_Node_getRelatedNodeFrom(const NV_ID *from, const NV_ID *rel);
@@ -193,6 +205,7 @@ const char *NV_NodeTypeList[kNodeTypeCount];
 const char c2hexTable[0x100];
 
 // @nv_term.c
+int NV_isTermType(const NV_ID *node, const NV_ID *tType);
 NV_ID NV_Term_tryConvertToVariable(const NV_ID *id, const NV_ID *ctx);
 int NV_Term_isInteger(const NV_ID *id, const NV_ID *ctx);
 int NV_Term_isAssignable(const NV_ID *id, const NV_ID *ctx);

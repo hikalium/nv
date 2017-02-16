@@ -47,7 +47,7 @@ char *NV_gets(char *str, int size)
 			break;
 		} else if(c == 0x08 || c == 0x7f){
 			// backspace
-			if(p <= 0) break;
+			if(p <= 0) continue;
 			printf("\x1b[D\x1b[J");	// move left and clear chars after cursor.
 			p--;
 			useLen--;

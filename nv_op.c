@@ -67,6 +67,8 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"save",	10,		"NV_Op_save"},
 	{"restore",	10,		"NV_Op_restore"},
 	{"print",	10,		"NV_Op_print"},
+	{"info",	10,		"NV_Op_info"},
+	{"clean",	10,		"NV_Op_clean"},
 	//
 	{"=",		101,	"NV_Op_assign"},
 	//
@@ -110,7 +112,9 @@ NV_ID NV_createOpList()
 			builtinOpList[i].token, builtinOpList[i].prec, builtinOpList[i].funcStr);
 	}
 	//
-	NV_Dict_print(&opList);
+	if(IS_DEBUG_MODE()){
+		NV_Dict_print(&opList);
+	}
 	return opList;
 }
 
@@ -265,6 +269,48 @@ void NV_Op_ls(const NV_ID *tList, int index)
 	NV_ID ans;
 	//
 	NV_Dict_print(&NODEID_NULL);
+	//
+	ans = NV_Node_createWithInt32(0);
+	NV_Array_writeToIndex(tList, index, &ans);
+}
+
+void NV_Op_info(const NV_ID *tList, int index)
+{
+	NV_ID ans;
+	//
+	NV_Node *n;
+	int i;
+	//
+	i = 0;
+	for(n = nodeRoot.next; n; n = n->next){
+		i++;
+	}
+	printf("%d nodes\n", i);
+	//
+	ans = NV_Node_createWithInt32(0);
+	NV_Array_writeToIndex(tList, index, &ans);
+}
+
+void NV_Op_clean(const NV_ID *tList, int index)
+{
+	NV_ID ans;
+	//
+	NV_Node *n;
+	int i;
+	//
+	i = 0;
+	for(n = nodeRoot.next; n; n = n->next){
+		i++;
+	}
+	printf("%d nodes\n", i);
+	//
+	NV_Node_cleanup();
+	//
+	i = 0;
+	for(n = nodeRoot.next; n; n = n->next){
+		i++;
+	}
+	printf("%d nodes\n", i);
 	//
 	ans = NV_Node_createWithInt32(0);
 	NV_Array_writeToIndex(tList, index, &ans);
@@ -440,9 +486,11 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 {
 	NV_ID op = NV_Array_getByIndex(tList, index);
 	//
-	printf("begin op ");
-	NV_printNodeByID(&op);
-	putchar('\n');
+	if(IS_DEBUG_MODE()){
+		printf("begin op ");
+		NV_printNodeByID(&op);
+		putchar('\n');
+	}
 	//
 	if(NV_isBuiltinOp(&op, "NV_Op_nothing")){
 		NV_Array_removeIndex(tList, index);
@@ -486,15 +534,21 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 		NV_Op_print(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_for")){
 		NV_Op_for(tList, index);
+	} else if(NV_isBuiltinOp(&op, "NV_Op_info")){
+		NV_Op_info(tList, index);
+	} else if(NV_isBuiltinOp(&op, "NV_Op_clean")){
+		NV_Op_clean(tList, index);
 	} else{
 		NV_ID errObj = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");
 		NV_Array_writeToIndex(tList, index, &errObj);
 	}
 	//
-	printf("end op ");
-	NV_printNodeByID(&op);
-	putchar('\n');
+	if(IS_DEBUG_MODE()){
+		printf("end op ");
+		NV_printNodeByID(&op);
+		putchar('\n');
+	}
 }
 
 void NV_printOp(const NV_ID *op)

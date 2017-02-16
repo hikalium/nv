@@ -1,9 +1,38 @@
 #include "nv.h"
+//
+// main
+//
 
-int NV_isTermType(const NV_ID *node, const NV_ID *tType)
+int32_t NV_globalExecFlag;
+
+int main(int argc, char *argv[])
 {
-	NV_ID typeID = NV_Node_getRelatedNodeFrom(node, &RELID_TERM_TYPE);
-	return NV_ID_isEqual(&typeID, tType);
+	NV_ID cTypeList, opList;
+	int i;
+	//
+	printf(
+		"# nv interpreter\n"
+		"# repository: https://github.com/hikalium/nv \n"
+		"# commit: %s\n# commit date: %s\n", 
+		GIT_COMMIT_ID, GIT_COMMIT_DATE
+	);
+	for(i = 1; i < argc; i++){
+		if(argv[i][0] == '-'){
+			if(argv[i][1] == 'v') NV_globalExecFlag |= NV_EXEC_FLAG_VERBOSE;
+		}
+	}
+	//
+	NV_Graph_init();
+	//
+	cTypeList = NV_createCharTypeList();
+	NV_Node_retain(&cTypeList);
+	//
+	opList = NV_createOpList();
+	NV_Node_retain(&opList);
+	//
+	NV_runInteractive(&cTypeList, &opList);
+	//
+	return 0;
 }
 
 int NV_runInteractive(const NV_ID *cTypeList, const NV_ID *opList)
@@ -14,13 +43,16 @@ int NV_runInteractive(const NV_ID *cTypeList, const NV_ID *opList)
 	while(NV_gets(line, sizeof(line)) != NULL){
 		tokenList = NV_tokenize(cTypeList, line);
 		NV_convertLiteral(&tokenList, opList);
-		NV_printNodeByID(&tokenList); putchar('\n');
+		if(IS_DEBUG_MODE()){
+			NV_printNodeByID(&tokenList); putchar('\n');
+		}
 		NV_evaluateSetence(&tokenList);
-		NV_printNodeByID(&tokenList); putchar('\n');
+		if(IS_DEBUG_MODE()){
+			NV_printNodeByID(&tokenList); putchar('\n');
+		}
 	}
 	return 0;
 }
-
 
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input)
 {
@@ -45,7 +77,6 @@ NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input)
 				//
 				ns = NV_Node_createWithString(buf);
 				NV_Array_push(&tokenList, &ns);
-				//NV_E_setFlag(t, EFUnknownToken);
 			}
 			p = input + i;
 		}
@@ -53,10 +84,11 @@ NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input)
 		if(input[i] == 0) break;
 		
 	}
-	NV_Array_print(&tokenList);
+	if(IS_DEBUG_MODE()){
+		NV_Array_print(&tokenList);
+	}
 	return tokenList;
 }
-
 
 int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList)
 {
@@ -116,33 +148,10 @@ NV_ID NV_evaluateSetence(const NV_ID *tokenizedList)
 		}
 		if(lastOpPrec == -1) break;	// no more op
 		NV_tryExecOpAt(tokenizedList, lastOpIndex);
-		NV_Array_print(tokenizedList); putchar('\n');
+		if(IS_DEBUG_MODE()){
+			NV_Array_print(tokenizedList); putchar('\n');
+		}
 	}
 	return NV_Array_getByIndex(tokenizedList, 0);
 }
-
-//
-// main
-//
-//int32_t NV_debugFlag;
-int main(int argc, char *argv[])
-{
-	NV_ID cTypeList, opList;
-	//
-	printf("# nv interpreter\n# repository: https://github.com/hikalium/nv \n# commit: %s\n# commit date: %s\n", 
-		GIT_COMMIT_ID, GIT_COMMIT_DATE);
-	//
-	NV_Graph_init();
-	//
-	cTypeList = NV_createCharTypeList();
-	NV_Node_retain(&cTypeList);
-	//
-	opList = NV_createOpList();
-	NV_Node_retain(&opList);
-	//
-	NV_runInteractive(&cTypeList, &opList);
-	//
-	return 0;
-}
-
 

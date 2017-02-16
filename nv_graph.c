@@ -2,8 +2,10 @@
 //
 // Graph
 //
-NV_Node nodeRoot;
 
+//
+// Internal
+//
 void NV_Graph_addStaticNode(const NV_ID *id, const char *s)
 {
 	NV_Node_createWithIDAndString(id, s);
@@ -40,6 +42,10 @@ void NV_Graph_init()
 	NV_Graph_initStaticNodes();
 }
 
+//
+// Public
+//
+NV_Node nodeRoot;
 
 void NV_Graph_dump()
 {
