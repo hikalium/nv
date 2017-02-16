@@ -87,7 +87,7 @@ int NV_isTermType(const NV_ID *node, const NV_ID *tType);
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
 int NV_runInteractive(const NV_ID *cTypeList, const NV_ID *opList);
 int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList);
-void NV_evaluateSetence(const NV_ID *tokenizedList);
+NV_ID NV_evaluateSetence(const NV_ID *tokenizedList);
 
 // @nv_array.c
 NV_ID NV_Array_create();
@@ -172,7 +172,7 @@ int32_t NV_getOpPrecAt(const NV_ID *tList, int index);
 void NV_getOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, NV_ID *idBuf, int count);
 void NV_removeOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, int count);
 void NV_tryExecOpAt(const NV_ID *tList, int index);
-void NV_Op_print(const NV_ID *op);
+void NV_printOp(const NV_ID *op);
 
 // @nv_static.c
 extern const NV_ID NODEID_NV_STATIC_ROOT;
@@ -194,6 +194,8 @@ const char c2hexTable[0x100];
 // @nv_term.c
 int NV_Term_isInteger(const NV_ID *id, const NV_ID *ctx);
 int NV_Term_isAssignable(const NV_ID *id, const NV_ID *ctx);
+int NV_Term_isArray(const NV_ID *id, const NV_ID *ctx);
+//
 int32_t NV_Term_getInt32(const NV_ID *id, const NV_ID *ctx);
 NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *ctx);
 

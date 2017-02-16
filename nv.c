@@ -92,7 +92,7 @@ int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList)
 //
 // Evaluate
 //
-void NV_evaluateSetence(const NV_ID *tokenizedList)
+NV_ID NV_evaluateSetence(const NV_ID *tokenizedList)
 {
 	int i, lastOpIndex;
 	int32_t lastOpPrec, opPrec;
@@ -118,6 +118,7 @@ void NV_evaluateSetence(const NV_ID *tokenizedList)
 		NV_tryExecOpAt(tokenizedList, lastOpIndex);
 		NV_Array_print(tokenizedList); putchar('\n');
 	}
+	return NV_Array_getByIndex(tokenizedList, 0);
 }
 
 //

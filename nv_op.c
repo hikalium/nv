@@ -65,6 +65,7 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"save",	0,		"NV_Op_save"},
 	{"restore",	0,		"NV_Op_restore"},
 	{"show",	0,		"NV_Op_convToVal"},
+	{"print",	0,		"NV_Op_print"},
 	{"=",		0,		"NV_Op_assign"},
 	{"+",		100,	"NV_Op_add"},
 	{"-",		100,	"NV_Op_sub"},
@@ -73,7 +74,10 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"%",		200,	"NV_Op_mod"},
 	{" ",		300,	"NV_Op_nothing"},
 	{"$",		300,	"NV_Op_getVarNamed"},
-	{"{",		1000,	"NV_Op_codeBlock"},
+	//
+	{"if",		1000,	"NV_Op_if"},
+	//
+	{"{",		2000,	"NV_Op_codeBlock"},
 	//
 	{"", -1, ""}	// terminate tag
 };
@@ -347,6 +351,65 @@ void NV_Op_codeBlock(const NV_ID *tList, int index)
 	NV_Array_writeToIndex(tList, index, &root);
 }
 
+void NV_Op_if(const NV_ID *tList, int index)
+{
+	// if {cond} {do} [{cond} {do}] [{else}]
+	NV_ID tCond, tDo, tRes;
+	const NV_ID *ctx = &NODEID_NULL;
+	int i;
+	//
+	for(i = index + 1; ; ){
+		tCond = NV_Array_getByIndex(tList, i++);
+		if(!NV_Term_isArray(&tCond, ctx)){
+			// end with nothing to do.
+			tRes = NODEID_NULL;
+			break;
+		}
+		tDo = NV_Array_getByIndex(tList, i++);
+		//
+		tRes = NV_evaluateSetence(&tCond);
+		if(!NV_Term_isArray(&tDo, ctx)){
+			// tCond is else statement.
+			break;
+		}
+		// eval cond
+		if(NV_Term_getInt32(&tRes, ctx) == 0){
+			// false. skip do and continue.
+			i++;
+			continue;
+		}
+		// true. eval do.
+		tRes = NV_evaluateSetence(&tDo);
+		break;
+	}
+	// store eval result
+	NV_Array_writeToIndex(tList, index, &tRes);
+	// remove operands
+	for(;;){
+		tCond = NV_Array_getByIndex(tList, index + 1);
+		if(!NV_Term_isArray(&tCond, ctx)) break;
+		NV_Array_removeIndex(tList, index + 1);
+	}
+}
+
+void NV_Op_print(const NV_ID *tList, int index)
+{
+	const int operandCount = 1;
+	NV_ID operand[operandCount];
+	int operandIndex[operandCount] = {1};
+	//
+	NV_ID ans;
+	//
+	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
+	//
+	NV_printNodeByID(&operand[0]); putchar('\n');
+	//
+	NV_removeOperandByList(tList, index, operandIndex, operandCount);
+	//
+	ans = NV_Node_createWithString("success");
+	NV_Array_writeToIndex(tList, index, &ans);
+}
+
 void NV_tryExecOpAt(const NV_ID *tList, int index)
 {
 	NV_ID op = NV_Array_getByIndex(tList, index);
@@ -381,6 +444,10 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 		NV_Op_getVarNamed(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_codeBlock")){
 		NV_Op_codeBlock(tList, index);
+	} else if(NV_isBuiltinOp(&op, "NV_Op_if")){
+		NV_Op_if(tList, index);
+	} else if(NV_isBuiltinOp(&op, "NV_Op_print")){
+		NV_Op_print(tList, index);
 	} else{
 		NV_ID errObj = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");
@@ -392,7 +459,7 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 	putchar('\n');
 }
 
-void NV_Op_print(const NV_ID *op)
+void NV_printOp(const NV_ID *op)
 {
 	NV_ID eFunc;
 	NV_ID ePrec;
