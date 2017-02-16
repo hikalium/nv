@@ -59,7 +59,7 @@ NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *ctx)
 }
 
 //
-//
+// print
 //
 
 void NV_printNodeByID(const NV_ID *id)
@@ -81,7 +81,6 @@ void NV_printNode(const NV_Node *n)
 	} else if(NV_isTermType(&n->id, &NODEID_TERM_TYPE_OP)){
 		NV_Op_print(&n->id);
 	} else{
-		printf("prim: ");
 		NV_Node_printPrimVal(n);
 	}
 }

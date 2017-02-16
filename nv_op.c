@@ -144,6 +144,12 @@ void NV_Op_ExecBuiltinInfix(const NV_ID *tList, int index, int func)
 	NV_Array_removeIndex(tList, index);
 	NV_Array_removeIndex(tList, index);
 	//
+	if((func == 3 || func == 4) && vR == 0){
+		NV_ID errObj = NV_Node_createWithString(
+			"Error: Div by 0");
+		NV_Array_writeToIndex(tList, index, &errObj);
+		return;
+	}
 	switch(func){
 		case 0: v = vL + vR; break;
 		case 1: v = vL - vR; break;
