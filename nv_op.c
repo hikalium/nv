@@ -84,6 +84,7 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"%",		2000,	"NV_Op_mod"},
 	//
 	{"if",		10000,	"NV_Op_if"},
+	{"for",		10000,	"NV_Op_for"},
 	//
 	{" ",		20000,	"NV_Op_nothing"},
 	//
@@ -367,6 +368,53 @@ void NV_Op_if(const NV_ID *tList, int index)
 	}
 }
 
+void NV_Op_for(const NV_ID *tList, int index)
+{
+	// for {init block}{conditional block}{update block}[{statement}]
+	NV_ID tInit, tCond, tUpdt, tStmt, t;
+	const NV_ID *ctx = &NODEID_NULL;
+	// Read terms
+	tInit = NV_Array_getByIndex(tList, index + 1);
+	tCond = NV_Array_getByIndex(tList, index + 2);
+	tUpdt = NV_Array_getByIndex(tList, index + 3);
+	tStmt = NV_Array_getByIndex(tList, index + 4);
+	// check
+	if(	!NV_Term_isArray(&tInit, ctx) ||
+		!NV_Term_isArray(&tCond, ctx) ||
+		!NV_Term_isArray(&tUpdt, ctx)){
+		NV_ID errObj = NV_Node_createWithString(
+			"Error: Expected >= 3 blocks but not found.");
+		NV_Array_writeToIndex(tList, index, &errObj);
+		return;
+	}
+	// run loop
+	t = NV_Array_clone(&tInit);
+	t = NV_evaluateSetence(&t);
+	for(;;){
+		// cond
+		t = NV_Array_clone(&tCond);
+		t = NV_evaluateSetence(&t);
+		if(NV_Term_getInt32(&t, ctx) == 0) break;
+		// stmt
+		if(NV_Term_isArray(&tStmt, ctx)){
+			t = NV_Array_clone(&tStmt);
+			t = NV_evaluateSetence(&t);
+		}
+		// updt
+		t = NV_Array_clone(&tUpdt);
+		t = NV_evaluateSetence(&t);
+	}
+	// store eval result
+	NV_Array_writeToIndex(tList, index, &t);
+	// remove operands
+	NV_Array_removeIndex(tList, index + 1);
+	NV_Array_removeIndex(tList, index + 1);
+	NV_Array_removeIndex(tList, index + 1);
+	if(NV_Term_isArray(&t, ctx)){
+		NV_Array_removeIndex(tList, index + 1);
+	}
+}
+
 void NV_Op_print(const NV_ID *tList, int index)
 {
 	const int operandCount = 1;
@@ -436,6 +484,8 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 		NV_Op_if(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_print")){
 		NV_Op_print(tList, index);
+	} else if(NV_isBuiltinOp(&op, "NV_Op_for")){
+		NV_Op_for(tList, index);
 	} else{
 		NV_ID errObj = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");

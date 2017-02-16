@@ -12,6 +12,20 @@ NV_ID NV_Array_create()
 	return arrayRoot;
 }
 
+NV_ID NV_Array_clone(const NV_ID *base)
+{
+	NV_ID newArray, t;
+	int i;
+	//
+	newArray = NV_Node_create();
+	for(i = 0; ; i++){
+		t = NV_Array_getByIndex(base, i);
+		if(NV_ID_isEqual(&t, &NODEID_NOT_FOUND)) break;
+		NV_Array_push(&newArray, &t);
+	}
+	return newArray;
+}
+
 NV_ID NV_Array_push(const NV_ID *array, const NV_ID *data)
 {
 	NV_ID v, t, next;

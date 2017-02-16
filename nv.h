@@ -91,6 +91,7 @@ NV_ID NV_evaluateSetence(const NV_ID *tokenizedList);
 
 // @nv_array.c
 NV_ID NV_Array_create();
+NV_ID NV_Array_clone(const NV_ID *base);
 NV_ID NV_Array_push(const NV_ID *array, const NV_ID *data);
 NV_ID NV_Array_getByIndex(const NV_ID *array, int index);
 void NV_Array_removeIndex(const NV_ID *array, int index);
