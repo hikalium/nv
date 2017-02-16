@@ -60,12 +60,14 @@ typedef struct NV_BUILTIN_OP_TAG {
 } NV_BuiltinOpTag;
 
 NV_BuiltinOpTag builtinOpList[] = {
-	{"}",		0,		"NV_Op_codeBlockClose"},
-	{"ls",		0,		"NV_Op_ls"},
-	{"save",	0,		"NV_Op_save"},
-	{"restore",	0,		"NV_Op_restore"},
-	{"show",	0,		"NV_Op_convToVal"},
-	{"print",	0,		"NV_Op_print"},
+	{";",		0,		"NV_Op_nothing"},
+	//
+	{"}",		10,		"NV_Op_codeBlockClose"},
+	{"ls",		10,		"NV_Op_ls"},
+	{"save",	10,		"NV_Op_save"},
+	{"restore",	10,		"NV_Op_restore"},
+	{"print",	10,		"NV_Op_print"},
+	//
 	{"=",		101,	"NV_Op_assign"},
 	//
 	{"<",		500,	"NV_Op_lt"},
@@ -80,8 +82,6 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"*",		2000,	"NV_Op_mul"},
 	{"/",		2000,	"NV_Op_div"},
 	{"%",		2000,	"NV_Op_mod"},
-	//
-	//{"$",		3000,	"NV_Op_getVarNamed"},
 	//
 	{"if",		10000,	"NV_Op_if"},
 	//
@@ -300,49 +300,6 @@ void NV_Op_assign(const NV_ID *tList, int index)
 	NV_Array_writeToIndex(tList, index - 1, &v);
 }
 
-void NV_Op_convToVal(const NV_ID *tList, int index)
-{
-	const int operandCount = 1;
-	NV_ID operand[operandCount];
-	int operandIndex[operandCount] = {1};
-	//
-	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
-	//
-	NV_ID v;
-	v = operand[0];
-	if(NV_isTermType(&v, &NODEID_TERM_TYPE_VARIABLE)){
-		// 右の項が変数だった
-		v = NV_Variable_getData(&v);
-	}
-	//
-	NV_removeOperandByList(tList, index, operandIndex, operandCount);
-	//
-	NV_Array_writeToIndex(tList, index, &v);
-}
-
-void NV_Op_getVarNamed(const NV_ID *tList, int index)
-{
-	const int operandCount = 1;
-	NV_ID operand[operandCount];
-	int operandIndex[operandCount] = {1};
-	//
-	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
-	//
-	NV_ID v;
-	v = operand[0];
-	if(!NV_Node_isString(&operand[0])){
-		NV_ID errObj = NV_Node_createWithString(
-			"Error: Invalid Operand Type.");
-		NV_Array_writeToIndex(tList, index, &errObj);
-		return;
-	}
-	v = NV_Variable_getNamed(&NODEID_NULL, &v);
-	//
-	NV_removeOperandByList(tList, index, operandIndex, operandCount);
-	//
-	NV_Array_writeToIndex(tList, index, &v);
-}
-
 void NV_Op_codeBlock(const NV_ID *tList, int index)
 {
 	NV_ID v;
@@ -473,10 +430,6 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 		NV_Op_ls(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_assign")){
 		NV_Op_assign(tList, index);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_convToVal")){
-		NV_Op_convToVal(tList, index);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_getVarNamed")){
-		NV_Op_getVarNamed(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_codeBlock")){
 		NV_Op_codeBlock(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_if")){
