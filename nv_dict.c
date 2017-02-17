@@ -16,6 +16,14 @@
 NV_ID NV_Dict_add
 (const NV_ID *root, const NV_ID *key, const NV_ID *value)
 {
+	// 重複を許して追加する。
+	return NV_Node_createRelation(root, key, value);	
+}
+
+NV_ID NV_Dict_addUniqueInKey
+(const NV_ID *root, const NV_ID *key, const NV_ID *value)
+{
+	// 重複を許して追加する。
 	return NV_Node_createRelation(root, key, value);	
 }
 
@@ -29,6 +37,7 @@ NV_ID NV_Dict_addByStringKey
 
 NV_ID NV_Dict_get(const NV_ID *root, const NV_ID *key)
 {
+	// keyが同じ値を持つ(IDが等しいとは限らない)オブジェクトを返す。
 	const NV_Node *n;
 	const NV_Relation *reld;
 	for(n = nodeRoot.next; n; n = n->next){

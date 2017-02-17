@@ -61,6 +61,21 @@ NV_ID NV_Array_pop(const NV_ID *array)
 	return NV_Variable_getData(&t);
 }
 
+NV_ID NV_Array_last(const NV_ID *array)
+{
+	NV_ID prev, t, next;
+	prev = *array;
+	t = NV_Node_getRelatedNodeFrom(&prev, &RELID_ARRAY_NEXT);
+	for(;;){
+		next = NV_Node_getRelatedNodeFrom(&t, &RELID_ARRAY_NEXT);
+		if(NV_ID_isEqual(&next, &NODEID_NOT_FOUND)) break;
+		prev = t;
+		t = next;
+	}
+	// t is retv.
+	return NV_Variable_getData(&t);
+}
+
 NV_ID NV_Array_getByIndex(const NV_ID *array, int index)
 {
 	NV_ID t;

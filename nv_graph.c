@@ -40,6 +40,9 @@ void NV_Graph_init()
 	nodeRoot.type = kNone;
 	//
 	NV_Graph_initStaticNodes();
+	//
+	NV_ID evalStack = NV_Array_create();
+	NV_Node_createRelation(&NODEID_NV_STATIC_ROOT, &RELID_EVAL_STACK, &evalStack);
 }
 
 //

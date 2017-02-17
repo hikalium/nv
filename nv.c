@@ -14,8 +14,9 @@ int main(int argc, char *argv[])
 	//
 	printf(
 		"# nv interpreter\n"
-		"# repository: https://github.com/hikalium/nv \n"
-		"# commit: %s\n# commit date: %s\n", 
+		"# repo:   https://github.com/hikalium/nv \n"
+		"# commit: %s\n"
+		"# date:   %s\n", 
 		GIT_COMMIT_ID, GIT_COMMIT_DATE
 	);
 	for(i = 1; i < argc; i++){
@@ -32,28 +33,40 @@ int main(int argc, char *argv[])
 	opList = NV_createOpList();
 	NV_Node_retain(&opList);
 	//
-	NV_runInteractive(&cTypeList, &opList);
+	NV_globalExecFlag |= NV_EXEC_FLAG_INTERACTIVE;
+	for(;;){
+		NV_evalLoop();
+		if(NV_globalExecFlag & NV_EXEC_FLAG_INTERACTIVE){
+			// 入力を取得して継続する
+			NV_interactiveInput(&cTypeList, &opList);
+		} else{
+			break;
+		}
+	}
 	//
 	return 0;
 }
 
-int NV_runInteractive(const NV_ID *cTypeList, const NV_ID *opList)
+int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *opList)
 {
 	char line[MAX_INPUT_LEN];
 	NV_ID tokenList;
+	NV_ID evalStack = NV_Node_getRelatedNodeFrom(
+		&NODEID_NV_STATIC_ROOT, &RELID_EVAL_STACK);
 	//
-	while(NV_gets(line, sizeof(line)) != NULL){
+	if(NV_gets(line, sizeof(line)) != NULL){
 		tokenList = NV_tokenize(cTypeList, line);
 		NV_convertLiteral(&tokenList, opList);
 		if(IS_DEBUG_MODE()){
 			NV_printNodeByID(&tokenList); putchar('\n');
 		}
-		NV_evaluateSetence(&tokenList);
+		NV_Array_push(&evalStack, &tokenList);
 		if(IS_DEBUG_MODE()){
 			NV_printNodeByID(&tokenList); putchar('\n');
 		}
+		return 0;
 	}
-	return 0;
+	return 1;
 }
 
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input)
@@ -126,15 +139,49 @@ int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList)
 //
 // Evaluate
 //
-NV_ID NV_evaluateSetence(const NV_ID *tokenizedList)
+
+int NV_getNextOpIndex(const NV_ID *currentBlock)
 {
 	int i, lastOpIndex;
 	int32_t lastOpPrec, opPrec;
 	NV_ID t, lastOp;
+	//
+	lastOpPrec = -1;
+	lastOpIndex = -1;
+	for(i = 0; ; i++){
+		t = NV_Array_getByIndex(currentBlock, i);
+		if(NV_ID_isEqual(&t, &NODEID_NOT_FOUND)) break;
+		if(!NV_isTermType(&t, &NODEID_TERM_TYPE_OP)) continue;
+		opPrec = NV_getOpPrecAt(currentBlock, i);
+		if(lastOpPrec & 1 ? lastOpPrec <= opPrec : lastOpPrec < opPrec){
+			// continue searching
+			lastOpIndex = i;
+			lastOpPrec = opPrec;
+			lastOp = t;
+			continue;
+		}
+		// found. lastOpID is target op.
+		break;
+	}
+	return lastOpIndex;
+}
+
+
+
+void NV_evalLoop()
+{
+	NV_ID currentBlock;
+	NV_ID currentTermIndexNode;
+	NV_ID currentTerm;
+	NV_ID evalStack = NV_Node_getRelatedNodeFrom(
+		&NODEID_NV_STATIC_ROOT, &RELID_EVAL_STACK);
+	NV_ID t, r;
+	int nextOpIndex, currentOpIndex;
 	for(;;){
 		if(NV_globalExecFlag & NV_EXEC_FLAG_INTERRUPT){
-			fprintf(stderr, "Saving env to `save.bin`...\n");
-			FILE *fp = fopen("save.bin", "wb");
+			// env saving
+			fprintf(stderr, "Saving env to `savefile`...\n");
+			FILE *fp = fopen("savefile", "wb");
 			if(!fp){
 				fprintf(stderr, "fopen failed.\n");
 			} else{
@@ -145,28 +192,46 @@ NV_ID NV_evaluateSetence(const NV_ID *tokenizedList)
 			}
 			NV_globalExecFlag &= ~NV_EXEC_FLAG_INTERRUPT;
 		}
-		lastOpPrec = -1;
-		for(i = 0; ; i++){
-			t = NV_Array_getByIndex(tokenizedList, i);
-			if(NV_ID_isEqual(&t, &NODEID_NOT_FOUND)) break;
-			if(!NV_isTermType(&t, &NODEID_TERM_TYPE_OP)) continue;
-			opPrec = NV_getOpPrecAt(tokenizedList, i);
-			if(lastOpPrec & 1 ? lastOpPrec <= opPrec : lastOpPrec < opPrec){
-				// continue searching
-				lastOpIndex = i;
-				lastOpPrec = opPrec;
-				lastOp = t;
-				continue;
+		//
+		currentBlock = NV_Array_last(&evalStack);
+		if(NV_ID_isEqual(&currentBlock, &NODEID_NOT_FOUND)){
+			// evalStack empty.
+			if(IS_DEBUG_MODE()){
+				printf("evalStack empty. break.\n");
 			}
-			// found. lastOpID is target op.
 			break;
 		}
-		if(lastOpPrec == -1) break;	// no more op
-		NV_tryExecOpAt(tokenizedList, lastOpIndex);
+		//NV_Array_print(&currentBlock); putchar('\n');
+		currentTermIndexNode = NV_Node_getRelatedNodeFrom(
+			&currentBlock, &RELID_CURRENT_TERM_INDEX);
+		if(!NV_ID_isEqual(&currentTermIndexNode, &NODEID_NOT_FOUND)){
+			// do op
+			currentOpIndex = NV_Node_getInt32FromID(&currentTermIndexNode);
+			currentTerm = NV_Array_getByIndex(&currentBlock, currentOpIndex);
+			if(IS_DEBUG_MODE()){
+				printf("currentBlock[%d] ", currentOpIndex);
+				NV_printNodeByID(&currentTerm); putchar('\n');
+			}
+			NV_tryExecOpAt(&currentBlock, currentOpIndex);
+		}
+		// search next term to do
+		nextOpIndex = NV_getNextOpIndex(&currentBlock);
+		if(nextOpIndex == -1){
+			// no more op
+			t = NV_Array_pop(&evalStack);
+			NV_Node_createUniqueRelation(
+				&NODEID_NV_STATIC_ROOT, &RELID_CURRENT_TERM_PHASE, &t);
+			continue;
+		}
+		t = NV_Node_createWithInt32(nextOpIndex);
 		if(IS_DEBUG_MODE()){
-			NV_Array_print(tokenizedList); putchar('\n');
+			printf("nextOpIndex: %d\n", nextOpIndex);
+		}
+		r = NV_Node_getRelationFrom(&currentBlock, &RELID_CURRENT_TERM_INDEX);
+		if(NV_ID_isEqual(&r, &NODEID_NOT_FOUND)){
+			NV_Node_createRelation(&currentBlock, &RELID_CURRENT_TERM_INDEX, &t);
+		} else{
+			NV_Node_updateRelationTo(&r, &t);
 		}
 	}
-	return NV_Array_getByIndex(tokenizedList, 0);
 }
-

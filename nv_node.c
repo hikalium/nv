@@ -75,6 +75,7 @@ NV_Node *NV_Node_getByID(const NV_ID *id)
 
 int NV_Node_isEqualInValue(const NV_Node *na, const NV_Node *nb)
 {
+	// 2つのNodeが値として等しいか否かを返す。
 	if(!na || !nb) return 0;
 	if(na->type != nb->type) return 0;
 	if(na->type == kString){
@@ -376,6 +377,21 @@ NV_ID NV_Node_createRelation
 {
 	NV_ID r = NV_Node_create();
 	NV_Node_setRelation(&r, from, rel, to);
+	return r;
+}
+
+NV_ID NV_Node_createUniqueRelation
+(const NV_ID *from, const NV_ID *rel, const NV_ID *to)
+{
+	// fromとrelが一致するRelationがすでにあるならば、それをアップデートする。
+	NV_ID r;
+	r = NV_Node_getRelationFrom(from, rel);
+	if(NV_ID_isEqual(&r, &NODEID_NOT_FOUND)){
+		// 新規
+		return NV_Node_createRelation(from, rel, to);
+	}
+	// 既存
+	NV_Node_updateRelationTo(&r, to);
 	return r;
 }
 

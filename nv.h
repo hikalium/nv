@@ -81,20 +81,23 @@ struct NV_RELATION {
 };
 
 // @nv.c
-#define NV_EXEC_FLAG_VERBOSE	0x01
-#define NV_EXEC_FLAG_INTERRUPT	0x02
+#define NV_EXEC_FLAG_VERBOSE		0x01
+#define NV_EXEC_FLAG_INTERRUPT		0x02
+#define NV_EXEC_FLAG_INTERACTIVE	0x04
 extern volatile sig_atomic_t NV_globalExecFlag;
 //
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
-int NV_runInteractive(const NV_ID *cTypeList, const NV_ID *opList);
+int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *opList);
 int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList);
-NV_ID NV_evaluateSetence(const NV_ID *tokenizedList);
+//NV_ID NV_evaluateSetence(const NV_ID *tokenizedList);
+void NV_evalLoop();
 
 // @nv_array.c
 NV_ID NV_Array_create();
 NV_ID NV_Array_clone(const NV_ID *base);
 NV_ID NV_Array_push(const NV_ID *array, const NV_ID *data);
 NV_ID NV_Array_pop(const NV_ID *array);
+NV_ID NV_Array_last(const NV_ID *array);
 NV_ID NV_Array_getByIndex(const NV_ID *array, int index);
 void NV_Array_removeIndex(const NV_ID *array, int index);
 void NV_Array_writeToIndex(const NV_ID *array, int index, const NV_ID *data);
@@ -109,10 +112,6 @@ void NV_Dict_print(const NV_ID *root);
 
 // @nv_driver.c
 char *NV_gets(char *str, int size);
-
-// @nv_enode.c
-void NV_printNodeByID(const NV_ID *id);
-void NV_printNode(const NV_Node *n);
 
 // @nv_fix.c
 char *NV_strncpy(char *dst, const char *src, size_t dst_size, size_t copy_size);
@@ -154,6 +153,7 @@ void NV_Node_printPrimVal(const NV_Node *n);
 void NV_Node_printForDebug(const NV_Node *n);
 // Relation
 NV_ID NV_Node_createRelation(const NV_ID *from, const NV_ID *rel,  const NV_ID *to);
+NV_ID NV_Node_createUniqueRelation(const NV_ID *from, const NV_ID *rel,  const NV_ID *to);
 void NV_Node_setRelation
 	(const NV_ID *relnid, const NV_ID *from, const NV_ID *rel, const NV_ID *to);
 NV_Node *NV_Node_Relation_getLinkFrom(const NV_ID *relnid);
@@ -206,6 +206,10 @@ extern const NV_ID RELID_POINTER_TARGET;
 extern const NV_ID RELID_OP_PRECEDENCE;
 extern const NV_ID RELID_OP_FUNC;
 extern const NV_ID RELID_TERM_TYPE;
+extern const NV_ID RELID_EVAL_STACK;
+extern const NV_ID RELID_LAST_RESULT;
+extern const NV_ID RELID_CURRENT_TERM_INDEX;
+extern const NV_ID RELID_CURRENT_TERM_PHASE;
 const char *NV_NodeTypeList[kNodeTypeCount];
 const char c2hexTable[0x100];
 
@@ -218,6 +222,9 @@ int NV_Term_isArray(const NV_ID *id, const NV_ID *ctx);
 //
 int32_t NV_Term_getInt32(const NV_ID *id, const NV_ID *ctx);
 NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *ctx);
+//
+void NV_printNodeByID(const NV_ID *id);
+void NV_printNode(const NV_Node *n);
 
 // @nv_test.c
 //void NV_Test_Memory();

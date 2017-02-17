@@ -1,5 +1,35 @@
 #include "nv.h"
 
+//
+// internal
+//
+
+void NV_Op_Internal_setCurrentPhase(const NV_ID *opList, int32_t phase)
+{
+	NV_ID r, n;
+	n = NV_Node_createWithInt32(phase);
+	r = NV_Node_getRelationFrom(opList, &RELID_CURRENT_TERM_PHASE);
+	if(NV_ID_isEqual(&r, &NODEID_NOT_FOUND)){
+		// create new one
+		NV_Node_createRelation(opList, &RELID_CURRENT_TERM_PHASE, &n);
+	} else{
+		// update old link
+		NV_Node_updateRelationTo(&r, &n);
+	}
+}
+
+int32_t NV_Op_Internal_getCurrentPhase(const NV_ID *opList)
+{
+	// if not set, returns -1
+	NV_ID n;
+	n = NV_Node_getRelatedNodeFrom(opList, &RELID_CURRENT_TERM_PHASE);
+	return NV_Node_getInt32FromID(&n);
+}
+
+//
+// public
+//
+
 #define NV_LANG_CHAR_LIST_LEN 3
 int NV_Lang_getCharType(const NV_ID *cTypeList, char c)
 {
@@ -64,6 +94,8 @@ NV_BuiltinOpTag builtinOpList[] = {
 	//
 	{"}",		10,		"NV_Op_codeBlockClose"},
 	{"ls",		10,		"NV_Op_ls"},
+	{"ls2",		10,		"NV_Op_ls2"},
+	{"last",	10,		"NV_Op_last"},
 	{"save",	10,		"NV_Op_save"},
 	{"restore",	10,		"NV_Op_restore"},
 	{"print",	10,		"NV_Op_print"},
@@ -141,6 +173,8 @@ void NV_removeOperandByList(const NV_ID *tList, int baseIndex, const int *relInd
 		NV_Array_removeIndex(tList, relIndexList[i] + baseIndex);
 	}
 }
+
+
 
 void NV_Op_ExecBuiltinInfix(const NV_ID *tList, int index, int func)
 {
@@ -274,6 +308,27 @@ void NV_Op_ls(const NV_ID *tList, int index)
 	NV_Array_writeToIndex(tList, index, &ans);
 }
 
+void NV_Op_ls2(const NV_ID *tList, int index)
+{
+	NV_ID ans;
+	//
+	NV_Dict_print(&NODEID_NV_STATIC_ROOT);
+	//
+	ans = NV_Node_createWithInt32(0);
+	NV_Array_writeToIndex(tList, index, &ans);
+}
+
+void NV_Op_last(const NV_ID *tList, int index)
+{
+	NV_ID ans, n;
+	//
+	n = NV_Node_getRelatedNodeFrom(&NODEID_NV_STATIC_ROOT, &RELID_CURRENT_TERM_PHASE);
+	NV_printNodeByID(&n); putchar('\n');
+	//
+	ans = NV_Node_createWithInt32(0);
+	NV_Array_writeToIndex(tList, index, &ans);
+}
+
 void NV_Op_info(const NV_ID *tList, int index)
 {
 	NV_ID ans;
@@ -372,15 +427,18 @@ void NV_Op_codeBlock(const NV_ID *tList, int index)
 	}
 	NV_Array_writeToIndex(tList, index, &root);
 }
-
+/*
 void NV_Op_if(const NV_ID *tList, int index)
 {
 	// if {cond} {do} [{cond} {do}] [{else}]
 	NV_ID tCond, tDo, tRes;
 	const NV_ID *ctx = &NODEID_NULL;
-	int i;
+	int i, phase;
+	// phaseには、次に確認すべき項のオフセットを格納する。
+	phase = NV_Op_Internal_getCurrentPhase(tList);
+	if(phase == -1) phase = 1;
 	//
-	for(i = index + 1; ; ){
+	if(phase >= 1){
 		tCond = NV_Array_getByIndex(tList, i++);
 		if(!NV_Term_isArray(&tCond, ctx)){
 			// end with nothing to do.
@@ -403,17 +461,19 @@ void NV_Op_if(const NV_ID *tList, int index)
 		// true. eval do.
 		tRes = NV_evaluateSetence(&tDo);
 		break;
-	}
-	// store eval result
-	NV_Array_writeToIndex(tList, index, &tRes);
-	// remove operands
-	for(;;){
-		tCond = NV_Array_getByIndex(tList, index + 1);
-		if(!NV_Term_isArray(&tCond, ctx)) break;
-		NV_Array_removeIndex(tList, index + 1);
+	} else{
+		// store eval result
+		NV_Array_writeToIndex(tList, index, &tRes);
+		// remove operands
+		for(;;){
+			tCond = NV_Array_getByIndex(tList, index + 1);
+			if(!NV_Term_isArray(&tCond, ctx)) break;
+			NV_Array_removeIndex(tList, index + 1);
+		}
 	}
 }
-
+*/
+/*
 void NV_Op_for(const NV_ID *tList, int index)
 {
 	// for {init block}{conditional block}{update block}[{statement}]
@@ -460,7 +520,7 @@ void NV_Op_for(const NV_ID *tList, int index)
 		NV_Array_removeIndex(tList, index + 1);
 	}
 }
-
+*/
 void NV_Op_print(const NV_ID *tList, int index)
 {
 	const int operandCount = 1;
@@ -524,16 +584,20 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 		NV_Op_restore(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_ls")){
 		NV_Op_ls(tList, index);
+	} else if(NV_isBuiltinOp(&op, "NV_Op_ls2")){
+		NV_Op_ls2(tList, index);
+	} else if(NV_isBuiltinOp(&op, "NV_Op_last")){
+		NV_Op_last(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_assign")){
 		NV_Op_assign(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_codeBlock")){
 		NV_Op_codeBlock(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_if")){
-		NV_Op_if(tList, index);
+		//NV_Op_if(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_print")){
 		NV_Op_print(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_for")){
-		NV_Op_for(tList, index);
+		//NV_Op_for(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_info")){
 		NV_Op_info(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_clean")){
