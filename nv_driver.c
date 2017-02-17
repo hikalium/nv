@@ -22,15 +22,28 @@ char *NV_gets(char *str, int size)
 #include <termios.h>
 #include <unistd.h>
 
+struct termios base_conf;
+int flg_set_atexit;
+
+void atexit_recover_termios(void)
+{
+	tcsetattr(0 , TCSAFLUSH , &base_conf );
+}
+
 char *NV_gets(char *str, int size)
 {
 	int c;
 	struct termios io_conf;
-	struct termios base_conf;
 	int useLen = 0, p = 0, i, movs;
 
 	tcgetattr( 0 , &io_conf );
 	base_conf = io_conf;
+
+	if(!flg_set_atexit){
+		atexit(atexit_recover_termios);
+		flg_set_atexit = 1;
+	}
+
 	io_conf.c_lflag &= ~( ECHO | ICANON );
 	io_conf.c_cc[VMIN]  = 1;
 	io_conf.c_cc[VTIME] = 0;

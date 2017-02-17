@@ -31,8 +31,6 @@
 
 #define IS_DEBUG_MODE()	(NV_globalExecFlag & NV_EXEC_FLAG_VERBOSE)
 
-#define DEBUG	1
-
 #if DEBUG
 	#define NV_DbgInfo(fmt, ...) \
 		printf("\nInfo : %3d:%s: " fmt "\n", __LINE__, __FUNCTION__, __VA_ARGS__)
@@ -96,6 +94,7 @@ NV_ID NV_evaluateSetence(const NV_ID *tokenizedList);
 NV_ID NV_Array_create();
 NV_ID NV_Array_clone(const NV_ID *base);
 NV_ID NV_Array_push(const NV_ID *array, const NV_ID *data);
+NV_ID NV_Array_pop(const NV_ID *array);
 NV_ID NV_Array_getByIndex(const NV_ID *array, int index);
 void NV_Array_removeIndex(const NV_ID *array, int index);
 void NV_Array_writeToIndex(const NV_ID *array, int index, const NV_ID *data);
@@ -143,6 +142,7 @@ NV_Node *NV_Node_getByID(const NV_ID *id);
 int NV_Node_isEqualInValue(const NV_Node *na, const NV_Node *nb);
 NV_ID NV_Node_createWithID(const NV_ID *id);
 NV_ID NV_Node_create();
+void NV_Node_remove(const NV_ID *baseID);
 NV_ID NV_Node_clone(const NV_ID *baseID);
 NV_ID NV_Node_restoreFromString(const char *s);
 void NV_Node_retain(const NV_ID *id);
@@ -220,7 +220,7 @@ int32_t NV_Term_getInt32(const NV_ID *id, const NV_ID *ctx);
 NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *ctx);
 
 // @nv_test.c
-
+//void NV_Test_Memory();
 
 // @nv_variable.c
 NV_ID NV_Variable_create();

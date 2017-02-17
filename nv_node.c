@@ -123,6 +123,13 @@ NV_ID NV_Node_create()
 	return NV_Node_createWithID(&id);
 }
 
+void NV_Node_remove(const NV_ID *baseID)
+{
+	NV_Node *n;
+	n = NV_Node_getByID(baseID);
+	if(n) NV_Node_Internal_remove(n);
+}
+
 NV_ID NV_Node_clone(const NV_ID *baseID)
 {
 	NV_Node *base, *new;
@@ -324,12 +331,12 @@ void NV_Node_printPrimVal(const NV_Node *n)
 
 void NV_Node_printForDebug(const NV_Node *n)
 {
-	NV_ID_dumpIDToFile(&n->id, stdout);
-	printf(": ");
 	if(!n){
-		printf("(null)");
+		printf("(NV_Node is NULL)");
 		return;
 	}
+	NV_ID_dumpIDToFile(&n->id, stdout);
+	printf(": ");
 	if(n->type == kString){
 		printf("\"%s\"", n->data);
 	} else if(n->type == kInteger){
