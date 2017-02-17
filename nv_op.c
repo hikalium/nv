@@ -471,6 +471,7 @@ void NV_Op_if(const NV_ID *tList, int index)
 			}
 		}
 	}
+	// 終了処理
 	// store eval result
 	NV_Array_writeToIndex(tList, index, &tRes);
 	// remove operands
@@ -482,43 +483,70 @@ void NV_Op_if(const NV_ID *tList, int index)
 	//
 	NV_Op_Internal_setCurrentPhase(tList, -1);
 }
-/*
+
 void NV_Op_for(const NV_ID *tList, int index)
 {
 	// for {init block}{conditional block}{update block}[{statement}]
-	NV_ID tInit, tCond, tUpdt, tStmt, t;
+	NV_ID t, tRes;
 	const NV_ID *ctx = &NODEID_NULL;
-	// Read terms
-	tInit = NV_Array_getByIndex(tList, index + 1);
-	tCond = NV_Array_getByIndex(tList, index + 2);
-	tUpdt = NV_Array_getByIndex(tList, index + 3);
-	tStmt = NV_Array_getByIndex(tList, index + 4);
-	// check
-	if(	!NV_Term_isArray(&tInit, ctx) ||
-		!NV_Term_isArray(&tCond, ctx) ||
-		!NV_Term_isArray(&tUpdt, ctx)){
-		NV_ID errObj = NV_Node_createWithString(
-			"Error: Expected >= 3 blocks but not found.");
-		NV_Array_writeToIndex(tList, index, &errObj);
+	int phase;
+	NV_ID evalStack = NV_Node_getRelatedNodeFrom(
+		&NODEID_NV_STATIC_ROOT, &RELID_EVAL_STACK);
+	// phaseには、次に実行すべき項のoffsetが格納されていることとする。
+	// つまり、for文の場合は、
+	// 1 > 2 > 4 > 3 > 2 > 4 > 3 > ...
+	// という順序で進行する。
+	phase = NV_Op_Internal_getCurrentPhase(tList);
+	if(phase == -1){
+		// 初めてこのforを実行する
+		// check
+		// 少なくとも後続の3つはArrayでなければならない。
+		int i;
+		for(i = 1; i <= 3; i++){
+			t = NV_Array_getByIndex(tList, index + i);
+			if(!NV_Term_isArray(&t, ctx)) break;
+		}
+		if(i <= 3){
+			NV_ID errObj = NV_Node_createWithString(
+				"Error: Expected >= 3 blocks but not found.");
+			NV_Array_writeToIndex(tList, index, &errObj);
+			return;
+		}
+		// 問題ないのでphase1から始める
+		phase = 1;
+	}
+	//printf("Op_for: phase = %d\n", phase);
+	t = NV_Array_getByIndex(tList, index + phase);
+	if(phase == 1){
+		// 初期化式を実行スタックに積んで終了
+		NV_Array_push(&evalStack, &t);
+		NV_Op_Internal_setCurrentPhase(tList, 2);
+		return;
+	} else if(phase == 2){
+		// 条件式のコピーを実行スタックに積んで終了
+		t = NV_Array_clone(&t);
+		NV_Array_push(&evalStack, &t);
+		NV_Op_Internal_setCurrentPhase(tList, 4);
+		return;
+	} else if(phase == 4){
+		// 条件を判定して、本体部分のコピーを実行スタックに積んで終了
+		tRes = NV_Node_getRelatedNodeFrom(&NODEID_NV_STATIC_ROOT, &RELID_LAST_RESULT);
+		tRes = NV_Array_last(&tRes);
+		if(NV_Term_getInt32(&tRes, ctx)){
+			t = NV_Array_clone(&t);
+			NV_Array_push(&evalStack, &t);
+			NV_Op_Internal_setCurrentPhase(tList, 3);
+			return;
+		}
+		// 条件が偽ならば終了処理へ
+	} else if(phase == 3){
+		// 更新式のコピーを実行スタックに積んで終了
+		t = NV_Array_clone(&t);
+		NV_Array_push(&evalStack, &t);
+		NV_Op_Internal_setCurrentPhase(tList, 2);
 		return;
 	}
-	// run loop
-	t = NV_Array_clone(&tInit);
-	t = NV_evaluateSetence(&t);
-	for(;;){
-		// cond
-		t = NV_Array_clone(&tCond);
-		t = NV_evaluateSetence(&t);
-		if(NV_Term_getInt32(&t, ctx) == 0) break;
-		// stmt
-		if(NV_Term_isArray(&tStmt, ctx)){
-			t = NV_Array_clone(&tStmt);
-			t = NV_evaluateSetence(&t);
-		}
-		// updt
-		t = NV_Array_clone(&tUpdt);
-		t = NV_evaluateSetence(&t);
-	}
+	// 終了処理
 	// store eval result
 	NV_Array_writeToIndex(tList, index, &t);
 	// remove operands
@@ -528,8 +556,9 @@ void NV_Op_for(const NV_ID *tList, int index)
 	if(NV_Term_isArray(&t, ctx)){
 		NV_Array_removeIndex(tList, index + 1);
 	}
+	NV_Op_Internal_setCurrentPhase(tList, -1);
 }
-*/
+
 void NV_Op_print(const NV_ID *tList, int index)
 {
 	const int operandCount = 1;
@@ -606,7 +635,7 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 	} else if(NV_isBuiltinOp(&op, "NV_Op_print")){
 		NV_Op_print(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_for")){
-		//NV_Op_for(tList, index);
+		NV_Op_for(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_info")){
 		NV_Op_info(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_clean")){
