@@ -175,7 +175,7 @@ void NV_evalLoop()
 	NV_ID currentTerm;
 	NV_ID evalStack = NV_Node_getRelatedNodeFrom(
 		&NODEID_NV_STATIC_ROOT, &RELID_EVAL_STACK);
-	NV_ID t, r;
+	NV_ID t;
 	int nextOpIndex, currentOpIndex;
 	for(;;){
 		if(NV_globalExecFlag & NV_EXEC_FLAG_INTERRUPT){
@@ -194,6 +194,9 @@ void NV_evalLoop()
 		}
 		//
 		currentBlock = NV_Array_last(&evalStack);
+		if(IS_DEBUG_MODE()){
+			NV_Array_print(&currentBlock); putchar('\n');
+		}
 		if(NV_ID_isEqual(&currentBlock, &NODEID_NOT_FOUND)){
 			// evalStack empty.
 			if(IS_DEBUG_MODE()){
@@ -201,18 +204,20 @@ void NV_evalLoop()
 			}
 			break;
 		}
-		//NV_Array_print(&currentBlock); putchar('\n');
 		currentTermIndexNode = NV_Node_getRelatedNodeFrom(
 			&currentBlock, &RELID_CURRENT_TERM_INDEX);
 		if(!NV_ID_isEqual(&currentTermIndexNode, &NODEID_NOT_FOUND)){
 			// do op
 			currentOpIndex = NV_Node_getInt32FromID(&currentTermIndexNode);
 			currentTerm = NV_Array_getByIndex(&currentBlock, currentOpIndex);
-			if(IS_DEBUG_MODE()){
-				printf("currentBlock[%d] ", currentOpIndex);
-				NV_printNodeByID(&currentTerm); putchar('\n');
-			}
+			//if(IS_DEBUG_MODE()){
+			//	printf("currentBlock[%d] ", currentOpIndex);
+			//	NV_printNodeByID(&currentTerm); putchar('\n');
+			//}
 			NV_tryExecOpAt(&currentBlock, currentOpIndex);
+			if(IS_DEBUG_MODE()){
+				NV_Array_print(&currentBlock); putchar('\n');
+			}
 		}
 		// search next term to do
 		nextOpIndex = NV_getNextOpIndex(&currentBlock);
@@ -220,18 +225,14 @@ void NV_evalLoop()
 			// no more op
 			t = NV_Array_pop(&evalStack);
 			NV_Node_createUniqueRelation(
-				&NODEID_NV_STATIC_ROOT, &RELID_CURRENT_TERM_PHASE, &t);
+				&NODEID_NV_STATIC_ROOT, &RELID_LAST_RESULT, &t);
 			continue;
 		}
 		t = NV_Node_createWithInt32(nextOpIndex);
-		if(IS_DEBUG_MODE()){
-			printf("nextOpIndex: %d\n", nextOpIndex);
-		}
-		r = NV_Node_getRelationFrom(&currentBlock, &RELID_CURRENT_TERM_INDEX);
-		if(NV_ID_isEqual(&r, &NODEID_NOT_FOUND)){
-			NV_Node_createRelation(&currentBlock, &RELID_CURRENT_TERM_INDEX, &t);
-		} else{
-			NV_Node_updateRelationTo(&r, &t);
-		}
+		//if(IS_DEBUG_MODE()){
+		//	printf("nextOpIndex: %d\n", nextOpIndex);
+		//}
+		NV_Node_createUniqueRelation(
+			&currentBlock, &RELID_CURRENT_TERM_INDEX, &t);
 	}
 }

@@ -322,7 +322,7 @@ void NV_Op_last(const NV_ID *tList, int index)
 {
 	NV_ID ans, n;
 	//
-	n = NV_Node_getRelatedNodeFrom(&NODEID_NV_STATIC_ROOT, &RELID_CURRENT_TERM_PHASE);
+	n = NV_Node_getRelatedNodeFrom(&NODEID_NV_STATIC_ROOT, &RELID_LAST_RESULT);
 	NV_printNodeByID(&n); putchar('\n');
 	//
 	ans = NV_Node_createWithInt32(0);
@@ -427,52 +427,61 @@ void NV_Op_codeBlock(const NV_ID *tList, int index)
 	}
 	NV_Array_writeToIndex(tList, index, &root);
 }
-/*
 void NV_Op_if(const NV_ID *tList, int index)
 {
 	// if {cond} {do} [{cond} {do}] [{else}]
-	NV_ID tCond, tDo, tRes;
+	NV_ID t, tRes;
 	const NV_ID *ctx = &NODEID_NULL;
-	int i, phase;
-	// phaseには、次に確認すべき項のオフセットを格納する。
+	int phase;
+	NV_ID evalStack = NV_Node_getRelatedNodeFrom(
+		&NODEID_NV_STATIC_ROOT, &RELID_EVAL_STACK);
+	// phaseには、次に実行すべき項のoffsetが格納されていることとする。
 	phase = NV_Op_Internal_getCurrentPhase(tList);
 	if(phase == -1) phase = 1;
 	//
 	if(phase >= 1){
-		tCond = NV_Array_getByIndex(tList, i++);
-		if(!NV_Term_isArray(&tCond, ctx)){
-			// end with nothing to do.
-			tRes = NODEID_NULL;
-			break;
-		}
-		tDo = NV_Array_getByIndex(tList, i++);
-		//
-		tRes = NV_evaluateSetence(&tCond);
-		if(!NV_Term_isArray(&tDo, ctx)){
-			// tCond is else statement.
-			break;
-		}
-		// eval cond
-		if(NV_Term_getInt32(&tRes, ctx) == 0){
-			// false. skip do and continue.
-			i++;
-			continue;
-		}
-		// true. eval do.
-		tRes = NV_evaluateSetence(&tDo);
-		break;
-	} else{
-		// store eval result
-		NV_Array_writeToIndex(tList, index, &tRes);
-		// remove operands
-		for(;;){
-			tCond = NV_Array_getByIndex(tList, index + 1);
-			if(!NV_Term_isArray(&tCond, ctx)) break;
-			NV_Array_removeIndex(tList, index + 1);
+		if(phase & 1){
+			// 奇数: 条件節の実行、もしくはelse節
+			t = NV_Array_getByIndex(tList, index + phase);
+			if(!NV_Term_isArray(&t, ctx)){
+				// どの条件節も成立しないまま、if文が終了した
+				tRes = NODEID_NULL;
+				// 終了処理へ
+			} else{
+				// 条件節を実行スタックに追加。この文が実行されてから現在の文に戻ってくる。
+				NV_Array_push(&evalStack, &t);
+				NV_Op_Internal_setCurrentPhase(tList, phase + 1);
+				return;
+			}
+		} else{
+			// 偶数: 実行
+			tRes = NV_Node_getRelatedNodeFrom(&NODEID_NV_STATIC_ROOT, &RELID_LAST_RESULT);
+			t = NV_Array_getByIndex(tList, index + phase);
+			if(!NV_Term_isArray(&t, ctx)){
+				// この直前に実行した文はelse節だった。
+				// 終了処理へ
+			} else{
+				// 条件を評価し、もしもtrueなら実行部分を実行スタックに追加。
+				tRes = NV_Array_last(&tRes);
+				if(NV_Term_getInt32(&tRes, ctx)){
+					NV_Array_push(&evalStack, &t);
+				}
+				NV_Op_Internal_setCurrentPhase(tList, phase + 1);
+				return;
+			}
 		}
 	}
+	// store eval result
+	NV_Array_writeToIndex(tList, index, &tRes);
+	// remove operands
+	for(;;){
+		t = NV_Array_getByIndex(tList, index + 1);
+		if(!NV_Term_isArray(&t, ctx)) break;
+		NV_Array_removeIndex(tList, index + 1);
+	}
+	//
+	NV_Op_Internal_setCurrentPhase(tList, -1);
 }
-*/
 /*
 void NV_Op_for(const NV_ID *tList, int index)
 {
@@ -593,7 +602,7 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 	} else if(NV_isBuiltinOp(&op, "NV_Op_codeBlock")){
 		NV_Op_codeBlock(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_if")){
-		//NV_Op_if(tList, index);
+		NV_Op_if(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_print")){
 		NV_Op_print(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_for")){
