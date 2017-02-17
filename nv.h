@@ -123,6 +123,7 @@ void NV_free(void *p);
 // @nv_graph.c
 extern NV_Node nodeRoot;
 void NV_Graph_init();
+void NV_Graph_insertInitialNode();
 void NV_Graph_dump();
 void NV_Graph_dumpToFile(FILE *fp);
 void NV_Graph_restoreFromFile(FILE *fp);

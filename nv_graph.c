@@ -26,8 +26,12 @@ void NV_Graph_initStaticNodes()
 	NV_Graph_addStaticNode(&RELID_ARRAY_NEXT, "relArrayNext");
 	NV_Graph_addStaticNode(&RELID_VARIABLE_DATA, "relVariableData");
 	NV_Graph_addStaticNode(&RELID_POINTER_TARGET, "relPointerTarget");
-	NV_Graph_addStaticNode(&RELID_OP_PRECEDENCE, "relPointerTarget");
-	NV_Graph_addStaticNode(&RELID_OP_FUNC, "relPointerTarget");
+	NV_Graph_addStaticNode(&RELID_OP_PRECEDENCE, "relOpPrec");
+	NV_Graph_addStaticNode(&RELID_OP_FUNC, "relOpFunc");
+	NV_Graph_addStaticNode(&RELID_EVAL_STACK, "relEvalStack");
+	NV_Graph_addStaticNode(&RELID_LAST_RESULT, "relLastResult");
+	NV_Graph_addStaticNode(&RELID_CURRENT_TERM_INDEX, "relCurrentTermIndex");
+	NV_Graph_addStaticNode(&RELID_CURRENT_TERM_PHASE, "relCurrentTermPhase");
 }
 
 void NV_Graph_init()
@@ -38,11 +42,18 @@ void NV_Graph_init()
 	nodeRoot.next = NULL;
 	nodeRoot.data = NULL;
 	nodeRoot.type = kNone;
-	//
+}
+
+void NV_Graph_insertInitialNode()
+{
 	NV_Graph_initStaticNodes();
-	//
-	NV_ID evalStack = NV_Array_create();
-	NV_Node_createRelation(&NODEID_NV_STATIC_ROOT, &RELID_EVAL_STACK, &evalStack);
+	// evalStackが存在しなければ作成する
+	NV_ID evalStack;
+	evalStack = NV_Node_getRelatedNodeFrom(&NODEID_NV_STATIC_ROOT, &RELID_EVAL_STACK);
+	if(NV_ID_isEqual(&evalStack, &NODEID_NOT_FOUND)){
+		evalStack = NV_Array_create();
+		NV_Node_createRelation(&NODEID_NV_STATIC_ROOT, &RELID_EVAL_STACK, &evalStack);
+	}
 }
 
 //
