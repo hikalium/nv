@@ -8,13 +8,13 @@ void NV_Op_Internal_setCurrentPhase(const NV_ID *opList, int32_t phase)
 {
 	NV_ID r, n;
 	n = NV_Node_createWithInt32(phase);
-	r = NV_Node_getRelationFrom(opList, &RELID_CURRENT_TERM_PHASE);
+	r = NV_NodeID_getRelationFrom(opList, &RELID_CURRENT_TERM_PHASE);
 	if(NV_ID_isEqual(&r, &NODEID_NOT_FOUND)){
 		// create new one
-		NV_Node_createRelation(opList, &RELID_CURRENT_TERM_PHASE, &n);
+		NV_NodeID_createRelation(opList, &RELID_CURRENT_TERM_PHASE, &n);
 	} else{
 		// update old link
-		NV_Node_updateRelationTo(&r, &n);
+		NV_NodeID_updateRelationTo(&r, &n);
 	}
 }
 
@@ -22,8 +22,8 @@ int32_t NV_Op_Internal_getCurrentPhase(const NV_ID *opList)
 {
 	// if not set, returns -1
 	NV_ID n;
-	n = NV_Node_getRelatedNodeFrom(opList, &RELID_CURRENT_TERM_PHASE);
-	return NV_Node_getInt32FromID(&n);
+	n = NV_NodeID_getRelatedNodeFrom(opList, &RELID_CURRENT_TERM_PHASE);
+	return NV_NodeID_getInt32(&n);
 }
 
 //
@@ -38,7 +38,7 @@ int NV_Lang_getCharType(const NV_ID *cTypeList, char c)
 	if(c == '\0') return -1;
 	for(i = 0; i < NV_LANG_CHAR_LIST_LEN; i++){
 		t = NV_Array_getByIndex(cTypeList, i);
-		if(NV_Node_String_strchr(NV_Node_getByID(&t), c)) break;
+		if(NV_Node_String_strchr(NV_NodeID_getNode(&t), c)) break;
 	}
 	return i;
 }
@@ -64,12 +64,12 @@ void NV_addOp(const NV_ID *opList, const char *token, int32_t prec, const NV_ID 
 	NV_ID opEntry;
 	NV_ID ePrec;
 	opEntry = NV_Node_create();
-	NV_Node_createRelation(
+	NV_NodeID_createRelation(
 		&opEntry, &RELID_TERM_TYPE, &NODEID_TERM_TYPE_OP);
 	ePrec = NV_Node_createWithInt32(prec);
-	NV_Node_createRelation(
+	NV_NodeID_createRelation(
 		&opEntry, &RELID_OP_PRECEDENCE, &ePrec);
-	NV_Node_createRelation(
+	NV_NodeID_createRelation(
 		&opEntry, &RELID_OP_FUNC, func);
 	
 	//
@@ -129,8 +129,8 @@ NV_BuiltinOpTag builtinOpList[] = {
 
 int NV_isBuiltinOp(const NV_ID *term, const char *ident)
 {
-	NV_ID func = NV_Node_getRelatedNodeFrom(term, &RELID_OP_FUNC);
-	return NV_Node_String_compareWithCStr(NV_Node_getByID(&func), ident) == 0;
+	NV_ID func = NV_NodeID_getRelatedNodeFrom(term, &RELID_OP_FUNC);
+	return NV_Node_String_compareWithCStr(NV_NodeID_getNode(&func), ident) == 0;
 }
 
 
@@ -152,8 +152,8 @@ NV_ID NV_createOpList()
 
 int32_t NV_getOpPrec(const NV_ID *op)
 {
-	NV_ID ePrec = NV_Node_getRelatedNodeFrom(op, &RELID_OP_PRECEDENCE);
-	return NV_Node_getInt32FromID(&ePrec);
+	NV_ID ePrec = NV_NodeID_getRelatedNodeFrom(op, &RELID_OP_PRECEDENCE);
+	return NV_NodeID_getInt32(&ePrec);
 }
 
 void NV_getOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, NV_ID *idBuf, int count)
@@ -231,13 +231,13 @@ void NV_Op_save(const NV_ID *tList, int index)
 	NV_ID ans;
 	//
 	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
-	if(!NV_Node_isString(&operand[0])){
+	if(!NV_NodeID_isString(&operand[0])){
 		NV_ID errObj = NV_Node_createWithString(
 			"Error: Invalid Operand Type.");
 		NV_Array_writeToIndex(tList, index, &errObj);
 		return;
 	}
-	fname = NV_Node_getCStr(&operand[0]);
+	fname = NV_NodeID_getCStr(&operand[0]);
 	if(!fname){
 		NV_ID errObj = NV_Node_createWithString(
 			"fname is null");
@@ -269,13 +269,13 @@ void NV_Op_restore(const NV_ID *tList, int index)
 	NV_ID ans;
 	//
 	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
-	if(!NV_Node_isString(&operand[0])){
+	if(!NV_NodeID_isString(&operand[0])){
 		NV_ID errObj = NV_Node_createWithString(
 			"Error: Invalid Operand Type.");
 		NV_Array_writeToIndex(tList, index, &errObj);
 		return;
 	}
-	fname = NV_Node_getCStr(&operand[0]);
+	fname = NV_NodeID_getCStr(&operand[0]);
 	if(!fname){
 		NV_ID errObj = NV_Node_createWithString(
 			"fname is null");
@@ -321,7 +321,7 @@ void NV_Op_last(const NV_ID *tList, int index)
 {
 	NV_ID ans, n;
 	//
-	n = NV_Node_getRelatedNodeFrom(&NODEID_NV_STATIC_ROOT, &RELID_LAST_RESULT);
+	n = NV_NodeID_getRelatedNodeFrom(&NODEID_NV_STATIC_ROOT, &RELID_LAST_RESULT);
 	NV_printNodeByID(&n); putchar('\n');
 	//
 	ans = NV_Node_createWithInt32(0);
@@ -385,7 +385,7 @@ void NV_Op_assign(const NV_ID *tList, int index)
 		v = NV_Term_getAssignableNode(&operand[0], ctx);
 	} else{
 		// 新規変数を作成して代入
-		if(!NV_Node_isString(&operand[0])){
+		if(!NV_NodeID_isString(&operand[0])){
 			NV_ID errObj = NV_Node_createWithString(
 				"Error: Invalid Operand Type.");
 			NV_Array_writeToIndex(tList, index, &errObj);
@@ -432,7 +432,7 @@ void NV_Op_if(const NV_ID *tList, int index)
 	NV_ID t, tRes;
 	const NV_ID *ctx = &NODEID_NULL;
 	int phase;
-	NV_ID evalStack = NV_Node_getRelatedNodeFrom(
+	NV_ID evalStack = NV_NodeID_getRelatedNodeFrom(
 		&NODEID_NV_STATIC_ROOT, &RELID_EVAL_STACK);
 	// phaseには、次に実行すべき項のoffsetが格納されていることとする。
 	phase = NV_Op_Internal_getCurrentPhase(tList);
@@ -454,7 +454,7 @@ void NV_Op_if(const NV_ID *tList, int index)
 			}
 		} else{
 			// 偶数: 実行
-			tRes = NV_Node_getRelatedNodeFrom(&NODEID_NV_STATIC_ROOT, &RELID_LAST_RESULT);
+			tRes = NV_NodeID_getRelatedNodeFrom(&NODEID_NV_STATIC_ROOT, &RELID_LAST_RESULT);
 			t = NV_Array_getByIndex(tList, index + phase);
 			if(!NV_Term_isArray(&t, ctx)){
 				// この直前に実行した文はelse節だった。
@@ -489,7 +489,7 @@ void NV_Op_for(const NV_ID *tList, int index)
 	NV_ID t, tRes;
 	const NV_ID *ctx = &NODEID_NULL;
 	int phase;
-	NV_ID evalStack = NV_Node_getRelatedNodeFrom(
+	NV_ID evalStack = NV_NodeID_getRelatedNodeFrom(
 		&NODEID_NV_STATIC_ROOT, &RELID_EVAL_STACK);
 	// phaseには、次に実行すべき項のoffsetが格納されていることとする。
 	// つまり、for文の場合は、
@@ -529,7 +529,7 @@ void NV_Op_for(const NV_ID *tList, int index)
 		return;
 	} else if(phase == 4){
 		// 条件を判定して、本体部分のコピーを実行スタックに積んで終了
-		tRes = NV_Node_getRelatedNodeFrom(&NODEID_NV_STATIC_ROOT, &RELID_LAST_RESULT);
+		tRes = NV_NodeID_getRelatedNodeFrom(&NODEID_NV_STATIC_ROOT, &RELID_LAST_RESULT);
 		tRes = NV_Array_last(&tRes);
 		if(NV_Term_getInt32(&tRes, ctx)){
 			t = NV_Array_clone(&t);
@@ -656,8 +656,8 @@ void NV_printOp(const NV_ID *op)
 {
 	NV_ID eFunc;
 	NV_ID ePrec;
-	eFunc = NV_Node_getRelatedNodeFrom(op, &RELID_OP_FUNC);
-	ePrec = NV_Node_getRelatedNodeFrom(op, &RELID_OP_PRECEDENCE);
+	eFunc = NV_NodeID_getRelatedNodeFrom(op, &RELID_OP_FUNC);
+	ePrec = NV_NodeID_getRelatedNodeFrom(op, &RELID_OP_PRECEDENCE);
 	printf("(op ");
 	NV_printNodeByID(&eFunc);
 	printf("/");

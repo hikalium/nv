@@ -17,14 +17,14 @@ NV_ID NV_Dict_add
 (const NV_ID *root, const NV_ID *key, const NV_ID *value)
 {
 	// 重複を許して追加する。
-	return NV_Node_createRelation(root, key, value);	
+	return NV_NodeID_createRelation(root, key, value);	
 }
 
 NV_ID NV_Dict_addUniqueInKey
 (const NV_ID *root, const NV_ID *key, const NV_ID *value)
 {
 	// 重複を許して追加する。
-	return NV_Node_createRelation(root, key, value);	
+	return NV_NodeID_createRelation(root, key, value);	
 }
 
 NV_ID NV_Dict_addByStringKey

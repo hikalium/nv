@@ -8,34 +8,34 @@ NV_ID NV_Variable_create()
 	//
 	v = NV_Node_create();
 	//
-	NV_Node_createRelation(&v, &RELID_TERM_TYPE, &NODEID_TERM_TYPE_VARIABLE);
-	NV_Node_createRelation(&v, &RELID_VARIABLE_DATA, &NODEID_NULL);
+	NV_NodeID_createRelation(&v, &RELID_TERM_TYPE, &NODEID_TERM_TYPE_VARIABLE);
+	NV_NodeID_createRelation(&v, &RELID_VARIABLE_DATA, &NODEID_NULL);
 	return v;
 }
 
 NV_ID NV_Variable_createWithName(const NV_ID *parentNode, const NV_ID *nameNode)
 {
 	NV_ID v = NV_Variable_create();
-	NV_Node_createRelation(parentNode, nameNode, &v);
+	NV_NodeID_createRelation(parentNode, nameNode, &v);
 	return v;
 }
 
 NV_ID NV_Variable_getNamed(const NV_ID *parentNode, const NV_ID *nameNode)
 {
-	return NV_Node_getEqRelatedNodeFrom(parentNode, nameNode);
+	return NV_NodeID_getEqRelatedNodeFrom(parentNode, nameNode);
 }
 
 void NV_Variable_assign(const NV_ID *vid, const NV_ID *data)
 {
 	NV_ID eid;
 	//
-	eid = NV_Node_getRelationFrom(vid, &RELID_VARIABLE_DATA);
-	NV_Node_updateRelationTo(&eid, data);
+	eid = NV_NodeID_getRelationFrom(vid, &RELID_VARIABLE_DATA);
+	NV_NodeID_updateRelationTo(&eid, data);
 }
 
 NV_ID NV_Variable_getData(const NV_ID *vid)
 {
-	return NV_Node_getRelatedNodeFrom(vid, &RELID_VARIABLE_DATA);
+	return NV_NodeID_getRelatedNodeFrom(vid, &RELID_VARIABLE_DATA);
 }
 
 void NV_Variable_print(const NV_ID *vid)
@@ -45,11 +45,11 @@ void NV_Variable_print(const NV_ID *vid)
 		printf("id: %08X is not Variable.", vid->d[0]);
 		return;
 	}
-	targetID = NV_Node_getRelatedNodeFrom(vid, &RELID_VARIABLE_DATA);
+	targetID = NV_NodeID_getRelatedNodeFrom(vid, &RELID_VARIABLE_DATA);
 	printf("(Var ");
 	NV_ID_dumpIDToFile(vid, stdout);
 	printf(" = ");
-	NV_printNode(NV_Node_getByID(&targetID));
+	NV_printNode(NV_NodeID_getNode(&targetID));
 	printf(")");
 }
 
@@ -60,7 +60,7 @@ void NV_Variable_printPrimVal(const NV_ID *vid)
 		printf("id: %08X is not Variable.", vid->d[0]);
 		return;
 	}
-	targetID = NV_Node_getRelatedNodeFrom(vid, &RELID_VARIABLE_DATA);
-	NV_printNode(NV_Node_getByID(&targetID));
+	targetID = NV_NodeID_getRelatedNodeFrom(vid, &RELID_VARIABLE_DATA);
+	NV_printNode(NV_NodeID_getNode(&targetID));
 }
 

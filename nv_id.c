@@ -59,15 +59,15 @@ int NV_ID_isEqual(const NV_ID *a, const NV_ID *b)
 int NV_ID_isEqualInValue(const NV_ID *a, const NV_ID *b)
 {
 	NV_Node *na, *nb;
-	na = NV_Node_getByID(a);
-	nb = NV_Node_getByID(b);
+	na = NV_NodeID_getNode(a);
+	nb = NV_NodeID_getNode(b);
 	return NV_Node_isEqualInValue(na, nb);
 }
 
 void NV_ID_printPrimVal(const NV_ID *id)
 {
 	NV_Node *n;
-	n = NV_Node_getByID(id);
+	n = NV_NodeID_getNode(id);
 	NV_Node_printPrimVal(n);
 }
 

@@ -48,10 +48,10 @@ int main(int argc, char *argv[])
 	NV_Graph_insertInitialNode();
 	//
 	cTypeList = NV_createCharTypeList();
-	NV_Node_retain(&cTypeList);
+	NV_NodeID_retain(&cTypeList);
 	//
 	opList = NV_createOpList();
-	NV_Node_retain(&opList);
+	NV_NodeID_retain(&opList);
 	//
 	NV_globalExecFlag |= NV_EXEC_FLAG_INTERACTIVE;
 	for(;;){
@@ -71,7 +71,7 @@ int NV_interactiveInput(const NV_ID *cTypeList)
 {
 	char line[MAX_INPUT_LEN];
 	NV_ID tokenList;
-	NV_ID evalStack = NV_Node_getRelatedNodeFrom(
+	NV_ID evalStack = NV_NodeID_getRelatedNodeFrom(
 		&NODEID_NV_STATIC_ROOT, &RELID_EVAL_STACK);
 	//
 	if(NV_gets(line, sizeof(line)) != NULL){
@@ -136,7 +136,7 @@ int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList)
 	for(i = 0; ; i++){
 		itemID = NV_Array_getByIndex(tokenizedList, i);
 		if(NV_ID_isEqual(&itemID, &NODEID_NOT_FOUND)) break;
-		item = NV_Node_getByID(&itemID);
+		item = NV_NodeID_getNode(&itemID);
 		// check operator
 		opID = NV_Dict_get(opList, &itemID);
 		if(!NV_ID_isEqual(&opID, &NODEID_NULL)){
@@ -202,7 +202,7 @@ void NV_evalLoop(const NV_ID *ctx)
 	NV_ID currentBlock;
 	NV_ID currentTermIndexNode;
 	NV_ID currentTerm;
-	NV_ID evalStack = NV_Node_getRelatedNodeFrom(
+	NV_ID evalStack = NV_NodeID_getRelatedNodeFrom(
 		&NODEID_NV_STATIC_ROOT, &RELID_EVAL_STACK);
 	NV_ID t;
 	int nextOpIndex, currentOpIndex;
@@ -233,11 +233,11 @@ void NV_evalLoop(const NV_ID *ctx)
 			}
 			break;
 		}
-		currentTermIndexNode = NV_Node_getRelatedNodeFrom(
+		currentTermIndexNode = NV_NodeID_getRelatedNodeFrom(
 			&currentBlock, &RELID_CURRENT_TERM_INDEX);
 		if(!NV_ID_isEqual(&currentTermIndexNode, &NODEID_NOT_FOUND)){
 			// do op
-			currentOpIndex = NV_Node_getInt32FromID(&currentTermIndexNode);
+			currentOpIndex = NV_NodeID_getInt32(&currentTermIndexNode);
 			currentTerm = NV_Array_getByIndex(&currentBlock, currentOpIndex);
 			//if(IS_DEBUG_MODE()){
 			//	printf("currentBlock[%d] ", currentOpIndex);
@@ -253,7 +253,7 @@ void NV_evalLoop(const NV_ID *ctx)
 		if(nextOpIndex == -1){
 			// no more op
 			t = NV_Array_pop(&evalStack);
-			NV_Node_createUniqueRelation(
+			NV_NodeID_createUniqueRelation(
 				&NODEID_NV_STATIC_ROOT, &RELID_LAST_RESULT, &t);
 			continue;
 		}
@@ -261,7 +261,7 @@ void NV_evalLoop(const NV_ID *ctx)
 		//if(IS_DEBUG_MODE()){
 		//	printf("nextOpIndex: %d\n", nextOpIndex);
 		//}
-		NV_Node_createUniqueRelation(
+		NV_NodeID_createUniqueRelation(
 			&currentBlock, &RELID_CURRENT_TERM_INDEX, &t);
 	}
 }

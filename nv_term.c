@@ -6,7 +6,7 @@
 
 int NV_isTermType(const NV_ID *node, const NV_ID *tType)
 {
-	NV_ID typeID = NV_Node_getRelatedNodeFrom(node, &RELID_TERM_TYPE);
+	NV_ID typeID = NV_NodeID_getRelatedNodeFrom(node, &RELID_TERM_TYPE);
 	return NV_ID_isEqual(&typeID, tType);
 }
 
@@ -22,7 +22,7 @@ NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *ctx)
 	vid = *id;
 	if(NV_isTermType(id, &NODEID_TERM_TYPE_VARIABLE)){
 		vid = NV_Variable_getData(id);
-	} else if(NV_Node_isString(id)){
+	} else if(NV_NodeID_isString(id)){
 		vid = NV_Variable_getNamed(ctx, id);
 		if(!NV_ID_isEqual(&vid, &NODEID_NOT_FOUND)){
 			vid = NV_Variable_getData(&vid);
@@ -53,17 +53,17 @@ NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *ctx)
 int NV_Term_isStrLiteral(const NV_ID *id, const NV_ID *ctx)
 {
 	NV_ID vid = NV_Term_tryReadAsVariable(id, ctx);
-	return NV_Node_isInteger(&vid);
+	return NV_NodeID_isInteger(&vid);
 }
 
 int NV_Term_isIntegerNotVal(const NV_ID *id)
 {
 	// 整数ならそれを返す
-	if(NV_Node_isInteger(id)){
+	if(NV_NodeID_isInteger(id)){
 		return 1;
 	}
 	// リテラルでない文字列ならば解釈を試みる
-	if(NV_Node_isString(id)){
+	if(NV_NodeID_isString(id)){
 		// idはstringである。数値として解釈することを試みる。
 		int endi;
 		NV_NodeID_String_strtol(id, &endi, 0);
@@ -93,7 +93,7 @@ int NV_Term_isInteger(const NV_ID *id, const NV_ID *ctx)
 int NV_Term_isAssignable(const NV_ID *id, const NV_ID *ctx)
 {
 	NV_ID vid;
-	if(NV_Node_isString(id)){
+	if(NV_NodeID_isString(id)){
 		vid = NV_Variable_getNamed(ctx, id);
 		id = &vid;
 	}
@@ -114,11 +114,11 @@ int NV_Term_isArray(const NV_ID *id, const NV_ID *ctx)
 int32_t NV_Term_getInt32NotVal(const NV_ID *id)
 {
 	// 整数ならそれを返す
-	if(NV_Node_isInteger(id)){
-		return NV_Node_getInt32FromID(id);
+	if(NV_NodeID_isInteger(id)){
+		return NV_NodeID_getInt32(id);
 	}
 	// リテラルでない文字列ならば解釈を試みる
-	if(NV_Node_isString(id)){
+	if(NV_NodeID_isString(id)){
 		// idはstringである。数値として解釈することを試みる。
 		int endi;
 		int32_t v;
@@ -149,7 +149,7 @@ int32_t NV_Term_getInt32(const NV_ID *id, const NV_ID *ctx)
 NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *ctx)
 {
 	NV_ID vid;
-	if(NV_Node_isString(id)){
+	if(NV_NodeID_isString(id)){
 		vid = NV_Variable_getNamed(ctx, id);
 		id = &vid;
 	}
@@ -163,7 +163,7 @@ NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *ctx)
 
 void NV_printNodeByID(const NV_ID *id)
 {
-	NV_Node *n = NV_Node_getByID(id);
+	NV_Node *n = NV_NodeID_getNode(id);
 	NV_printNode(n);
 }
 

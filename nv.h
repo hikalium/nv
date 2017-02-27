@@ -135,38 +135,38 @@ int NV_ID_isEqualInValue(const NV_ID *a, const NV_ID *b);
 void NV_ID_printPrimVal(const NV_ID *id);
 
 // @nv_node.c
-int NV_Node_existsID(const NV_ID *id);
-NV_Node *NV_Node_getByID(const NV_ID *id);
+int NV_NodeID_exists(const NV_ID *id);
+NV_Node *NV_NodeID_getNode(const NV_ID *id);
 int NV_Node_isEqualInValue(const NV_Node *na, const NV_Node *nb);
-NV_ID NV_Node_createWithID(const NV_ID *id);
+NV_ID NV_NodeID_create(const NV_ID *id);
 NV_ID NV_Node_create();
-void NV_Node_remove(const NV_ID *baseID);
-NV_ID NV_Node_clone(const NV_ID *baseID);
+void NV_NodeID_remove(const NV_ID *baseID);
+NV_ID NV_NodeID_clone(const NV_ID *baseID);
 NV_ID NV_Node_restoreFromString(const char *s);
-void NV_Node_retain(const NV_ID *id);
-void NV_Node_release(const NV_ID *id);
+void NV_NodeID_retain(const NV_ID *id);
+void NV_NodeID_release(const NV_ID *id);
 void NV_Node_cleanup();
 void NV_Node_fdump(FILE *fp, const NV_Node *n);
 void NV_Node_dump(const NV_Node *n);
 void NV_Node_printPrimVal(const NV_Node *n);
 void NV_Node_printForDebug(const NV_Node *n);
 // Relation
-NV_ID NV_Node_createRelation(const NV_ID *from, const NV_ID *rel,  const NV_ID *to);
-NV_ID NV_Node_createUniqueRelation(const NV_ID *from, const NV_ID *rel,  const NV_ID *to);
+NV_ID NV_NodeID_createRelation(const NV_ID *from, const NV_ID *rel,  const NV_ID *to);
+NV_ID NV_NodeID_createUniqueRelation(const NV_ID *from, const NV_ID *rel,  const NV_ID *to);
 void NV_Node_setRelation
 	(const NV_ID *relnid, const NV_ID *from, const NV_ID *rel, const NV_ID *to);
-NV_Node *NV_Node_Relation_getLinkFrom(const NV_ID *relnid);
-NV_Node *NV_Node_Relation_getLinkTo(const NV_ID *relnid);
-NV_Node *NV_Node_Relation_getLinkRel(const NV_ID *relnid);
-void NV_Node_updateRelationTo(const NV_ID *relnid, const NV_ID *to);
-NV_ID NV_Node_getRelationFrom(const NV_ID *from, const NV_ID *rel);
-NV_ID NV_Node_getRelatedNodeFrom(const NV_ID *from, const NV_ID *rel);
-NV_ID NV_Node_getEqRelatedNodeFrom(const NV_ID *from, const NV_ID *rel);
+NV_Node *NV_NodeID_Relation_getLinkFrom(const NV_ID *relnid);
+NV_Node *NV_NodeID_Relation_getLinkTo(const NV_ID *relnid);
+NV_Node *NV_NodeID_Relation_getLinkRel(const NV_ID *relnid);
+void NV_NodeID_updateRelationTo(const NV_ID *relnid, const NV_ID *to);
+NV_ID NV_NodeID_getRelationFrom(const NV_ID *from, const NV_ID *rel);
+NV_ID NV_NodeID_getRelatedNodeFrom(const NV_ID *from, const NV_ID *rel);
+NV_ID NV_NodeID_getEqRelatedNodeFrom(const NV_ID *from, const NV_ID *rel);
 // String
-int NV_Node_isString(const NV_ID *id);
+int NV_NodeID_isString(const NV_ID *id);
 NV_ID NV_Node_createWithString(const char *s);
-void NV_Node_createWithIDAndString(const NV_ID *id, const char *s);
-const char *NV_Node_getCStr(const NV_ID *id);
+void NV_NodeID_createAndString(const NV_ID *id, const char *s);
+const char *NV_NodeID_getCStr(const NV_ID *id);
 int NV_Node_String_compare(const NV_Node *na, const NV_Node *nb);
 int NV_Node_String_compareWithCStr(const NV_Node *na, const char *s);
 int NV_NodeID_String_compareWithCStr(const NV_ID *na, const char *s);
@@ -176,9 +176,9 @@ long NV_NodeID_String_strtol(const NV_ID *ns, int *endptrindex, int base);
 size_t NV_Node_String_strlen(const NV_Node *ns);
 size_t NV_NodeID_String_strlen(const NV_ID *ns);
 // Integer
-int NV_Node_isInteger(const NV_ID *id);
+int NV_NodeID_isInteger(const NV_ID *id);
 NV_ID NV_Node_createWithInt32(int32_t v);
-int32_t NV_Node_getInt32FromID(const NV_ID *id);
+int32_t NV_NodeID_getInt32(const NV_ID *id);
 
 // nv_op.c
 int NV_Lang_getCharType(const NV_ID *cTypeList, char c);

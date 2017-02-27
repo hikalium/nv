@@ -16,7 +16,7 @@ void NV_Node_Internal_resetData(NV_Node *n)
 		if(n->data){
 			if(n->type == kRelation){
 				NV_Relation *reld = n->data;
-				NV_Node_release(&reld->to);
+				NV_NodeID_release(&reld->to);
 			}
 			NV_DbgInfo("Free Data type: %s", NV_NodeTypeList[n->type]);
 			NV_free(n->data);
@@ -57,12 +57,12 @@ void NV_Node_Internal_removeAllRelationFrom(const NV_ID *from)
 // Node
 //
 
-int NV_Node_existsID(const NV_ID *id)
+int NV_NodeID_exists(const NV_ID *id)
 {
-	return NV_Node_getByID(id) != NULL;
+	return NV_NodeID_getNode(id) != NULL;
 }
 
-NV_Node *NV_Node_getByID(const NV_ID *id)
+NV_Node *NV_NodeID_getNode(const NV_ID *id)
 {
 	NV_Node *n;
 	//
@@ -91,11 +91,11 @@ int NV_Node_isLiveNode(NV_Node *n)
 	return 1;
 }
 */
-NV_ID NV_Node_createWithID(const NV_ID *id)
+NV_ID NV_NodeID_create(const NV_ID *id)
 {
 	// すでに存在するIDについては，新たに確保せず，既存の内容をリセットする．
 	NV_Node *n;
-	n = NV_Node_getByID(id);
+	n = NV_NodeID_getNode(id);
 	if(n){
 		NV_Node_Internal_resetData(n);
 		return n->id;
@@ -121,22 +121,22 @@ NV_ID NV_Node_createWithID(const NV_ID *id)
 NV_ID NV_Node_create()
 {
 	NV_ID id = NV_ID_generateRandom();
-	return NV_Node_createWithID(&id);
+	return NV_NodeID_create(&id);
 }
 
-void NV_Node_remove(const NV_ID *baseID)
+void NV_NodeID_remove(const NV_ID *baseID)
 {
 	NV_Node *n;
-	n = NV_Node_getByID(baseID);
+	n = NV_NodeID_getNode(baseID);
 	if(n) NV_Node_Internal_remove(n);
 }
 
-NV_ID NV_Node_clone(const NV_ID *baseID)
+NV_ID NV_NodeID_clone(const NV_ID *baseID)
 {
 	NV_Node *base, *new;
 	NV_ID newID = NV_Node_create();
-	new = NV_Node_getByID(&newID);
-	base = NV_Node_getByID(baseID);
+	new = NV_NodeID_getNode(&newID);
+	base = NV_NodeID_getNode(baseID);
 	new->type = base->type;
 	if(base->data){
 		new->data = NV_malloc(base->size);
@@ -160,7 +160,7 @@ NV_ID NV_Node_restoreFromString(const char *s)
 	}
 	// NV_ID_dumpIDToFile(&id, stdout);
 	// putchar(' ');
-	NV_Node_createWithID(&id);
+	NV_NodeID_create(&id);
 	//
 	p = &s[32];
 	n = NV_strtolSeq(&p, 10);
@@ -207,11 +207,11 @@ NV_ID NV_Node_restoreFromString(const char *s)
 	return id;
 }
 
-void NV_Node_retain(const NV_ID *id)
+void NV_NodeID_retain(const NV_ID *id)
 {
 	NV_Node *n;
 	//
-	n = NV_Node_getByID(id);
+	n = NV_NodeID_getNode(id);
 	if(n){
 		n->refCount++;
 		//NV_DbgInfo_mem(n, "retain");
@@ -223,11 +223,11 @@ void NV_Node_retain(const NV_ID *id)
 	}
 }
 
-void NV_Node_release(const NV_ID *id)
+void NV_NodeID_release(const NV_ID *id)
 {
 	NV_Node *n;
 	//
-	n = NV_Node_getByID(id);
+	n = NV_NodeID_getNode(id);
 	if(n){
 		n->refCount--;
 		//NV_DbgInfo_mem(n, "release");
@@ -253,19 +253,19 @@ void NV_Node_cleanup()
 	}
 	for(n = &nodeRoot.next; *n; n = &(*n)->next){
 		if((*n)->type == kRelation){
-			p = NV_Node_Relation_getLinkFrom(&(*n)->id);
+			p = NV_NodeID_Relation_getLinkFrom(&(*n)->id);
 			if(!p){
 				(*n)->refCount = 0;
 				continue;
 			}
 			//
-			q = NV_Node_Relation_getLinkTo(&(*n)->id);
+			q = NV_NodeID_Relation_getLinkTo(&(*n)->id);
 			if(!q){
 				(*n)->refCount = 0;
 				continue;
 			}
 			//
-			r = NV_Node_Relation_getLinkRel(&(*n)->id);
+			r = NV_NodeID_Relation_getLinkRel(&(*n)->id);
 			//
 			p->refCount = 1;
 			q->refCount = 1;
@@ -365,14 +365,14 @@ int NV_Node_isLiveRelation(const NV_ID *relnid)
 	NV_Node *n;
 	NV_Relation *reld;
 	//
-	n = NV_Node_getByID(relnid);
+	n = NV_NodeID_getNode(relnid);
 	if(n){
 		reld = n->data;
 	}
 	
 }
 */
-NV_ID NV_Node_createRelation
+NV_ID NV_NodeID_createRelation
 (const NV_ID *from, const NV_ID *rel, const NV_ID *to)
 {
 	NV_ID r = NV_Node_create();
@@ -380,18 +380,18 @@ NV_ID NV_Node_createRelation
 	return r;
 }
 
-NV_ID NV_Node_createUniqueRelation
+NV_ID NV_NodeID_createUniqueRelation
 (const NV_ID *from, const NV_ID *rel, const NV_ID *to)
 {
 	// fromとrelが一致するRelationがすでにあるならば、それをアップデートする。
 	NV_ID r;
-	r = NV_Node_getRelationFrom(from, rel);
+	r = NV_NodeID_getRelationFrom(from, rel);
 	if(NV_ID_isEqual(&r, &NODEID_NOT_FOUND)){
 		// 新規
-		return NV_Node_createRelation(from, rel, to);
+		return NV_NodeID_createRelation(from, rel, to);
 	}
 	// 既存
-	NV_Node_updateRelationTo(&r, to);
+	NV_NodeID_updateRelationTo(&r, to);
 	return r;
 }
 
@@ -405,11 +405,11 @@ void NV_Node_setRelation
 	NV_Relation *reld;
 	//
 /*
-	if(!NV_Node_existsID(from) || !NV_Node_existsID(rel) || !NV_Node_existsID(to)){
+	if(!NV_NodeID_exists(from) || !NV_NodeID_exists(rel) || !NV_NodeID_exists(to)){
 		return;
 	}
 */
-	n = NV_Node_getByID(relnid);
+	n = NV_NodeID_getNode(relnid);
 	if(n){
 		if(n->type != kNone) NV_Node_Internal_resetData(n);
 		n->type = kRelation;
@@ -421,63 +421,63 @@ void NV_Node_setRelation
 		reld->rel = *rel;
 		reld->to = *to;
 		//
-		NV_Node_retain(to);
+		NV_NodeID_retain(to);
 		//
 		n->refCount++;
 	}
 }
 
-NV_Node *NV_Node_Relation_getLinkFrom(const NV_ID *relnid)
+NV_Node *NV_NodeID_Relation_getLinkFrom(const NV_ID *relnid)
 {
 	NV_Node *n;
 	NV_Relation *reld;
 	//
-	n = NV_Node_getByID(relnid);
+	n = NV_NodeID_getNode(relnid);
 	if(!n || n->type != kRelation) return NULL;
 	reld = n->data;
-	return NV_Node_getByID(&reld->from);
+	return NV_NodeID_getNode(&reld->from);
 }
 
-NV_Node *NV_Node_Relation_getLinkTo(const NV_ID *relnid)
+NV_Node *NV_NodeID_Relation_getLinkTo(const NV_ID *relnid)
 {
 	NV_Node *n;
 	NV_Relation *reld;
 	//
-	n = NV_Node_getByID(relnid);
+	n = NV_NodeID_getNode(relnid);
 	if(!n || n->type != kRelation) return NULL;
 	reld = n->data;
-	return NV_Node_getByID(&reld->to);
+	return NV_NodeID_getNode(&reld->to);
 }
 
-NV_Node *NV_Node_Relation_getLinkRel(const NV_ID *relnid)
+NV_Node *NV_NodeID_Relation_getLinkRel(const NV_ID *relnid)
 {
 	NV_Node *n;
 	NV_Relation *reld;
 	//
-	n = NV_Node_getByID(relnid);
+	n = NV_NodeID_getNode(relnid);
 	if(!n || n->type != kRelation) return NULL;
 	reld = n->data;
-	return NV_Node_getByID(&reld->rel);
+	return NV_NodeID_getNode(&reld->rel);
 }
 
-void NV_Node_updateRelationTo(const NV_ID *relnid, const NV_ID *to)
+void NV_NodeID_updateRelationTo(const NV_ID *relnid, const NV_ID *to)
 {
 	NV_Node *n;
 	NV_Relation *reld;
 	//
-	n = NV_Node_getByID(relnid);
+	n = NV_NodeID_getNode(relnid);
 	if(n){
 		if(n->type != kRelation) return;
 		reld = n->data;
 		//
-		NV_Node_release(&reld->to);
+		NV_NodeID_release(&reld->to);
 		//
 		reld->to = *to;
-		NV_Node_retain(&reld->to);
+		NV_NodeID_retain(&reld->to);
 	}
 }
 
-NV_ID NV_Node_getRelationFrom(const NV_ID *from, const NV_ID *rel)
+NV_ID NV_NodeID_getRelationFrom(const NV_ID *from, const NV_ID *rel)
 {
 	const NV_Node *n;
 	const NV_Relation *reld;
@@ -493,7 +493,7 @@ NV_ID NV_Node_getRelationFrom(const NV_ID *from, const NV_ID *rel)
 	return NODEID_NOT_FOUND;
 }
 
-NV_ID NV_Node_getRelatedNodeFrom(const NV_ID *from, const NV_ID *rel)
+NV_ID NV_NodeID_getRelatedNodeFrom(const NV_ID *from, const NV_ID *rel)
 {
 	const NV_Node *n;
 	const NV_Relation *reld;
@@ -509,7 +509,7 @@ NV_ID NV_Node_getRelatedNodeFrom(const NV_ID *from, const NV_ID *rel)
 	return NODEID_NOT_FOUND;
 }
 
-NV_ID NV_Node_getEqRelatedNodeFrom(const NV_ID *from, const NV_ID *rel)
+NV_ID NV_NodeID_getEqRelatedNodeFrom(const NV_ID *from, const NV_ID *rel)
 {
 	const NV_Node *n;
 	const NV_Relation *reld;
@@ -529,11 +529,11 @@ NV_ID NV_Node_getEqRelatedNodeFrom(const NV_ID *from, const NV_ID *rel)
 // String
 //
 
-int NV_Node_isString(const NV_ID *id)
+int NV_NodeID_isString(const NV_ID *id)
 {
 	NV_Node *n;
 	//
-	n = NV_Node_getByID(id);
+	n = NV_NodeID_getNode(id);
 	if(!n || n->type != kString) return 0;
 	return 1;
 }
@@ -546,17 +546,17 @@ NV_ID NV_Node_createWithString(const char *s)
 	return id;
 }
 
-void NV_Node_createWithIDAndString(const NV_ID *id, const char *s)
+void NV_NodeID_createAndString(const NV_ID *id, const char *s)
 {
-	NV_Node_createWithID(id);
+	NV_NodeID_create(id);
 	NV_Node_Internal_setStrToID(id, s);
 }
 
-const char *NV_Node_getCStr(const NV_ID *id)
+const char *NV_NodeID_getCStr(const NV_ID *id)
 {
 	NV_Node *n;
 	//
-	n = NV_Node_getByID(id);
+	n = NV_NodeID_getNode(id);
 	if(!n || n->type != kString) return NULL; 
 	return n->data;
 }
@@ -565,7 +565,7 @@ void NV_Node_Internal_setStrToID(const NV_ID *id, const char *s)
 {
 	NV_Node *n;
 	//
-	n = NV_Node_getByID(id);
+	n = NV_NodeID_getNode(id);
 	if(n){
 		if(n->type != kNone) NV_Node_Internal_resetData(n);
 		n->type = kString;
@@ -596,7 +596,7 @@ int NV_Node_String_compareWithCStr(const NV_Node *na, const char *s)
 
 int NV_NodeID_String_compareWithCStr(const NV_ID *na, const char *s)
 {
-	return NV_Node_String_compareWithCStr(NV_Node_getByID(na), s);
+	return NV_Node_String_compareWithCStr(NV_NodeID_getNode(na), s);
 }
 
 char *NV_Node_String_strchr(const NV_Node *ns, char c)
@@ -619,7 +619,7 @@ long NV_Node_String_strtol(const NV_Node *ns, int *endptrindex, int base)
 }
 long NV_NodeID_String_strtol(const NV_ID *ns, int *endptrindex, int base)
 {
-	return NV_Node_String_strtol(NV_Node_getByID(ns), endptrindex, base);
+	return NV_Node_String_strtol(NV_NodeID_getNode(ns), endptrindex, base);
 
 }
 
@@ -631,7 +631,7 @@ size_t NV_Node_String_strlen(const NV_Node *ns)
 
 size_t NV_NodeID_String_strlen(const NV_ID *ns)
 {
-	return NV_Node_String_strlen(NV_Node_getByID(ns));
+	return NV_Node_String_strlen(NV_NodeID_getNode(ns));
 }
 
 
@@ -639,11 +639,11 @@ size_t NV_NodeID_String_strlen(const NV_ID *ns)
 // Integer
 //
 
-int NV_Node_isInteger(const NV_ID *id)
+int NV_NodeID_isInteger(const NV_ID *id)
 {
 	NV_Node *n;
 	//
-	n = NV_Node_getByID(id);
+	n = NV_NodeID_getNode(id);
 	if(!n || n->type != kInteger) return 0;
 	return 1;
 }
@@ -652,7 +652,7 @@ void NV_Node_Internal_setInt32ToID(const NV_ID *id, int32_t v)
 {
 	NV_Node *n;
 	//
-	n = NV_Node_getByID(id);
+	n = NV_NodeID_getNode(id);
 	if(n){
 		if(n->type != kNone) NV_Node_Internal_resetData(n);
 		n->type = kInteger;
@@ -671,11 +671,11 @@ NV_ID NV_Node_createWithInt32(int32_t v)
 }
 
 
-int32_t NV_Node_getInt32FromID(const NV_ID *id)
+int32_t NV_NodeID_getInt32(const NV_ID *id)
 {
 	NV_Node *n;
 	//
-	n = NV_Node_getByID(id);
+	n = NV_NodeID_getNode(id);
 	if(!n || n->type != kInteger) return -1;
 	return *((int32_t *)n->data);
 }

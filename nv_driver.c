@@ -55,6 +55,7 @@ char *NV_gets(char *str, int size)
 		else if(c == '\n'){
 			printf("\x1b[S");
 			printf("\x1b[E");
+			printf("\n");
 			break;
 		} else if(c == 0x04){	// EOT
 			break;

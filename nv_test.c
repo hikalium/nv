@@ -25,29 +25,29 @@ void NV_Test_Memory()
 
 	id4 = NV_Array_pop(&id);
 	NV_Array_print(&id); putchar('\n');
-	NV_Node_printForDebug(NV_Node_getByID(&id4)); putchar('\n');
+	NV_Node_printForDebug(NV_NodeID_getNode(&id4)); putchar('\n');
 
 	id4 = NV_Array_pop(&id);
 	NV_Array_print(&id); putchar('\n');
-	NV_Node_printForDebug(NV_Node_getByID(&id4)); putchar('\n');
+	NV_Node_printForDebug(NV_NodeID_getNode(&id4)); putchar('\n');
 
 	id4 = NV_Array_pop(&id);
 	NV_Array_print(&id); putchar('\n');
-	NV_Node_printForDebug(NV_Node_getByID(&id4)); putchar('\n');
+	NV_Node_printForDebug(NV_NodeID_getNode(&id4)); putchar('\n');
 
 	id4 = NV_Array_pop(&id);
 	NV_Array_print(&id); putchar('\n');
-	NV_Node_printForDebug(NV_Node_getByID(&id4)); putchar('\n');
+	NV_Node_printForDebug(NV_NodeID_getNode(&id4)); putchar('\n');
 
 	NV_Array_push(&id, &id2);
 	NV_Array_print(&id); putchar('\n');
 
 	id4 = NV_Array_pop(&id);
 	NV_Array_print(&id); putchar('\n');
-	NV_Node_printForDebug(NV_Node_getByID(&id4)); putchar('\n');
+	NV_Node_printForDebug(NV_NodeID_getNode(&id4)); putchar('\n');
 
 	//
-	//NV_Node_retain(&id);
+	//NV_NodeID_retain(&id);
 	//
 	//
 	printf("mem not freed: %d\n", NV_getMallocCount() - memcount0);
@@ -70,7 +70,7 @@ void NV_Test_Dict()
 	//
 	NV_Dict_print(&root);
 	//
-	NV_Node_retain(&root);
+	NV_NodeID_retain(&root);
 	//
 	NV_Graph_dump();
 	NV_Node_cleanup();
@@ -109,7 +109,7 @@ void NV_Test_Data()
 		NV_ID_isEqualInValue(&id, &id2),
 		NV_ID_isEqual(&id, &id2));
 	//
-	//NV_Node_retain(&id);
+	//NV_NodeID_retain(&id);
 	//
 	NV_Graph_dump();
 	NV_Node_cleanup();
