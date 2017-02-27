@@ -406,6 +406,7 @@ void NV_Op_codeBlock(const NV_ID *tList, int index)
 	NV_ID v;
 	//
 	NV_ID root;
+	int nc = 1;	// nest count
 	//
 	root = NV_Array_create();
 	for(;;){
@@ -418,9 +419,14 @@ void NV_Op_codeBlock(const NV_ID *tList, int index)
 			return;
 		}
 		NV_Array_removeIndex(tList, index + 1);
+		if(NV_NodeID_String_compareWithCStr(&v, "{") == 0){
+			// 開きかっこ
+			nc++;
+		}
 		if(NV_NodeID_String_compareWithCStr(&v, "}") == 0){
 			// 終了
-			break;
+			nc--;
+			if(nc == 0) break;
 		}
 		NV_Array_push(&root, &v);
 	}
