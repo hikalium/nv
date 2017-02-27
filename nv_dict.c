@@ -63,19 +63,21 @@ void NV_Dict_print(const NV_ID *root)
 {
 	const NV_Node *n;
 	const NV_Relation *reld;
-	printf("Dict ");
+	int cnt = 0;
 	NV_ID_printPrimVal(root);
 	printf(":\n");
 	for(n = nodeRoot.next; n; n = n->next){
 		if(n->type == kRelation){
 			reld = n->data;
 			if(NV_ID_isEqual(&reld->from, root)){
-				printf("|--- ");
+				printf("  |--- ");
 				NV_ID_printPrimVal(&reld->rel);
 				printf(": ");
 				NV_printNodeByID(&reld->to);
 				printf("\n");
+				cnt++;
 			}
 		}
 	}
+	printf("(%d items)\n", cnt);
 }
