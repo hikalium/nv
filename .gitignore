@@ -1,3 +1,4 @@
+.DS_Store
 *.swp
 a.out*
 nv
@@ -5,3 +6,5 @@ nv.dSYM/*
 test*
 *.bin
 savefile
+html/
+latex/
