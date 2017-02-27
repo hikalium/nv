@@ -49,7 +49,7 @@ NV_ID NV_Dict_get(const NV_ID *root, const NV_ID *key)
 			}
 		}
 	}
-	return NODEID_NULL;
+	return NODEID_NOT_FOUND;
 }
 
 NV_ID NV_Dict_getByStringKey

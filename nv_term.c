@@ -10,8 +10,13 @@ int NV_isTermType(const NV_ID *node, const NV_ID *tType)
 	return NV_ID_isEqual(&typeID, tType);
 }
 
-NV_ID NV_Term_tryConvertToVariable(const NV_ID *id, const NV_ID *ctx)
+NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *ctx)
 {
+	// 変数としてidが解釈できるなら、その変数の値に相当するidを返す
+	// 変数として解釈できる、とは
+	//   - リテラルでない文字列で、コンテキストに存在する変数名と等しい
+	//   - TermType === Variable
+	// 無理ならば、もとのidを返す
 	NV_ID vid;
 	//
 	vid = *id;
@@ -19,15 +24,70 @@ NV_ID NV_Term_tryConvertToVariable(const NV_ID *id, const NV_ID *ctx)
 		vid = NV_Variable_getData(id);
 	} else if(NV_Node_isString(id)){
 		vid = NV_Variable_getNamed(ctx, id);
-		vid = NV_Variable_getData(&vid);
+		if(!NV_ID_isEqual(&vid, &NODEID_NOT_FOUND)){
+			vid = NV_Variable_getData(&vid);
+		} else{
+			vid = *id;
+		}
 	}
 	return vid;
 }
 
+NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *ctx)
+{
+	// あるidがオペレータとして解釈できるなら、そのidを返す
+	// この関数は、変数の中身は確認しない
+	// あるidがオペレータである、とは
+	//   - TermType === Operator
+	//   - リテラルでない文字列で、コンテキストに存在するもの
+	// 無理ならば、もとのidを返す
+	NV_ID opID;
+	opID = NV_Dict_get(ctx, id);
+	if(!NV_ID_isEqual(&opID, &NODEID_NOT_FOUND)){
+		return opID;
+	}
+	return *id;
+}
+
+
+int NV_Term_isStrLiteral(const NV_ID *id, const NV_ID *ctx)
+{
+	NV_ID vid = NV_Term_tryReadAsVariable(id, ctx);
+	return NV_Node_isInteger(&vid);
+}
+
+int NV_Term_isIntegerNotVal(const NV_ID *id)
+{
+	// 整数ならそれを返す
+	if(NV_Node_isInteger(id)){
+		return 1;
+	}
+	// リテラルでない文字列ならば解釈を試みる
+	if(NV_Node_isString(id)){
+		// idはstringである。数値として解釈することを試みる。
+		int endi;
+		NV_NodeID_String_strtol(id, &endi, 0);
+		if((size_t)endi == NV_NodeID_String_strlen(id)){
+			// 文字列全体が整数として解釈できたのでこれは整数
+			return 1;
+		}
+	}
+	// どうやっても数値とは解釈できない
+	return 0;
+}
+
 int NV_Term_isInteger(const NV_ID *id, const NV_ID *ctx)
 {
-	NV_ID vid = NV_Term_tryConvertToVariable(id, ctx);
-	return NV_Node_isInteger(&vid);
+	if(NV_Term_isIntegerNotVal(id)){
+		return 1;
+	}
+	// ダメだったら変数として解釈を試みる
+	if(NV_Term_isAssignable(id, ctx)){
+		NV_ID vid = NV_Term_tryReadAsVariable(id, ctx);
+		return NV_Term_isIntegerNotVal(&vid);
+	}
+	// 変数でもないので整数とは解釈できない
+	return 0;
 }
 
 int NV_Term_isAssignable(const NV_ID *id, const NV_ID *ctx)
@@ -43,18 +103,47 @@ int NV_Term_isAssignable(const NV_ID *id, const NV_ID *ctx)
 
 int NV_Term_isArray(const NV_ID *id, const NV_ID *ctx)
 {
-	NV_ID vid = NV_Term_tryConvertToVariable(id, ctx);
+	NV_ID vid = NV_Term_tryReadAsVariable(id, ctx);
 	return NV_isTermType(&vid, &NODEID_TERM_TYPE_ARRAY);
 }
 
 //
 // Read term data
 //
+
+int32_t NV_Term_getInt32NotVal(const NV_ID *id)
+{
+	// 整数ならそれを返す
+	if(NV_Node_isInteger(id)){
+		return NV_Node_getInt32FromID(id);
+	}
+	// リテラルでない文字列ならば解釈を試みる
+	if(NV_Node_isString(id)){
+		// idはstringである。数値として解釈することを試みる。
+		int endi;
+		int32_t v;
+		v = NV_NodeID_String_strtol(id, &endi, 0);
+		if((size_t)endi == NV_NodeID_String_strlen(id)){
+			// 文字列全体が整数として解釈できたのでこれは整数
+			return v;
+		}
+	}
+	// どうやっても数値とは解釈できない
+	return -1;
+}
+
 int32_t NV_Term_getInt32(const NV_ID *id, const NV_ID *ctx)
 {
-	NV_ID vid = NV_Term_tryConvertToVariable(id, ctx);
-	if(!NV_Node_isInteger(&vid)) return 0;
-	return NV_Node_getInt32FromID(&vid);
+	if(NV_Term_isIntegerNotVal(id)){
+		return NV_Term_getInt32NotVal(id);
+	}
+	// ダメだったら変数として解釈を試みる
+	if(NV_Term_isAssignable(id, ctx)){
+		NV_ID vid = NV_Term_tryReadAsVariable(id, ctx);
+		return NV_Term_getInt32NotVal(&vid);
+	}
+	// 変数でもないので整数とは解釈できない
+	return -1;
 }
 
 NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *ctx)

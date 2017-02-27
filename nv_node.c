@@ -594,6 +594,11 @@ int NV_Node_String_compareWithCStr(const NV_Node *na, const char *s)
 	return strcmp(na->data, s);
 }
 
+int NV_NodeID_String_compareWithCStr(const NV_ID *na, const char *s)
+{
+	return NV_Node_String_compareWithCStr(NV_Node_getByID(na), s);
+}
+
 char *NV_Node_String_strchr(const NV_Node *ns, char c)
 {
 	if(!ns || ns->type != kString) return NULL;
@@ -612,12 +617,23 @@ long NV_Node_String_strtol(const NV_Node *ns, int *endptrindex, int base)
 	if(endptrindex) *endptrindex = ep - (char *)ns->data;
 	return v;
 }
+long NV_NodeID_String_strtol(const NV_ID *ns, int *endptrindex, int base)
+{
+	return NV_Node_String_strtol(NV_Node_getByID(ns), endptrindex, base);
+
+}
 
 size_t NV_Node_String_strlen(const NV_Node *ns)
 {
 	if(!ns || ns->type != kString) return 0;
 	return strlen(ns->data);
 }
+
+size_t NV_NodeID_String_strlen(const NV_ID *ns)
+{
+	return NV_Node_String_strlen(NV_Node_getByID(ns));
+}
+
 
 //
 // Integer

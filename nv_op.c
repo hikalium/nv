@@ -150,10 +150,9 @@ NV_ID NV_createOpList()
 	return opList;
 }
 
-int32_t NV_getOpPrecAt(const NV_ID *tList, int index)
+int32_t NV_getOpPrec(const NV_ID *op)
 {
-	NV_ID op = NV_Array_getByIndex(tList, index);
-	NV_ID ePrec = NV_Node_getRelatedNodeFrom(&op, &RELID_OP_PRECEDENCE);
+	NV_ID ePrec = NV_Node_getRelatedNodeFrom(op, &RELID_OP_PRECEDENCE);
 	return NV_Node_getInt32FromID(&ePrec);
 }
 
@@ -419,7 +418,7 @@ void NV_Op_codeBlock(const NV_ID *tList, int index)
 			return;
 		}
 		NV_Array_removeIndex(tList, index + 1);
-		if(NV_isBuiltinOp(&v, "NV_Op_codeBlockClose")){
+		if(NV_NodeID_String_compareWithCStr(&v, "}") == 0){
 			// 終了
 			break;
 		}
@@ -571,7 +570,7 @@ void NV_Op_print(const NV_ID *tList, int index)
 	//
 	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
 	//
-	operand[0] = NV_Term_tryConvertToVariable(&operand[0], ctx);
+	operand[0] = NV_Term_tryReadAsVariable(&operand[0], ctx);
 	NV_printNodeByID(&operand[0]); putchar('\n');
 	//
 	NV_removeOperandByList(tList, index, operandIndex, operandCount);

@@ -55,10 +55,10 @@ int main(int argc, char *argv[])
 	//
 	NV_globalExecFlag |= NV_EXEC_FLAG_INTERACTIVE;
 	for(;;){
-		NV_evalLoop();
+		NV_evalLoop(&opList);
 		if(NV_globalExecFlag & NV_EXEC_FLAG_INTERACTIVE){
 			// 入力を取得して継続する
-			NV_interactiveInput(&cTypeList, &opList);
+			NV_interactiveInput(&cTypeList);
 		} else{
 			break;
 		}
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *opList)
+int NV_interactiveInput(const NV_ID *cTypeList)
 {
 	char line[MAX_INPUT_LEN];
 	NV_ID tokenList;
@@ -76,7 +76,6 @@ int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *opList)
 	//
 	if(NV_gets(line, sizeof(line)) != NULL){
 		tokenList = NV_tokenize(cTypeList, line);
-		NV_convertLiteral(&tokenList, opList);
 		if(IS_DEBUG_MODE()){
 			NV_printNodeByID(&tokenList); putchar('\n');
 		}
@@ -124,7 +123,7 @@ NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input)
 	}
 	return tokenList;
 }
-
+/*
 int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList)
 {
 	// retv: converted token list
@@ -155,13 +154,15 @@ int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList)
 	}
 	return 0;
 }
-
+*/
 //
 // Evaluate
 //
 
-int NV_getNextOpIndex(const NV_ID *currentBlock)
+int NV_getNextOpIndex(const NV_ID *currentBlock, const NV_ID *ctx)
 {
+	// 次に実行すべきオペレータを探し、そのインデックスを返す
+	// その実行すべきインデックスの項は、オペレータに置き換えられる。
 	int i, lastOpIndex;
 	int32_t lastOpPrec, opPrec;
 	NV_ID t, lastOp;
@@ -171,8 +172,13 @@ int NV_getNextOpIndex(const NV_ID *currentBlock)
 	for(i = 0; ; i++){
 		t = NV_Array_getByIndex(currentBlock, i);
 		if(NV_ID_isEqual(&t, &NODEID_NOT_FOUND)) break;
+		t = NV_Term_tryReadAsOperator(&t, ctx);
 		if(!NV_isTermType(&t, &NODEID_TERM_TYPE_OP)) continue;
-		opPrec = NV_getOpPrecAt(currentBlock, i);
+		opPrec = NV_getOpPrec(&t);
+		if(IS_DEBUG_MODE()){
+			printf("Op found. prec = %d ", opPrec);
+			NV_printNodeByID(&t); putchar('\n');
+		}
 		if(lastOpPrec & 1 ? lastOpPrec <= opPrec : lastOpPrec < opPrec){
 			// continue searching
 			lastOpIndex = i;
@@ -183,12 +189,15 @@ int NV_getNextOpIndex(const NV_ID *currentBlock)
 		// found. lastOpID is target op.
 		break;
 	}
+	if(lastOpIndex != -1){
+		NV_Array_writeToIndex(currentBlock, lastOpIndex, &lastOp);
+	}
 	return lastOpIndex;
 }
 
 
 
-void NV_evalLoop()
+void NV_evalLoop(const NV_ID *ctx)
 {
 	NV_ID currentBlock;
 	NV_ID currentTermIndexNode;
@@ -240,7 +249,7 @@ void NV_evalLoop()
 			}
 		}
 		// search next term to do
-		nextOpIndex = NV_getNextOpIndex(&currentBlock);
+		nextOpIndex = NV_getNextOpIndex(&currentBlock, ctx);
 		if(nextOpIndex == -1){
 			// no more op
 			t = NV_Array_pop(&evalStack);

@@ -87,10 +87,8 @@ struct NV_RELATION {
 extern volatile sig_atomic_t NV_globalExecFlag;
 //
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
-int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *opList);
-int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList);
-//NV_ID NV_evaluateSetence(const NV_ID *tokenizedList);
-void NV_evalLoop();
+int NV_interactiveInput(const NV_ID *cTypeList);
+void NV_evalLoop(const NV_ID *ctx);
 
 // @nv_array.c
 NV_ID NV_Array_create();
@@ -171,9 +169,12 @@ void NV_Node_createWithIDAndString(const NV_ID *id, const char *s);
 const char *NV_Node_getCStr(const NV_ID *id);
 int NV_Node_String_compare(const NV_Node *na, const NV_Node *nb);
 int NV_Node_String_compareWithCStr(const NV_Node *na, const char *s);
+int NV_NodeID_String_compareWithCStr(const NV_ID *na, const char *s);
 char *NV_Node_String_strchr(const NV_Node *ns, char c);
 long NV_Node_String_strtol(const NV_Node *ns, int *endptrindex, int base);
+long NV_NodeID_String_strtol(const NV_ID *ns, int *endptrindex, int base);
 size_t NV_Node_String_strlen(const NV_Node *ns);
+size_t NV_NodeID_String_strlen(const NV_ID *ns);
 // Integer
 int NV_Node_isInteger(const NV_ID *id);
 NV_ID NV_Node_createWithInt32(int32_t v);
@@ -184,7 +185,7 @@ int NV_Lang_getCharType(const NV_ID *cTypeList, char c);
 NV_ID NV_createCharTypeList();
 void NV_addOp(const NV_ID *opList, const char *token, int32_t prec, const NV_ID *func);
 NV_ID NV_createOpList();
-int32_t NV_getOpPrecAt(const NV_ID *tList, int index);
+int32_t NV_getOpPrec(const NV_ID *op);
 void NV_getOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, NV_ID *idBuf, int count);
 void NV_removeOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, int count);
 void NV_tryExecOpAt(const NV_ID *tList, int index);
@@ -216,7 +217,8 @@ const char c2hexTable[0x100];
 
 // @nv_term.c
 int NV_isTermType(const NV_ID *node, const NV_ID *tType);
-NV_ID NV_Term_tryConvertToVariable(const NV_ID *id, const NV_ID *ctx);
+NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *ctx);
+NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *ctx);
 int NV_Term_isInteger(const NV_ID *id, const NV_ID *ctx);
 int NV_Term_isAssignable(const NV_ID *id, const NV_ID *ctx);
 int NV_Term_isArray(const NV_ID *id, const NV_ID *ctx);
