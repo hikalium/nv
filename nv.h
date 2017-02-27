@@ -99,6 +99,7 @@ NV_ID NV_Array_last(const NV_ID *array);
 NV_ID NV_Array_getByIndex(const NV_ID *array, int index);
 void NV_Array_removeIndex(const NV_ID *array, int index);
 void NV_Array_writeToIndex(const NV_ID *array, int index, const NV_ID *data);
+NV_ID NV_Array_joinWithCStr(const NV_ID *array, const char *sep);
 void NV_Array_print(const NV_ID *array);
 
 // @nv_dict.c

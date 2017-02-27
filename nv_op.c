@@ -124,6 +124,8 @@ NV_BuiltinOpTag builtinOpList[] = {
 	//
 	{"{",		30000,	"NV_Op_codeBlock"},
 	//
+	{"\"",		100000,	"NV_Op_strLiteral"},
+	//
 	{"", -1, ""}	// terminate tag
 };
 
@@ -432,6 +434,44 @@ void NV_Op_codeBlock(const NV_ID *tList, int index)
 	}
 	NV_Array_writeToIndex(tList, index, &root);
 }
+
+void NV_Op_strLiteral(const NV_ID *tList, int index)
+{
+	NV_ID v, s;
+	//
+	NV_ID root;
+	int esc = 0;	// escape flag
+	//
+	root = NV_Array_create();
+	for(;;){
+		v = NV_Array_getByIndex(tList, index + 1);
+		if(NV_ID_isEqual(&v, &NODEID_NOT_FOUND)){
+			// おかしい
+			NV_ID errObj = NV_Node_createWithString(
+				"Error: Expected \" but not found.");
+			NV_Array_writeToIndex(tList, index, &errObj);
+			return;
+		}
+		NV_Array_removeIndex(tList, index + 1);
+		if(esc){
+			esc = 0;
+			NV_Array_push(&root, &v);
+		} else{
+			if(NV_NodeID_String_compareWithCStr(&v, "\\") == 0){
+				esc = 1;
+				continue;
+			}
+			if(NV_NodeID_String_compareWithCStr(&v, "\"") == 0){
+				// 終了
+				break;
+			}
+			NV_Array_push(&root, &v);
+		}
+	}
+	s = NV_Array_joinWithCStr(&root, "");
+	NV_Array_writeToIndex(tList, index, &s);
+}
+
 void NV_Op_if(const NV_ID *tList, int index)
 {
 	// if {cond} {do} [{cond} {do}] [{else}]
@@ -645,6 +685,8 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 		NV_Op_info(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_clean")){
 		NV_Op_clean(tList, index);
+	} else if(NV_isBuiltinOp(&op, "NV_Op_strLiteral")){
+		NV_Op_strLiteral(tList, index);
 	} else{
 		NV_ID errObj = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");

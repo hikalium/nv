@@ -121,6 +121,39 @@ void NV_Array_writeToIndex(const NV_ID *array, int index, const NV_ID *data)
 	NV_Variable_assign(&t, data);
 }
 
+NV_ID NV_Array_joinWithCStr(const NV_ID *array, const char *sep)
+{
+	size_t sumLen = 1;
+	NV_ID t;
+	char *buf, *p;
+	const char *s;
+	int i;
+	//
+	for(i = 0; ; i++){
+		t = NV_Array_getByIndex(array, i);
+		if(NV_ID_isEqual(&t, &NODEID_NOT_FOUND)) break;
+		sumLen += NV_NodeID_String_strlen(&t);
+	}
+	sumLen += i * strlen(sep);
+	buf = NV_malloc(sumLen);
+	p = buf;
+	for(i = 0; ; i++){
+		t = NV_Array_getByIndex(array, i);
+		if(NV_ID_isEqual(&t, &NODEID_NOT_FOUND)) break;
+		s = NV_NodeID_getCStr(&t);
+		if(s){
+			NV_strncpy(p, s, sumLen - (p - buf), strlen(s));
+			p += strlen(s);
+		}
+		NV_strncpy(p, sep, sumLen - (p - buf), strlen(sep));
+		p += strlen(sep);
+	}
+	*p = 0;
+	t = NV_Node_createWithString(buf);
+	NV_free(buf);
+	return t;
+}
+
 void NV_Array_print(const NV_ID *array)
 {
 	NV_ID t;
