@@ -17,7 +17,7 @@ NV_ID NV_Array_clone(const NV_ID *base)
 	NV_ID newArray, t;
 	int i;
 	//
-	newArray = NV_Node_create();
+	newArray = NV_Array_create();
 	for(i = 0; ; i++){
 		t = NV_Array_getByIndex(base, i);
 		if(NV_ID_isEqual(&t, &NODEID_NOT_FOUND)) break;
@@ -74,6 +74,18 @@ NV_ID NV_Array_last(const NV_ID *array)
 	}
 	// t is retv.
 	return NV_Variable_getData(&t);
+}
+
+size_t NV_Array_count(const NV_ID *array)
+{
+	size_t cnt;
+	NV_ID t;
+	t = *array;
+	for(cnt = 0; ; cnt++){
+		t = NV_NodeID_getRelatedNodeFrom(&t, &RELID_ARRAY_NEXT);
+		if(NV_ID_isEqual(&t, &NODEID_NOT_FOUND)) break;
+	}
+	return cnt;
 }
 
 NV_ID NV_Array_getByIndex(const NV_ID *array, int index)
@@ -152,6 +164,28 @@ NV_ID NV_Array_joinWithCStr(const NV_ID *array, const char *sep)
 	t = NV_Node_createWithString(buf);
 	NV_free(buf);
 	return t;
+}
+
+NV_ID NV_Array_getSorted(const NV_ID *array, int (*f)(const void *n1, const void *n2))
+{
+	size_t nel = NV_Array_count(array);
+	NV_ID *buf = NV_malloc(sizeof(NV_ID) * nel);
+	size_t i;
+	NV_ID new;
+	//
+	for(i = 0; i < nel; i++){
+		buf[i] = NV_Array_getByIndex(array, i);
+	}
+	//
+	qsort(buf, nel, sizeof(NV_ID), f);
+	//
+	new = NV_Array_create();
+	for(i = 0; i < nel; i++){
+		NV_Array_push(&new, &buf[i]);
+	}
+	//
+	NV_free(buf);
+	return new;
 }
 
 void NV_Array_print(const NV_ID *array)

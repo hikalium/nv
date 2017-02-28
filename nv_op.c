@@ -117,6 +117,10 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"/",		2000,	"NV_Op_div"},
 	{"%",		2000,	"NV_Op_mod"},
 	//
+	{"+",		5001,	"NV_Op_sign_plus"},
+	{"-",		5001,	"NV_Op_sign_minus"},
+	
+	//
 	{"if",		10000,	"NV_Op_if"},
 	{"for",		10000,	"NV_Op_for"},
 	//
@@ -177,7 +181,7 @@ void NV_removeOperandByList(const NV_ID *tList, int baseIndex, const int *relInd
 
 
 
-void NV_Op_ExecBuiltinInfix(const NV_ID *tList, int index, int func)
+NV_ID NV_Op_ExecBuiltinInfix(const NV_ID *tList, int index, int func)
 {
 	NV_ID nL, nR, ans;
 	int vL, vR, v;
@@ -186,10 +190,8 @@ void NV_Op_ExecBuiltinInfix(const NV_ID *tList, int index, int func)
 	nL = NV_Array_getByIndex(tList, index - 1);
 	nR = NV_Array_getByIndex(tList, index + 1);
 	if(!NV_Term_isInteger(&nL, ctx) || !NV_Term_isInteger(&nR, ctx)){
-		NV_ID errObj = NV_Node_createWithString(
+		return NV_Node_createWithString(
 			"Error: Invalid Operand Type.");
-		NV_Array_writeToIndex(tList, index, &errObj);
-		return;
 	}
 	vL = NV_Term_getInt32(&nL, ctx);
 	vR = NV_Term_getInt32(&nR, ctx);
@@ -199,10 +201,8 @@ void NV_Op_ExecBuiltinInfix(const NV_ID *tList, int index, int func)
 	NV_Array_removeIndex(tList, index);
 	//
 	if((func == 3 || func == 4) && vR == 0){
-		NV_ID errObj = NV_Node_createWithString(
+		return NV_Node_createWithString(
 			"Error: Div by 0");
-		NV_Array_writeToIndex(tList, index, &errObj);
-		return;
 	}
 	switch(func){
 		//
@@ -222,9 +222,10 @@ void NV_Op_ExecBuiltinInfix(const NV_ID *tList, int index, int func)
 	//
 	ans = NV_Node_createWithInt32(v);
 	NV_Array_writeToIndex(tList, index, &ans);
+	return NODEID_NULL;
 }
 
-void NV_Op_save(const NV_ID *tList, int index)
+NV_ID NV_Op_save(const NV_ID *tList, int index)
 {
 	const int operandCount = 1;
 	NV_ID operand[operandCount];
@@ -234,34 +235,30 @@ void NV_Op_save(const NV_ID *tList, int index)
 	//
 	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
 	if(!NV_NodeID_isString(&operand[0])){
-		NV_ID errObj = NV_Node_createWithString(
+		return NV_Node_createWithString(
 			"Error: Invalid Operand Type.");
-		NV_Array_writeToIndex(tList, index, &errObj);
-		return;
 	}
 	fname = NV_NodeID_getCStr(&operand[0]);
 	if(!fname){
-		NV_ID errObj = NV_Node_createWithString(
+		return NV_Node_createWithString(
 			"fname is null");
-		NV_Array_writeToIndex(tList, index, &errObj);
 	}
 	//
 	NV_removeOperandByList(tList, index, operandIndex, operandCount);
 	//
 	FILE *fp = fopen(fname, "wb");
 	if(!fp){
-		NV_ID errObj = NV_Node_createWithString(
+		return NV_Node_createWithString(
 			"fopen failed");
-		NV_Array_writeToIndex(tList, index, &errObj);
-		return;
 	}
 	ans = NV_Node_createWithInt32(0);
 	NV_Graph_dumpToFile(fp);
 	fclose(fp);
 	NV_Array_writeToIndex(tList, index, &ans);
+	return NODEID_NULL;
 }
 
-void NV_Op_restore(const NV_ID *tList, int index)
+NV_ID NV_Op_restore(const NV_ID *tList, int index)
 {
 	const int operandCount = 1;
 	NV_ID operand[operandCount];
@@ -272,10 +269,8 @@ void NV_Op_restore(const NV_ID *tList, int index)
 	//
 	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
 	if(!NV_NodeID_isString(&operand[0])){
-		NV_ID errObj = NV_Node_createWithString(
+		return NV_Node_createWithString(
 			"Error: Invalid Operand Type.");
-		NV_Array_writeToIndex(tList, index, &errObj);
-		return;
 	}
 	fname = NV_NodeID_getCStr(&operand[0]);
 	if(!fname){
@@ -288,18 +283,17 @@ void NV_Op_restore(const NV_ID *tList, int index)
 	//
 	FILE *fp = fopen(fname, "rb");
 	if(!fp){
-		NV_ID errObj = NV_Node_createWithString(
+		return NV_Node_createWithString(
 			"fopen failed");
-		NV_Array_writeToIndex(tList, index, &errObj);
-		return;
 	}
 	ans = NV_Node_createWithString("restore");
 	NV_Graph_restoreFromFile(fp);
 	fclose(fp);
 	NV_Array_writeToIndex(tList, index, &ans);
+	return NODEID_NULL;
 }
 
-void NV_Op_ls(const NV_ID *tList, int index)
+NV_ID NV_Op_ls(const NV_ID *tList, int index)
 {
 	NV_ID ans;
 	//
@@ -307,9 +301,10 @@ void NV_Op_ls(const NV_ID *tList, int index)
 	//
 	ans = NV_Node_createWithInt32(0);
 	NV_Array_writeToIndex(tList, index, &ans);
+	return NODEID_NULL;
 }
 
-void NV_Op_ls2(const NV_ID *tList, int index)
+NV_ID NV_Op_ls2(const NV_ID *tList, int index)
 {
 	NV_ID ans;
 	//
@@ -317,9 +312,10 @@ void NV_Op_ls2(const NV_ID *tList, int index)
 	//
 	ans = NV_Node_createWithInt32(0);
 	NV_Array_writeToIndex(tList, index, &ans);
+	return NODEID_NULL;
 }
 
-void NV_Op_last(const NV_ID *tList, int index)
+NV_ID NV_Op_last(const NV_ID *tList, int index)
 {
 	NV_ID ans, n;
 	//
@@ -328,9 +324,10 @@ void NV_Op_last(const NV_ID *tList, int index)
 	//
 	ans = NV_Node_createWithInt32(0);
 	NV_Array_writeToIndex(tList, index, &ans);
+	return NODEID_NULL;
 }
 
-void NV_Op_info(const NV_ID *tList, int index)
+NV_ID NV_Op_info(const NV_ID *tList, int index)
 {
 	NV_ID ans;
 	//
@@ -345,9 +342,10 @@ void NV_Op_info(const NV_ID *tList, int index)
 	//
 	ans = NV_Node_createWithInt32(0);
 	NV_Array_writeToIndex(tList, index, &ans);
+	return NODEID_NULL;
 }
 
-void NV_Op_clean(const NV_ID *tList, int index)
+NV_ID NV_Op_clean(const NV_ID *tList, int index)
 {
 	NV_ID ans;
 	//
@@ -370,9 +368,10 @@ void NV_Op_clean(const NV_ID *tList, int index)
 	//
 	ans = NV_Node_createWithInt32(0);
 	NV_Array_writeToIndex(tList, index, &ans);
+	return NODEID_NULL;
 }
 
-void NV_Op_assign(const NV_ID *tList, int index)
+NV_ID NV_Op_assign(const NV_ID *tList, int index)
 {
 	const int operandCount = 2;
 	NV_ID operand[operandCount];
@@ -388,10 +387,8 @@ void NV_Op_assign(const NV_ID *tList, int index)
 	} else{
 		// 新規変数を作成して代入
 		if(!NV_NodeID_isString(&operand[0])){
-			NV_ID errObj = NV_Node_createWithString(
+			return NV_Node_createWithString(
 				"Error: Invalid Operand Type.");
-			NV_Array_writeToIndex(tList, index, &errObj);
-			return;
 		}
 		v = NV_Variable_createWithName(ctx, &operand[0]);
 	}
@@ -401,9 +398,10 @@ void NV_Op_assign(const NV_ID *tList, int index)
 	NV_removeOperandByList(tList, index, operandIndex, operandCount);
 	//
 	NV_Array_writeToIndex(tList, index - 1, &v);
+	return NODEID_NULL;
 }
 
-void NV_Op_codeBlock(const NV_ID *tList, int index)
+NV_ID NV_Op_codeBlock(const NV_ID *tList, int index)
 {
 	NV_ID v;
 	//
@@ -415,10 +413,8 @@ void NV_Op_codeBlock(const NV_ID *tList, int index)
 		v = NV_Array_getByIndex(tList, index + 1);
 		if(NV_ID_isEqual(&v, &NODEID_NOT_FOUND)){
 			// おかしい
-			NV_ID errObj = NV_Node_createWithString(
+			return NV_Node_createWithString(
 				"Error: Expected } but not found.");
-			NV_Array_writeToIndex(tList, index, &errObj);
-			return;
 		}
 		NV_Array_removeIndex(tList, index + 1);
 		if(NV_NodeID_String_compareWithCStr(&v, "{") == 0){
@@ -433,9 +429,10 @@ void NV_Op_codeBlock(const NV_ID *tList, int index)
 		NV_Array_push(&root, &v);
 	}
 	NV_Array_writeToIndex(tList, index, &root);
+	return NODEID_NULL;
 }
 
-void NV_Op_strLiteral(const NV_ID *tList, int index)
+NV_ID NV_Op_strLiteral(const NV_ID *tList, int index)
 {
 	NV_ID v, s;
 	//
@@ -447,10 +444,8 @@ void NV_Op_strLiteral(const NV_ID *tList, int index)
 		v = NV_Array_getByIndex(tList, index + 1);
 		if(NV_ID_isEqual(&v, &NODEID_NOT_FOUND)){
 			// おかしい
-			NV_ID errObj = NV_Node_createWithString(
+			return NV_Node_createWithString(
 				"Error: Expected \" but not found.");
-			NV_Array_writeToIndex(tList, index, &errObj);
-			return;
 		}
 		NV_Array_removeIndex(tList, index + 1);
 		if(esc){
@@ -470,9 +465,10 @@ void NV_Op_strLiteral(const NV_ID *tList, int index)
 	}
 	s = NV_Array_joinWithCStr(&root, "");
 	NV_Array_writeToIndex(tList, index, &s);
+	return NODEID_NULL;
 }
 
-void NV_Op_if(const NV_ID *tList, int index)
+NV_ID NV_Op_if(const NV_ID *tList, int index)
 {
 	// if {cond} {do} [{cond} {do}] [{else}]
 	NV_ID t, tRes;
@@ -496,7 +492,7 @@ void NV_Op_if(const NV_ID *tList, int index)
 				// 条件節を実行スタックに追加。この文が実行されてから現在の文に戻ってくる。
 				NV_Array_push(&evalStack, &t);
 				NV_Op_Internal_setCurrentPhase(tList, phase + 1);
-				return;
+				return NODEID_NULL;
 			}
 		} else{
 			// 偶数: 実行
@@ -512,7 +508,7 @@ void NV_Op_if(const NV_ID *tList, int index)
 					NV_Array_push(&evalStack, &t);
 				}
 				NV_Op_Internal_setCurrentPhase(tList, phase + 1);
-				return;
+				return NODEID_NULL;
 			}
 		}
 	}
@@ -527,9 +523,10 @@ void NV_Op_if(const NV_ID *tList, int index)
 	}
 	//
 	NV_Op_Internal_setCurrentPhase(tList, -1);
+	return NODEID_NULL;
 }
 
-void NV_Op_for(const NV_ID *tList, int index)
+NV_ID NV_Op_for(const NV_ID *tList, int index)
 {
 	// for {init block}{conditional block}{update block}[{statement}]
 	NV_ID t, tRes;
@@ -552,10 +549,8 @@ void NV_Op_for(const NV_ID *tList, int index)
 			if(!NV_Term_isArray(&t, ctx)) break;
 		}
 		if(i <= 3){
-			NV_ID errObj = NV_Node_createWithString(
+			return NV_Node_createWithString(
 				"Error: Expected >= 3 blocks but not found.");
-			NV_Array_writeToIndex(tList, index, &errObj);
-			return;
 		}
 		// 問題ないのでphase1から始める
 		phase = 1;
@@ -566,13 +561,13 @@ void NV_Op_for(const NV_ID *tList, int index)
 		// 初期化式を実行スタックに積んで終了
 		NV_Array_push(&evalStack, &t);
 		NV_Op_Internal_setCurrentPhase(tList, 2);
-		return;
+		return NODEID_NULL;
 	} else if(phase == 2){
 		// 条件式のコピーを実行スタックに積んで終了
 		t = NV_Array_clone(&t);
 		NV_Array_push(&evalStack, &t);
 		NV_Op_Internal_setCurrentPhase(tList, 4);
-		return;
+		return NODEID_NULL;
 	} else if(phase == 4){
 		// 条件を判定して、本体部分のコピーを実行スタックに積んで終了
 		tRes = NV_NodeID_getRelatedNodeFrom(&NODEID_NV_STATIC_ROOT, &RELID_LAST_RESULT);
@@ -581,7 +576,7 @@ void NV_Op_for(const NV_ID *tList, int index)
 			t = NV_Array_clone(&t);
 			NV_Array_push(&evalStack, &t);
 			NV_Op_Internal_setCurrentPhase(tList, 3);
-			return;
+			return NODEID_NULL;
 		}
 		// 条件が偽ならば終了処理へ
 	} else if(phase == 3){
@@ -589,7 +584,7 @@ void NV_Op_for(const NV_ID *tList, int index)
 		t = NV_Array_clone(&t);
 		NV_Array_push(&evalStack, &t);
 		NV_Op_Internal_setCurrentPhase(tList, 2);
-		return;
+		return NODEID_NULL;
 	}
 	// 終了処理
 	// store eval result
@@ -602,9 +597,10 @@ void NV_Op_for(const NV_ID *tList, int index)
 		NV_Array_removeIndex(tList, index + 1);
 	}
 	NV_Op_Internal_setCurrentPhase(tList, -1);
+	return NODEID_NULL;
 }
 
-void NV_Op_print(const NV_ID *tList, int index)
+NV_ID NV_Op_print(const NV_ID *tList, int index)
 {
 	const int operandCount = 1;
 	NV_ID operand[operandCount];
@@ -623,6 +619,7 @@ void NV_Op_print(const NV_ID *tList, int index)
 	//
 	ans = NV_Node_createWithString("success");
 	NV_Array_writeToIndex(tList, index, &ans);
+	return NODEID_NULL;
 }
 
 void NV_tryExecOpAt(const NV_ID *tList, int index)
@@ -635,62 +632,67 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 		putchar('\n');
 	}
 	//
+	NV_ID r;
 	if(NV_isBuiltinOp(&op, "NV_Op_nothing")){
 		NV_Array_removeIndex(tList, index);
+		r = NODEID_NULL;
 	} else if(NV_isBuiltinOp(&op, "NV_Op_add")){
-		NV_Op_ExecBuiltinInfix(tList, index, 0);
+		r = NV_Op_ExecBuiltinInfix(tList, index, 0);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_sub")){
-		NV_Op_ExecBuiltinInfix(tList, index, 1);
+		r = NV_Op_ExecBuiltinInfix(tList, index, 1);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_mul")){
-		NV_Op_ExecBuiltinInfix(tList, index, 2);
+		r = NV_Op_ExecBuiltinInfix(tList, index, 2);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_div")){
-		NV_Op_ExecBuiltinInfix(tList, index, 3);
+		r = NV_Op_ExecBuiltinInfix(tList, index, 3);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_mod")){
-		NV_Op_ExecBuiltinInfix(tList, index, 4);
+		r = NV_Op_ExecBuiltinInfix(tList, index, 4);
 	//
 	} else if(NV_isBuiltinOp(&op, "NV_Op_lt")){
-		NV_Op_ExecBuiltinInfix(tList, index, 10);
+		r = NV_Op_ExecBuiltinInfix(tList, index, 10);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_gte")){
-		NV_Op_ExecBuiltinInfix(tList, index, 11);
+		r = NV_Op_ExecBuiltinInfix(tList, index, 11);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_lte")){
-		NV_Op_ExecBuiltinInfix(tList, index, 12);
+		r = NV_Op_ExecBuiltinInfix(tList, index, 12);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_gt")){
-		NV_Op_ExecBuiltinInfix(tList, index, 13);
+		r = NV_Op_ExecBuiltinInfix(tList, index, 13);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_eq")){
-		NV_Op_ExecBuiltinInfix(tList, index, 14);
+		r = NV_Op_ExecBuiltinInfix(tList, index, 14);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_neq")){
-		NV_Op_ExecBuiltinInfix(tList, index, 15);
+		r = NV_Op_ExecBuiltinInfix(tList, index, 15);
 	//
 	} else if(NV_isBuiltinOp(&op, "NV_Op_save")){
-		NV_Op_save(tList, index);
+		r = NV_Op_save(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_restore")){
-		NV_Op_restore(tList, index);
+		r = NV_Op_restore(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_ls")){
-		NV_Op_ls(tList, index);
+		r = NV_Op_ls(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_ls2")){
-		NV_Op_ls2(tList, index);
+		r = NV_Op_ls2(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_last")){
-		NV_Op_last(tList, index);
+		r = NV_Op_last(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_assign")){
-		NV_Op_assign(tList, index);
+		r = NV_Op_assign(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_codeBlock")){
-		NV_Op_codeBlock(tList, index);
+		r = NV_Op_codeBlock(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_if")){
-		NV_Op_if(tList, index);
+		r = NV_Op_if(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_print")){
-		NV_Op_print(tList, index);
+		r = NV_Op_print(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_for")){
-		NV_Op_for(tList, index);
+		r = NV_Op_for(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_info")){
-		NV_Op_info(tList, index);
+		r = NV_Op_info(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_clean")){
-		NV_Op_clean(tList, index);
+		r = NV_Op_clean(tList, index);
 	} else if(NV_isBuiltinOp(&op, "NV_Op_strLiteral")){
-		NV_Op_strLiteral(tList, index);
+		r = NV_Op_strLiteral(tList, index);
 	} else{
-		NV_ID errObj = NV_Node_createWithString(
+		r = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");
-		NV_Array_writeToIndex(tList, index, &errObj);
+	}
+	if(!NV_ID_isEqual(&r, &NODEID_NULL)){
+		// error ocuured
+		NV_Array_writeToIndex(tList, index, &r);
 	}
 	//
 	if(IS_DEBUG_MODE()){

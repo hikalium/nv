@@ -96,16 +96,19 @@ NV_ID NV_Array_clone(const NV_ID *base);
 NV_ID NV_Array_push(const NV_ID *array, const NV_ID *data);
 NV_ID NV_Array_pop(const NV_ID *array);
 NV_ID NV_Array_last(const NV_ID *array);
+size_t NV_Array_count(const NV_ID *array);
 NV_ID NV_Array_getByIndex(const NV_ID *array, int index);
 void NV_Array_removeIndex(const NV_ID *array, int index);
 void NV_Array_writeToIndex(const NV_ID *array, int index, const NV_ID *data);
 NV_ID NV_Array_joinWithCStr(const NV_ID *array, const char *sep);
+NV_ID NV_Array_getSorted(const NV_ID *array, int (*f)(const void *n1, const void *n2));
 void NV_Array_print(const NV_ID *array);
 
 // @nv_dict.c
 NV_ID NV_Dict_add(const NV_ID *root, const NV_ID *key, const NV_ID *value);
 NV_ID NV_Dict_addByStringKey(const NV_ID *root, const char *key, const NV_ID *value);
 NV_ID NV_Dict_get(const NV_ID *root, const NV_ID *key);
+NV_ID NV_Dict_getAll(const NV_ID *root, const NV_ID *key);
 NV_ID NV_Dict_getByStringKey(const NV_ID *root, const char *key);
 void NV_Dict_print(const NV_ID *root);
 
@@ -191,6 +194,10 @@ void NV_getOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexL
 void NV_removeOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, int count);
 void NV_tryExecOpAt(const NV_ID *tList, int index);
 void NV_printOp(const NV_ID *op);
+
+// @nv_path.c
+NV_ID NV_Path_createWithCodeBlock(NV_ID *code);
+NV_ID NV_Path_createWithCStr(const char *pathStr);
 
 // @nv_signal.c
 void NV_signalHandler(int signum);

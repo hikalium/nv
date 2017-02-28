@@ -52,6 +52,28 @@ NV_ID NV_Dict_get(const NV_ID *root, const NV_ID *key)
 	return NODEID_NOT_FOUND;
 }
 
+NV_ID NV_Dict_getAll(const NV_ID *root, const NV_ID *key)
+{
+	// keyが同じ値を持つ(IDが等しいとは限らない)オブジェクトを
+	// すべて含むリストを返す。
+	const NV_Node *n;
+	const NV_Relation *reld;
+	NV_ID list;
+	//
+	list = NV_Array_create();
+	//
+	for(n = nodeRoot.next; n; n = n->next){
+		if(n->type == kRelation){
+			reld = n->data;
+			if(	NV_ID_isEqual(&reld->from, root) && 
+				NV_ID_isEqualInValue(&reld->rel, key)){
+				NV_Array_push(&list, &reld->to);
+			}
+		}
+	}
+	return list;
+}
+
 NV_ID NV_Dict_getByStringKey
 (const NV_ID *root, const char *key)
 {

@@ -33,16 +33,28 @@ NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *ctx)
 	return vid;
 }
 
+int NV_Term_f_OpPrec_Dec(const void *n1, const void *n2)
+{
+	const NV_ID *e1 = n1, *e2 = n2;
+	return NV_getOpPrec(e2) - NV_getOpPrec(e1);
+}
+
 NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *ctx)
 {
-	// あるidがオペレータとして解釈できるなら、そのidを返す
-	// この関数は、変数の中身は確認しない
-	// あるidがオペレータである、とは
-	//   - TermType === Operator
-	//   - リテラルでない文字列で、コンテキストに存在するもの
-	// 無理ならば、もとのidを返す
-	NV_ID opID;
-	opID = NV_Dict_get(ctx, id);
+	// <id>: String であることを想定
+	// <id>/triedPrec が設定されているならば、それ未満のPrecのものの中で
+	// 最大のものを返す。
+	// なければ、NOT_FOUND
+	NV_ID opID, opList;
+	int i;
+	//
+	opList = NV_Dict_getAll(ctx, id);
+	opList = NV_Array_getSorted(&opList, NV_Term_f_OpPrec_Dec);
+	for(i = 0; ; i++){
+		opID = NV_Array_getByIndex(&opList, i);
+		break;
+	}
+
 	if(!NV_ID_isEqual(&opID, &NODEID_NOT_FOUND)){
 		return opID;
 	}
