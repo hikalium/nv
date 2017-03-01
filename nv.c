@@ -53,9 +53,11 @@ int main(int argc, char *argv[])
 	opList = NV_createOpList();
 	NV_NodeID_retain(&opList);
 	//
+/*
 	NV_ID t;
 	t = NV_Path_createWithCStr("/var/log/httpd");
 	NV_printNodeByID(&t); putchar('\n');
+*/
 	//
 	NV_globalExecFlag |= NV_EXEC_FLAG_INTERACTIVE;
 	for(;;){
