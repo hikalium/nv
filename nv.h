@@ -72,6 +72,8 @@ struct NV_NODE {
 	NV_NodeType type;
 	int size;	// size of data, bytes.
 	int refCount;
+	//
+	const NV_Node *relCache; // link from this node. recently referenced.
 };
 
 struct NV_RELATION {
@@ -96,7 +98,7 @@ NV_ID NV_Array_clone(const NV_ID *base);
 NV_ID NV_Array_push(const NV_ID *array, const NV_ID *data);
 NV_ID NV_Array_pop(const NV_ID *array);
 NV_ID NV_Array_last(const NV_ID *array);
-size_t NV_Array_count(const NV_ID *array);
+int32_t NV_Array_count(const NV_ID *array);
 NV_ID NV_Array_getByIndex(const NV_ID *array, int index);
 void NV_Array_removeIndex(const NV_ID *array, int index);
 void NV_Array_writeToIndex(const NV_ID *array, int index, const NV_ID *data);
@@ -111,7 +113,7 @@ NV_ID NV_Dict_addUniqueIDKey(const NV_ID *root, const NV_ID *key, const NV_ID *v
 NV_ID NV_Dict_addUniqueEqKeyByCStr(const NV_ID *root, const char *key, const NV_ID *value);
 NV_ID NV_Dict_removeUniqueEqKeyByCStr(const NV_ID *root, const char *key);
 NV_ID NV_Dict_get(const NV_ID *root, const NV_ID *key);
-NV_ID NV_Dict_getAll(const NV_ID *root, const NV_ID *key);
+//NV_ID NV_Dict_getAll(const NV_ID *root, const NV_ID *key);
 NV_ID NV_Dict_getByStringKey(const NV_ID *root, const char *key);
 void NV_Dict_print(const NV_ID *root);
 

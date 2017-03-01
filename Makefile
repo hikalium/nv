@@ -26,6 +26,11 @@ debug: $(SRCS) $(HEADERS) Makefile
 	make debugbin
 	lldb -f ./nv
 
+perf:
+	make debugbin
+	iprofiler -timeprofiler ./nv < sample/001.nv
+	open nv.dtps
+
 clean:
 	-rm nv
 	-rm -rf ./nv.dSYM

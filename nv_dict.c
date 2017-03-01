@@ -49,22 +49,12 @@ NV_ID NV_Dict_removeUniqueEqKeyByCStr(const NV_ID *root, const char *key)
 NV_ID NV_Dict_get(const NV_ID *root, const NV_ID *key)
 {
 	// keyが同じ値を持つ(IDが等しいとは限らない)オブジェクトを返す。
-	const NV_Node *n;
-	const NV_Relation *reld;
-	for(n = nodeRoot.next; n; n = n->next){
-		if(n->type == kRelation){
-			reld = n->data;
-			if(	NV_ID_isEqual(&reld->from, root) && 
-				NV_ID_isEqualInValue(&reld->rel, key)){
-				return reld->to;
-			}
-		}
-	}
-	return NODEID_NOT_FOUND;
+	return NV_NodeID_getEqRelatedNodeFrom(root, key);
 }
-
+/*
 NV_ID NV_Dict_getAll(const NV_ID *root, const NV_ID *key)
 {
+	// VARY SLOW!!!!!
 	// keyが同じ値を持つ(IDが等しいとは限らない)オブジェクトを
 	// すべて含むリストを返す。
 	const NV_Node *n;
@@ -84,6 +74,7 @@ NV_ID NV_Dict_getAll(const NV_ID *root, const NV_ID *key)
 	}
 	return list;
 }
+*/
 
 NV_ID NV_Dict_getByStringKey
 (const NV_ID *root, const char *key)

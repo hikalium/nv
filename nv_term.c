@@ -49,7 +49,7 @@ NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *ctx)
 	int i;
 	int32_t triedPrec;
 	//
-	opList = NV_Dict_getAll(ctx, id);
+	opList = NV_Dict_get(ctx, id);
 	opList = NV_Array_getSorted(&opList, NV_Term_f_OpPrec_Dec);
 	triedPrecNode = NV_Dict_getByStringKey(id, "triedPrec");
 	triedPrec = NV_NodeID_getInt32(&triedPrecNode);

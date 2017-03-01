@@ -62,13 +62,31 @@ int NV_NodeID_exists(const NV_ID *id)
 	return NV_NodeID_getNode(id) != NULL;
 }
 
+#define NODE_CACHE_MASK	0xFFFF
+
+NV_Node *nodeIDCache[NODE_CACHE_MASK + 1];
+
 NV_Node *NV_NodeID_getNode(const NV_ID *id)
 {
 	NV_Node *n;
 	//
 	if(!id) return NULL;
+	// check cache
+	if(nodeIDCache[id->d[0] & NODE_CACHE_MASK]){
+		if(NV_ID_isEqual(&nodeIDCache[id->d[0] & NODE_CACHE_MASK]->id, id)){
+			// hit!
+			return nodeIDCache[id->d[0] & NODE_CACHE_MASK];
+		}
+	}
+	//
 	for(n = nodeRoot.next; n; n = n->next){
-		if(NV_ID_isEqual(&n->id, id)) return n;
+		if(NV_ID_isEqual(&n->id, id)){
+			// found
+			// add to cache
+			nodeIDCache[id->d[0] & NODE_CACHE_MASK] = n;
+			//
+			return n;
+		}
 	}
 	return NULL;
 }
@@ -91,6 +109,29 @@ int NV_Node_isLiveNode(NV_Node *n)
 	return 1;
 }
 */
+
+NV_ID NV_NodeID_createNew(const NV_ID *id)
+{
+	NV_Node *n;
+	// 新規作成
+	n = NV_malloc(sizeof(NV_Node));
+	if(!n) exit(EXIT_FAILURE);
+	//
+	n->id = *id;
+	n->type = kNone;
+	n->data = NULL;
+	n->size = 0;
+	n->refCount = 0;
+	n->relCache = NULL;
+	//
+	n->next = nodeRoot.next;
+	if(n->next) n->next->prev = n;
+	n->prev = &nodeRoot;
+	if(n->prev) n->prev->next = n;
+	//
+	return n->id;
+}
+
 NV_ID NV_NodeID_create(const NV_ID *id)
 {
 	// すでに存在するIDについては，新たに確保せず，既存の内容をリセットする．
@@ -101,27 +142,13 @@ NV_ID NV_NodeID_create(const NV_ID *id)
 		return n->id;
 	}
 	// 新規作成
-	n = NV_malloc(sizeof(NV_Node));
-	if(!n) exit(EXIT_FAILURE);
-	//
-	n->id = *id;
-	n->type = kNone;
-	n->data = NULL;
-	n->size = 0;
-	n->refCount = 0;
-	//
-	n->next = nodeRoot.next;
-	if(n->next) n->next->prev = n;
-	n->prev = &nodeRoot;
-	if(n->prev) n->prev->next = n;
-	//
-	return n->id;
+	return NV_NodeID_createNew(id);
 }
 
 NV_ID NV_Node_create()
 {
 	NV_ID id = NV_ID_generateRandom();
-	return NV_NodeID_create(&id);
+	return NV_NodeID_createNew(&id);
 }
 
 void NV_NodeID_remove(const NV_ID *baseID)
@@ -499,18 +526,51 @@ void NV_NodeID_updateRelationTo(const NV_ID *relnid, const NV_ID *to)
 	}
 }
 
+#define REL_CACHE_MASK 0xFF
+#define HASH_REL(id)	(id->d[0] & REL_CACHE_MASK)
+
+const NV_Node *relCache[REL_CACHE_MASK + 1][REL_CACHE_MASK + 1]; // [from][rel] -> to
+
 const NV_Node *NV_NodeID_getRelNodeFromWithCmp
 (const NV_ID *from, const NV_ID *rel, int (*cmp)(const NV_ID *p, const NV_ID *q))
 {
 	const NV_Node *n;
 	const NV_Relation *reld;
-	for(n = nodeRoot.next; n; n = n->next){
-		if(n->type == kRelation){
+	if(!from || !rel || !cmp) return NULL;
+	// check cache
+	n = relCache[HASH_REL(from)][HASH_REL(rel)];
+	if(n){
+		reld = n->data;
+		if(n->type == kRelation && reld &&
+			NV_ID_isEqual(&reld->from, from) && cmp(&reld->rel, rel)){
+			// hit!
+			return n;
+		}
+	}
+	// check relCache
+	n = NV_NodeID_getNode(from);
+	if(n){
+		n = n->relCache;
+		if(n && n->type == kRelation){
 			reld = n->data;
-			if(	NV_ID_isEqual(&reld->from, from) && 
-				cmp(&reld->rel, rel)){
+			if(NV_ID_isEqual(&reld->from, from) && cmp(&reld->rel, rel)){
 				return n;
 			}
+		}
+	}
+	//
+	for(n = nodeRoot.next; n; n = n->next){
+		if(n->type != kRelation) continue;
+		reld = n->data;
+		if(NV_ID_isEqual(&reld->from, from) && cmp(&reld->rel, rel)){
+			//
+			relCache[HASH_REL(from)][HASH_REL(rel)] = n;
+			NV_Node *fn = NV_NodeID_getNode(from);
+			if(fn){
+				fn->relCache = n;
+			}
+			//
+			return n;
 		}
 	}
 	return NULL;

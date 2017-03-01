@@ -8,6 +8,11 @@ NV_ID NV_Array_create()
 	NV_ID arrayRoot;
 	arrayRoot = NV_Node_create();
 	NV_NodeID_createRelation(&arrayRoot, &RELID_TERM_TYPE, &NODEID_TERM_TYPE_ARRAY);
+	//
+	NV_ID count;
+	count = NV_Node_createWithInt32(0);
+	NV_Dict_addUniqueEqKeyByCStr(&arrayRoot, "count", &count);
+	//
 	return arrayRoot;
 }
 
@@ -39,6 +44,12 @@ NV_ID NV_Array_push(const NV_ID *array, const NV_ID *data)
 		t = next;
 	}
 	NV_NodeID_createRelation(&t, &RELID_ARRAY_NEXT, &v);
+	//
+	NV_ID count;
+	count = NV_Dict_getByStringKey(array, "count");
+	count = NV_Node_createWithInt32(NV_NodeID_getInt32(&count) + 1);
+	NV_Dict_addUniqueEqKeyByCStr(array, "count", &count);
+	//
 	return v;
 }
 
@@ -57,34 +68,40 @@ NV_ID NV_Array_pop(const NV_ID *array)
 	NV_ID relnid;
 	relnid = NV_NodeID_getRelationFrom(&prev, &RELID_ARRAY_NEXT);
 	NV_NodeID_remove(&relnid);
+	//
+	NV_ID count;
+	count = NV_Dict_getByStringKey(array, "count");
+	count = NV_Node_createWithInt32(NV_NodeID_getInt32(&count) - 1);
+	NV_Dict_addUniqueEqKeyByCStr(array, "count", &count);
+	//
 	return NV_Variable_getData(&t);
 }
 
 NV_ID NV_Array_last(const NV_ID *array)
 {
-	NV_ID prev, t, next;
-	prev = *array;
-	t = NV_NodeID_getRelatedNodeFrom(&prev, &RELID_ARRAY_NEXT);
-	for(;;){
-		next = NV_NodeID_getRelatedNodeFrom(&t, &RELID_ARRAY_NEXT);
-		if(NV_ID_isEqual(&next, &NODEID_NOT_FOUND)) break;
-		prev = t;
-		t = next;
+	NV_ID t;
+	int32_t count, i;
+	//
+	count = NV_Array_count(array);
+	//
+	t = NV_NodeID_getRelatedNodeFrom(array, &RELID_ARRAY_NEXT);
+	//
+	for(i = 0; i < count - 1; i++){
+		t = NV_NodeID_getRelatedNodeFrom(&t, &RELID_ARRAY_NEXT);
 	}
 	// t is retv.
 	return NV_Variable_getData(&t);
 }
 
-size_t NV_Array_count(const NV_ID *array)
+int32_t NV_Array_count(const NV_ID *array)
 {
-	size_t cnt;
-	NV_ID t;
-	t = *array;
-	for(cnt = 0; ; cnt++){
-		t = NV_NodeID_getRelatedNodeFrom(&t, &RELID_ARRAY_NEXT);
-		if(NV_ID_isEqual(&t, &NODEID_NOT_FOUND)) break;
-	}
-	return cnt;
+	NV_ID countNode;
+	//
+	if(!array) return 0;
+	countNode = NV_Dict_getByStringKey(array, "count");
+	if(NV_ID_isEqual(&countNode, &NODEID_NOT_FOUND)) return 0;
+	//
+	return NV_NodeID_getInt32(&countNode);
 }
 
 NV_ID NV_Array_getByIndex(const NV_ID *array, int index)
@@ -116,6 +133,12 @@ void NV_Array_removeIndex(const NV_ID *array, int index)
 		tnn = NV_NodeID_getRelatedNodeFrom(&tn, &RELID_ARRAY_NEXT);
 		r = NV_NodeID_getRelationFrom(&t, &RELID_ARRAY_NEXT);
 		NV_NodeID_updateRelationTo(&r, &tnn);
+		//
+		NV_ID count;
+		count = NV_Dict_getByStringKey(array, "count");
+		count = NV_Node_createWithInt32(NV_NodeID_getInt32(&count) - 1);
+		NV_Dict_addUniqueEqKeyByCStr(array, "count", &count);
+		//
 	}
 }
 

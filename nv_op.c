@@ -61,8 +61,17 @@ NV_ID NV_createCharTypeList()
 
 void NV_addOp(const NV_ID *opList, const char *token, int32_t prec, const NV_ID *func)
 {
+	NV_ID opDir;
 	NV_ID opEntry;
 	NV_ID ePrec;
+	// まずtokenごとに分けたDirがある
+	opDir = NV_Dict_getByStringKey(opList, token);
+	if(NV_ID_isEqual(&opDir, &NODEID_NOT_FOUND)){
+		// このtokenは初出なので新規追加
+		opDir = NV_Array_create();
+		NV_Dict_addKeyByCStr(opList, token, &opDir);
+	}
+	// opEntry(ひとつのOpを表現)を作成
 	opEntry = NV_Node_create();
 	NV_NodeID_createRelation(
 		&opEntry, &RELID_TERM_TYPE, &NODEID_TERM_TYPE_OP);
@@ -71,9 +80,8 @@ void NV_addOp(const NV_ID *opList, const char *token, int32_t prec, const NV_ID 
 		&opEntry, &RELID_OP_PRECEDENCE, &ePrec);
 	NV_NodeID_createRelation(
 		&opEntry, &RELID_OP_FUNC, func);
-	
-	//
-	NV_Dict_addKeyByCStr(opList, token, &opEntry);
+	// opEntryをopDirに追加
+	NV_Array_push(&opDir, &opEntry);
 }
 
 void NV_addBuiltinOp(const NV_ID *opList, const char *token, int32_t prec, const char *funcStr)
