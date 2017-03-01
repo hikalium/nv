@@ -205,6 +205,7 @@ void NV_printOp(const NV_ID *op);
 // @nv_path.c
 NV_ID NV_Path_createAbsoluteWithCodeBlock(NV_ID *code);
 NV_ID NV_Path_createAbsoluteWithCStr(const char *pathStr);
+NV_ID NV_Path_getTarget(const NV_ID *path);
 
 // @nv_signal.c
 void NV_signalHandler(int signum);

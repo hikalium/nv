@@ -302,8 +302,11 @@ NV_ID NV_Op_ls(const NV_ID *tList, int index)
 	pathStr = NV_Array_getByIndex(tList, index + 1);
 	if(NV_NodeID_isString(&pathStr)){
 		NV_ID path = NV_Path_createAbsoluteWithCStr(NV_NodeID_getCStr(&pathStr));
+		NV_ID d;
 		NV_Dict_print(&path);
-		NV_Array_removeIndex(tList, index + 1); 
+		d = NV_Path_getTarget(&path);
+		NV_Dict_print(&d);
+		NV_Array_removeIndex(tList, index + 1);
 	}
 	ans = NV_Node_createWithInt32(0);
 	NV_Array_writeToIndex(tList, index, &ans);

@@ -32,9 +32,19 @@ NV_ID NV_Path_createAbsoluteWithCStr(const char *pathStr)
 	path = NV_Path_createAbsoluteWithCodeBlock(&tokenList);
 	return path;
 }
-/*
+
 NV_ID NV_Path_getTarget(const NV_ID *path)
 {
-	return NODEID_NOT_FOUND;
+	NV_ID t, route, p;
+	int i;
+	//
+	route = NV_Dict_getByStringKey(path, "route");
+	p = NV_Dict_getByStringKey(path, "origin");
+	for(i = 0; ; i++){
+		t = NV_Array_getByIndex(&route, i);
+		if(NV_ID_isEqual(&t, &NODEID_NOT_FOUND)) break;
+		p = NV_NodeID_getEqRelatedNodeFrom(&p, &t);
+	}
+	return p;
 }
-*/
+
