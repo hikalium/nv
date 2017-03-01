@@ -73,7 +73,7 @@ void NV_addOp(const NV_ID *opList, const char *token, int32_t prec, const NV_ID 
 		&opEntry, &RELID_OP_FUNC, func);
 	
 	//
-	NV_Dict_addByStringKey(opList, token, &opEntry);
+	NV_Dict_addKeyByCStr(opList, token, &opEntry);
 }
 
 void NV_addBuiltinOp(const NV_ID *opList, const char *token, int32_t prec, const char *funcStr)
@@ -622,82 +622,143 @@ NV_ID NV_Op_print(const NV_ID *tList, int index)
 	return NODEID_NULL;
 }
 
+NV_ID NV_Op_unaryPrefix(const NV_ID *tList, int index, int mod)
+{
+	NV_ID nL, nR, ans;
+	int vR, v;
+	const NV_ID *ctx = &NODEID_NULL;
+	//
+	nL = NV_Array_getByIndex(tList, index - 1);
+	nR = NV_Array_getByIndex(tList, index + 1);
+	if(!NV_Term_isInteger(&nR, ctx)){
+		return NV_Node_createWithString(
+			"Error: Expected type(nR) == Integer, but not.");
+	}
+	if(NV_Term_isInteger(&nL, ctx)){
+		return NV_Node_createWithString(
+			"Error: Expected type(nL) != Integer, but not.");
+	}
+	vR = NV_Term_getInt32(&nR, ctx);
+	//
+	NV_Array_removeIndex(tList, index);
+	//
+	switch(mod){
+		//
+		case 0:		v = vR; break;
+		case 1:		v = -vR; break;
+/*
+		case 2:		v = vL * vR; break;
+		case 3:		v = vL / vR; break;
+		case 4:		v = vL % vR; break;
+		//
+		case 10:	v = (vL < vR); break;
+		case 11:	v = (vL >= vR); break;
+		case 12:	v = (vL <= vR); break;
+		case 13:	v = (vL > vR); break;
+		case 14:	v = (vL == vR); break;
+		case 15:	v = (vL != vR); break;
+*/
+		default:
+			return NV_Node_createWithString(
+				"Error: Invalid mod");
+	}
+	//
+	ans = NV_Node_createWithInt32(v);
+	NV_Array_writeToIndex(tList, index, &ans);
+	return NODEID_NULL;
+}
+
 void NV_tryExecOpAt(const NV_ID *tList, int index)
 {
-	NV_ID op = NV_Array_getByIndex(tList, index);
+	NV_ID opStr = NV_Array_getByIndex(tList, index);
+	NV_ID opRecog = NV_Dict_getByStringKey(&opStr, "recogAsOp");
 	//
 	if(IS_DEBUG_MODE()){
 		printf("begin op ");
-		NV_printNodeByID(&op);
+		NV_printNodeByID(&opRecog);
 		putchar('\n');
 	}
 	//
 	NV_ID r;
-	if(NV_isBuiltinOp(&op, "NV_Op_nothing")){
+	if(NV_isBuiltinOp(&opRecog, "NV_Op_nothing")){
 		NV_Array_removeIndex(tList, index);
 		r = NODEID_NULL;
-	} else if(NV_isBuiltinOp(&op, "NV_Op_add")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_add")){
 		r = NV_Op_ExecBuiltinInfix(tList, index, 0);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_sub")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_sub")){
 		r = NV_Op_ExecBuiltinInfix(tList, index, 1);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_mul")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_mul")){
 		r = NV_Op_ExecBuiltinInfix(tList, index, 2);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_div")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_div")){
 		r = NV_Op_ExecBuiltinInfix(tList, index, 3);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_mod")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_mod")){
 		r = NV_Op_ExecBuiltinInfix(tList, index, 4);
 	//
-	} else if(NV_isBuiltinOp(&op, "NV_Op_lt")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_lt")){
 		r = NV_Op_ExecBuiltinInfix(tList, index, 10);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_gte")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_gte")){
 		r = NV_Op_ExecBuiltinInfix(tList, index, 11);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_lte")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_lte")){
 		r = NV_Op_ExecBuiltinInfix(tList, index, 12);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_gt")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_gt")){
 		r = NV_Op_ExecBuiltinInfix(tList, index, 13);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_eq")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_eq")){
 		r = NV_Op_ExecBuiltinInfix(tList, index, 14);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_neq")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_neq")){
 		r = NV_Op_ExecBuiltinInfix(tList, index, 15);
 	//
-	} else if(NV_isBuiltinOp(&op, "NV_Op_save")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_save")){
 		r = NV_Op_save(tList, index);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_restore")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_restore")){
 		r = NV_Op_restore(tList, index);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_ls")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_ls")){
 		r = NV_Op_ls(tList, index);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_ls2")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_ls2")){
 		r = NV_Op_ls2(tList, index);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_last")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_last")){
 		r = NV_Op_last(tList, index);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_assign")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_assign")){
 		r = NV_Op_assign(tList, index);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_codeBlock")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_codeBlock")){
 		r = NV_Op_codeBlock(tList, index);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_if")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_if")){
 		r = NV_Op_if(tList, index);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_print")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_print")){
 		r = NV_Op_print(tList, index);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_for")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_for")){
 		r = NV_Op_for(tList, index);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_info")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_info")){
 		r = NV_Op_info(tList, index);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_clean")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_clean")){
 		r = NV_Op_clean(tList, index);
-	} else if(NV_isBuiltinOp(&op, "NV_Op_strLiteral")){
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_strLiteral")){
 		r = NV_Op_strLiteral(tList, index);
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_sign_plus")){
+		r = NV_Op_unaryPrefix(tList, index, 0);
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_sign_minus")){
+		r = NV_Op_unaryPrefix(tList, index, 1);
 	} else{
 		r = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");
 	}
 	if(!NV_ID_isEqual(&r, &NODEID_NULL)){
 		// error ocuured
-		NV_Array_writeToIndex(tList, index, &r);
+		NV_Dict_removeUniqueEqKeyByCStr(&opStr, "recogAsOp");
+		NV_Dict_addKeyByCStr(&opStr, "failedOp", &opRecog);
+		NV_Dict_addKeyByCStr(&opStr, "failedReason", &r);
+		NV_ID prec = NV_Node_createWithInt32(NV_getOpPrec(&opRecog));
+		NV_Dict_addUniqueEqKeyByCStr(&opStr, "triedPrec", &prec);
+		NV_Dict_addKeyByCStr(&opStr, "failedOp", &opRecog);
+		if(IS_DEBUG_MODE()){
+			printf("op failed:");
+			NV_printNodeByID(&r);
+			putchar('\n');
+		}
 	}
 	//
 	if(IS_DEBUG_MODE()){
 		printf("end op ");
-		NV_printNodeByID(&op);
+		NV_printNodeByID(&opRecog);
 		putchar('\n');
 	}
 }

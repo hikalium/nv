@@ -166,10 +166,9 @@ int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList)
 int NV_getNextOpIndex(const NV_ID *currentBlock, const NV_ID *ctx)
 {
 	// 次に実行すべきオペレータを探し、そのインデックスを返す
-	// その実行すべきインデックスの項は、オペレータに置き換えられる。
 	int i, lastOpIndex;
 	int32_t lastOpPrec, opPrec;
-	NV_ID t, lastOp;
+	NV_ID t, lastOp, org;
 	//
 	lastOpPrec = -1;
 	lastOpIndex = -1;
@@ -194,7 +193,8 @@ int NV_getNextOpIndex(const NV_ID *currentBlock, const NV_ID *ctx)
 		break;
 	}
 	if(lastOpIndex != -1){
-		NV_Array_writeToIndex(currentBlock, lastOpIndex, &lastOp);
+		org = NV_Array_getByIndex(currentBlock, lastOpIndex);
+		NV_Dict_addUniqueEqKeyByCStr(&org, "recogAsOp", &lastOp);
 	}
 	return lastOpIndex;
 }
@@ -257,7 +257,7 @@ void NV_evalLoop(const NV_ID *ctx)
 		if(nextOpIndex == -1){
 			// no more op
 			t = NV_Array_pop(&evalStack);
-			NV_NodeID_createUniqueRelation(
+			NV_NodeID_createUniqueIDRelation(
 				&NODEID_NV_STATIC_ROOT, &RELID_LAST_RESULT, &t);
 			continue;
 		}
@@ -265,7 +265,7 @@ void NV_evalLoop(const NV_ID *ctx)
 		//if(IS_DEBUG_MODE()){
 		//	printf("nextOpIndex: %d\n", nextOpIndex);
 		//}
-		NV_NodeID_createUniqueRelation(
+		NV_NodeID_createUniqueIDRelation(
 			&currentBlock, &RELID_CURRENT_TERM_INDEX, &t);
 	}
 }

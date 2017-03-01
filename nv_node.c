@@ -380,12 +380,12 @@ NV_ID NV_NodeID_createRelation
 	return r;
 }
 
-NV_ID NV_NodeID_createUniqueRelation
-(const NV_ID *from, const NV_ID *rel, const NV_ID *to)
+NV_ID NV_NodeID_createRel_OnDupUpdate
+(const NV_ID *from, const NV_ID *rel, const NV_ID *to, 
+NV_ID (*find)(const NV_ID *from, const NV_ID *rel))
 {
-	// fromとrelが一致するRelationがすでにあるならば、それをアップデートする。
 	NV_ID r;
-	r = NV_NodeID_getRelationFrom(from, rel);
+	r = find(from, rel);
 	if(NV_ID_isEqual(&r, &NODEID_NOT_FOUND)){
 		// 新規
 		return NV_NodeID_createRelation(from, rel, to);
@@ -393,6 +393,28 @@ NV_ID NV_NodeID_createUniqueRelation
 	// 既存
 	NV_NodeID_updateRelationTo(&r, to);
 	return r;
+} 
+
+NV_ID NV_NodeID_createUniqueIDRelation
+(const NV_ID *from, const NV_ID *rel, const NV_ID *to)
+{
+	// fromが同一のIDで、
+	// re1.id === rel2.idとなるような
+	// relがすでに存在するならば、それのtoをupdateする。
+	// 存在しないならば、新規作成する。
+	return NV_NodeID_createRel_OnDupUpdate(
+		from, rel, to, NV_NodeID_getRelationFrom);
+}
+
+NV_ID NV_NodeID_createUniqueEqRelation
+(const NV_ID *from, const NV_ID *rel, const NV_ID *to)
+{
+	// fromが同一のIDで、
+	// relがNV_Node_isEqualInValue()において等価であるような
+	// relがすでに存在するならば、それのtoをupdateする。
+	// 存在しないならば、新規作成する。
+	return NV_NodeID_createRel_OnDupUpdate(
+		from, rel, to, NV_NodeID_getEqRelationFrom);
 }
 
 void NV_Node_setRelation
@@ -477,7 +499,8 @@ void NV_NodeID_updateRelationTo(const NV_ID *relnid, const NV_ID *to)
 	}
 }
 
-NV_ID NV_NodeID_getRelationFrom(const NV_ID *from, const NV_ID *rel)
+const NV_Node *NV_NodeID_getRelNodeFromWithCmp
+(const NV_ID *from, const NV_ID *rel, int (*cmp)(const NV_ID *p, const NV_ID *q))
 {
 	const NV_Node *n;
 	const NV_Relation *reld;
@@ -485,11 +508,20 @@ NV_ID NV_NodeID_getRelationFrom(const NV_ID *from, const NV_ID *rel)
 		if(n->type == kRelation){
 			reld = n->data;
 			if(	NV_ID_isEqual(&reld->from, from) && 
-				NV_ID_isEqual(&reld->rel, rel)){
-				return n->id;
+				cmp(&reld->rel, rel)){
+				return n;
 			}
 		}
 	}
+	return NULL;
+}
+
+NV_ID NV_NodeID_getRelationFrom(const NV_ID *from, const NV_ID *rel)
+{
+	const NV_Node *n;
+	//
+	n = NV_NodeID_getRelNodeFromWithCmp(from, rel, NV_ID_isEqual);
+	if(n) return n->id;
 	return NODEID_NOT_FOUND;
 }
 
@@ -497,15 +529,21 @@ NV_ID NV_NodeID_getRelatedNodeFrom(const NV_ID *from, const NV_ID *rel)
 {
 	const NV_Node *n;
 	const NV_Relation *reld;
-	for(n = nodeRoot.next; n; n = n->next){
-		if(n->type == kRelation){
-			reld = n->data;
-			if(	NV_ID_isEqual(&reld->from, from) &&
-				NV_ID_isEqual(&reld->rel, rel)){
-				return reld->to;
-			}
-		}
+	//
+	n = NV_NodeID_getRelNodeFromWithCmp(from, rel, NV_ID_isEqual);
+	if(n){
+		reld = n->data;
+		return reld->to;
 	}
+	return NODEID_NOT_FOUND;
+}
+
+NV_ID NV_NodeID_getEqRelationFrom(const NV_ID *from, const NV_ID *rel)
+{
+	const NV_Node *n;
+	//
+	n = NV_NodeID_getRelNodeFromWithCmp(from, rel, NV_ID_isEqualInValue);
+	if(n) return n->id;
 	return NODEID_NOT_FOUND;
 }
 
@@ -513,17 +551,15 @@ NV_ID NV_NodeID_getEqRelatedNodeFrom(const NV_ID *from, const NV_ID *rel)
 {
 	const NV_Node *n;
 	const NV_Relation *reld;
-	for(n = nodeRoot.next; n; n = n->next){
-		if(n->type == kRelation){
-			reld = n->data;
-			if(	NV_ID_isEqual(&reld->from, from) &&
-				NV_ID_isEqualInValue(&reld->rel, rel)){
-				return reld->to;
-			}
-		}
-	}
+	//
+	n = NV_NodeID_getRelNodeFromWithCmp(from, rel, NV_ID_isEqualInValue);
+	if(n){
+		reld = n->data;
+		return reld->to;
+	}	
 	return NODEID_NOT_FOUND;
 }
+
 
 //
 // String

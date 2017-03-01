@@ -105,8 +105,11 @@ NV_ID NV_Array_getSorted(const NV_ID *array, int (*f)(const void *n1, const void
 void NV_Array_print(const NV_ID *array);
 
 // @nv_dict.c
-NV_ID NV_Dict_add(const NV_ID *root, const NV_ID *key, const NV_ID *value);
-NV_ID NV_Dict_addByStringKey(const NV_ID *root, const char *key, const NV_ID *value);
+NV_ID NV_Dict_addKey(const NV_ID *root, const NV_ID *key, const NV_ID *value);
+NV_ID NV_Dict_addKeyByCStr(const NV_ID *root, const char *key, const NV_ID *value);
+NV_ID NV_Dict_addUniqueIDKey(const NV_ID *root, const NV_ID *key, const NV_ID *value);
+NV_ID NV_Dict_addUniqueEqKeyByCStr(const NV_ID *root, const char *key, const NV_ID *value);
+NV_ID NV_Dict_removeUniqueEqKeyByCStr(const NV_ID *root, const char *key);
 NV_ID NV_Dict_get(const NV_ID *root, const NV_ID *key);
 NV_ID NV_Dict_getAll(const NV_ID *root, const NV_ID *key);
 NV_ID NV_Dict_getByStringKey(const NV_ID *root, const char *key);
@@ -156,15 +159,19 @@ void NV_Node_printPrimVal(const NV_Node *n);
 void NV_Node_printForDebug(const NV_Node *n);
 // Relation
 NV_ID NV_NodeID_createRelation(const NV_ID *from, const NV_ID *rel,  const NV_ID *to);
-NV_ID NV_NodeID_createUniqueRelation(const NV_ID *from, const NV_ID *rel,  const NV_ID *to);
+NV_ID NV_NodeID_createUniqueIDRelation(const NV_ID *from, const NV_ID *rel,  const NV_ID *to);
+NV_ID NV_NodeID_createUniqueEqRelation(const NV_ID *from, const NV_ID *rel,  const NV_ID *to);
 void NV_Node_setRelation
 	(const NV_ID *relnid, const NV_ID *from, const NV_ID *rel, const NV_ID *to);
 NV_Node *NV_NodeID_Relation_getLinkFrom(const NV_ID *relnid);
 NV_Node *NV_NodeID_Relation_getLinkTo(const NV_ID *relnid);
 NV_Node *NV_NodeID_Relation_getLinkRel(const NV_ID *relnid);
 void NV_NodeID_updateRelationTo(const NV_ID *relnid, const NV_ID *to);
+const NV_Node *NV_NodeID_getRelNodeFromWithCmp
+	(const NV_ID *from, const NV_ID *rel, int (*cmp)(const NV_ID *p, const NV_ID *q));
 NV_ID NV_NodeID_getRelationFrom(const NV_ID *from, const NV_ID *rel);
 NV_ID NV_NodeID_getRelatedNodeFrom(const NV_ID *from, const NV_ID *rel);
+NV_ID NV_NodeID_getEqRelationFrom(const NV_ID *from, const NV_ID *rel);
 NV_ID NV_NodeID_getEqRelatedNodeFrom(const NV_ID *from, const NV_ID *rel);
 // String
 int NV_NodeID_isString(const NV_ID *id);

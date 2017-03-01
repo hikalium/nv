@@ -13,27 +13,38 @@
 	
 */
 
-NV_ID NV_Dict_add
+NV_ID NV_Dict_addKey
 (const NV_ID *root, const NV_ID *key, const NV_ID *value)
 {
-	// 重複を許して追加する。
 	return NV_NodeID_createRelation(root, key, value);	
 }
 
-NV_ID NV_Dict_addUniqueInKey
-(const NV_ID *root, const NV_ID *key, const NV_ID *value)
-{
-	// 重複を許して追加する。
-	return NV_NodeID_createRelation(root, key, value);	
-}
-
-NV_ID NV_Dict_addByStringKey
+NV_ID NV_Dict_addKeyByCStr
 (const NV_ID *root, const char *key, const NV_ID *value)
 {
 	NV_ID strid = NV_Node_createWithString(key);
-	return NV_Dict_add(root, &strid, value);
+	return NV_Dict_addKey(root, &strid, value);
 }
 
+NV_ID NV_Dict_addUniqueIDKey
+(const NV_ID *root, const NV_ID *key, const NV_ID *value)
+{
+	return NV_NodeID_createUniqueIDRelation(root, key, value);	
+}
+
+NV_ID NV_Dict_addUniqueEqKeyByCStr
+(const NV_ID *root, const char *key, const NV_ID *value)
+{
+	NV_ID strid = NV_Node_createWithString(key);
+	return NV_NodeID_createUniqueEqRelation(root, &strid, value);
+}
+
+NV_ID NV_Dict_removeUniqueEqKeyByCStr(const NV_ID *root, const char *key)
+{
+	// removeと言っているが、実際はリンク先をNOT_FOUNDに向けるだけ
+	NV_ID strid = NV_Node_createWithString(key);
+	return NV_NodeID_createUniqueEqRelation(root, &strid, &NODEID_NOT_FOUND);
+}
 
 NV_ID NV_Dict_get(const NV_ID *root, const NV_ID *key)
 {

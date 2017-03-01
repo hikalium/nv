@@ -45,16 +45,19 @@ NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *ctx)
 	// <id>/triedPrec が設定されているならば、それ未満のPrecのものの中で
 	// 最大のものを返す。
 	// なければ、NOT_FOUND
-	NV_ID opID, opList;
+	NV_ID opID, opList, triedPrecNode;
 	int i;
+	int32_t triedPrec;
 	//
 	opList = NV_Dict_getAll(ctx, id);
 	opList = NV_Array_getSorted(&opList, NV_Term_f_OpPrec_Dec);
+	triedPrecNode = NV_Dict_getByStringKey(id, "triedPrec");
+	triedPrec = NV_NodeID_getInt32(&triedPrecNode);
+	//
 	for(i = 0; ; i++){
 		opID = NV_Array_getByIndex(&opList, i);
-		break;
+		if(triedPrec == -1 || NV_getOpPrec(&opID) < triedPrec) break;
 	}
-
 	if(!NV_ID_isEqual(&opID, &NODEID_NOT_FOUND)){
 		return opID;
 	}
