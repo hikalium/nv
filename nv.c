@@ -64,7 +64,9 @@ int main(int argc, char *argv[])
 		NV_evalLoop(&opList);
 		if(NV_globalExecFlag & NV_EXEC_FLAG_INTERACTIVE){
 			// 入力を取得して継続する
-			NV_interactiveInput(&cTypeList);
+			if(NV_interactiveInput(&cTypeList)){
+				break;
+			}
 		} else{
 			break;
 		}
