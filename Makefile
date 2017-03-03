@@ -28,7 +28,7 @@ debug: $(SRCS) $(HEADERS) Makefile
 
 perf:
 	make debugbin
-	iprofiler -timeprofiler ./nv < sample/001.nv
+	iprofiler -timeprofiler ./nv < sample/perf.nv
 	open nv.dtps
 
 clean:

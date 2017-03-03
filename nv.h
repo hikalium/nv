@@ -221,6 +221,7 @@ extern const NV_ID NODEID_TERM_TYPE_VARIABLE;
 extern const NV_ID NODEID_TERM_TYPE_OP;
 //
 extern const NV_ID RELID_ARRAY_NEXT;
+extern const NV_ID RELID_ARRAY_COUNT;
 extern const NV_ID RELID_VARIABLE_DATA;
 extern const NV_ID RELID_POINTER_TARGET;
 extern const NV_ID RELID_OP_PRECEDENCE;
