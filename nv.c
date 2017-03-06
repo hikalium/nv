@@ -72,11 +72,11 @@ int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList)
 	//
 	for(i = 0; ; i++){
 		itemID = NV_Array_getByIndex(tokenizedList, i);
-		if(NV_ID_isEqual(&itemID, &NODEID_NOT_FOUND)) break;
+		if(NV_NodeID_isEqual(&itemID, &NODEID_NOT_FOUND)) break;
 		item = NV_NodeID_getNode(&itemID);
 		// check operator
 		opID = NV_Dict_get(opList, &itemID);
-		if(!NV_ID_isEqual(&opID, &NODEID_NULL)){
+		if(!NV_NodeID_isEqual(&opID, &NODEID_NULL)){
 			NV_Array_writeToIndex(tokenizedList, i, &opID);
 			continue;
 		}
@@ -107,7 +107,7 @@ int NV_getNextOpIndex(const NV_ID *currentBlock, const NV_ID *ctx)
 	lastOpIndex = -1;
 	for(i = 0; ; i++){
 		t = NV_Array_getByIndex(currentBlock, i);
-		if(NV_ID_isEqual(&t, &NODEID_NOT_FOUND)) break;
+		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
 		t = NV_Term_tryReadAsOperator(&t, ctx);
 		if(!NV_isTermType(&t, &NODEID_TERM_TYPE_OP)) continue;
 		opPrec = NV_getOpPrec(&t);
@@ -163,7 +163,7 @@ void NV_evalLoop(const NV_ID *ctx)
 		if(IS_DEBUG_MODE()){
 			NV_Array_print(&currentBlock); putchar('\n');
 		}
-		if(NV_ID_isEqual(&currentBlock, &NODEID_NOT_FOUND)){
+		if(NV_NodeID_isEqual(&currentBlock, &NODEID_NOT_FOUND)){
 			// evalStack empty.
 			if(IS_DEBUG_MODE()){
 				printf("evalStack empty. break.\n");
@@ -172,7 +172,7 @@ void NV_evalLoop(const NV_ID *ctx)
 		}
 		currentTermIndexNode = NV_NodeID_getRelatedNodeFrom(
 			&currentBlock, &RELID_CURRENT_TERM_INDEX);
-		if(!NV_ID_isEqual(&currentTermIndexNode, &NODEID_NOT_FOUND)){
+		if(!NV_NodeID_isEqual(&currentTermIndexNode, &NODEID_NOT_FOUND)){
 			// do op
 			currentOpIndex = NV_NodeID_getInt32(&currentTermIndexNode);
 			currentTerm = NV_Array_getByIndex(&currentBlock, currentOpIndex);

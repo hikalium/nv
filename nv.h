@@ -139,10 +139,10 @@ void NV_Graph_restoreFromFile(FILE *fp);
 // @nv_id.c
 NV_ID NV_ID_generateRandom();
 int NV_ID_setFromString(NV_ID *id, const char *s);
-int NV_ID_isEqual(const NV_ID *a, const NV_ID *b);
+int NV_NodeID_isEqual(const NV_ID *a, const NV_ID *b);
 void NV_ID_dumpIDToFile(const NV_ID *id, FILE *fp);
-int NV_ID_isEqualInValue(const NV_ID *a, const NV_ID *b);
-void NV_ID_printPrimVal(const NV_ID *id);
+int NV_NodeID_isEqualInValue(const NV_ID *a, const NV_ID *b);
+void NV_NodeID_printPrimVal(const NV_ID *id);
 
 // @nv_node.c
 int NV_NodeID_exists(const NV_ID *id);
@@ -160,7 +160,8 @@ void NV_Node_fdump(FILE *fp, const NV_Node *n);
 void NV_Node_dump(const NV_Node *n);
 void NV_Node_printPrimVal(const NV_Node *n);
 void NV_Node_printForDebug(const NV_Node *n);
-// Relation
+
+// @nv_relation.c
 NV_ID NV_NodeID_createRelation(const NV_ID *from, const NV_ID *rel,  const NV_ID *to);
 NV_ID NV_NodeID_createUniqueIDRelation(const NV_ID *from, const NV_ID *rel,  const NV_ID *to);
 NV_ID NV_NodeID_createUniqueEqRelation(const NV_ID *from, const NV_ID *rel,  const NV_ID *to);
@@ -176,7 +177,8 @@ NV_ID NV_NodeID_getRelationFrom(const NV_ID *from, const NV_ID *rel);
 NV_ID NV_NodeID_getRelatedNodeFrom(const NV_ID *from, const NV_ID *rel);
 NV_ID NV_NodeID_getEqRelationFrom(const NV_ID *from, const NV_ID *rel);
 NV_ID NV_NodeID_getEqRelatedNodeFrom(const NV_ID *from, const NV_ID *rel);
-// String
+
+// @nv_string.c
 int NV_NodeID_isString(const NV_ID *id);
 NV_ID NV_Node_createWithString(const char *s);
 void NV_NodeID_createAndString(const NV_ID *id, const char *s);
@@ -189,12 +191,13 @@ long NV_Node_String_strtol(const NV_Node *ns, int *endptrindex, int base);
 long NV_NodeID_String_strtol(const NV_ID *ns, int *endptrindex, int base);
 size_t NV_Node_String_strlen(const NV_Node *ns);
 size_t NV_NodeID_String_strlen(const NV_ID *ns);
-// Integer
+
+// @nv_integer.c
 int NV_NodeID_isInteger(const NV_ID *id);
 NV_ID NV_Node_createWithInt32(int32_t v);
 int32_t NV_NodeID_getInt32(const NV_ID *id);
 
-// nv_op.c
+// @nv_op.c
 int NV_Lang_getCharType(const NV_ID *cTypeList, char c);
 NV_ID NV_createCharTypeList();
 void NV_addOp(const NV_ID *opList, const char *token, int32_t prec, const NV_ID *func);

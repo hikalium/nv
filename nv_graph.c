@@ -51,7 +51,7 @@ void NV_Graph_insertInitialNode()
 	// evalStackが存在しなければ作成する
 	NV_ID evalStack;
 	evalStack = NV_NodeID_getRelatedNodeFrom(&NODEID_NV_STATIC_ROOT, &RELID_EVAL_STACK);
-	if(NV_ID_isEqual(&evalStack, &NODEID_NOT_FOUND)){
+	if(NV_NodeID_isEqual(&evalStack, &NODEID_NOT_FOUND)){
 		evalStack = NV_Array_create();
 		NV_NodeID_createRelation(&NODEID_NV_STATIC_ROOT, &RELID_EVAL_STACK, &evalStack);
 	}

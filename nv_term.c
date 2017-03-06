@@ -7,7 +7,7 @@
 int NV_isTermType(const NV_ID *node, const NV_ID *tType)
 {
 	NV_ID typeID = NV_NodeID_getRelatedNodeFrom(node, &RELID_TERM_TYPE);
-	return NV_ID_isEqual(&typeID, tType);
+	return NV_NodeID_isEqual(&typeID, tType);
 }
 
 NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *ctx)
@@ -24,7 +24,7 @@ NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *ctx)
 		vid = NV_Variable_getData(id);
 	} else if(NV_NodeID_isString(id)){
 		vid = NV_Variable_getNamed(ctx, id);
-		if(!NV_ID_isEqual(&vid, &NODEID_NOT_FOUND)){
+		if(!NV_NodeID_isEqual(&vid, &NODEID_NOT_FOUND)){
 			vid = NV_Variable_getData(&vid);
 		} else{
 			vid = *id;
@@ -50,7 +50,7 @@ NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *ctx)
 	int32_t triedPrec;
 	//
 	opList = NV_Dict_get(ctx, id);
-	if(NV_ID_isEqual(&opList, &NODEID_NOT_FOUND)){
+	if(NV_NodeID_isEqual(&opList, &NODEID_NOT_FOUND)){
 		return *id;
 	}
 	opList = NV_Array_getSorted(&opList, NV_Term_f_OpPrec_Dec);
@@ -61,7 +61,7 @@ NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *ctx)
 		opID = NV_Array_getByIndex(&opList, i);
 		if(triedPrec == -1 || NV_getOpPrec(&opID) < triedPrec) break;
 	}
-	if(!NV_ID_isEqual(&opID, &NODEID_NOT_FOUND)){
+	if(!NV_NodeID_isEqual(&opID, &NODEID_NOT_FOUND)){
 		return opID;
 	}
 	return *id;

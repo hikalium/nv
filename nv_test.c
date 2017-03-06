@@ -102,12 +102,12 @@ void NV_Test_Data()
 	id = NV_Node_create();
 	NV_Node_setStrToID(&id, "World");
 	printf("%d %d\n",
-		NV_ID_isEqualInValue(&id, &id2),
-		NV_ID_isEqual(&id, &id2));
+		NV_NodeID_isEqualInValue(&id, &id2),
+		NV_NodeID_isEqual(&id, &id2));
 	NV_Node_setStrToID(&id, "");
 	printf("%d %d\n",
-		NV_ID_isEqualInValue(&id, &id2),
-		NV_ID_isEqual(&id, &id2));
+		NV_NodeID_isEqualInValue(&id, &id2),
+		NV_NodeID_isEqual(&id, &id2));
 	//
 	//NV_NodeID_retain(&id);
 	//

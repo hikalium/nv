@@ -72,8 +72,8 @@ NV_ID NV_Dict_getAll(const NV_ID *root, const NV_ID *key)
 	for(n = nodeRoot.next; n; n = n->next){
 		if(n->type == kRelation){
 			reld = n->data;
-			if(	NV_ID_isEqual(&reld->from, root) && 
-				NV_ID_isEqualInValue(&reld->rel, key)){
+			if(	NV_NodeID_isEqual(&reld->from, root) && 
+				NV_NodeID_isEqualInValue(&reld->rel, key)){
 				NV_Array_push(&list, &reld->to);
 			}
 		}
@@ -94,14 +94,14 @@ void NV_Dict_print(const NV_ID *root)
 	const NV_Node *n;
 	const NV_Relation *reld;
 	int cnt = 0;
-	NV_ID_printPrimVal(root);
+	NV_NodeID_printPrimVal(root);
 	printf(":\n");
 	for(n = nodeRoot.next; n; n = n->next){
 		if(n->type == kRelation){
 			reld = n->data;
-			if(NV_ID_isEqual(&reld->from, root)){
+			if(NV_NodeID_isEqual(&reld->from, root)){
 				printf("  |--- ");
-				NV_ID_printPrimVal(&reld->rel);
+				NV_NodeID_printPrimVal(&reld->rel);
 				printf(": ");
 				NV_printNodeByID(&reld->to);
 				printf("\n");

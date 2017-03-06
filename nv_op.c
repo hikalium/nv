@@ -9,7 +9,7 @@ void NV_Op_Internal_setCurrentPhase(const NV_ID *opList, int32_t phase)
 	NV_ID r, n;
 	n = NV_Node_createWithInt32(phase);
 	r = NV_NodeID_getRelationFrom(opList, &RELID_CURRENT_TERM_PHASE);
-	if(NV_ID_isEqual(&r, &NODEID_NOT_FOUND)){
+	if(NV_NodeID_isEqual(&r, &NODEID_NOT_FOUND)){
 		// create new one
 		NV_NodeID_createRelation(opList, &RELID_CURRENT_TERM_PHASE, &n);
 	} else{
@@ -66,7 +66,7 @@ void NV_addOp(const NV_ID *opList, const char *token, int32_t prec, const NV_ID 
 	NV_ID ePrec;
 	// まずtokenごとに分けたDirがある
 	opDir = NV_Dict_getByStringKey(opList, token);
-	if(NV_ID_isEqual(&opDir, &NODEID_NOT_FOUND)){
+	if(NV_NodeID_isEqual(&opDir, &NODEID_NOT_FOUND)){
 		// このtokenは初出なので新規追加
 		opDir = NV_Array_create();
 		NV_Dict_addKeyByCStr(opList, token, &opDir);
@@ -428,7 +428,7 @@ NV_ID NV_Op_codeBlock(const NV_ID *tList, int index)
 	root = NV_Array_create();
 	for(;;){
 		v = NV_Array_getByIndex(tList, index + 1);
-		if(NV_ID_isEqual(&v, &NODEID_NOT_FOUND)){
+		if(NV_NodeID_isEqual(&v, &NODEID_NOT_FOUND)){
 			// おかしい
 			return NV_Node_createWithString(
 				"Error: Expected } but not found.");
@@ -459,7 +459,7 @@ NV_ID NV_Op_strLiteral(const NV_ID *tList, int index)
 	root = NV_Array_create();
 	for(;;){
 		v = NV_Array_getByIndex(tList, index + 1);
-		if(NV_ID_isEqual(&v, &NODEID_NOT_FOUND)){
+		if(NV_NodeID_isEqual(&v, &NODEID_NOT_FOUND)){
 			// おかしい
 			return NV_Node_createWithString(
 				"Error: Expected \" but not found.");
@@ -758,7 +758,7 @@ void NV_tryExecOpAt(const NV_ID *tList, int index)
 		r = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");
 	}
-	if(!NV_ID_isEqual(&r, &NODEID_NULL)){
+	if(!NV_NodeID_isEqual(&r, &NODEID_NULL)){
 		// error ocuured
 		NV_Dict_removeUniqueEqKeyByCStr(&opStr, "recogAsOp");
 		NV_Dict_addKeyByCStr(&opStr, "failedOp", &opRecog);

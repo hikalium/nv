@@ -44,7 +44,7 @@ NV_ID NV_Array_clone(const NV_ID *base)
 	newArray = NV_Array_create();
 	for(i = 0; ; i++){
 		t = NV_Array_getByIndex(base, i);
-		if(NV_ID_isEqual(&t, &NODEID_NOT_FOUND)) break;
+		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
 		NV_Array_push(&newArray, &t);
 	}
 	return newArray;
@@ -60,7 +60,7 @@ NV_ID NV_Array_push(const NV_ID *array, const NV_ID *data)
 	t = *array;
 	for(;;){
 		next = NV_NodeID_getRelatedNodeFrom(&t, &RELID_ARRAY_NEXT);
-		if(NV_ID_isEqual(&next, &NODEID_NOT_FOUND)) break;
+		if(NV_NodeID_isEqual(&next, &NODEID_NOT_FOUND)) break;
 		t = next;
 	}
 	NV_NodeID_createRelation(&t, &RELID_ARRAY_NEXT, &v);
@@ -77,7 +77,7 @@ NV_ID NV_Array_pop(const NV_ID *array)
 	t = NV_NodeID_getRelatedNodeFrom(&prev, &RELID_ARRAY_NEXT);
 	for(;;){
 		next = NV_NodeID_getRelatedNodeFrom(&t, &RELID_ARRAY_NEXT);
-		if(NV_ID_isEqual(&next, &NODEID_NOT_FOUND)) break;
+		if(NV_NodeID_isEqual(&next, &NODEID_NOT_FOUND)) break;
 		prev = t;
 		t = next;
 	}
@@ -86,7 +86,7 @@ NV_ID NV_Array_pop(const NV_ID *array)
 	relnid = NV_NodeID_getRelationFrom(&prev, &RELID_ARRAY_NEXT);
 	NV_NodeID_remove(&relnid);
 	//
-	if(!NV_ID_isEqual(&t, &NODEID_NOT_FOUND)){
+	if(!NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)){
 		NV_Array_Internal_updateCountRel(array, -1);
 	}
 	//
@@ -124,7 +124,7 @@ NV_ID NV_Array_getByIndex(const NV_ID *array, int index)
 	for(; index; index--){
 		if(index == 0) break;
 		t = NV_NodeID_getRelatedNodeFrom(&t, &RELID_ARRAY_NEXT);
-		if(NV_ID_isEqual(&t, &NODEID_NOT_FOUND)) break;
+		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
 	}
 	return NV_Variable_getData(&t);
 }
@@ -137,10 +137,10 @@ void NV_Array_removeIndex(const NV_ID *array, int index)
 	for(; index; index--){
 		if(index == 0) break;
 		t = NV_NodeID_getRelatedNodeFrom(&t, &RELID_ARRAY_NEXT);
-		if(NV_ID_isEqual(&t, &NODEID_NOT_FOUND)) break;
+		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
 	}
 	// tのnextが削除対象。これをtnとおく。
-	if(!NV_ID_isEqual(&t, &NODEID_NOT_FOUND)){
+	if(!NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)){
 		tn = NV_NodeID_getRelatedNodeFrom(&t, &RELID_ARRAY_NEXT);
 		tnn = NV_NodeID_getRelatedNodeFrom(&tn, &RELID_ARRAY_NEXT);
 		r = NV_NodeID_getRelationFrom(&t, &RELID_ARRAY_NEXT);
@@ -159,7 +159,7 @@ void NV_Array_writeToIndex(const NV_ID *array, int index, const NV_ID *data)
 	for(; index; index--){
 		if(index == 0) break;
 		t = NV_NodeID_getRelatedNodeFrom(&t, &RELID_ARRAY_NEXT);
-		if(NV_ID_isEqual(&t, &NODEID_NOT_FOUND)) return;
+		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) return;
 	}
 	NV_Variable_assign(&t, data);
 }
@@ -174,7 +174,7 @@ NV_ID NV_Array_joinWithCStr(const NV_ID *array, const char *sep)
 	//
 	for(i = 0; ; i++){
 		t = NV_Array_getByIndex(array, i);
-		if(NV_ID_isEqual(&t, &NODEID_NOT_FOUND)) break;
+		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
 		sumLen += NV_NodeID_String_strlen(&t);
 	}
 	sumLen += i * strlen(sep);
@@ -182,7 +182,7 @@ NV_ID NV_Array_joinWithCStr(const NV_ID *array, const char *sep)
 	p = buf;
 	for(i = 0; ; i++){
 		t = NV_Array_getByIndex(array, i);
-		if(NV_ID_isEqual(&t, &NODEID_NOT_FOUND)) break;
+		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
 		s = NV_NodeID_getCStr(&t);
 		if(s){
 			NV_strncpy(p, s, sumLen - (p - buf), strlen(s));
@@ -226,7 +226,7 @@ void NV_Array_print(const NV_ID *array)
 	printf("[");
 	for(i = 0; ; i++){
 		t = NV_Array_getByIndex(array, i);
-		if(NV_ID_isEqual(&t, &NODEID_NOT_FOUND)) break;
+		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
 		if(i != 0) printf(",");
 		NV_printNodeByID(&t);
 	}
