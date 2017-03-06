@@ -88,9 +88,12 @@ struct NV_RELATION {
 #define NV_EXEC_FLAG_INTERACTIVE	0x04
 extern volatile sig_atomic_t NV_globalExecFlag;
 //
+NV_ID NV_Context_create();
+NV_ID NV_Context_getEvalStack(const NV_ID *ctx);
+void NV_Context_pushToEvalStack(const NV_ID *ctx, const NV_ID *code);
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
-int NV_interactiveInput(const NV_ID *cTypeList);
-void NV_evalLoop(const NV_ID *ctx);
+int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *ctx);
+void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx);
 
 // @nv_array.c
 NV_ID NV_Array_create();
@@ -205,7 +208,7 @@ NV_ID NV_createOpList();
 int32_t NV_getOpPrec(const NV_ID *op);
 void NV_getOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, NV_ID *idBuf, int count);
 void NV_removeOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, int count);
-void NV_tryExecOpAt(const NV_ID *tList, int index);
+void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx);
 void NV_printOp(const NV_ID *op);
 
 // @nv_path.c
@@ -235,6 +238,7 @@ extern const NV_ID RELID_EVAL_STACK;
 extern const NV_ID RELID_LAST_RESULT;
 extern const NV_ID RELID_CURRENT_TERM_INDEX;
 extern const NV_ID RELID_CURRENT_TERM_PHASE;
+extern const NV_ID RELID_CURRENT_SCOPE;
 const char *NV_NodeTypeList[kNodeTypeCount];
 const char c2hexTable[0x100];
 

@@ -4,19 +4,44 @@
 //
 volatile sig_atomic_t NV_globalExecFlag;
 
-int NV_interactiveInput(const NV_ID *cTypeList)
+NV_ID NV_Context_create()
+{
+	char s[128];
+	time_t td;
+	td = time(NULL);
+	strftime(s, sizeof(s), "%Y-%m-%d- %H:%M:%S", localtime(&td));
+	NV_ID ctx = NV_Node_createWithString(s);
+	//
+	NV_ID evalStack = NV_Array_create();
+	NV_Dict_addUniqueIDKey(&ctx, &RELID_EVAL_STACK, &evalStack);
+	//
+	return ctx;
+}
+
+NV_ID NV_Context_getEvalStack(const NV_ID *ctx)
+{
+	return NV_NodeID_getRelatedNodeFrom(ctx, &RELID_EVAL_STACK);
+}
+
+void NV_Context_pushToEvalStack(const NV_ID *ctx, const NV_ID *code)
+{
+	NV_ID evalStack = NV_Context_getEvalStack(ctx);
+	NV_ID currentScope = NV_Array_create();
+	NV_Dict_addUniqueIDKey(code, &RELID_CURRENT_SCOPE, &currentScope);
+	NV_Array_push(&evalStack, code);
+}
+
+int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *ctx)
 {
 	char line[MAX_INPUT_LEN];
 	NV_ID tokenList;
-	NV_ID evalStack = NV_NodeID_getRelatedNodeFrom(
-		&NODEID_NV_STATIC_ROOT, &RELID_EVAL_STACK);
 	//
 	if(NV_gets(line, sizeof(line)) != NULL){
 		tokenList = NV_tokenize(cTypeList, line);
 		if(IS_DEBUG_MODE()){
 			NV_printNodeByID(&tokenList); putchar('\n');
 		}
-		NV_Array_push(&evalStack, &tokenList);
+		NV_Context_pushToEvalStack(ctx, &tokenList);
 		if(IS_DEBUG_MODE()){
 			NV_printNodeByID(&tokenList); putchar('\n');
 		}
@@ -134,13 +159,12 @@ int NV_getNextOpIndex(const NV_ID *currentBlock, const NV_ID *ctx)
 
 
 
-void NV_evalLoop(const NV_ID *ctx)
+void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx)
 {
 	NV_ID currentBlock;
 	NV_ID currentTermIndexNode;
 	NV_ID currentTerm;
-	NV_ID evalStack = NV_NodeID_getRelatedNodeFrom(
-		&NODEID_NV_STATIC_ROOT, &RELID_EVAL_STACK);
+	NV_ID evalStack = NV_Context_getEvalStack(ctx);
 	NV_ID t;
 	int nextOpIndex, currentOpIndex;
 	for(;;){
@@ -180,13 +204,13 @@ void NV_evalLoop(const NV_ID *ctx)
 			//	printf("currentBlock[%d] ", currentOpIndex);
 			//	NV_printNodeByID(&currentTerm); putchar('\n');
 			//}
-			NV_tryExecOpAt(&currentBlock, currentOpIndex);
+			NV_tryExecOpAt(&currentBlock, currentOpIndex, ctx);
 			if(IS_DEBUG_MODE()){
 				NV_Array_print(&currentBlock); putchar('\n');
 			}
 		}
 		// search next term to do
-		nextOpIndex = NV_getNextOpIndex(&currentBlock, ctx);
+		nextOpIndex = NV_getNextOpIndex(&currentBlock, opList);
 		if(nextOpIndex == -1){
 			// no more op
 			t = NV_Array_pop(&evalStack);

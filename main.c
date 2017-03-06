@@ -56,13 +56,14 @@ int main(int argc, char *argv[])
 	t = NV_Path_createWithCStr("/var/log/httpd");
 	NV_printNodeByID(&t); putchar('\n');
 */
+	NV_ID ctx = NV_Context_create();
 	//
 	NV_globalExecFlag |= NV_EXEC_FLAG_INTERACTIVE;
 	for(;;){
-		NV_evalLoop(&opList);
+		NV_evalLoop(&opList, &ctx);
 		if(NV_globalExecFlag & NV_EXEC_FLAG_INTERACTIVE){
 			// 入力を取得して継続する
-			if(NV_interactiveInput(&cTypeList)){
+			if(NV_interactiveInput(&cTypeList, &ctx)){
 				break;
 			}
 		} else{
