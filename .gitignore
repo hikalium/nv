@@ -3,9 +3,8 @@
 a.out*
 nv
 nv.dSYM/*
-test*
 *.bin
-savefile
+save*
 html/
 latex/
 *.dtps/
