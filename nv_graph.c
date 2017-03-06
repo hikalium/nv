@@ -48,12 +48,13 @@ void NV_Graph_init()
 void NV_Graph_insertInitialNode()
 {
 	NV_Graph_initStaticNodes();
-	// evalStackが存在しなければ作成する
-	NV_ID evalStack;
-	evalStack = NV_NodeID_getRelatedNodeFrom(&NODEID_NV_STATIC_ROOT, &RELID_EVAL_STACK);
-	if(NV_NodeID_isEqual(&evalStack, &NODEID_NOT_FOUND)){
-		evalStack = NV_Array_create();
-		NV_NodeID_createRelation(&NODEID_NV_STATIC_ROOT, &RELID_EVAL_STACK, &evalStack);
+	// contextListが存在しなければ作成する
+	NV_ID contextList;
+	contextList = NV_getContextList();
+	if(NV_NodeID_isEqual(&contextList, &NODEID_NOT_FOUND)){
+		contextList = NV_Array_create();
+		NV_NodeID_createRelation(&NODEID_NV_STATIC_ROOT, 
+			&RELID_CONTEXT_LIST, &contextList);
 	}
 }
 

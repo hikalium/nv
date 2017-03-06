@@ -57,6 +57,10 @@ int main(int argc, char *argv[])
 	NV_printNodeByID(&t); putchar('\n');
 */
 	NV_ID ctx = NV_Context_create();
+	if(IS_DEBUG_MODE()){
+		NV_ID ctxList = NV_getContextList();
+		NV_Array_print(&ctxList);
+	}
 	//
 	NV_globalExecFlag |= NV_EXEC_FLAG_INTERACTIVE;
 	for(;;){

@@ -88,6 +88,7 @@ struct NV_RELATION {
 #define NV_EXEC_FLAG_INTERACTIVE	0x04
 extern volatile sig_atomic_t NV_globalExecFlag;
 //
+NV_ID NV_getContextList();
 NV_ID NV_Context_create();
 NV_ID NV_Context_getEvalStack(const NV_ID *ctx);
 void NV_Context_pushToEvalStack(const NV_ID *ctx, const NV_ID *code);
@@ -239,6 +240,7 @@ extern const NV_ID RELID_LAST_RESULT;
 extern const NV_ID RELID_CURRENT_TERM_INDEX;
 extern const NV_ID RELID_CURRENT_TERM_PHASE;
 extern const NV_ID RELID_CURRENT_SCOPE;
+extern const NV_ID RELID_CONTEXT_LIST;
 const char *NV_NodeTypeList[kNodeTypeCount];
 const char c2hexTable[0x100];
 

@@ -4,6 +4,11 @@
 //
 volatile sig_atomic_t NV_globalExecFlag;
 
+NV_ID NV_getContextList()
+{
+	return NV_NodeID_getRelatedNodeFrom(&NODEID_NV_STATIC_ROOT, &RELID_CONTEXT_LIST);
+}
+
 NV_ID NV_Context_create()
 {
 	char s[128];
@@ -14,6 +19,9 @@ NV_ID NV_Context_create()
 	//
 	NV_ID evalStack = NV_Array_create();
 	NV_Dict_addUniqueIDKey(&ctx, &RELID_EVAL_STACK, &evalStack);
+	//
+	NV_ID ctxList = NV_getContextList();
+	NV_Array_push(&ctxList, &ctx);
 	//
 	return ctx;
 }
