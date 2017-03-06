@@ -24,6 +24,7 @@ void NV_Graph_initStaticNodes()
 	//
 	NV_Graph_addStaticNode(&RELID_TERM_TYPE, "relTreeType");
 	NV_Graph_addStaticNode(&RELID_ARRAY_NEXT, "relArrayNext");
+	//NV_Graph_addStaticNode(&RELID_ARRAY_COUNT, "relArrayCount");
 	NV_Graph_addStaticNode(&RELID_VARIABLE_DATA, "relVariableData");
 	NV_Graph_addStaticNode(&RELID_POINTER_TARGET, "relPointerTarget");
 	NV_Graph_addStaticNode(&RELID_OP_PRECEDENCE, "relOpPrec");

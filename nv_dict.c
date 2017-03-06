@@ -51,6 +51,12 @@ NV_ID NV_Dict_get(const NV_ID *root, const NV_ID *key)
 	// keyが同じ値を持つ(IDが等しいとは限らない)オブジェクトを返す。
 	return NV_NodeID_getEqRelatedNodeFrom(root, key);
 }
+
+NV_ID NV_Dict_getEqID(const NV_ID *root, const NV_ID *key)
+{
+	return NV_NodeID_getRelatedNodeFrom(root, key);
+}
+
 /*
 NV_ID NV_Dict_getAll(const NV_ID *root, const NV_ID *key)
 {

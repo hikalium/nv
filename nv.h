@@ -113,6 +113,7 @@ NV_ID NV_Dict_addUniqueIDKey(const NV_ID *root, const NV_ID *key, const NV_ID *v
 NV_ID NV_Dict_addUniqueEqKeyByCStr(const NV_ID *root, const char *key, const NV_ID *value);
 NV_ID NV_Dict_removeUniqueEqKeyByCStr(const NV_ID *root, const char *key);
 NV_ID NV_Dict_get(const NV_ID *root, const NV_ID *key);
+NV_ID NV_Dict_getEqID(const NV_ID *root, const NV_ID *key);
 //NV_ID NV_Dict_getAll(const NV_ID *root, const NV_ID *key);
 NV_ID NV_Dict_getByStringKey(const NV_ID *root, const char *key);
 void NV_Dict_print(const NV_ID *root);

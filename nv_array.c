@@ -8,13 +8,13 @@ void NV_Array_Internal_setCount(const NV_ID *array, int32_t count)
 	NV_ID cn;
 	cn = NV_Node_createWithInt32(count);
 	
-	NV_Dict_addUniqueEqKeyByCStr(array, "count", &cn);
+	NV_Dict_addUniqueIDKey(array, &RELID_ARRAY_COUNT, &cn);
 }
 
 int32_t NV_Array_Internal_getCount(const NV_ID *array)
 {
 	NV_ID cn;
-	cn = NV_Dict_getByStringKey(array, "count");
+	cn = NV_Dict_getEqID(array, &RELID_ARRAY_COUNT);
 	return NV_NodeID_getInt32(&cn);
 }
 

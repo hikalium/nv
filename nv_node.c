@@ -453,11 +453,6 @@ void NV_Node_setRelation
 	NV_Node *n;
 	NV_Relation *reld;
 	//
-/*
-	if(!NV_NodeID_exists(from) || !NV_NodeID_exists(rel) || !NV_NodeID_exists(to)){
-		return;
-	}
-*/
 	n = NV_NodeID_getNode(relnid);
 	if(n){
 		if(n->type != kNone) NV_Node_Internal_resetData(n);
@@ -765,7 +760,6 @@ NV_ID NV_Node_createWithInt32(int32_t v)
 	NV_Node_Internal_setInt32ToID(&id, v);
 	return id;
 }
-
 
 int32_t NV_NodeID_getInt32(const NV_ID *id)
 {
