@@ -3,17 +3,37 @@
 // TermType: Array
 //
 
+void NV_Array_Internal_setCount(const NV_ID *array, int32_t count)
+{
+	NV_ID cn;
+	cn = NV_Node_createWithInt32(count);
+	
+	NV_Dict_addUniqueEqKeyByCStr(array, "count", &cn);
+}
+
+int32_t NV_Array_Internal_getCount(const NV_ID *array)
+{
+	NV_ID cn;
+	cn = NV_Dict_getByStringKey(array, "count");
+	return NV_NodeID_getInt32(&cn);
+}
+
+void NV_Array_Internal_updateCountRel(const NV_ID *array, int32_t diff)
+{
+	int32_t count;
+	count = NV_Array_Internal_getCount(array);
+	NV_Array_Internal_setCount(array, count + diff);
+}
+
 NV_ID NV_Array_create()
 {
-	NV_ID arrayRoot;
-	arrayRoot = NV_Node_create();
-	NV_NodeID_createRelation(&arrayRoot, &RELID_TERM_TYPE, &NODEID_TERM_TYPE_ARRAY);
+	NV_ID array;
+	array = NV_Node_create();
+	NV_NodeID_createRelation(&array, &RELID_TERM_TYPE, &NODEID_TERM_TYPE_ARRAY);
 	//
-	NV_ID count;
-	count = NV_Node_createWithInt32(0);
-	NV_Dict_addUniqueEqKeyByCStr(&arrayRoot, "count", &count);
+	NV_Array_Internal_setCount(&array, 0);
 	//
-	return arrayRoot;
+	return array;
 }
 
 NV_ID NV_Array_clone(const NV_ID *base)
@@ -45,10 +65,7 @@ NV_ID NV_Array_push(const NV_ID *array, const NV_ID *data)
 	}
 	NV_NodeID_createRelation(&t, &RELID_ARRAY_NEXT, &v);
 	//
-	NV_ID count;
-	count = NV_Dict_getByStringKey(array, "count");
-	count = NV_Node_createWithInt32(NV_NodeID_getInt32(&count) + 1);
-	NV_Dict_addUniqueEqKeyByCStr(array, "count", &count);
+	NV_Array_Internal_updateCountRel(array, +1);
 	//
 	return v;
 }
@@ -69,10 +86,9 @@ NV_ID NV_Array_pop(const NV_ID *array)
 	relnid = NV_NodeID_getRelationFrom(&prev, &RELID_ARRAY_NEXT);
 	NV_NodeID_remove(&relnid);
 	//
-	NV_ID count;
-	count = NV_Dict_getByStringKey(array, "count");
-	count = NV_Node_createWithInt32(NV_NodeID_getInt32(&count) - 1);
-	NV_Dict_addUniqueEqKeyByCStr(array, "count", &count);
+	if(!NV_ID_isEqual(&t, &NODEID_NOT_FOUND)){
+		NV_Array_Internal_updateCountRel(array, -1);
+	}
 	//
 	return NV_Variable_getData(&t);
 }
@@ -95,13 +111,9 @@ NV_ID NV_Array_last(const NV_ID *array)
 
 int32_t NV_Array_count(const NV_ID *array)
 {
-	NV_ID countNode;
-	//
 	if(!array) return 0;
-	countNode = NV_Dict_getByStringKey(array, "count");
-	if(NV_ID_isEqual(&countNode, &NODEID_NOT_FOUND)) return 0;
-	//
-	return NV_NodeID_getInt32(&countNode);
+	if(!NV_isTermType(array, &NODEID_TERM_TYPE_ARRAY)) return 0;
+	return NV_Array_Internal_getCount(array);
 }
 
 NV_ID NV_Array_getByIndex(const NV_ID *array, int index)
@@ -134,10 +146,7 @@ void NV_Array_removeIndex(const NV_ID *array, int index)
 		r = NV_NodeID_getRelationFrom(&t, &RELID_ARRAY_NEXT);
 		NV_NodeID_updateRelationTo(&r, &tnn);
 		//
-		NV_ID count;
-		count = NV_Dict_getByStringKey(array, "count");
-		count = NV_Node_createWithInt32(NV_NodeID_getInt32(&count) - 1);
-		NV_Dict_addUniqueEqKeyByCStr(array, "count", &count);
+		NV_Array_Internal_updateCountRel(array, -1);
 		//
 	}
 }
