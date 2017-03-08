@@ -40,8 +40,10 @@ void NV_Context_pushToEvalStack
 	if(newScope){
 		currentScope = *newScope;	// GLOBAL SCOPE
 	} else{
+		NV_ID parentScope = NV_Context_getCurrentScope(ctx);
 		currentScope = NV_Node_createWithStringFormat(
 			"scope level %d", NV_Array_count(&evalStack));
+		NV_Dict_addUniqueIDKey(&currentScope, &RELID_PARENT_SCOPE, &parentScope);
 	}
 	//
 	NV_Dict_addUniqueIDKey(code, &RELID_CURRENT_SCOPE, &currentScope);

@@ -15,6 +15,7 @@ NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *ctx)
 	// 変数としてidが解釈できるなら、その変数の値に相当するidを返す
 	// 変数として解釈できる、とは
 	//   - リテラルでない文字列で、コンテキストに存在する変数名と等しい
+	//    - コンテキストはネストされている。元までたどる。
 	//   - TermType === Variable
 	// 無理ならば、もとのidを返す
 	NV_ID vid;
@@ -28,6 +29,13 @@ NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *ctx)
 			vid = NV_Variable_getData(&vid);
 		} else{
 			vid = *id;
+		}
+	}
+	if(NV_NodeID_isEqual(&vid, id)){
+		// このコンテキスト階層では見つからなかったので、親があればたどる
+		NV_ID pCtx = NV_Dict_getEqID(ctx, &RELID_PARENT_SCOPE);
+		if(!NV_NodeID_isEqual(&pCtx, &NODEID_NOT_FOUND)){
+			return NV_Term_tryReadAsVariable(id, &pCtx);
 		}
 	}
 	return vid;
@@ -68,13 +76,6 @@ NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *ctx)
 		return opID;
 	}
 	return *id;
-}
-
-
-int NV_Term_isStrLiteral(const NV_ID *id, const NV_ID *ctx)
-{
-	NV_ID vid = NV_Term_tryReadAsVariable(id, ctx);
-	return NV_NodeID_isInteger(&vid);
 }
 
 int NV_Term_isIntegerNotVal(const NV_ID *id)

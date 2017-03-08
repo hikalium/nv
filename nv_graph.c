@@ -33,6 +33,8 @@ void NV_Graph_initStaticNodes()
 	NV_Graph_addStaticNode(&RELID_LAST_RESULT, "relLastResult");
 	NV_Graph_addStaticNode(&RELID_CURRENT_TERM_INDEX, "relCurrentTermIndex");
 	NV_Graph_addStaticNode(&RELID_CURRENT_TERM_PHASE, "relCurrentTermPhase");
+	NV_Graph_addStaticNode(&RELID_CURRENT_SCOPE, "_currentScope");
+	NV_Graph_addStaticNode(&RELID_PARENT_SCOPE, "_parentScope");
 }
 
 void NV_Graph_init()

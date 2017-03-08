@@ -1,0 +1,1 @@
+a = 3; f = {print a; ls; b = 32; print b; ls}; f(); ls
