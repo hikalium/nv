@@ -119,7 +119,9 @@ int32_t NV_Array_count(const NV_ID *array)
 NV_ID NV_Array_getByIndex(const NV_ID *array, int index)
 {
 	NV_ID t;
-	if(index < 0) return NODEID_NULL;
+	if(index < 0){
+		index =  NV_Array_count(array) - 1;
+	}
 	t = NV_NodeID_getRelatedNodeFrom(array, &RELID_ARRAY_NEXT);
 	for(; index; index--){
 		if(index == 0) break;

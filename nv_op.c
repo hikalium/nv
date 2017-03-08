@@ -303,9 +303,10 @@ NV_ID NV_Op_restore(const NV_ID *tList, int index)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Op_ls(const NV_ID *tList, int index)
+NV_ID NV_Op_ls(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	NV_ID ans, pathStr;
+	NV_ID scope;
 	//
 	pathStr = NV_Array_getByIndex(tList, index + 1);
 	if(NV_NodeID_isString(&pathStr)){
@@ -316,7 +317,8 @@ NV_ID NV_Op_ls(const NV_ID *tList, int index)
 		NV_Dict_print(&d);
 		NV_Array_removeIndex(tList, index + 1);
 	} else{
-		NV_Dict_print(&NODEID_NULL);
+		scope = NV_Context_getCurrentScope(ctx);
+		NV_Dict_print(&scope);
 	}
 	ans = NV_Node_createWithInt32(0);
 	NV_Array_writeToIndex(tList, index, &ans);
@@ -390,26 +392,26 @@ NV_ID NV_Op_clean(const NV_ID *tList, int index)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Op_assign(const NV_ID *tList, int index)
+NV_ID NV_Op_assign(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	const int operandCount = 2;
 	NV_ID operand[operandCount];
 	int operandIndex[operandCount] = {-1, 1};
 	//
-	const NV_ID *scope = &NODEID_NULL;
+	const NV_ID scope = NV_Context_getCurrentScope(ctx);
 	NV_ID v = operand[0];
 	//
 	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
-	if(NV_Term_isAssignable(&operand[0], scope)){
+	if(NV_Term_isAssignable(&operand[0], &scope)){
 		// 既存変数への代入
-		v = NV_Term_getAssignableNode(&operand[0], scope);
+		v = NV_Term_getAssignableNode(&operand[0], &scope);
 	} else{
 		// 新規変数を作成して代入
 		if(!NV_NodeID_isString(&operand[0])){
 			return NV_Node_createWithString(
 				"Error: Invalid Operand Type.");
 		}
-		v = NV_Variable_createWithName(scope, &operand[0]);
+		v = NV_Variable_createWithName(&scope, &operand[0]);
 	}
 	//
 	NV_Variable_assign(&v, &operand[1]);	
@@ -576,13 +578,13 @@ NV_ID NV_Op_for(const NV_ID *tList, int index, const NV_ID *ctx)
 	t = NV_Array_getByIndex(tList, index + phase);
 	if(phase == 1){
 		// 初期化式を実行スタックに積んで終了
-		NV_Context_pushToEvalStack(ctx, &t); 
+		NV_Context_pushToEvalStack(ctx, &t, NULL); 
 		NV_Op_Internal_setCurrentPhase(tList, 2);
 		return NODEID_NULL;
 	} else if(phase == 2){
 		// 条件式のコピーを実行スタックに積んで終了
 		t = NV_Array_clone(&t);
-		NV_Context_pushToEvalStack(ctx, &t); 
+		NV_Context_pushToEvalStack(ctx, &t, NULL); 
 		NV_Op_Internal_setCurrentPhase(tList, 4);
 		return NODEID_NULL;
 	} else if(phase == 4){
@@ -591,7 +593,7 @@ NV_ID NV_Op_for(const NV_ID *tList, int index, const NV_ID *ctx)
 		tRes = NV_Array_last(&tRes);
 		if(NV_Term_getInt32(&tRes, scope)){
 			t = NV_Array_clone(&t);
-			NV_Context_pushToEvalStack(ctx, &t); 
+			NV_Context_pushToEvalStack(ctx, &t, NULL); 
 			NV_Op_Internal_setCurrentPhase(tList, 3);
 			return NODEID_NULL;
 		}
@@ -599,7 +601,7 @@ NV_ID NV_Op_for(const NV_ID *tList, int index, const NV_ID *ctx)
 	} else if(phase == 3){
 		// 更新式のコピーを実行スタックに積んで終了
 		t = NV_Array_clone(&t);
-		NV_Context_pushToEvalStack(ctx, &t); 
+		NV_Context_pushToEvalStack(ctx, &t, NULL); 
 		NV_Op_Internal_setCurrentPhase(tList, 2);
 		return NODEID_NULL;
 	}
@@ -617,19 +619,19 @@ NV_ID NV_Op_for(const NV_ID *tList, int index, const NV_ID *ctx)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Op_print(const NV_ID *tList, int index)
+NV_ID NV_Op_print(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	const int operandCount = 1;
 	NV_ID operand[operandCount];
 	int operandIndex[operandCount] = {1};
 	//
-	const NV_ID *scope = &NODEID_NULL;
+	const NV_ID scope = NV_Context_getCurrentScope(ctx);
 	//
 	NV_ID ans;
 	//
 	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
 	//
-	operand[0] = NV_Term_tryReadAsVariable(&operand[0], scope);
+	operand[0] = NV_Term_tryReadAsVariable(&operand[0], &scope);
 	NV_printNodeByID(&operand[0]); putchar('\n');
 	//
 	NV_removeOperandByList(tList, index, operandIndex, operandCount);
@@ -689,14 +691,14 @@ NV_ID NV_Op_callArgs(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	// {code block}(arg1, arg2, ...)
 	NV_ID t, r;
-	const NV_ID *scope = &NODEID_NULL;
+	const NV_ID scope = NV_Context_getCurrentScope(ctx);
 	int phase;
 	phase = NV_Op_Internal_getCurrentPhase(tList);
 	// 初めてこのOpを実行する
 	// 実行すべきコードブロックを取得
 	t = NV_Array_getByIndex(tList, index - 1);
-	t = NV_Term_tryReadAsVariable(&t, scope);
-	if(!NV_Term_isArray(&t, scope)){
+	t = NV_Term_tryReadAsVariable(&t, &scope);
+	if(!NV_Term_isArray(&t, &scope)){
 		return NV_Node_createWithString("pre term is not an Array");
 	}
 	if(IS_DEBUG_MODE()){
@@ -708,7 +710,7 @@ NV_ID NV_Op_callArgs(const NV_ID *tList, int index, const NV_ID *ctx)
 	//
 	//NV_Array_removeIndex(tList, index);
 	// 問題ないので実行スタックに積む
-	NV_Context_pushToEvalStack(ctx, &t); 
+	NV_Context_pushToEvalStack(ctx, &t, NULL); 
 	//
 	return NODEID_NULL;
 }
@@ -758,19 +760,19 @@ void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_restore")){
 		r = NV_Op_restore(tList, index);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_ls")){
-		r = NV_Op_ls(tList, index);
+		r = NV_Op_ls(tList, index, ctx);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_ls2")){
 		r = NV_Op_ls2(tList, index);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_last")){
 		r = NV_Op_last(tList, index);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_assign")){
-		r = NV_Op_assign(tList, index);
+		r = NV_Op_assign(tList, index, ctx);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_codeBlock")){
 		r = NV_Op_codeBlock(tList, index, "{", "}");
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_if")){
 		r = NV_Op_if(tList, index, ctx);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_print")){
-		r = NV_Op_print(tList, index);
+		r = NV_Op_print(tList, index, ctx);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_for")){
 		r = NV_Op_for(tList, index, ctx);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_info")){

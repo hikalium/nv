@@ -31,10 +31,19 @@ NV_ID NV_Context_getEvalStack(const NV_ID *ctx)
 	return NV_NodeID_getRelatedNodeFrom(ctx, &RELID_EVAL_STACK);
 }
 
-void NV_Context_pushToEvalStack(const NV_ID *ctx, const NV_ID *code)
+void NV_Context_pushToEvalStack
+(const NV_ID *ctx, const NV_ID *code, const NV_ID *newScope)
 {
 	NV_ID evalStack = NV_Context_getEvalStack(ctx);
-	NV_ID currentScope = NV_Array_create();
+	//
+	NV_ID currentScope;
+	if(newScope){
+		currentScope = *newScope;	// GLOBAL SCOPE
+	} else{
+		currentScope = NV_Node_createWithStringFormat(
+			"scope level %d", NV_Array_count(&evalStack));
+	}
+	//
 	NV_Dict_addUniqueIDKey(code, &RELID_CURRENT_SCOPE, &currentScope);
 	NV_Array_push(&evalStack, code);
 	if(IS_DEBUG_MODE()){
@@ -43,6 +52,18 @@ void NV_Context_pushToEvalStack(const NV_ID *ctx, const NV_ID *code)
 		printf("evalStack: ");
 		NV_Array_print(&evalStack); putchar('\n');
 	}
+}
+
+NV_ID NV_Context_getCurrentCode(const NV_ID *ctx)
+{
+	NV_ID evalStack = NV_Context_getEvalStack(ctx);
+	return NV_Array_last(&evalStack);
+}
+
+NV_ID NV_Context_getCurrentScope(const NV_ID *ctx)
+{
+	NV_ID currentCode = NV_Context_getCurrentCode(ctx);
+	return NV_NodeID_getRelatedNodeFrom(&currentCode, &RELID_CURRENT_SCOPE);
 }
 
 int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *ctx)
@@ -55,7 +76,7 @@ int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *ctx)
 		if(IS_DEBUG_MODE()){
 			NV_printNodeByID(&tokenList); putchar('\n');
 		}
-		NV_Context_pushToEvalStack(ctx, &tokenList);
+		NV_Context_pushToEvalStack(ctx, &tokenList, &NODEID_NULL);
 		if(IS_DEBUG_MODE()){
 			NV_printNodeByID(&tokenList); putchar('\n');
 		}

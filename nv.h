@@ -6,6 +6,7 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <signal.h>
+#include <stdarg.h>
 
 #define MAX_INPUT_LEN		1024
 #define MAX_TOKEN_LEN		256
@@ -91,7 +92,9 @@ extern volatile sig_atomic_t NV_globalExecFlag;
 NV_ID NV_getContextList();
 NV_ID NV_Context_create();
 NV_ID NV_Context_getEvalStack(const NV_ID *ctx);
-void NV_Context_pushToEvalStack(const NV_ID *ctx, const NV_ID *code);
+void NV_Context_pushToEvalStack(const NV_ID *ctx, const NV_ID *code, const NV_ID *newScope);
+NV_ID NV_Context_getCurrentCode(const NV_ID *ctx);
+NV_ID NV_Context_getCurrentScope(const NV_ID *ctx);
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
 int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *ctx);
 void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx);
@@ -185,6 +188,7 @@ NV_ID NV_NodeID_getEqRelatedNodeFrom(const NV_ID *from, const NV_ID *rel);
 // @nv_string.c
 int NV_NodeID_isString(const NV_ID *id);
 NV_ID NV_Node_createWithString(const char *s);
+NV_ID NV_Node_createWithStringFormat(const char *fmt, ...);
 void NV_NodeID_createAndString(const NV_ID *id, const char *s);
 const char *NV_NodeID_getCStr(const NV_ID *id);
 int NV_Node_String_compare(const NV_Node *na, const NV_Node *nb);

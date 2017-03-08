@@ -41,6 +41,27 @@ NV_ID NV_Node_createWithString(const char *s)
 	return id;
 }
 
+NV_ID NV_Node_createWithStringFormat(const char *fmt, ...)
+{
+	char *s;
+	int sLen;
+	va_list ap;
+	NV_ID newID;
+	//
+	sLen = strlen(fmt) * 2;
+	s = NV_malloc(sLen);
+	//
+	va_start(ap, fmt);
+	vsnprintf(s, sLen, fmt, ap);
+	va_end(ap);
+	//
+	newID = NV_Node_createWithString(s);
+	//
+	NV_free(s);
+	//
+	return newID;
+}
+
 void NV_NodeID_createAndString(const NV_ID *id, const char *s)
 {
 	NV_NodeID_create(id);
