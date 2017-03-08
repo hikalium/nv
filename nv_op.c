@@ -132,6 +132,8 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"if",		10000,	"NV_Op_if"},
 	{"for",		10000,	"NV_Op_for"},
 	//
+	{"(",		15000,	"NV_Op_callArgs"},
+	//
 	{" ",		20000,	"NV_Op_nothing"},
 	//
 	{"{",		30000,	"NV_Op_codeBlock"},
@@ -418,7 +420,8 @@ NV_ID NV_Op_assign(const NV_ID *tList, int index)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Op_codeBlock(const NV_ID *tList, int index)
+NV_ID NV_Op_codeBlock
+(const NV_ID *tList, int index, const char *openTerm, const char *closeTerm)
 {
 	NV_ID v;
 	//
@@ -431,14 +434,14 @@ NV_ID NV_Op_codeBlock(const NV_ID *tList, int index)
 		if(NV_NodeID_isEqual(&v, &NODEID_NOT_FOUND)){
 			// おかしい
 			return NV_Node_createWithString(
-				"Error: Expected } but not found.");
+				"Error: Expected closeTerm but not found.");
 		}
 		NV_Array_removeIndex(tList, index + 1);
-		if(NV_NodeID_String_compareWithCStr(&v, "{") == 0){
+		if(NV_NodeID_String_compareWithCStr(&v, openTerm) == 0){
 			// 開きかっこ
 			nc++;
 		}
-		if(NV_NodeID_String_compareWithCStr(&v, "}") == 0){
+		if(NV_NodeID_String_compareWithCStr(&v, closeTerm) == 0){
 			// 終了
 			nc--;
 			if(nc == 0) break;
@@ -682,14 +685,43 @@ NV_ID NV_Op_unaryPrefix(const NV_ID *tList, int index, int mod)
 	return NODEID_NULL;
 }
 
+NV_ID NV_Op_callArgs(const NV_ID *tList, int index, const NV_ID *ctx)
+{
+	// {code block}(arg1, arg2, ...)
+	NV_ID t, r;
+	const NV_ID *scope = &NODEID_NULL;
+	int phase;
+	phase = NV_Op_Internal_getCurrentPhase(tList);
+	// 初めてこのOpを実行する
+	// 実行すべきコードブロックを取得
+	t = NV_Array_getByIndex(tList, index - 1);
+	t = NV_Term_tryReadAsVariable(&t, scope);
+	if(!NV_Term_isArray(&t, scope)){
+		return NV_Node_createWithString("pre term is not an Array");
+	}
+	if(IS_DEBUG_MODE()){
+		printf("Exec block: ");
+		NV_Array_print(&t); putchar('\n');
+	}
+	// 引数ブロックをまとめてもらう
+	r = NV_Op_codeBlock(tList, index, "(", ")");
+	//
+	//NV_Array_removeIndex(tList, index);
+	// 問題ないので実行スタックに積む
+	NV_Context_pushToEvalStack(ctx, &t); 
+	//
+	return NODEID_NULL;
+}
+
 void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	NV_ID opStr = NV_Array_getByIndex(tList, index);
 	NV_ID opRecog = NV_Dict_getByStringKey(&opStr, "recogAsOp");
 	//
 	if(IS_DEBUG_MODE()){
-		printf("begin op ");
+		printf("begin op at index: %d ", index);
 		NV_printNodeByID(&opRecog);
+		NV_printNodeByID(tList);
 		putchar('\n');
 	}
 	//
@@ -734,7 +766,7 @@ void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_assign")){
 		r = NV_Op_assign(tList, index);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_codeBlock")){
-		r = NV_Op_codeBlock(tList, index);
+		r = NV_Op_codeBlock(tList, index, "{", "}");
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_if")){
 		r = NV_Op_if(tList, index, ctx);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_print")){
@@ -751,6 +783,8 @@ void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 		r = NV_Op_unaryPrefix(tList, index, 0);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_sign_minus")){
 		r = NV_Op_unaryPrefix(tList, index, 1);
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_callArgs")){
+		r = NV_Op_callArgs(tList, index, ctx);
 	} else{
 		r = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");
@@ -766,6 +800,7 @@ void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 		if(IS_DEBUG_MODE()){
 			printf("op failed:");
 			NV_printNodeByID(&r);
+			NV_printNodeByID(&opRecog);
 			putchar('\n');
 		}
 	}

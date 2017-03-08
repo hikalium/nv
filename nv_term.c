@@ -62,6 +62,9 @@ NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *ctx)
 		if(triedPrec == -1 || NV_getOpPrec(&opID) < triedPrec) break;
 	}
 	if(!NV_NodeID_isEqual(&opID, &NODEID_NOT_FOUND)){
+		if(IS_DEBUG_MODE()){
+			printf("op found at index: %d\n", i);
+		}
 		return opID;
 	}
 	return *id;
