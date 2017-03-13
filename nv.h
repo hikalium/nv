@@ -248,6 +248,7 @@ extern const NV_ID RELID_CURRENT_TERM_PHASE;
 extern const NV_ID RELID_CURRENT_SCOPE;
 extern const NV_ID RELID_PARENT_SCOPE;
 extern const NV_ID RELID_CONTEXT_LIST;
+extern const NV_ID RELID_NEXT_CONTEXT;
 const char *NV_NodeTypeList[kNodeTypeCount];
 const char c2hexTable[0x100];
 

@@ -104,6 +104,7 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"ls",		10,		"NV_Op_ls"},
 	{"ls2",		10,		"NV_Op_ls2"},
 	{"lsctx",	10,		"NV_Op_lsctx"},
+	{"swctx",	10,		"NV_Op_swctx"},
 	{"last",	10,		"NV_Op_last"},
 	{"save",	10,		"NV_Op_save"},
 	{"restore",	10,		"NV_Op_restore"},
@@ -348,6 +349,43 @@ NV_ID NV_Op_lsctx(const NV_ID *tList, int index)
 	NV_Array_print(&cl); putchar('\n');
 	//
 	NV_Array_removeIndex(tList, index);
+	return NODEID_NULL;
+}
+
+NV_ID NV_Op_swctx(const NV_ID *tList, int index, const NV_ID *ctx)
+{
+	const int operandCount = 1;
+	NV_ID operand[operandCount];
+	int operandIndex[operandCount] = {1};
+	//
+	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
+	//
+	const NV_ID scope = NV_Context_getCurrentScope(ctx);
+	NV_ID v = operand[0];
+	//
+	if(!NV_Term_isInteger(&v, &scope)){
+		return NV_Node_createWithString("Operand is not an integer");
+	}
+	int contextIndex = NV_Term_getInt32(&v, &scope);
+	NV_ID contextList = NV_getContextList();
+	NV_ID nextContext = NV_Array_getByIndex(&contextList, contextIndex);
+	if(NV_NodeID_isEqual(&nextContext, &NODEID_NOT_FOUND)){
+		return NV_Node_createWithString("index is out of range");
+	}
+	if(NV_NodeID_isEqual(&nextContext, ctx)){
+		return NV_Node_createWithString("Already on the context");
+	}
+	//
+	NV_Dict_addUniqueIDKey(ctx, &RELID_NEXT_CONTEXT, &nextContext);
+	//
+	printf("Switch to context: ");
+	NV_printNodeByID(&nextContext);
+	putchar('\n');
+	//
+	NV_removeOperandByList(tList, index, operandIndex, operandCount);
+	//
+	NV_Array_writeToIndex(tList, index, &v);
+	//
 	return NODEID_NULL;
 }
 
@@ -804,6 +842,8 @@ void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 		r = NV_Op_callArgs(tList, index, ctx);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_lsctx")){
 		r = NV_Op_lsctx(tList, index);
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_swctx")){
+		r = NV_Op_swctx(tList, index, ctx);
 	} else{
 		r = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");

@@ -65,6 +65,14 @@ int main(int argc, char *argv[])
 	NV_globalExecFlag |= NV_EXEC_FLAG_INTERACTIVE;
 	for(;;){
 		NV_evalLoop(&opList, &ctx);
+		// check if context should be changed
+		NV_ID nextContext = NV_Dict_getEqID(&ctx, &RELID_NEXT_CONTEXT);
+		if(!NV_NodeID_isEqual(&nextContext, &NODEID_NOT_FOUND)){
+			NV_Dict_removeUniqueIDKey(&ctx, &RELID_NEXT_CONTEXT);
+			ctx = nextContext;
+			continue;
+		}
+		//
 		if(NV_globalExecFlag & NV_EXEC_FLAG_INTERACTIVE){
 			// 入力を取得して継続する
 			if(NV_interactiveInput(&cTypeList, &ctx)){
