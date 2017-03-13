@@ -501,7 +501,6 @@ NV_ID NV_Op_if(const NV_ID *tList, int index, const NV_ID *ctx)
 	NV_ID t, tRes;
 	const NV_ID scope = NV_Context_getCurrentScope(ctx);
 	int phase;
-	NV_ID evalStack = NV_Context_getEvalStack(ctx);
 	// phaseには、次に実行すべき項のoffsetが格納されていることとする。
 	phase = NV_Op_Internal_getCurrentPhase(tList);
 	if(phase == -1) phase = 1;
@@ -516,7 +515,7 @@ NV_ID NV_Op_if(const NV_ID *tList, int index, const NV_ID *ctx)
 				// 終了処理へ
 			} else{
 				// 条件節を実行スタックに追加。この文が実行されてから現在の文に戻ってくる。
-				NV_Array_push(&evalStack, &t);
+				NV_Context_pushToEvalStack(ctx, &t, NULL);
 				NV_Op_Internal_setCurrentPhase(tList, phase + 1);
 				return NODEID_NULL;
 			}
@@ -531,7 +530,7 @@ NV_ID NV_Op_if(const NV_ID *tList, int index, const NV_ID *ctx)
 				// 条件を評価し、もしもtrueなら実行部分を実行スタックに追加。
 				tRes = NV_Array_last(&tRes);
 				if(NV_Term_getInt32(&tRes, &scope)){
-					NV_Array_push(&evalStack, &t);
+					NV_Context_pushToEvalStack(ctx, &t, NULL);
 				}
 				NV_Op_Internal_setCurrentPhase(tList, phase + 1);
 				return NODEID_NULL;
