@@ -406,6 +406,7 @@ NV_ID NV_Op_assign(const NV_ID *tList, int index, const NV_ID *ctx)
 	NV_ID v = operand[0];
 	//
 	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
+	operand[0] = NV_Term_tryReadAsVariable(&operand[0], &scope);
 	if(NV_Term_isAssignable(&operand[0], &scope)){
 		// 既存変数への代入
 		v = NV_Term_getAssignableNode(&operand[0], &scope);
@@ -635,7 +636,7 @@ NV_ID NV_Op_print(const NV_ID *tList, int index, const NV_ID *ctx)
 	//
 	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
 	//
-	operand[0] = NV_Term_tryReadAsVariable(&operand[0], &scope);
+	operand[0] = NV_Term_tryReadAsVariableData(&operand[0], &scope);
 	NV_printNodeByID(&operand[0]); putchar('\n');
 	//
 	NV_removeOperandByList(tList, index, operandIndex, operandCount);
@@ -701,7 +702,7 @@ NV_ID NV_Op_callArgs(const NV_ID *tList, int index, const NV_ID *ctx)
 	// 初めてこのOpを実行する
 	// 実行すべきコードブロックを取得
 	t = NV_Array_getByIndex(tList, index - 1);
-	t = NV_Term_tryReadAsVariable(&t, &scope);
+	t = NV_Term_tryReadAsVariableData(&t, &scope);
 	if(!NV_Term_isArray(&t, &scope)){
 		return NV_Node_createWithString("pre term is not an Array");
 	}

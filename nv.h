@@ -251,14 +251,15 @@ const char c2hexTable[0x100];
 
 // @nv_term.c
 int NV_isTermType(const NV_ID *node, const NV_ID *tType);
-NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *ctx);
-NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *ctx);
-int NV_Term_isInteger(const NV_ID *id, const NV_ID *ctx);
-int NV_Term_isAssignable(const NV_ID *id, const NV_ID *ctx);
-int NV_Term_isArray(const NV_ID *id, const NV_ID *ctx);
+NV_ID NV_Term_tryReadAsVariableData(const NV_ID *id, const NV_ID *scope);
+NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *scope);
+NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *scope);
+int NV_Term_isInteger(const NV_ID *id, const NV_ID *scope);
+int NV_Term_isAssignable(const NV_ID *id, const NV_ID *scope);
+int NV_Term_isArray(const NV_ID *id, const NV_ID *scope);
 //
-int32_t NV_Term_getInt32(const NV_ID *id, const NV_ID *ctx);
-NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *ctx);
+int32_t NV_Term_getInt32(const NV_ID *id, const NV_ID *scope);
+NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *scope);
 //
 void NV_printNodeByID(const NV_ID *id);
 void NV_printNode(const NV_Node *n);

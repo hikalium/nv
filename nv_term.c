@@ -10,7 +10,7 @@ int NV_isTermType(const NV_ID *node, const NV_ID *tType)
 	return NV_NodeID_isEqual(&typeID, tType);
 }
 
-NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *ctx)
+NV_ID NV_Term_tryReadAsVariableData(const NV_ID *id, const NV_ID *scope)
 {
 	// 変数としてidが解釈できるなら、その変数の値に相当するidを返す
 	// 変数として解釈できる、とは
@@ -20,25 +20,56 @@ NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *ctx)
 	// 無理ならば、もとのidを返す
 	NV_ID vid;
 	//
-	vid = *id;
-	if(NV_isTermType(id, &NODEID_TERM_TYPE_VARIABLE)){
-		vid = NV_Variable_getData(id);
-	} else if(NV_NodeID_isString(id)){
-		vid = NV_Variable_getNamed(ctx, id);
+	vid = NV_Term_tryReadAsVariable(id, scope);
+	if(NV_isTermType(&vid, &NODEID_TERM_TYPE_VARIABLE)){
+		vid = NV_Variable_getData(&vid);
 		if(!NV_NodeID_isEqual(&vid, &NODEID_NOT_FOUND)){
-			vid = NV_Variable_getData(&vid);
-		} else{
-			vid = *id;
+			return vid;
 		}
 	}
-	if(NV_NodeID_isEqual(&vid, id)){
-		// このコンテキスト階層では見つからなかったので、親があればたどる
-		NV_ID pCtx = NV_Dict_getEqID(ctx, &RELID_PARENT_SCOPE);
-		if(!NV_NodeID_isEqual(&pCtx, &NODEID_NOT_FOUND)){
-			return NV_Term_tryReadAsVariable(id, &pCtx);
+	return *id;
+}
+
+NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *scope)
+{
+	// 変数としてidが解釈できるなら、その変数に相当するidを返す
+	// 変数として解釈できる、とは
+	//   - リテラルでない文字列で、コンテキストに存在する変数名と等しい
+	//    - コンテキストはネストされている。元までたどる。
+	//   - TermType === Variable
+	// 無理ならば、もとのidを返す
+	//
+	if(NV_isTermType(id, &NODEID_TERM_TYPE_VARIABLE)){
+		// もともと変数オブジェクトだった
+		return *id;
+	}
+	if(NV_NodeID_isString(id)){
+		// 文字列だったので現在のスコープを検索
+		NV_ID vid;
+		vid = NV_Variable_getNamed(scope, id);
+		if(!NV_NodeID_isEqual(&vid, &NODEID_NOT_FOUND)){
+			// 現在のスコープにあった！のでそれを返す
+			if(IS_DEBUG_MODE()){
+				printf("Var found!\n");
+			}
+			return vid;
 		}
 	}
-	return vid;
+
+	// このコンテキスト階層では見つからなかったので、親があればたどる
+	NV_ID pCtx = NV_Dict_getEqID(scope, &RELID_PARENT_SCOPE);
+	if(!NV_NodeID_isEqual(&pCtx, &NODEID_NOT_FOUND)){
+		// 親の検索結果を返す
+		if(IS_DEBUG_MODE()){
+			printf("Var NOT found. Search parent.\n");
+		}
+		return NV_Term_tryReadAsVariable(id, &pCtx);
+	}
+	// あきらめる
+	if(IS_DEBUG_MODE()){
+		printf("Var NOT found and has no parent.\n");
+	}
+	return *id;
 }
 
 int NV_Term_f_OpPrec_Dec(const void *n1, const void *n2)
@@ -47,7 +78,7 @@ int NV_Term_f_OpPrec_Dec(const void *n1, const void *n2)
 	return NV_getOpPrec(e2) - NV_getOpPrec(e1);
 }
 
-NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *ctx)
+NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *scope)
 {
 	// <id>: String であることを想定
 	// <id>/triedPrec が設定されているならば、それ未満のPrecのものの中で
@@ -57,7 +88,7 @@ NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *ctx)
 	int i;
 	int32_t triedPrec;
 	//
-	opList = NV_Dict_get(ctx, id);
+	opList = NV_Dict_get(scope, id);
 	if(NV_NodeID_isEqual(&opList, &NODEID_NOT_FOUND)){
 		return *id;
 	}
@@ -98,34 +129,31 @@ int NV_Term_isIntegerNotVal(const NV_ID *id)
 	return 0;
 }
 
-int NV_Term_isInteger(const NV_ID *id, const NV_ID *ctx)
+int NV_Term_isInteger(const NV_ID *id, const NV_ID *scope)
 {
 	if(NV_Term_isIntegerNotVal(id)){
 		return 1;
 	}
 	// ダメだったら変数として解釈を試みる
-	if(NV_Term_isAssignable(id, ctx)){
-		NV_ID vid = NV_Term_tryReadAsVariable(id, ctx);
+	if(NV_Term_isAssignable(id, scope)){
+		NV_ID vid = NV_Term_tryReadAsVariableData(id, scope);
 		return NV_Term_isIntegerNotVal(&vid);
 	}
 	// 変数でもないので整数とは解釈できない
 	return 0;
 }
 
-int NV_Term_isAssignable(const NV_ID *id, const NV_ID *ctx)
+int NV_Term_isAssignable(const NV_ID *id, const NV_ID *scope)
 {
 	NV_ID vid;
-	if(NV_NodeID_isString(id)){
-		vid = NV_Variable_getNamed(ctx, id);
-		id = &vid;
-	}
+	vid = NV_Term_tryReadAsVariable(id, scope);
 
-	return NV_isTermType(id, &NODEID_TERM_TYPE_VARIABLE);
+	return NV_isTermType(&vid, &NODEID_TERM_TYPE_VARIABLE);
 }
 
-int NV_Term_isArray(const NV_ID *id, const NV_ID *ctx)
+int NV_Term_isArray(const NV_ID *id, const NV_ID *scope)
 {
-	NV_ID vid = NV_Term_tryReadAsVariable(id, ctx);
+	NV_ID vid = NV_Term_tryReadAsVariableData(id, scope);
 	return NV_isTermType(&vid, &NODEID_TERM_TYPE_ARRAY);
 }
 
@@ -154,25 +182,25 @@ int32_t NV_Term_getInt32NotVal(const NV_ID *id)
 	return -1;
 }
 
-int32_t NV_Term_getInt32(const NV_ID *id, const NV_ID *ctx)
+int32_t NV_Term_getInt32(const NV_ID *id, const NV_ID *scope)
 {
 	if(NV_Term_isIntegerNotVal(id)){
 		return NV_Term_getInt32NotVal(id);
 	}
 	// ダメだったら変数として解釈を試みる
-	if(NV_Term_isAssignable(id, ctx)){
-		NV_ID vid = NV_Term_tryReadAsVariable(id, ctx);
+	if(NV_Term_isAssignable(id, scope)){
+		NV_ID vid = NV_Term_tryReadAsVariableData(id, scope);
 		return NV_Term_getInt32NotVal(&vid);
 	}
 	// 変数でもないので整数とは解釈できない
 	return -1;
 }
 
-NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *ctx)
+NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *scope)
 {
 	NV_ID vid;
 	if(NV_NodeID_isString(id)){
-		vid = NV_Variable_getNamed(ctx, id);
+		vid = NV_Variable_getNamed(scope, id);
 		id = &vid;
 	}
 	if(!NV_isTermType(id, &NODEID_TERM_TYPE_VARIABLE)) return NODEID_NOT_FOUND;
