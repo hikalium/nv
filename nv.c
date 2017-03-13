@@ -129,38 +129,7 @@ NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input)
 	}
 	return tokenList;
 }
-/*
-int NV_convertLiteral(const NV_ID *tokenizedList, const NV_ID *opList)
-{
-	// retv: converted token list
-	int pIndex;
-	int32_t tmpNum;
-	NV_ID itemID, opID;
-	NV_Node *item;
-	int i;
-	//
-	for(i = 0; ; i++){
-		itemID = NV_Array_getByIndex(tokenizedList, i);
-		if(NV_NodeID_isEqual(&itemID, &NODEID_NOT_FOUND)) break;
-		item = NV_NodeID_getNode(&itemID);
-		// check operator
-		opID = NV_Dict_get(opList, &itemID);
-		if(!NV_NodeID_isEqual(&opID, &NODEID_NULL)){
-			NV_Array_writeToIndex(tokenizedList, i, &opID);
-			continue;
-		}
-		// check Integer
-		tmpNum = NV_Node_String_strtol(item, &pIndex, 0);
-		if(pIndex != 0 && (int)NV_Node_String_strlen(item) == pIndex){
-			// converted entire string to number.
-			itemID = NV_Node_createWithInt32(tmpNum);
-			NV_Array_writeToIndex(tokenizedList, i, &itemID);
-			continue;
-		}
-	}
-	return 0;
-}
-*/
+
 //
 // Evaluate
 //
@@ -201,7 +170,24 @@ int NV_getNextOpIndex(const NV_ID *currentBlock, const NV_ID *ctx)
 	return lastOpIndex;
 }
 
-
+int NV_checkAndPrintErrorOfCodeBlock(const NV_ID *code)
+{
+	NV_ID t, failedOp, failedReason;
+	int i;
+	for(i = 0; ; i++){
+		t = NV_Array_getByIndex(code, i);
+		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
+		failedOp = NV_Dict_getByStringKey(&t, "failedOp");
+		if(!NV_NodeID_isEqual(&failedOp, &NODEID_NOT_FOUND)){
+			failedReason = NV_Dict_getByStringKey(&t, "failedReason");
+			NV_printNodeByID(&failedOp);
+			printf(" : ");
+			NV_printNodeByID(&failedReason);
+			printf("\n");
+		}
+	}
+	return 0;
+}
 
 void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx)
 {
@@ -268,6 +254,8 @@ void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx)
 				printf("nextOp not found\n");
 			}
 			t = NV_Array_pop(&evalStack);
+			// error check
+			NV_checkAndPrintErrorOfCodeBlock(&t);
 			// store last result
 			NV_NodeID_createUniqueIDRelation(ctx, &RELID_LAST_RESULT, &t);
 			continue;

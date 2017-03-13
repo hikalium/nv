@@ -851,11 +851,10 @@ void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 	if(!NV_NodeID_isEqual(&r, &NODEID_NULL)){
 		// error ocuured
 		NV_Dict_removeUniqueEqKeyByCStr(&opStr, "recogAsOp");
-		NV_Dict_addKeyByCStr(&opStr, "failedOp", &opRecog);
-		NV_Dict_addKeyByCStr(&opStr, "failedReason", &r);
+		NV_Dict_addUniqueEqKeyByCStr(&opStr, "failedOp", &opRecog);
+		NV_Dict_addUniqueEqKeyByCStr(&opStr, "failedReason", &r);
 		NV_ID prec = NV_Node_createWithInt32(NV_getOpPrec(&opRecog));
 		NV_Dict_addUniqueEqKeyByCStr(&opStr, "triedPrec", &prec);
-		NV_Dict_addKeyByCStr(&opStr, "failedOp", &opRecog);
 		if(IS_DEBUG_MODE()){
 			printf("op failed:");
 			NV_printNodeByID(&r);
