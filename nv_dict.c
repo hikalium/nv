@@ -39,6 +39,12 @@ NV_ID NV_Dict_addUniqueEqKeyByCStr
 	return NV_NodeID_createUniqueEqRelation(root, &strid, value);
 }
 
+NV_ID NV_Dict_removeUniqueIDKey(const NV_ID *root, const NV_ID *key)
+{
+	// removeと言っているが、実際はリンク先をNOT_FOUNDに向けるだけ
+	return NV_NodeID_createUniqueIDRelation(root, key, &NODEID_NOT_FOUND);
+}
+
 NV_ID NV_Dict_removeUniqueEqKeyByCStr(const NV_ID *root, const char *key)
 {
 	// removeと言っているが、実際はリンク先をNOT_FOUNDに向けるだけ

@@ -11,10 +11,12 @@ NV_ID NV_getContextList()
 
 NV_ID NV_Context_create()
 {
+	char st[128];
 	char s[128];
 	time_t td;
 	td = time(NULL);
-	strftime(s, sizeof(s), "%Y-%m-%d- %H:%M:%S", localtime(&td));
+	strftime(st, sizeof(st), "%F %H:%M:%S", localtime(&td));
+	snprintf(s, sizeof(s), "%s %lu", st, clock());
 	NV_ID ctx = NV_Node_createWithString(s);
 	//
 	NV_ID evalStack = NV_Array_create();
@@ -66,6 +68,11 @@ NV_ID NV_Context_getCurrentScope(const NV_ID *ctx)
 {
 	NV_ID currentCode = NV_Context_getCurrentCode(ctx);
 	return NV_NodeID_getRelatedNodeFrom(&currentCode, &RELID_CURRENT_SCOPE);
+}
+
+NV_ID NV_Context_getLastResult(const NV_ID *ctx)
+{	
+	return NV_NodeID_getRelatedNodeFrom(ctx, &RELID_LAST_RESULT);
 }
 
 int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *ctx)
@@ -205,8 +212,8 @@ void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx)
 	NV_ID t;
 	int nextOpIndex, currentOpIndex;
 	//
-	currentBlock = NV_Array_last(&evalStack);
 	for(;;){
+		currentBlock = NV_Array_last(&evalStack);
 		if(NV_globalExecFlag & NV_EXEC_FLAG_INTERRUPT){
 			// env saving
 			fprintf(stderr, "Saving env to `savefile`...\n");
@@ -223,39 +230,32 @@ void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx)
 		}
 		//
 		if(IS_DEBUG_MODE()){
+			printf("---- eval begin\n ");
+			//
 			printf("current evalStack: ");
 			NV_printNodeByID(&evalStack); putchar('\n');
 		}
-		if(IS_DEBUG_MODE()){
-			printf("currentBlock: ");
-			NV_printNodeByID(&currentBlock); putchar('\n');
-		}
-		if(IS_DEBUG_MODE()){
-			NV_Array_print(&currentBlock); putchar('\n');
-		}
 		if(NV_NodeID_isEqual(&currentBlock, &NODEID_NOT_FOUND)){
-			// evalStack empty.
+			// evalStack is empty.
 			if(IS_DEBUG_MODE()){
 				printf("evalStack empty. break.\n");
 			}
 			break;
 		}
+		// find next op
 		currentTermIndexNode = NV_NodeID_getRelatedNodeFrom(
 			&currentBlock, &RELID_CURRENT_TERM_INDEX);
 		if(!NV_NodeID_isEqual(&currentTermIndexNode, &NODEID_NOT_FOUND)){
 			// do op
 			currentOpIndex = NV_NodeID_getInt32(&currentTermIndexNode);
 			currentTerm = NV_Array_getByIndex(&currentBlock, currentOpIndex);
-			//if(IS_DEBUG_MODE()){
-			//	printf("currentBlock[%d] ", currentOpIndex);
-			//	NV_printNodeByID(&currentTerm); putchar('\n');
-			//}
+			if(IS_DEBUG_MODE()){
+				printf("op at currentBlock[%d]: ", currentOpIndex);
+				NV_printNodeByID(&currentTerm); putchar('\n');
+			}
 			NV_tryExecOpAt(&currentBlock, currentOpIndex, ctx);
 			if(IS_DEBUG_MODE()){
-				NV_Array_print(&currentBlock); putchar('\n');
-			}
-			if(IS_DEBUG_MODE()){
-				printf("current evalStack2: ");
+				printf("evalStack after op exec: ");
 				NV_printNodeByID(&evalStack); putchar('\n');
 			}
 		}
@@ -264,15 +264,18 @@ void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx)
 		nextOpIndex = NV_getNextOpIndex(&currentBlock, opList);
 		if(nextOpIndex == -1){
 			// no more op
+			if(IS_DEBUG_MODE()){
+				printf("nextOp not found\n");
+			}
 			t = NV_Array_pop(&evalStack);
-			NV_NodeID_createUniqueIDRelation(
-				&NODEID_NV_STATIC_ROOT, &RELID_LAST_RESULT, &t);
+			// store last result
+			NV_NodeID_createUniqueIDRelation(ctx, &RELID_LAST_RESULT, &t);
 			continue;
 		}
 		t = NV_Node_createWithInt32(nextOpIndex);
-		//if(IS_DEBUG_MODE()){
-		//	printf("nextOpIndex: %d\n", nextOpIndex);
-		//}
+		if(IS_DEBUG_MODE()){
+			printf("nextOpIndex: %d\n", nextOpIndex);
+		}
 		NV_NodeID_createUniqueIDRelation(
 			&currentBlock, &RELID_CURRENT_TERM_INDEX, &t);
 	}

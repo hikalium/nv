@@ -8,33 +8,56 @@
 //
 void NV_Graph_addStaticNode(const NV_ID *id, const char *s)
 {
+	int f = NV_NodeID_exists(id);
+	//
 	NV_NodeID_createAndString(id, s);
-	NV_NodeID_createRelation(&NODEID_NV_STATIC_ROOT, &NODEID_NULL, id);
+	if(!f){
+		NV_NodeID_createRelation(&NODEID_NV_STATIC_ROOT, &NODEID_NULL, id);
+	}
 }
+
+typedef struct NV_STATIC_NODE_NAME_TAG NV_StaticNodeNameTag;
+struct NV_STATIC_NODE_NAME_TAG {
+	const NV_ID *id;
+	const char *s;
+};
+
+NV_StaticNodeNameTag staticNodeNameList[] = {
+	{&NODEID_NULL, "NullElement"},
+	//
+	{&NODEID_TERM_TYPE_ARRAY, "Type(Array)"},
+	{&NODEID_TERM_TYPE_VARIABLE, "Type(Variable)"},
+	{&NODEID_TERM_TYPE_OP, "Type(Op)"},
+	//
+	{&RELID_TERM_TYPE, "type"},
+	{&RELID_ARRAY_NEXT, "next"},
+	{&RELID_VARIABLE_DATA, "data"},
+	{&RELID_POINTER_TARGET, "target"},
+	{&RELID_OP_PRECEDENCE, "precedence"},
+	{&RELID_OP_FUNC, "func"},
+	{&RELID_EVAL_STACK, "evalStack"},
+	{&RELID_LAST_RESULT, "lastResult"},
+	{&RELID_CURRENT_TERM_INDEX, "currentTermIndex"},
+	{&RELID_CURRENT_TERM_PHASE, "currentTermPhase"},
+	{&RELID_CURRENT_SCOPE, "currentScope"},
+	{&RELID_PARENT_SCOPE, "parentScope"},
+	{&RELID_CONTEXT_LIST, "contextList"},
+	//
+	{NULL, NULL}
+};
 
 void NV_Graph_initStaticNodes()
 {
 	NV_NodeID_createAndString(&NODEID_NV_STATIC_ROOT, "NV_StaticRoot");
 	NV_NodeID_retain(&NODEID_NV_STATIC_ROOT);
 	//
-	NV_Graph_addStaticNode(&NODEID_NULL, "NullElement");
-	NV_Graph_addStaticNode(&NODEID_TERM_TYPE_ARRAY, "TreeType(Array)");
-	NV_Graph_addStaticNode(&NODEID_TERM_TYPE_VARIABLE, "TreeType(Variable)");
-	NV_Graph_addStaticNode(&NODEID_TERM_TYPE_OP, "TreeType(Op)");
-	//
-	NV_Graph_addStaticNode(&RELID_TERM_TYPE, "relTreeType");
-	NV_Graph_addStaticNode(&RELID_ARRAY_NEXT, "relArrayNext");
-	//NV_Graph_addStaticNode(&RELID_ARRAY_COUNT, "relArrayCount");
-	NV_Graph_addStaticNode(&RELID_VARIABLE_DATA, "relVariableData");
-	NV_Graph_addStaticNode(&RELID_POINTER_TARGET, "relPointerTarget");
-	NV_Graph_addStaticNode(&RELID_OP_PRECEDENCE, "relOpPrec");
-	NV_Graph_addStaticNode(&RELID_OP_FUNC, "relOpFunc");
-	NV_Graph_addStaticNode(&RELID_EVAL_STACK, "relEvalStack");
-	NV_Graph_addStaticNode(&RELID_LAST_RESULT, "relLastResult");
-	NV_Graph_addStaticNode(&RELID_CURRENT_TERM_INDEX, "relCurrentTermIndex");
-	NV_Graph_addStaticNode(&RELID_CURRENT_TERM_PHASE, "relCurrentTermPhase");
-	NV_Graph_addStaticNode(&RELID_CURRENT_SCOPE, "_currentScope");
-	NV_Graph_addStaticNode(&RELID_PARENT_SCOPE, "_parentScope");
+	NV_StaticNodeNameTag *t;
+	int i;
+	for(i = 0; ; i++){
+		t = &staticNodeNameList[i];
+		if(!t->s) break;
+		NV_Graph_addStaticNode(t->id, t->s); 
+	}
 }
 
 void NV_Graph_init()

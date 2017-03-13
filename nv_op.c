@@ -103,6 +103,7 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"}",		10,		"NV_Op_codeBlockClose"},
 	{"ls",		10,		"NV_Op_ls"},
 	{"ls2",		10,		"NV_Op_ls2"},
+	{"lsctx",	10,		"NV_Op_lsctx"},
 	{"last",	10,		"NV_Op_last"},
 	{"save",	10,		"NV_Op_save"},
 	{"restore",	10,		"NV_Op_restore"},
@@ -340,11 +341,21 @@ NV_ID NV_Op_ls2(const NV_ID *tList, int index)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Op_last(const NV_ID *tList, int index)
+NV_ID NV_Op_lsctx(const NV_ID *tList, int index)
+{
+	NV_ID cl = NV_getContextList();
+	//
+	NV_Array_print(&cl); putchar('\n');
+	//
+	NV_Array_removeIndex(tList, index);
+	return NODEID_NULL;
+}
+
+NV_ID NV_Op_last(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	NV_ID ans, n;
 	//
-	n = NV_NodeID_getRelatedNodeFrom(&NODEID_NV_STATIC_ROOT, &RELID_LAST_RESULT);
+	n = NV_Context_getLastResult(ctx);
 	NV_printNodeByID(&n); putchar('\n');
 	//
 	ans = NV_Node_createWithInt32(0);
@@ -521,7 +532,7 @@ NV_ID NV_Op_if(const NV_ID *tList, int index, const NV_ID *ctx)
 			}
 		} else{
 			// 偶数: 実行
-			tRes = NV_NodeID_getRelatedNodeFrom(&NODEID_NV_STATIC_ROOT, &RELID_LAST_RESULT);
+			tRes = NV_Context_getLastResult(ctx);
 			t = NV_Array_getByIndex(tList, index + phase);
 			if(!NV_Term_isArray(&t, &scope)){
 				// この直前に実行した文はelse節だった。
@@ -593,7 +604,7 @@ NV_ID NV_Op_for(const NV_ID *tList, int index, const NV_ID *ctx)
 		return NODEID_NULL;
 	} else if(phase == 4){
 		// 条件を判定して、本体部分のコピーを実行スタックに積んで終了
-		tRes = NV_NodeID_getRelatedNodeFrom(&NODEID_NV_STATIC_ROOT, &RELID_LAST_RESULT);
+		tRes = NV_Context_getLastResult(ctx);
 		tRes = NV_Array_last(&tRes);
 		if(NV_Term_getInt32(&tRes, &scope)){
 			t = NV_Array_clone(&t);
@@ -768,7 +779,7 @@ void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_ls2")){
 		r = NV_Op_ls2(tList, index);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_last")){
-		r = NV_Op_last(tList, index);
+		r = NV_Op_last(tList, index, ctx);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_assign")){
 		r = NV_Op_assign(tList, index, ctx);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_codeBlock")){
@@ -791,6 +802,8 @@ void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 		r = NV_Op_unaryPrefix(tList, index, 1, ctx);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_callArgs")){
 		r = NV_Op_callArgs(tList, index, ctx);
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_lsctx")){
+		r = NV_Op_lsctx(tList, index);
 	} else{
 		r = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");
