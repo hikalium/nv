@@ -219,8 +219,10 @@ void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx);
 void NV_printOp(const NV_ID *op);
 
 // @nv_path.c
+NV_ID NV_Path_createWithOrigin(const NV_ID *origin);
 NV_ID NV_Path_createAbsoluteWithCodeBlock(NV_ID *code);
 NV_ID NV_Path_createAbsoluteWithCStr(const char *pathStr);
+void NV_Path_appendRoute(const NV_ID *path, const NV_ID *r);
 NV_ID NV_Path_getTarget(const NV_ID *path);
 
 // @nv_signal.c
@@ -233,6 +235,7 @@ extern const NV_ID NODEID_NOT_FOUND;
 extern const NV_ID NODEID_TERM_TYPE_ARRAY;
 extern const NV_ID NODEID_TERM_TYPE_VARIABLE;
 extern const NV_ID NODEID_TERM_TYPE_OP;
+extern const NV_ID NODEID_TERM_TYPE_PATH;
 //
 extern const NV_ID RELID_ARRAY_NEXT;
 extern const NV_ID RELID_ARRAY_COUNT;

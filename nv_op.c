@@ -135,6 +135,7 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"for",		10000,	"NV_Op_for"},
 	//
 	{"(",		15000,	"NV_Op_callArgs"},
+	{".",		17000,	"NV_Op_pathSeparator"},
 	//
 	{" ",		20000,	"NV_Op_nothing"},
 	//
@@ -768,6 +769,48 @@ NV_ID NV_Op_callArgs(const NV_ID *tList, int index, const NV_ID *ctx)
 	return NODEID_NULL;
 }
 
+NV_ID NV_Op_pathSeparator(const NV_ID *tList, int index, const NV_ID *ctx)
+{
+	// {code block}(arg1, arg2, ...)
+	NV_ID nL, nR;
+	NV_ID path;
+	const NV_ID scope = NV_Context_getCurrentScope(ctx);
+	//
+	nR = NV_Array_getByIndex(tList, index + 1);
+	//
+	if(index > 0){
+		nL = NV_Array_getByIndex(tList, index - 1);
+	} else{
+		nL = NODEID_NOT_FOUND;
+	}
+	// Check left operands
+	nL = NV_Term_tryReadAsOperator(&nL, &scope);
+
+	if(NV_NodeID_isEqual(&nL, &NODEID_NOT_FOUND) || 
+		NV_isTermType(&nL, &NODEID_TERM_TYPE_OP)){
+		path = NV_Path_createWithOrigin(&NODEID_NULL);
+	} else if(NV_isTermType(&nL, &NODEID_TERM_TYPE_PATH)){
+		path = nL;
+	} else{
+		nL = NV_Dict_get(&scope, &nL);
+		if(!NV_NodeID_isEqual(&nL, &NODEID_NOT_FOUND)){
+			path = NV_Path_createWithOrigin(&nL);
+		} else{
+			return NV_Node_createWithString("Base path not found");
+		}
+	}
+	// add right operand to path
+	NV_Path_appendRoute(&path, &nR);
+	//
+	NV_Dict_print(&path);
+	//
+	NV_Array_writeToIndex(tList, index, &path);
+	NV_Array_removeIndex(tList, index + 1);
+	NV_Array_removeIndex(tList, index - 1);
+	//
+	return NODEID_NULL;
+}
+
 void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	NV_ID opStr = NV_Array_getByIndex(tList, index);
@@ -844,6 +887,8 @@ void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 		r = NV_Op_lsctx(tList, index);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_swctx")){
 		r = NV_Op_swctx(tList, index, ctx);
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_pathSeparator")){
+		r = NV_Op_pathSeparator(tList, index, ctx);
 	} else{
 		r = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");

@@ -3,16 +3,27 @@
 // 始点ノードとパスを指定することで、パスの到達点となるノードを取得できる。
 // 値がエッジとして指定されている場合には、その値と等価なエッジが選択される。
 
+NV_ID NV_Path_createWithOrigin(const NV_ID *origin)
+{
+	NV_ID newArray, path;
+	//
+	newArray = NV_Array_create();
+	path = NV_Node_create();
+	NV_NodeID_createRelation(&path, &RELID_TERM_TYPE, &NODEID_TERM_TYPE_PATH);
+	NV_Dict_addKeyByCStr(&path, "route", &newArray);
+	NV_Dict_addKeyByCStr(&path, "origin", origin);
+	//
+	return path;
+}
+
 NV_ID NV_Path_createAbsoluteWithCodeBlock(NV_ID *code)
 {
 	// 単に元の配列からパス区切りとなる記号を除去した配列を生成する。
 	NV_ID newArray, t, path;
 	int i;
 	//
-	newArray = NV_Array_create();
-	path = NV_Node_create();
-	NV_Dict_addKeyByCStr(&path, "route", &newArray);
-	NV_Dict_addKeyByCStr(&path, "origin", &NODEID_NULL);
+	path = NV_Path_createWithOrigin(&NODEID_NULL);
+	newArray = NV_Dict_getByStringKey(&path, "route");
 	//
 	for(i = 0; ; i++){
 		t = NV_Array_getByIndex(code, i);
@@ -31,6 +42,13 @@ NV_ID NV_Path_createAbsoluteWithCStr(const char *pathStr)
 	tokenList = NV_tokenize(&cTypeList, pathStr);
 	path = NV_Path_createAbsoluteWithCodeBlock(&tokenList);
 	return path;
+}
+
+void NV_Path_appendRoute(const NV_ID *path, const NV_ID *r)
+{
+	NV_ID route;
+	route = NV_Dict_getByStringKey(path, "route");
+	NV_Array_push(&route, r);
 }
 
 NV_ID NV_Path_getTarget(const NV_ID *path)
