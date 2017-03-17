@@ -23,8 +23,12 @@ int main(int argc, char *argv[])
 	for(i = 1; i < argc; i++){
 		if(argv[i][0] == '-'){
 			if(argv[i][1] == 'v') NV_globalExecFlag |= NV_EXEC_FLAG_VERBOSE;
+			if(argv[i][1] == 's'){
+				i++;
+				NV_strncpy(filename, argv[i], MAX_TOKEN_LEN, strlen(argv[i]));
+			}
 		} else{
-			NV_strncpy(filename, argv[i], MAX_TOKEN_LEN, strlen(argv[i]));
+			
 		}
 	}
 	//
@@ -38,6 +42,9 @@ int main(int argc, char *argv[])
 			NV_Graph_restoreFromFile(fp);
 			fclose(fp);
 			printf("done.\n");
+			//
+			NV_ID cl = NV_getContextList(); 
+			printf("%d contexts found.\n", NV_Array_count(&cl));
 		} else{
 			printf("fopen failed.\n");
 		}
