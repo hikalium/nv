@@ -73,3 +73,12 @@ NV_ID NV_Context_getLastResult(const NV_ID *ctx)
 	return NV_NodeID_getRelatedNodeFrom(ctx, &RELID_LAST_RESULT);
 }
 
+void NV_Context_setOpDict(const NV_ID *ctx, const NV_ID *opDict)
+{
+	NV_Dict_addUniqueIDKey(ctx, &RELID_OP_DICT, opDict);
+}
+
+NV_ID NV_Context_getOpDict(const NV_ID *ctx)
+{	
+	return NV_NodeID_getRelatedNodeFrom(ctx, &RELID_OP_DICT);
+}

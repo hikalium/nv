@@ -62,6 +62,10 @@ NV_ID NV_Path_getTarget(const NV_ID *path)
 		t = NV_Array_getByIndex(&route, i);
 		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
 		p = NV_NodeID_getEqRelatedNodeFrom(&p, &t);
+		if(NV_NodeID_isEqual(&p, &NODEID_NOT_FOUND)){
+			printf("key not found:");
+			NV_printNodeByID(&t);
+		}
 	}
 	return p;
 }

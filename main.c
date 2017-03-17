@@ -64,6 +64,7 @@ int main(int argc, char *argv[])
 	NV_printNodeByID(&t); putchar('\n');
 */
 	NV_ID ctx = NV_Context_create();
+	NV_Context_setOpDict(&ctx, &opList);
 	if(IS_DEBUG_MODE()){
 		NV_ID ctxList = NV_getContextList();
 		NV_Array_print(&ctxList);

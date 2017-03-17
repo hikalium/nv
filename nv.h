@@ -89,13 +89,6 @@ struct NV_RELATION {
 #define NV_EXEC_FLAG_INTERACTIVE	0x04
 extern volatile sig_atomic_t NV_globalExecFlag;
 //
-NV_ID NV_getContextList();
-NV_ID NV_Context_create();
-NV_ID NV_Context_getEvalStack(const NV_ID *ctx);
-void NV_Context_pushToEvalStack(const NV_ID *ctx, const NV_ID *code, const NV_ID *newScope);
-NV_ID NV_Context_getCurrentCode(const NV_ID *ctx);
-NV_ID NV_Context_getCurrentScope(const NV_ID *ctx);
-NV_ID NV_Context_getLastResult(const NV_ID *ctx);
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
 int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *ctx);
 void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx);
@@ -113,6 +106,17 @@ void NV_Array_writeToIndex(const NV_ID *array, int index, const NV_ID *data);
 NV_ID NV_Array_joinWithCStr(const NV_ID *array, const char *sep);
 NV_ID NV_Array_getSorted(const NV_ID *array, int (*f)(const void *n1, const void *n2));
 void NV_Array_print(const NV_ID *array);
+
+// @nv_context.c
+NV_ID NV_getContextList();
+NV_ID NV_Context_create();
+NV_ID NV_Context_getEvalStack(const NV_ID *ctx);
+void NV_Context_pushToEvalStack(const NV_ID *ctx, const NV_ID *code, const NV_ID *newScope);
+NV_ID NV_Context_getCurrentCode(const NV_ID *ctx);
+NV_ID NV_Context_getCurrentScope(const NV_ID *ctx);
+NV_ID NV_Context_getLastResult(const NV_ID *ctx);
+void NV_Context_setOpDict(const NV_ID *ctx, const NV_ID *opDict);
+NV_ID NV_Context_getOpDict(const NV_ID *ctx);
 
 // @nv_dict.c
 NV_ID NV_Dict_addKey(const NV_ID *root, const NV_ID *key, const NV_ID *value);
@@ -252,6 +256,8 @@ extern const NV_ID RELID_CURRENT_SCOPE;
 extern const NV_ID RELID_PARENT_SCOPE;
 extern const NV_ID RELID_CONTEXT_LIST;
 extern const NV_ID RELID_NEXT_CONTEXT;
+extern const NV_ID RELID_OP_DICT;
+//
 const char *NV_NodeTypeList[kNodeTypeCount];
 const char c2hexTable[0x100];
 

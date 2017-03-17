@@ -686,6 +686,9 @@ NV_ID NV_Op_print(const NV_ID *tList, int index, const NV_ID *ctx)
 	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
 	//
 	operand[0] = NV_Term_tryReadAsVariableData(&operand[0], &scope);
+	if(NV_isTermType(&operand[0], &NODEID_TERM_TYPE_PATH)){
+		operand[0] = NV_Path_getTarget(&operand[0]);
+	}
 	NV_printNodeByID(&operand[0]); putchar('\n');
 	//
 	NV_removeOperandByList(tList, index, operandIndex, operandCount);
@@ -775,6 +778,8 @@ NV_ID NV_Op_pathSeparator(const NV_ID *tList, int index, const NV_ID *ctx)
 	NV_ID nL, nR;
 	NV_ID path;
 	const NV_ID scope = NV_Context_getCurrentScope(ctx);
+	const NV_ID opDict = NV_Context_getOpDict(ctx);
+	int isLeftOpIrrelevant;
 	//
 	nR = NV_Array_getByIndex(tList, index + 1);
 	//
@@ -784,10 +789,11 @@ NV_ID NV_Op_pathSeparator(const NV_ID *tList, int index, const NV_ID *ctx)
 		nL = NODEID_NOT_FOUND;
 	}
 	// Check left operands
-	nL = NV_Term_tryReadAsOperator(&nL, &scope);
+	nL = NV_Term_tryReadAsOperator(&nL, &opDict);
+	isLeftOpIrrelevant = NV_NodeID_isEqual(&nL, &NODEID_NOT_FOUND) || 
+		NV_isTermType(&nL, &NODEID_TERM_TYPE_OP);
 
-	if(NV_NodeID_isEqual(&nL, &NODEID_NOT_FOUND) || 
-		NV_isTermType(&nL, &NODEID_TERM_TYPE_OP)){
+	if(isLeftOpIrrelevant){
 		path = NV_Path_createWithOrigin(&NODEID_NULL);
 	} else if(NV_isTermType(&nL, &NODEID_TERM_TYPE_PATH)){
 		path = nL;
@@ -796,17 +802,19 @@ NV_ID NV_Op_pathSeparator(const NV_ID *tList, int index, const NV_ID *ctx)
 		if(!NV_NodeID_isEqual(&nL, &NODEID_NOT_FOUND)){
 			path = NV_Path_createWithOrigin(&nL);
 		} else{
-			return NV_Node_createWithString("Base path not found");
+			return NV_Node_createWithString("Origin node not found");
 		}
 	}
 	// add right operand to path
 	NV_Path_appendRoute(&path, &nR);
 	//
-	NV_Dict_print(&path);
+	// NV_Dict_print(&path);
 	//
 	NV_Array_writeToIndex(tList, index, &path);
 	NV_Array_removeIndex(tList, index + 1);
-	NV_Array_removeIndex(tList, index - 1);
+	if(!isLeftOpIrrelevant){
+		NV_Array_removeIndex(tList, index - 1);
+	}
 	//
 	return NODEID_NULL;
 }

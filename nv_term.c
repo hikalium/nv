@@ -78,7 +78,7 @@ int NV_Term_f_OpPrec_Dec(const void *n1, const void *n2)
 	return NV_getOpPrec(e2) - NV_getOpPrec(e1);
 }
 
-NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *scope)
+NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *opDict)
 {
 	// <id>: String であることを想定
 	// <id>/triedPrec が設定されているならば、それ未満のPrecのものの中で
@@ -88,7 +88,7 @@ NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *scope)
 	int i;
 	int32_t triedPrec;
 	//
-	opList = NV_Dict_get(scope, id);
+	opList = NV_Dict_get(opDict, id);
 	if(NV_NodeID_isEqual(&opList, &NODEID_NOT_FOUND)){
 		return *id;
 	}
