@@ -51,6 +51,7 @@ NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *scope)
 			// 現在のスコープにあった！のでそれを返す
 			if(IS_DEBUG_MODE()){
 				printf("Var found!\n");
+				NV_printNodeByID(&vid); putchar('\n');
 			}
 			return vid;
 		}
@@ -79,9 +80,17 @@ NV_ID NV_Term_getPrimNodeID(const NV_ID *id, const NV_ID *scope)
 	n = *id;
 	if(1/* TODO: Add literal string check. */){
 		n = NV_Term_tryReadAsVariableData(&n, scope);
+		if(IS_DEBUG_MODE()){
+			printf("Var check result:\n");
+			NV_printNodeByID(&n); putchar('\n');
+		}
 	}
 	if(NV_isTermType(&n, &NODEID_TERM_TYPE_PATH)){
-		return NV_Path_getTarget(&n);
+		n = NV_Path_getTarget(&n);
+		if(IS_DEBUG_MODE()){
+			printf("Path check result:\n");
+			NV_printNodeByID(&n); putchar('\n');
+		}
 	}
 	return n;
 }

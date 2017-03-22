@@ -693,10 +693,7 @@ NV_ID NV_Op_print(const NV_ID *tList, int index, const NV_ID *ctx)
 	//
 	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
 	//
-	operand[0] = NV_Term_tryReadAsVariableData(&operand[0], &scope);
-	if(NV_isTermType(&operand[0], &NODEID_TERM_TYPE_PATH)){
-		operand[0] = NV_Path_getTarget(&operand[0]);
-	}
+	operand[0] = NV_Term_getPrimNodeID(&operand[0], &scope);
 	NV_printNodeByID(&operand[0]); putchar('\n');
 	//
 	NV_removeOperandByList(tList, index, operandIndex, operandCount);
@@ -755,9 +752,10 @@ NV_ID NV_Op_unaryPrefix(const NV_ID *tList, int index, int mod, const NV_ID *ctx
 NV_ID NV_Op_callArgs(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	// {code block}(arg1, arg2, ...)
-	NV_ID t, r;
+	NV_ID t, argsBlock, retv;
 	const NV_ID scope = NV_Context_getCurrentScope(ctx);
 	int phase;
+	NV_ID newScope;
 	phase = NV_Op_Internal_getCurrentPhase(tList);
 	// 初めてこのOpを実行する
 	// 実行すべきコードブロックを取得
@@ -766,16 +764,27 @@ NV_ID NV_Op_callArgs(const NV_ID *tList, int index, const NV_ID *ctx)
 	if(!NV_Term_isArray(&t, &scope)){
 		return NV_Node_createWithString("pre term is not an Array");
 	}
+	// 引数ブロックをまとめてもらう
+	retv = NV_Op_codeBlock(tList, index, "(", ")");
+	if(!NV_NodeID_isEqual(&retv, &NODEID_NULL)){
+		return NV_Node_createWithString("close bracket not found");
+	}
+	argsBlock = NV_Array_getByIndex(tList, index);
+	//
+	/*
 	if(IS_DEBUG_MODE()){
 		printf("Exec block: ");
 		NV_Array_print(&t); putchar('\n');
+		NV_Array_print(&argsBlock); putchar('\n');
 	}
-	// 引数ブロックをまとめてもらう
-	r = NV_Op_codeBlock(tList, index, "(", ")");
+	*/
 	//
-	//NV_Array_removeIndex(tList, index);
+	NV_Array_removeIndex(tList, index);
+	NV_Array_removeIndex(tList, index - 1);
 	// 問題ないので実行スタックに積む
-	NV_Context_pushToEvalStack(ctx, &t, NULL); 
+	// 引数をスコープに書き込んだ状態で実行する
+	newScope = NV_Context_createChildScopeWithArgs(ctx, &argsBlock);
+	NV_Context_pushToEvalStack(ctx, &t, &newScope); 
 	//
 	return NODEID_NULL;
 }

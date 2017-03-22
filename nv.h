@@ -111,6 +111,7 @@ void NV_Array_print(const NV_ID *array);
 NV_ID NV_getContextList();
 NV_ID NV_Context_create();
 NV_ID NV_Context_getEvalStack(const NV_ID *ctx);
+NV_ID NV_Context_createChildScopeWithArgs(const NV_ID *ctx, const NV_ID *argsBlock);
 void NV_Context_pushToEvalStack(const NV_ID *ctx, const NV_ID *code, const NV_ID *newScope);
 NV_ID NV_Context_getCurrentCode(const NV_ID *ctx);
 NV_ID NV_Context_getCurrentScope(const NV_ID *ctx);

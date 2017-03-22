@@ -29,6 +29,20 @@ NV_ID NV_Context_getEvalStack(const NV_ID *ctx)
 	return NV_NodeID_getRelatedNodeFrom(ctx, &RELID_EVAL_STACK);
 }
 
+NV_ID NV_Context_createChildScopeWithArgs(const NV_ID *ctx, const NV_ID *argsBlock)
+{
+	NV_ID newScope;
+	NV_ID parentScope = NV_Context_getCurrentScope(ctx);
+	newScope = NV_Node_createWithStringFormat("scope");
+	NV_Dict_addUniqueIDKey(&newScope, &RELID_PARENT_SCOPE, &parentScope);
+	if(argsBlock){
+		NV_ID argsVar = NV_Variable_create();
+		NV_Variable_assign(&argsVar, argsBlock);
+		NV_Dict_addKeyByCStr(&newScope, "args", &argsVar);
+	}
+	return newScope;
+}
+
 void NV_Context_pushToEvalStack
 (const NV_ID *ctx, const NV_ID *code, const NV_ID *newScope)
 {
@@ -40,10 +54,7 @@ void NV_Context_pushToEvalStack
 		currentScope = *newScope;	// GLOBAL SCOPE
 	} else{
 		// NULLならば、現在のコンテキストを親に持つ新しいコンテキストに設定する。
-		NV_ID parentScope = NV_Context_getCurrentScope(ctx);
-		currentScope = NV_Node_createWithStringFormat(
-			"scope level %d", NV_Array_count(&evalStack));
-		NV_Dict_addUniqueIDKey(&currentScope, &RELID_PARENT_SCOPE, &parentScope);
+		currentScope = NV_Context_createChildScopeWithArgs(ctx, NULL);
 	}
 	//
 	NV_Dict_addUniqueIDKey(code, &RELID_CURRENT_SCOPE, &currentScope);
