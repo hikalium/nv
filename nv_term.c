@@ -72,6 +72,20 @@ NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *scope)
 	return *id;
 }
 
+NV_ID NV_Term_getPrimNodeID(const NV_ID *id, const NV_ID *scope)
+{
+	NV_ID n;
+	if(!id) return NODEID_NOT_FOUND;
+	n = *id;
+	if(1/* TODO: Add literal string check. */){
+		n = NV_Term_tryReadAsVariableData(&n, scope);
+	}
+	if(NV_isTermType(&n, &NODEID_TERM_TYPE_PATH)){
+		return NV_Path_getTarget(&n);
+	}
+	return n;
+}
+
 int NV_Term_f_OpPrec_Dec(const void *n1, const void *n2)
 {
 	const NV_ID *e1 = n1, *e2 = n2;
@@ -108,7 +122,7 @@ NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *opDict)
 	}
 	return *id;
 }
-
+/*
 int NV_Term_isIntegerNotVal(const NV_ID *id)
 {
 	// 整数ならそれを返す
@@ -128,18 +142,21 @@ int NV_Term_isIntegerNotVal(const NV_ID *id)
 	// どうやっても数値とは解釈できない
 	return 0;
 }
-
+*/
 int NV_Term_isInteger(const NV_ID *id, const NV_ID *scope)
 {
-	if(NV_Term_isIntegerNotVal(id)){
-		return 1;
+	NV_ID n;
+	n = NV_Term_getPrimNodeID(id, scope);
+	if(NV_NodeID_isInteger(&n)) return 1;
+	if(NV_NodeID_isString(&n)){
+		int endi;
+		NV_NodeID_String_strtol(&n, &endi, 0);
+		if((size_t)endi == NV_NodeID_String_strlen(&n)){
+			// 文字列全体が整数として解釈できたのでこれは整数
+			return 1;
+		}
 	}
-	// ダメだったら変数として解釈を試みる
-	if(NV_Term_isAssignable(id, scope)){
-		NV_ID vid = NV_Term_tryReadAsVariableData(id, scope);
-		return NV_Term_isIntegerNotVal(&vid);
-	}
-	// 変数でもないので整数とは解釈できない
+	// 整数とは解釈できない
 	return 0;
 }
 
@@ -161,38 +178,21 @@ int NV_Term_isArray(const NV_ID *id, const NV_ID *scope)
 // Read term data
 //
 
-int32_t NV_Term_getInt32NotVal(const NV_ID *id)
+int32_t NV_Term_getInt32(const NV_ID *id, const NV_ID *scope)
 {
-	// 整数ならそれを返す
-	if(NV_NodeID_isInteger(id)){
-		return NV_NodeID_getInt32(id);
-	}
-	// リテラルでない文字列ならば解釈を試みる
-	if(NV_NodeID_isString(id)){
-		// idはstringである。数値として解釈することを試みる。
+	NV_ID n;
+	n = NV_Term_getPrimNodeID(id, scope);
+	if(NV_NodeID_isInteger(&n)) return NV_NodeID_getInt32(&n);
+	if(NV_NodeID_isString(&n)){
 		int endi;
-		int32_t v;
-		v = NV_NodeID_String_strtol(id, &endi, 0);
-		if((size_t)endi == NV_NodeID_String_strlen(id)){
+		int v;
+		v = NV_NodeID_String_strtol(&n, &endi, 0);
+		if((size_t)endi == NV_NodeID_String_strlen(&n)){
 			// 文字列全体が整数として解釈できたのでこれは整数
 			return v;
 		}
 	}
-	// どうやっても数値とは解釈できない
-	return -1;
-}
-
-int32_t NV_Term_getInt32(const NV_ID *id, const NV_ID *scope)
-{
-	if(NV_Term_isIntegerNotVal(id)){
-		return NV_Term_getInt32NotVal(id);
-	}
-	// ダメだったら変数として解釈を試みる
-	if(NV_Term_isAssignable(id, scope)){
-		NV_ID vid = NV_Term_tryReadAsVariableData(id, scope);
-		return NV_Term_getInt32NotVal(&vid);
-	}
-	// 変数でもないので整数とは解釈できない
+	// 整数とは解釈できない
 	return -1;
 }
 
@@ -229,6 +229,8 @@ void NV_printNode(const NV_Node *n)
 		NV_Variable_print(&n->id);
 	} else if(NV_isTermType(&n->id, &NODEID_TERM_TYPE_OP)){
 		NV_printOp(&n->id);
+	} else if(NV_isTermType(&n->id, &NODEID_TERM_TYPE_PATH)){
+		NV_Path_print(&n->id);
 	} else{
 		NV_Node_printPrimVal(n);
 	}

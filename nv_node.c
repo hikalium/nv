@@ -321,7 +321,7 @@ void NV_Node_cleanup()
 	}
 	for(n = &nodeRoot.next; *n; n = &(*n)->next){
 		if((*n)->refCount) continue;
-		NV_Node_printForDebug(*n); putchar('\n');
+		NV_NodeID_printForDebug(&(*n)->id); putchar('\n');
 		NV_Node_Internal_remove(*n);
 	}
 }
@@ -377,8 +377,10 @@ void NV_Node_printPrimVal(const NV_Node *n)
 	}
 }
 
-void NV_Node_printForDebug(const NV_Node *n)
+void NV_NodeID_printForDebug(const NV_ID *id)
 {
+	const NV_Node *n = NV_NodeID_getNode(id);
+
 	if(!n){
 		printf("(NV_Node is NULL)");
 		return;

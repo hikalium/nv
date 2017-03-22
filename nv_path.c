@@ -70,3 +70,66 @@ NV_ID NV_Path_getTarget(const NV_ID *path)
 	return p;
 }
 
+int NV_Path_statTarget(const NV_ID *path)
+{
+	// 0: not existed, 1: existed
+	NV_ID t, route, p;
+	int i;
+	//
+	route = NV_Dict_getByStringKey(path, "route");
+	p = NV_Dict_getByStringKey(path, "origin");
+	for(i = 0; ; i++){
+		t = NV_Array_getByIndex(&route, i);
+		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
+		p = NV_NodeID_getEqRelatedNodeFrom(&p, &t);
+		if(NV_NodeID_isEqual(&p, &NODEID_NOT_FOUND)){
+			return 0;
+		}
+	}
+	return 1;
+}
+
+void NV_Path_assign(const NV_ID *path, const NV_ID *data)
+{
+	NV_ID rel, route, p, q, relNode;
+	int i;
+	//
+	relNode = NODEID_NOT_FOUND;
+	route = NV_Dict_getByStringKey(path, "route");
+	q = NV_Dict_getByStringKey(path, "origin");
+	for(i = 0; ; i++){
+		rel = NV_Array_getByIndex(&route, i);
+		if(NV_NodeID_isEqual(&rel, &NODEID_NOT_FOUND)) break;
+		p = q;
+		relNode = NV_NodeID_getEqRelationFrom(&p, &rel);
+		q = NV_NodeID_Relation_getIDLinkTo(&relNode);
+		if(NV_NodeID_isEqual(&q, &NODEID_NOT_FOUND)){
+			// 途中の経路で生成されていない部分があれば作る
+			q = NV_Node_create();
+			relNode = NV_NodeID_createRelation(&p, &rel, &q);
+		}
+	}
+	if(!NV_NodeID_isEqual(&relNode, &NODEID_NOT_FOUND)){
+		NV_NodeID_updateRelationTo(&relNode, data);
+	}
+}
+
+NV_ID NV_Path_print(const NV_ID *path)
+{
+	NV_ID t, route, p;
+	int i;
+	//
+	printf("(Path ");
+	route = NV_Dict_getByStringKey(path, "route");
+	p = NV_Dict_getByStringKey(path, "origin");
+	for(i = 0; ; i++){
+		t = NV_Array_getByIndex(&route, i);
+		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
+		p = NV_NodeID_getEqRelatedNodeFrom(&p, &t);
+		NV_printNodeByID(&t);
+		printf(" "); 
+	}
+	printf(")");
+	return p;
+}
+

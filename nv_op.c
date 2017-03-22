@@ -453,23 +453,31 @@ NV_ID NV_Op_assign(const NV_ID *tList, int index, const NV_ID *ctx)
 	int operandIndex[operandCount] = {-1, 1};
 	//
 	const NV_ID scope = NV_Context_getCurrentScope(ctx);
-	NV_ID v = operand[0];
+	NV_ID v;
 	//
 	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
-	operand[0] = NV_Term_tryReadAsVariable(&operand[0], &scope);
-	if(NV_Term_isAssignable(&operand[0], &scope)){
-		// 既存変数への代入
-		v = NV_Term_getAssignableNode(&operand[0], &scope);
+	v = operand[0];
+	//
+	if(NV_isTermType(&v, &NODEID_TERM_TYPE_PATH)){
+		// パスへの代入
+		NV_Path_assign(&v, &operand[1]);
 	} else{
-		// 新規変数を作成して代入
-		if(!NV_NodeID_isString(&operand[0])){
+		// 変数への代入
+		v = NV_Term_tryReadAsVariable(&v, &scope);
+		
+		if(NV_Term_isAssignable(&v, &scope)){
+			// 既存変数への代入
+			v = NV_Term_getAssignableNode(&v, &scope);
+		} else if(NV_NodeID_isString(&v)){
+			// 新規変数を作成して代入
+			v = NV_Variable_createWithName(&scope, &v);
+		} else{
 			return NV_Node_createWithString(
 				"Error: Invalid Operand Type.");
 		}
-		v = NV_Variable_createWithName(&scope, &operand[0]);
+		//
+		NV_Variable_assign(&v, &operand[1]);
 	}
-	//
-	NV_Variable_assign(&v, &operand[1]);	
 	//
 	NV_removeOperandByList(tList, index, operandIndex, operandCount);
 	//

@@ -104,15 +104,22 @@ NV_Node *NV_NodeID_Relation_getLinkFrom(const NV_ID *relnid)
 	return NV_NodeID_getNode(&reld->from);
 }
 
-NV_Node *NV_NodeID_Relation_getLinkTo(const NV_ID *relnid)
+NV_ID NV_NodeID_Relation_getIDLinkTo(const NV_ID *relnid)
 {
 	NV_Node *n;
 	NV_Relation *reld;
 	//
 	n = NV_NodeID_getNode(relnid);
-	if(!n || n->type != kRelation) return NULL;
+	if(!n || n->type != kRelation) return NODEID_NOT_FOUND;
 	reld = n->data;
-	return NV_NodeID_getNode(&reld->to);
+	return reld->to;
+}
+
+NV_Node *NV_NodeID_Relation_getLinkTo(const NV_ID *relnid)
+{
+	NV_ID id;
+	id = NV_NodeID_Relation_getIDLinkTo(relnid);
+	return NV_NodeID_getNode(&id);
 }
 
 NV_Node *NV_NodeID_Relation_getLinkRel(const NV_ID *relnid)

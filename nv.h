@@ -172,7 +172,7 @@ void NV_Node_cleanup();
 void NV_Node_fdump(FILE *fp, const NV_Node *n);
 void NV_Node_dump(const NV_Node *n);
 void NV_Node_printPrimVal(const NV_Node *n);
-void NV_Node_printForDebug(const NV_Node *n);
+void NV_NodeID_printForDebug(const NV_ID *id);
 
 // @nv_relation.c
 NV_ID NV_NodeID_createRelation(const NV_ID *from, const NV_ID *rel,  const NV_ID *to);
@@ -181,6 +181,7 @@ NV_ID NV_NodeID_createUniqueEqRelation(const NV_ID *from, const NV_ID *rel,  con
 void NV_Node_setRelation
 	(const NV_ID *relnid, const NV_ID *from, const NV_ID *rel, const NV_ID *to);
 NV_Node *NV_NodeID_Relation_getLinkFrom(const NV_ID *relnid);
+NV_ID NV_NodeID_Relation_getIDLinkTo(const NV_ID *relnid);
 NV_Node *NV_NodeID_Relation_getLinkTo(const NV_ID *relnid);
 NV_Node *NV_NodeID_Relation_getLinkRel(const NV_ID *relnid);
 void NV_NodeID_updateRelationTo(const NV_ID *relnid, const NV_ID *to);
@@ -228,6 +229,9 @@ NV_ID NV_Path_createAbsoluteWithCodeBlock(NV_ID *code);
 NV_ID NV_Path_createAbsoluteWithCStr(const char *pathStr);
 void NV_Path_appendRoute(const NV_ID *path, const NV_ID *r);
 NV_ID NV_Path_getTarget(const NV_ID *path);
+int NV_Path_statTarget(const NV_ID *path);
+NV_ID NV_Path_print(const NV_ID *path);
+void NV_Path_assign(const NV_ID *path, const NV_ID *data);
 
 // @nv_signal.c
 void NV_signalHandler(int signum);
@@ -265,6 +269,7 @@ const char c2hexTable[0x100];
 int NV_isTermType(const NV_ID *node, const NV_ID *tType);
 NV_ID NV_Term_tryReadAsVariableData(const NV_ID *id, const NV_ID *scope);
 NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *scope);
+NV_ID NV_Term_getPrimNodeID(const NV_ID *id, const NV_ID *scope);
 NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *scope);
 int NV_Term_isInteger(const NV_ID *id, const NV_ID *scope);
 int NV_Term_isAssignable(const NV_ID *id, const NV_ID *scope);
