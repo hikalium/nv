@@ -135,6 +135,7 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"for",		10000,	"NV_Op_for"},
 	//
 	{"(",		15000,	"NV_Op_callArgs"},
+	{"[",		15000,	"NV_Op_arrayAccessor"},
 	{".",		17000,	"NV_Op_pathSeparator"},
 	//
 	{" ",		20000,	"NV_Op_nothing"},
@@ -756,6 +757,7 @@ NV_ID NV_Op_callArgs(const NV_ID *tList, int index, const NV_ID *ctx)
 	const NV_ID scope = NV_Context_getCurrentScope(ctx);
 	int phase;
 	NV_ID newScope;
+	// TODO: Impl return value
 	phase = NV_Op_Internal_getCurrentPhase(tList);
 	// 初めてこのOpを実行する
 	// 実行すべきコードブロックを取得
@@ -785,6 +787,35 @@ NV_ID NV_Op_callArgs(const NV_ID *tList, int index, const NV_ID *ctx)
 	// 引数をスコープに書き込んだ状態で実行する
 	newScope = NV_Context_createChildScopeWithArgs(ctx, &argsBlock);
 	NV_Context_pushToEvalStack(ctx, &t, &newScope); 
+	//
+	return NODEID_NULL;
+}
+
+NV_ID NV_Op_arrayAccessor(const NV_ID *tList, int index, const NV_ID *ctx)
+{
+	// {code block}(arg1, arg2, ...)
+	NV_ID array, indexBlock, indexNode, v;
+	const NV_ID scope = NV_Context_getCurrentScope(ctx);
+	int refIndex;
+	// 参照すべきArrayを取得
+	array = NV_Array_getByIndex(tList, index - 1);
+	array = NV_Term_getPrimNodeID(&array, &scope);
+	if(!NV_Term_isArray(&array, &scope)){
+		return NV_Node_createWithString("pre term is not an Array");
+	}
+	// 引数ブロックをまとめてもらう
+	v = NV_Op_codeBlock(tList, index, "[", "]");
+	if(!NV_NodeID_isEqual(&v, &NODEID_NULL)){
+		return NV_Node_createWithString("close bracket not found");
+	}
+	indexBlock = NV_Array_getByIndex(tList, index);
+	//
+	indexNode = NV_Array_getByIndex(&indexBlock, 0);
+	refIndex = NV_Term_getInt32(&indexNode, &scope);
+	v = NV_Array_getByIndex(&array, refIndex);
+	NV_Array_writeToIndex(tList, index, &v);
+	//
+	NV_Array_removeIndex(tList, index - 1);
 	//
 	return NODEID_NULL;
 }
@@ -908,6 +939,8 @@ void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 		r = NV_Op_unaryPrefix(tList, index, 1, ctx);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_callArgs")){
 		r = NV_Op_callArgs(tList, index, ctx);
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_arrayAccessor")){
+		r = NV_Op_arrayAccessor(tList, index, ctx);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_lsctx")){
 		r = NV_Op_lsctx(tList, index);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_swctx")){
