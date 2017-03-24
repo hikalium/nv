@@ -310,24 +310,28 @@ NV_ID NV_Op_restore(const NV_ID *tList, int index)
 
 NV_ID NV_Op_ls(const NV_ID *tList, int index, const NV_ID *ctx)
 {
-	NV_ID ans/*, pathStr*/;
+	NV_ID ans, path;
 	//
-	/*
-	pathStr = NV_Array_getByIndex(tList, index + 1);
-	if(NV_NodeID_isString(&pathStr)){
+	
+	
+	path = NV_Array_getByIndex(tList, index + 1);
+	
+	if(NV_isTermType(&path, &NODEID_TERM_TYPE_PATH)){
+		/*
 		NV_ID path = NV_Path_createAbsoluteWithCStr(NV_NodeID_getCStr(&pathStr));
 		NV_ID d;
 		//NV_Dict_print(&path);
 		d = NV_Path_getTarget(&path);
 		NV_Dict_print(&d);
 		NV_Array_removeIndex(tList, index + 1);
+		*/
+		NV_ID target = NV_Path_getTarget(&path);
+		NV_Dict_print(&target);
+		
 	} else{
-	*/
 		NV_ID scope = NV_Context_getCurrentScope(ctx);
 		NV_Dict_print(&scope);
-		/*
 	}
-	*/
 	ans = NV_Node_createWithInt32(0);
 	NV_Array_writeToIndex(tList, index, &ans);
 	return NODEID_NULL;
@@ -458,6 +462,7 @@ NV_ID NV_Op_assign(const NV_ID *tList, int index, const NV_ID *ctx)
 	//
 	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
 	v = operand[0];
+	operand[1] = NV_Term_getPrimNodeID(&operand[1], &scope);
 	//
 	if(NV_isTermType(&v, &NODEID_TERM_TYPE_PATH)){
 		// パスへの代入
