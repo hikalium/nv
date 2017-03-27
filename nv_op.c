@@ -301,7 +301,7 @@ NV_ID NV_Op_restore(const NV_ID *tList, int index)
 		return NV_Node_createWithString(
 			"fopen failed");
 	}
-	ans = NV_Node_createWithString("restore");
+	ans = NV_Node_createWithString("true");
 	NV_Graph_restoreFromFile(fp);
 	fclose(fp);
 	NV_Array_writeToIndex(tList, index, &ans);
