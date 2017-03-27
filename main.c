@@ -32,14 +32,14 @@ int main(int argc, char *argv[])
 		}
 	}
 	//
-	NV_Graph_init();
+	NV_Node_initRoot();
 	//
 	if(filename[0]){
 		// restore savedata
 		printf("Restoring from %s ...\n", filename);
 		FILE *fp = fopen(filename, "rb");
 		if(fp){
-			NV_Graph_restoreFromFile(fp);
+			NV_Node_restoreFromFile(fp);
 			fclose(fp);
 			printf("done.\n");
 			//

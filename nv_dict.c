@@ -1,4 +1,5 @@
 #include "nv.h"
+#include "nv_node.h"
 
 /*
 	このシステム上では、あらゆるオブジェクトがDictとみなせる。

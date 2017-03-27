@@ -222,20 +222,15 @@ NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *scope)
 
 void NV_Term_print(const NV_ID *id)
 {
-	NV_Node *n = NV_NodeID_getNode(id);
-	if(!n){
-		printf("(null pointer node)");
-		return;
-	}
-	if(NV_isTermType(&n->id, &NODEID_TERM_TYPE_ARRAY)){
-		NV_Array_print(&n->id);
-	} else if(NV_isTermType(&n->id, &NODEID_TERM_TYPE_VARIABLE)){
-		NV_Variable_print(&n->id);
-	} else if(NV_isTermType(&n->id, &NODEID_TERM_TYPE_OP)){
-		NV_printOp(&n->id);
-	} else if(NV_isTermType(&n->id, &NODEID_TERM_TYPE_PATH)){
-		NV_Path_print(&n->id);
+	if(NV_isTermType(id, &NODEID_TERM_TYPE_ARRAY)){
+		NV_Array_print(id);
+	} else if(NV_isTermType(id, &NODEID_TERM_TYPE_VARIABLE)){
+		NV_Variable_print(id);
+	} else if(NV_isTermType(id, &NODEID_TERM_TYPE_OP)){
+		NV_printOp(id);
+	} else if(NV_isTermType(id, &NODEID_TERM_TYPE_PATH)){
+		NV_Path_print(id);
 	} else{
-		NV_Node_printPrimVal(&n->id);
+		NV_Node_printPrimVal(id);
 	}
 }

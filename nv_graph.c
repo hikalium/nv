@@ -60,16 +60,6 @@ void NV_Graph_initStaticNodes()
 	}
 }
 
-void NV_Graph_init()
-{
-	srand(time(NULL));
-	//
-	nodeRoot.prev = NULL;
-	nodeRoot.next = NULL;
-	nodeRoot.data = NULL;
-	nodeRoot.type = kNone;
-}
-
 void NV_Graph_insertInitialNode()
 {
 	NV_Graph_initStaticNodes();
@@ -86,32 +76,4 @@ void NV_Graph_insertInitialNode()
 //
 // Public
 //
-NV_Node nodeRoot;
-
-void NV_Graph_dump()
-{
-	NV_Node *n;
-	//
-	for(n = nodeRoot.next; n; n = n->next){
-		NV_Node_dump(&n->id); putchar('\n');
-	}
-}
-
-void NV_Graph_dumpToFile(FILE *fp)
-{
-	NV_Node *n;
-	if(!fp) return;
-	for(n = nodeRoot.next; n; n = n->next){
-		NV_Node_fdump(fp, &n->id); fputc('\n', fp);
-	}
-}
-
-void NV_Graph_restoreFromFile(FILE *fp)
-{
-	char s[MAX_SAVE_DATA_ENTRY_SIZE];
-
-	while(fgets(s, sizeof(s), fp)){
-		NV_Node_restoreFromString(s);
-	}
-}
 

@@ -65,18 +65,6 @@ struct NV_ELEMENT_ID {
 	uint32_t d[4];
 };
 
-struct NV_NODE {
-	NV_ID id;
-	void *data;
-	NV_Node *prev;
-	NV_Node *next;
-	NV_NodeType type;
-	int size;	// size of data, bytes.
-	int refCount;
-	//
-	const NV_Node *relCache; // link from this node. recently referenced.
-};
-
 struct NV_RELATION {
 	NV_ID from;
 	NV_ID rel;
@@ -143,12 +131,7 @@ void *NV_malloc(size_t size);
 void NV_free(void *p);
 
 // @nv_graph.c
-extern NV_Node nodeRoot;
-void NV_Graph_init();
 void NV_Graph_insertInitialNode();
-void NV_Graph_dump();
-void NV_Graph_dumpToFile(FILE *fp);
-void NV_Graph_restoreFromFile(FILE *fp);
 
 // @nv_id.c
 NV_ID NV_ID_generateRandom();
@@ -159,8 +142,16 @@ void NV_ID_dumpIDToFile(const NV_ID *id, FILE *fp);
 int NV_NodeID_isEqualInValue(const NV_ID *a, const NV_ID *b);
 
 // @nv_node.c
+extern NV_Node nodeRoot;
+void NV_Node_initRoot();
 int NV_NodeID_exists(const NV_ID *id);
 NV_Node *NV_NodeID_getNode(const NV_ID *id);
+NV_NodeType NV_Node_getType(const NV_ID *id);
+void *NV_Node_getDataAsType(const NV_ID *id, NV_NodeType type);
+void NV_Node_dumpAll();
+void NV_Node_dumpAllToFile(FILE *fp);
+void NV_Node_restoreFromFile(FILE *fp);
+int NV_Node_getNodeCount();
 NV_ID NV_NodeID_create(const NV_ID *id);
 NV_ID NV_Node_create();
 void NV_NodeID_remove(const NV_ID *baseID);

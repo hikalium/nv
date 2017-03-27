@@ -86,6 +86,29 @@ int NV_Node_Internal_isEqualInValue(const NV_Node *na, const NV_Node *nb)
 //
 // Node
 //
+NV_Node nodeRoot;
+
+void NV_Node_initRoot()
+{
+	srand(time(NULL));
+	//
+	nodeRoot.prev = NULL;
+	nodeRoot.next = NULL;
+	nodeRoot.data = NULL;
+	nodeRoot.type = kNone;
+}
+
+int NV_Node_getNodeCount()
+{
+	NV_Node *n;
+	int i;
+	//
+	i = 0;
+	for(n = nodeRoot.next; n; n = n->next){
+		i++;
+	}
+	return i;
+}
 
 NV_ID NV_NodeID_create(const NV_ID *id)
 {
@@ -158,14 +181,49 @@ NV_Node *NV_NodeID_getNode(const NV_ID *id)
 	return NULL;
 }
 
-/*
-int NV_Node_isLiveNode(NV_Node *n)
+NV_NodeType NV_Node_getType(const NV_ID *id)
 {
-	if(!n) return 0;
-	if(n->refCount == 0) return 0;
-	return 1;
+	NV_Node *n;
+	n = NV_NodeID_getNode(id);
+	if(n) return n->type;
+	return -1;
 }
-*/
+
+void *NV_Node_getDataAsType(const NV_ID *id, NV_NodeType type)
+{
+	NV_Node *n;
+	n = NV_NodeID_getNode(id);
+	if(!n || n->type != type) return NULL;
+	return n->data;
+}
+
+void NV_Node_dumpAll()
+{
+	NV_Node *n;
+	//
+	for(n = nodeRoot.next; n; n = n->next){
+		NV_Node_dump(&n->id); putchar('\n');
+	}
+}
+
+void NV_Node_dumpAllToFile(FILE *fp)
+{
+	NV_Node *n;
+	if(!fp) return;
+	for(n = nodeRoot.next; n; n = n->next){
+		NV_Node_fdump(fp, &n->id); fputc('\n', fp);
+	}
+}
+
+void NV_Node_restoreFromFile(FILE *fp)
+{
+	char s[MAX_SAVE_DATA_ENTRY_SIZE];
+
+	while(fgets(s, sizeof(s), fp)){
+		NV_Node_restoreFromString(s);
+	}
+}
+
 
 void NV_NodeID_remove(const NV_ID *baseID)
 {

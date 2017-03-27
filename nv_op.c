@@ -267,7 +267,7 @@ NV_ID NV_Op_save(const NV_ID *tList, int index)
 			"fopen failed");
 	}
 	ans = NV_Node_createWithInt32(0);
-	NV_Graph_dumpToFile(fp);
+	NV_Node_dumpAllToFile(fp);
 	fclose(fp);
 	NV_Array_writeToIndex(tList, index, &ans);
 	return NODEID_NULL;
@@ -302,7 +302,7 @@ NV_ID NV_Op_restore(const NV_ID *tList, int index)
 			"fopen failed");
 	}
 	ans = NV_Node_createWithString("true");
-	NV_Graph_restoreFromFile(fp);
+	NV_Node_restoreFromFile(fp);
 	fclose(fp);
 	NV_Array_writeToIndex(tList, index, &ans);
 	return NODEID_NULL;
@@ -411,14 +411,7 @@ NV_ID NV_Op_info(const NV_ID *tList, int index)
 {
 	NV_ID ans;
 	//
-	NV_Node *n;
-	int i;
-	//
-	i = 0;
-	for(n = nodeRoot.next; n; n = n->next){
-		i++;
-	}
-	printf("%d nodes\n", i);
+	printf("%d nodes\n", NV_Node_getNodeCount());
 	//
 	ans = NV_Node_createWithInt32(0);
 	NV_Array_writeToIndex(tList, index, &ans);
@@ -426,8 +419,7 @@ NV_ID NV_Op_info(const NV_ID *tList, int index)
 }
 
 NV_ID NV_Op_clean(const NV_ID *tList, int index)
-{
-	NV_ID ans;
+{/*
 	//
 	NV_Node *n;
 	int i;
@@ -446,7 +438,8 @@ NV_ID NV_Op_clean(const NV_ID *tList, int index)
 	}
 	printf("%d nodes\n", i);
 	//
-	ans = NV_Node_createWithInt32(0);
+	*/
+	NV_ID ans = NV_Node_createWithInt32(0);
 	NV_Array_writeToIndex(tList, index, &ans);
 	return NODEID_NULL;
 }

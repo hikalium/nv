@@ -136,7 +136,7 @@ void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx)
 			if(!fp){
 				fprintf(stderr, "fopen failed.\n");
 			} else{
-				NV_Graph_dumpToFile(fp);
+				NV_Node_dumpAllToFile(fp);
 				fclose(fp);
 				fprintf(stderr, "Saving env done.\n");
 				exit(EXIT_SUCCESS);
