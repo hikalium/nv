@@ -38,7 +38,7 @@ int NV_Lang_getCharType(const NV_ID *cTypeList, char c)
 	if(c == '\0') return -1;
 	for(i = 0; i < NV_LANG_CHAR_LIST_LEN; i++){
 		t = NV_Array_getByIndex(cTypeList, i);
-		if(NV_Node_String_strchr(NV_NodeID_getNode(&t), c)) break;
+		if(NV_Node_String_strchr(&t, c)) break;
 	}
 	return i;
 }
@@ -150,7 +150,7 @@ NV_BuiltinOpTag builtinOpList[] = {
 int NV_isBuiltinOp(const NV_ID *term, const char *ident)
 {
 	NV_ID func = NV_NodeID_getRelatedNodeFrom(term, &RELID_OP_FUNC);
-	return NV_Node_String_compareWithCStr(NV_NodeID_getNode(&func), ident) == 0;
+	return NV_Node_String_compareWithCStr(&func, ident) == 0;
 }
 
 
@@ -385,7 +385,7 @@ NV_ID NV_Op_swctx(const NV_ID *tList, int index, const NV_ID *ctx)
 	NV_Dict_addUniqueIDKey(ctx, &RELID_NEXT_CONTEXT, &nextContext);
 	//
 	printf("Switch to context: ");
-	NV_printNodeByID(&nextContext);
+	NV_Term_print(&nextContext);
 	putchar('\n');
 	//
 	NV_removeOperandByList(tList, index, operandIndex, operandCount);
@@ -400,7 +400,7 @@ NV_ID NV_Op_last(const NV_ID *tList, int index, const NV_ID *ctx)
 	NV_ID ans, n;
 	//
 	n = NV_Context_getLastResult(ctx);
-	NV_printNodeByID(&n); putchar('\n');
+	NV_Term_print(&n); putchar('\n');
 	//
 	ans = NV_Node_createWithInt32(0);
 	NV_Array_writeToIndex(tList, index, &ans);
@@ -508,11 +508,11 @@ NV_ID NV_Op_codeBlock
 				"Error: Expected closeTerm but not found.");
 		}
 		NV_Array_removeIndex(tList, index + 1);
-		if(NV_NodeID_String_compareWithCStr(&v, openTerm) == 0){
+		if(NV_Node_String_compareWithCStr(&v, openTerm) == 0){
 			// 開きかっこ
 			nc++;
 		}
-		if(NV_NodeID_String_compareWithCStr(&v, closeTerm) == 0){
+		if(NV_Node_String_compareWithCStr(&v, closeTerm) == 0){
 			// 終了
 			nc--;
 			if(nc == 0) break;
@@ -543,11 +543,11 @@ NV_ID NV_Op_strLiteral(const NV_ID *tList, int index)
 			esc = 0;
 			NV_Array_push(&root, &v);
 		} else{
-			if(NV_NodeID_String_compareWithCStr(&v, "\\") == 0){
+			if(NV_Node_String_compareWithCStr(&v, "\\") == 0){
 				esc = 1;
 				continue;
 			}
-			if(NV_NodeID_String_compareWithCStr(&v, "\"") == 0){
+			if(NV_Node_String_compareWithCStr(&v, "\"") == 0){
 				// 終了
 				break;
 			}
@@ -700,7 +700,7 @@ NV_ID NV_Op_print(const NV_ID *tList, int index, const NV_ID *ctx)
 	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
 	//
 	operand[0] = NV_Term_getPrimNodeID(&operand[0], &scope);
-	NV_printNodeByID(&operand[0]); putchar('\n');
+	NV_Term_print(&operand[0]); putchar('\n');
 	//
 	NV_removeOperandByList(tList, index, operandIndex, operandCount);
 	//
@@ -879,8 +879,8 @@ void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 	//
 	if(IS_DEBUG_MODE()){
 		printf("begin op at index: %d ", index);
-		NV_printNodeByID(&opRecog);
-		NV_printNodeByID(tList);
+		NV_Term_print(&opRecog);
+		NV_Term_print(tList);
 		putchar('\n');
 	}
 	//
@@ -965,15 +965,15 @@ void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 		NV_Dict_addUniqueEqKeyByCStr(&opStr, "triedPrec", &prec);
 		if(IS_DEBUG_MODE()){
 			printf("op failed:");
-			NV_printNodeByID(&r);
-			NV_printNodeByID(&opRecog);
+			NV_Term_print(&r);
+			NV_Term_print(&opRecog);
 			putchar('\n');
 		}
 	}
 	//
 	if(IS_DEBUG_MODE()){
 		printf("end op ");
-		NV_printNodeByID(&opRecog);
+		NV_Term_print(&opRecog);
 		putchar('\n');
 	}
 }
@@ -985,8 +985,8 @@ void NV_printOp(const NV_ID *op)
 	eFunc = NV_NodeID_getRelatedNodeFrom(op, &RELID_OP_FUNC);
 	ePrec = NV_NodeID_getRelatedNodeFrom(op, &RELID_OP_PRECEDENCE);
 	printf("(op ");
-	NV_printNodeByID(&eFunc);
+	NV_Term_print(&eFunc);
 	printf("/");
-	NV_printNodeByID(&ePrec);
+	NV_Term_print(&ePrec);
 	printf(")");
 }

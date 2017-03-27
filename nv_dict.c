@@ -100,16 +100,16 @@ void NV_Dict_print(const NV_ID *root)
 	const NV_Node *n;
 	const NV_Relation *reld;
 	int cnt = 0;
-	NV_NodeID_printPrimVal(root);
+	NV_Node_printPrimVal(root);
 	printf(":\n");
 	for(n = nodeRoot.next; n; n = n->next){
 		if(n->type == kRelation){
 			reld = n->data;
 			if(NV_NodeID_isEqual(&reld->from, root)){
 				printf("  |--- ");
-				NV_NodeID_printPrimVal(&reld->rel);
+				NV_Node_printPrimVal(&reld->rel);
 				printf(": ");
-				NV_printNodeByID(&reld->to);
+				NV_Term_print(&reld->to);
 				printf("\n");
 				cnt++;
 			}

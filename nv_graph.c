@@ -93,7 +93,7 @@ void NV_Graph_dump()
 	NV_Node *n;
 	//
 	for(n = nodeRoot.next; n; n = n->next){
-		NV_Node_dump(n); putchar('\n');
+		NV_Node_dump(&n->id); putchar('\n');
 	}
 }
 
@@ -102,7 +102,7 @@ void NV_Graph_dumpToFile(FILE *fp)
 	NV_Node *n;
 	if(!fp) return;
 	for(n = nodeRoot.next; n; n = n->next){
-		NV_Node_fdump(fp, n); fputc('\n', fp);
+		NV_Node_fdump(fp, &n->id); fputc('\n', fp);
 	}
 }
 

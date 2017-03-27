@@ -28,7 +28,7 @@ NV_ID NV_Path_createAbsoluteWithCodeBlock(NV_ID *code)
 	for(i = 0; ; i++){
 		t = NV_Array_getByIndex(code, i);
 		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
-		if(NV_NodeID_String_compareWithCStr(&t, "/") == 0) continue;
+		if(NV_Node_String_compareWithCStr(&t, "/") == 0) continue;
 		NV_Array_push(&newArray, &t);
 	}
 	return path;
@@ -64,7 +64,7 @@ NV_ID NV_Path_getTarget(const NV_ID *path)
 		p = NV_NodeID_getEqRelatedNodeFrom(&p, &t);
 		if(NV_NodeID_isEqual(&p, &NODEID_NOT_FOUND)){
 			printf("key not found:");
-			NV_printNodeByID(&t);
+			NV_Term_print(&t);
 		}
 	}
 	return p;
@@ -126,7 +126,7 @@ NV_ID NV_Path_print(const NV_ID *path)
 		t = NV_Array_getByIndex(&route, i);
 		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
 		p = NV_NodeID_getEqRelatedNodeFrom(&p, &t);
-		NV_printNodeByID(&t);
+		NV_Term_print(&t);
 		printf(" "); 
 	}
 	printf(")");

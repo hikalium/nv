@@ -42,6 +42,7 @@ void NV_Node_Internal_resetData(NV_Node *n)
 		n->type = kNone;
 	}
 }
+
 void NV_Node_Internal_remove(NV_Node *n)
 {
 	if(n){
@@ -54,6 +55,7 @@ void NV_Node_Internal_remove(NV_Node *n)
 	}
 	NV_Node_Internal_removeAllRelationFrom(&n->id);
 }
+
 void NV_Node_Internal_removeAllRelationFrom(const NV_ID *from)
 {
 	NV_Node *n;
@@ -69,6 +71,18 @@ void NV_Node_Internal_removeAllRelationFrom(const NV_ID *from)
 		}
 	}
 }
+
+int NV_Node_Internal_isEqualInValue(const NV_Node *na, const NV_Node *nb)
+{
+	// 2つのNodeが値として等しいか否かを返す。
+	if(!na || !nb) return 0;
+	if(na->type != nb->type) return 0;
+	if(na->type == kString){
+		return (NV_Node_String_compare(&na->id, &nb->id) == 0);
+	}
+	return 0;
+}
+
 //
 // Node
 //
@@ -107,16 +121,8 @@ int NV_NodeID_isEqualInValue(const NV_ID *a, const NV_ID *b)
 	NV_Node *na, *nb;
 	na = NV_NodeID_getNode(a);
 	nb = NV_NodeID_getNode(b);
-	return NV_Node_isEqualInValue(na, nb);
+	return NV_Node_Internal_isEqualInValue(na, nb);
 }
-
-void NV_NodeID_printPrimVal(const NV_ID *id)
-{
-	NV_Node *n;
-	n = NV_NodeID_getNode(id);
-	NV_Node_printPrimVal(n);
-}
-
 
 int NV_NodeID_exists(const NV_ID *id)
 {
@@ -152,16 +158,6 @@ NV_Node *NV_NodeID_getNode(const NV_ID *id)
 	return NULL;
 }
 
-int NV_Node_isEqualInValue(const NV_Node *na, const NV_Node *nb)
-{
-	// 2つのNodeが値として等しいか否かを返す。
-	if(!na || !nb) return 0;
-	if(na->type != nb->type) return 0;
-	if(na->type == kString){
-		return (NV_Node_String_compare(na, nb) == 0);
-	}
-	return 0;
-}
 /*
 int NV_Node_isLiveNode(NV_Node *n)
 {
@@ -326,8 +322,9 @@ void NV_Node_cleanup()
 	}
 }
 
-void NV_Node_fdump(FILE *fp, const NV_Node *n)
+void NV_Node_fdump(FILE *fp, const NV_ID *id)
 {
+	const NV_Node *n = NV_NodeID_getNode(id);
 	if(!n){
 		fprintf(fp, "(null)");
 		return;
@@ -357,13 +354,14 @@ void NV_Node_fdump(FILE *fp, const NV_Node *n)
 	}
 }
 
-void NV_Node_dump(const NV_Node *n)
+void NV_Node_dump(const NV_ID *id)
 {
-	NV_Node_fdump(stdout, n);
+	NV_Node_fdump(stdout, id);
 }
 
-void NV_Node_printPrimVal(const NV_Node *n)
+void NV_Node_printPrimVal(const NV_ID *id)
 {
+	const NV_Node *n = NV_NodeID_getNode(id);
 	if(!n){
 		printf("(null)");
 		return;

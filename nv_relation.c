@@ -59,7 +59,7 @@ NV_ID NV_NodeID_createUniqueEqRelation
 (const NV_ID *from, const NV_ID *rel, const NV_ID *to)
 {
 	// fromが同一のIDで、
-	// relがNV_Node_isEqualInValue()において等価であるような
+	// relがNV_Node_Internal_isEqualInValue()において等価であるような
 	// relがすでに存在するならば、それのtoをupdateする。
 	// 存在しないならば、新規作成する。
 	return NV_NodeID_createRel_OnDupUpdate(

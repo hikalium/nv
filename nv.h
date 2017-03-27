@@ -155,13 +155,12 @@ NV_ID NV_ID_generateRandom();
 int NV_ID_setFromString(NV_ID *id, const char *s);
 int NV_NodeID_isEqual(const NV_ID *a, const NV_ID *b);
 void NV_ID_dumpIDToFile(const NV_ID *id, FILE *fp);
+//
 int NV_NodeID_isEqualInValue(const NV_ID *a, const NV_ID *b);
-void NV_NodeID_printPrimVal(const NV_ID *id);
 
 // @nv_node.c
 int NV_NodeID_exists(const NV_ID *id);
 NV_Node *NV_NodeID_getNode(const NV_ID *id);
-int NV_Node_isEqualInValue(const NV_Node *na, const NV_Node *nb);
 NV_ID NV_NodeID_create(const NV_ID *id);
 NV_ID NV_Node_create();
 void NV_NodeID_remove(const NV_ID *baseID);
@@ -170,9 +169,9 @@ NV_ID NV_Node_restoreFromString(const char *s);
 void NV_NodeID_retain(const NV_ID *id);
 void NV_NodeID_release(const NV_ID *id);
 void NV_Node_cleanup();
-void NV_Node_fdump(FILE *fp, const NV_Node *n);
-void NV_Node_dump(const NV_Node *n);
-void NV_Node_printPrimVal(const NV_Node *n);
+void NV_Node_fdump(FILE *fp, const NV_ID *id);
+void NV_Node_dump(const NV_ID *id);
+void NV_Node_printPrimVal(const NV_ID *id);
 void NV_NodeID_printForDebug(const NV_ID *id);
 
 // @nv_relation.c
@@ -199,14 +198,11 @@ NV_ID NV_Node_createWithString(const char *s);
 NV_ID NV_Node_createWithStringFormat(const char *fmt, ...);
 void NV_NodeID_createAndString(const NV_ID *id, const char *s);
 const char *NV_NodeID_getCStr(const NV_ID *id);
-int NV_Node_String_compare(const NV_Node *na, const NV_Node *nb);
-int NV_Node_String_compareWithCStr(const NV_Node *na, const char *s);
-int NV_NodeID_String_compareWithCStr(const NV_ID *na, const char *s);
-char *NV_Node_String_strchr(const NV_Node *ns, char c);
-long NV_Node_String_strtol(const NV_Node *ns, int *endptrindex, int base);
-long NV_NodeID_String_strtol(const NV_ID *ns, int *endptrindex, int base);
-size_t NV_Node_String_strlen(const NV_Node *ns);
-size_t NV_NodeID_String_strlen(const NV_ID *ns);
+int NV_Node_String_compare(const NV_ID *ida, const NV_ID *idb);
+int NV_Node_String_compareWithCStr(const NV_ID *ida, const char *s);
+char *NV_Node_String_strchr(const NV_ID *id, char c);
+long NV_Node_String_strtol(const NV_ID *ns, int *endptrindex, int base);
+size_t NV_Node_String_strlen(const NV_ID *id);
 
 // @nv_integer.c
 int NV_NodeID_isInteger(const NV_ID *id);
@@ -279,8 +275,7 @@ int NV_Term_isArray(const NV_ID *id, const NV_ID *scope);
 int32_t NV_Term_getInt32(const NV_ID *id, const NV_ID *scope);
 NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *scope);
 //
-void NV_printNodeByID(const NV_ID *id);
-void NV_printNode(const NV_Node *n);
+void NV_Term_print(const NV_ID *id);
 
 // @nv_test.c
 //void NV_Test_Memory();

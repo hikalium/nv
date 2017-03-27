@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 /*
 	NV_ID t;
 	t = NV_Path_createWithCStr("/var/log/httpd");
-	NV_printNodeByID(&t); putchar('\n');
+	NV_Term_print(&t); putchar('\n');
 */
 	NV_ID ctx = NV_Context_create();
 	NV_Context_setOpDict(&ctx, &opList);

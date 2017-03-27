@@ -51,7 +51,7 @@ NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *scope)
 			// 現在のスコープにあった！のでそれを返す
 			if(IS_DEBUG_MODE()){
 				printf("Var found!\n");
-				NV_printNodeByID(&vid); putchar('\n');
+				NV_Term_print(&vid); putchar('\n');
 			}
 			return vid;
 		}
@@ -82,14 +82,14 @@ NV_ID NV_Term_getPrimNodeID(const NV_ID *id, const NV_ID *scope)
 		n = NV_Term_tryReadAsVariableData(&n, scope);
 		if(IS_DEBUG_MODE()){
 			printf("Var check result:\n");
-			NV_printNodeByID(&n); putchar('\n');
+			NV_Term_print(&n); putchar('\n');
 		}
 	}
 	if(NV_isTermType(&n, &NODEID_TERM_TYPE_PATH)){
 		n = NV_Path_getTarget(&n);
 		if(IS_DEBUG_MODE()){
 			printf("Path check result:\n");
-			NV_printNodeByID(&n); putchar('\n');
+			NV_Term_print(&n); putchar('\n');
 		}
 	}
 	return n;
@@ -159,8 +159,8 @@ int NV_Term_isInteger(const NV_ID *id, const NV_ID *scope)
 	if(NV_NodeID_isInteger(&n)) return 1;
 	if(NV_NodeID_isString(&n)){
 		int endi;
-		NV_NodeID_String_strtol(&n, &endi, 0);
-		if((size_t)endi == NV_NodeID_String_strlen(&n)){
+		NV_Node_String_strtol(&n, &endi, 0);
+		if((size_t)endi == NV_Node_String_strlen(&n)){
 			// 文字列全体が整数として解釈できたのでこれは整数
 			return 1;
 		}
@@ -195,8 +195,8 @@ int32_t NV_Term_getInt32(const NV_ID *id, const NV_ID *scope)
 	if(NV_NodeID_isString(&n)){
 		int endi;
 		int v;
-		v = NV_NodeID_String_strtol(&n, &endi, 0);
-		if((size_t)endi == NV_NodeID_String_strlen(&n)){
+		v = NV_Node_String_strtol(&n, &endi, 0);
+		if((size_t)endi == NV_Node_String_strlen(&n)){
 			// 文字列全体が整数として解釈できたのでこれは整数
 			return v;
 		}
@@ -220,14 +220,9 @@ NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *scope)
 // print
 //
 
-void NV_printNodeByID(const NV_ID *id)
+void NV_Term_print(const NV_ID *id)
 {
 	NV_Node *n = NV_NodeID_getNode(id);
-	NV_printNode(n);
-}
-
-void NV_printNode(const NV_Node *n)
-{
 	if(!n){
 		printf("(null pointer node)");
 		return;
@@ -241,6 +236,6 @@ void NV_printNode(const NV_Node *n)
 	} else if(NV_isTermType(&n->id, &NODEID_TERM_TYPE_PATH)){
 		NV_Path_print(&n->id);
 	} else{
-		NV_Node_printPrimVal(n);
+		NV_Node_printPrimVal(&n->id);
 	}
 }

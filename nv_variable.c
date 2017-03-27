@@ -49,7 +49,7 @@ void NV_Variable_print(const NV_ID *vid)
 	printf("(Var ");
 	NV_ID_dumpIDToFile(vid, stdout);
 	printf(" = ");
-	NV_printNode(NV_NodeID_getNode(&targetID));
+	NV_Term_print(&targetID);
 	printf(")");
 }
 
@@ -61,6 +61,6 @@ void NV_Variable_printPrimVal(const NV_ID *vid)
 		return;
 	}
 	targetID = NV_NodeID_getRelatedNodeFrom(vid, &RELID_VARIABLE_DATA);
-	NV_printNode(NV_NodeID_getNode(&targetID));
+	NV_Term_print(&targetID);
 }
 

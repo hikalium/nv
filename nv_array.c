@@ -177,7 +177,7 @@ NV_ID NV_Array_joinWithCStr(const NV_ID *array, const char *sep)
 	for(i = 0; ; i++){
 		t = NV_Array_getByIndex(array, i);
 		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
-		sumLen += NV_NodeID_String_strlen(&t);
+		sumLen += NV_Node_String_strlen(&t);
 	}
 	sumLen += i * strlen(sep);
 	buf = NV_malloc(sumLen);
@@ -230,7 +230,7 @@ void NV_Array_print(const NV_ID *array)
 		t = NV_Array_getByIndex(array, i);
 		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
 		if(i != 0) printf(",");
-		NV_printNodeByID(&t);
+		NV_Term_print(&t);
 	}
 	printf("]");
 }

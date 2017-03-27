@@ -12,11 +12,11 @@ int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *ctx)
 	if(NV_gets(line, sizeof(line)) != NULL){
 		tokenList = NV_tokenize(cTypeList, line);
 		if(IS_DEBUG_MODE()){
-			NV_printNodeByID(&tokenList); putchar('\n');
+			NV_Term_print(&tokenList); putchar('\n');
 		}
 		NV_Context_pushToEvalStack(ctx, &tokenList, &NODEID_NULL);
 		if(IS_DEBUG_MODE()){
-			NV_printNodeByID(&tokenList); putchar('\n');
+			NV_Term_print(&tokenList); putchar('\n');
 		}
 		return 0;
 	}
@@ -80,7 +80,7 @@ int NV_getNextOpIndex(const NV_ID *currentBlock, const NV_ID *ctx)
 		opPrec = NV_getOpPrec(&t);
 		if(IS_DEBUG_MODE()){
 			printf("Op found. prec = %d ", opPrec);
-			NV_printNodeByID(&t); putchar('\n');
+			NV_Term_print(&t); putchar('\n');
 		}
 		if(lastOpPrec & 1 ? lastOpPrec <= opPrec : lastOpPrec < opPrec){
 			// continue searching
@@ -109,9 +109,9 @@ int NV_checkAndPrintErrorOfCodeBlock(const NV_ID *code)
 		failedOp = NV_Dict_getByStringKey(&t, "failedOp");
 		if(!NV_NodeID_isEqual(&failedOp, &NODEID_NOT_FOUND)){
 			failedReason = NV_Dict_getByStringKey(&t, "failedReason");
-			NV_printNodeByID(&failedOp);
+			NV_Term_print(&failedOp);
 			printf(" : ");
-			NV_printNodeByID(&failedReason);
+			NV_Term_print(&failedReason);
 			printf("\n");
 		}
 	}
@@ -148,7 +148,7 @@ void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx)
 			printf("---- eval begin\n ");
 			//
 			printf("current evalStack: ");
-			NV_printNodeByID(&evalStack); putchar('\n');
+			NV_Term_print(&evalStack); putchar('\n');
 		}
 		if(NV_NodeID_isEqual(&currentBlock, &NODEID_NOT_FOUND)){
 			// evalStack is empty.
@@ -166,12 +166,12 @@ void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx)
 			currentTerm = NV_Array_getByIndex(&currentBlock, currentOpIndex);
 			if(IS_DEBUG_MODE()){
 				printf("op at currentBlock[%d]: ", currentOpIndex);
-				NV_printNodeByID(&currentTerm); putchar('\n');
+				NV_Term_print(&currentTerm); putchar('\n');
 			}
 			NV_tryExecOpAt(&currentBlock, currentOpIndex, ctx);
 			if(IS_DEBUG_MODE()){
 				printf("evalStack after op exec: ");
-				NV_printNodeByID(&evalStack); putchar('\n');
+				NV_Term_print(&evalStack); putchar('\n');
 			}
 		}
 		currentBlock = NV_Array_last(&evalStack);

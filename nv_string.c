@@ -20,6 +20,20 @@ void NV_Node_Internal_setStrToID(const NV_ID *id, const char *s)
 	}
 }
 
+long NV_Node_String_Internal_strtol(const NV_Node *ns, int *endptrindex, int base)
+{
+	long v;
+	char *ep;
+	if(!ns || ns->type != kString){
+		if(endptrindex) *endptrindex = 0; 
+		return 0;
+	}
+	v = strtol(ns->data, &ep, base);
+	if(endptrindex) *endptrindex = ep - (char *)ns->data;
+	return v;
+}
+
+
 //
 // String
 //
@@ -77,62 +91,44 @@ const char *NV_NodeID_getCStr(const NV_ID *id)
 	return n->data;
 }
 
-int NV_Node_String_compare(const NV_Node *na, const NV_Node *nb)
+int NV_Node_String_compare(const NV_ID *ida, const NV_ID *idb)
 {
 	// compatible with strcmp
 	// but if node->data is null, returns -1.
 	// "" == "" -> true
+	NV_Node *na = NV_NodeID_getNode(ida);
+	NV_Node *nb = NV_NodeID_getNode(idb);
 	if(!na || !nb || na->type != kString || nb->type != kString) return -1;
 	return strcmp(na->data, nb->data);
 }
 
-int NV_Node_String_compareWithCStr(const NV_Node *na, const char *s)
+int NV_Node_String_compareWithCStr(const NV_ID *ida, const char *s)
 {
 	// compatible with strcmp
 	// but if node->data is null, returns -1.
 	// "" == "" -> true
+	NV_Node *na = NV_NodeID_getNode(ida);
 	if(!na || !s || na->type != kString) return -1;
 	return strcmp(na->data, s);
 }
 
-int NV_NodeID_String_compareWithCStr(const NV_ID *na, const char *s)
+char *NV_Node_String_strchr(const NV_ID *id, char c)
 {
-	return NV_Node_String_compareWithCStr(NV_NodeID_getNode(na), s);
-}
-
-char *NV_Node_String_strchr(const NV_Node *ns, char c)
-{
+	NV_Node *ns = NV_NodeID_getNode(id);
 	if(!ns || ns->type != kString) return NULL;
 	return strchr(ns->data, c);
 }
 
-long NV_Node_String_strtol(const NV_Node *ns, int *endptrindex, int base)
+long NV_Node_String_strtol(const NV_ID *ns, int *endptrindex, int base)
 {
-	long v;
-	char *ep;
-	if(!ns || ns->type != kString){
-		if(endptrindex) *endptrindex = 0; 
-		return 0;
-	}
-	v = strtol(ns->data, &ep, base);
-	if(endptrindex) *endptrindex = ep - (char *)ns->data;
-	return v;
-}
-
-long NV_NodeID_String_strtol(const NV_ID *ns, int *endptrindex, int base)
-{
-	return NV_Node_String_strtol(NV_NodeID_getNode(ns), endptrindex, base);
+	return NV_Node_String_Internal_strtol(NV_NodeID_getNode(ns), endptrindex, base);
 
 }
 
-size_t NV_Node_String_strlen(const NV_Node *ns)
+size_t NV_Node_String_strlen(const NV_ID *id)
 {
+	NV_Node *ns = NV_NodeID_getNode(id);
 	if(!ns || ns->type != kString) return 0;
 	return strlen(ns->data);
-}
-
-size_t NV_NodeID_String_strlen(const NV_ID *ns)
-{
-	return NV_Node_String_strlen(NV_NodeID_getNode(ns));
 }
 
