@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 		}
 	}
 	//
-	NV_Graph_insertInitialNode();
+	NV_insertInitialNode();
 	//
 	cTypeList = NV_createCharTypeList();
 	NV_NodeID_retain(&cTypeList);

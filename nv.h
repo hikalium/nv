@@ -131,7 +131,6 @@ void *NV_malloc(size_t size);
 void NV_free(void *p);
 
 // @nv_graph.c
-void NV_Graph_insertInitialNode();
 
 // @nv_id.c
 NV_ID NV_ID_generateRandom();
@@ -252,6 +251,8 @@ extern const NV_ID RELID_OP_DICT;
 //
 const char *NV_NodeTypeList[kNodeTypeCount];
 const char c2hexTable[0x100];
+//
+void NV_insertInitialNode();
 
 // @nv_term.c
 int NV_isTermType(const NV_ID *node, const NV_ID *tType);
