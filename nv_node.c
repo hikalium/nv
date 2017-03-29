@@ -425,7 +425,7 @@ void NV_Node_printPrimVal(const NV_ID *id)
 		return;
 	}
 	if(n->type == kString){
-		printf("\"%s\"", n->data);
+		printf("%s", n->data);
 	} else if(n->type == kInteger){
 		if(n->size == sizeof(int32_t)){
 			printf("%d", *((int32_t *)n->data));

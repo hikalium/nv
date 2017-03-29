@@ -109,6 +109,8 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"save",	10,		"NV_Op_save"},
 	{"restore",	10,		"NV_Op_restore"},
 	{"print",	10,		"NV_Op_print"},
+	{"out",		10,		"NV_Op_out"},
+	{"fmt",		10,		"NV_Op_fmt"},
 	{"info",	10,		"NV_Op_info"},
 	{"clean",	10,		"NV_Op_clean"},
 	//
@@ -702,6 +704,57 @@ NV_ID NV_Op_print(const NV_ID *tList, int index, const NV_ID *ctx)
 	return NODEID_NULL;
 }
 
+NV_ID NV_Op_out(const NV_ID *tList, int index, const NV_ID *ctx)
+{
+	const int operandCount = 1;
+	NV_ID operand[operandCount];
+	int operandIndex[operandCount] = {1};
+	//
+	const NV_ID scope = NV_Context_getCurrentScope(ctx);
+	//
+	NV_ID ans;
+	//
+	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
+	//
+	operand[0] = NV_Term_getPrimNodeID(&operand[0], &scope);
+	NV_Term_print(&operand[0]);
+	//
+	NV_removeOperandByList(tList, index, operandIndex, operandCount);
+	//
+	ans = NV_Node_createWithString("success");
+	NV_Array_writeToIndex(tList, index, &ans);
+	return NODEID_NULL;
+}
+
+NV_ID NV_Op_fmt(const NV_ID *tList, int index, const NV_ID *ctx)
+{
+	// TODO: Impl properly
+	const int operandCount = 2;
+	NV_ID operand[operandCount];
+	int operandIndex[operandCount] = {1, 2};
+
+	//
+	const NV_ID scope = NV_Context_getCurrentScope(ctx);
+	int v;
+	const char *widthFormat;
+	char buf[128];
+	//
+	NV_ID ans;
+	//
+	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
+	//
+	widthFormat = NV_NodeID_getCStr(&operand[0]);
+	v = NV_Term_getInt32(&operand[1], &scope);
+	snprintf(buf, sizeof(buf), "%%%sd", widthFormat);
+	printf(buf, v);
+	//
+	NV_removeOperandByList(tList, index, operandIndex, operandCount);
+	//
+	ans = NV_Node_createWithString("success");
+	NV_Array_writeToIndex(tList, index, &ans);
+	return NODEID_NULL;
+}
+
 NV_ID NV_Op_unaryPrefix(const NV_ID *tList, int index, int mod, const NV_ID *ctx)
 {
 	NV_ID nL, nR, ans;
@@ -811,6 +864,7 @@ NV_ID NV_Op_callArgs(const NV_ID *tList, int index, const NV_ID *ctx)
 	if(!NV_Term_isArray(&t, &scope)){
 		return NV_Node_createWithString("pre term is not an Array");
 	}
+	t = NV_Array_clone(&t);
 	// 引数ブロックをまとめてもらう
 	retv = NV_Op_codeBlock(tList, index, "(", ")");
 	if(!NV_NodeID_isEqual(&retv, &NODEID_NULL)){
@@ -970,6 +1024,10 @@ void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 		r = NV_Op_if(tList, index, ctx);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_print")){
 		r = NV_Op_print(tList, index, ctx);
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_out")){
+		r = NV_Op_out(tList, index, ctx);
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_fmt")){
+		r = NV_Op_fmt(tList, index, ctx);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_for")){
 		r = NV_Op_for(tList, index, ctx);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_info")){

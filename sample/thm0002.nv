@@ -1,0 +1,1 @@
+out"3.";loop(i 14 114 {fmt 02 i%100})print""
