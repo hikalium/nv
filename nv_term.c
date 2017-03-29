@@ -217,6 +217,22 @@ NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *scope)
 }
 
 //
+// Assign to term
+//
+NV_ID NV_Term_assign(const NV_ID *v, const NV_ID *data)
+{
+	// v: Path or Variable
+	if(NV_isTermType(v, &NODEID_TERM_TYPE_PATH)){
+		NV_Path_assign(v, data);
+	} else if(NV_isTermType(v, &NODEID_TERM_TYPE_VARIABLE)){
+		NV_Variable_assign(v, data);
+	} else{
+		return NV_Node_createWithString("NV_Term_assign:Not assignable");
+	}
+	return NODEID_NULL;
+}
+
+//
 // print
 //
 

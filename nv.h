@@ -267,6 +267,8 @@ int NV_Term_isArray(const NV_ID *id, const NV_ID *scope);
 int32_t NV_Term_getInt32(const NV_ID *id, const NV_ID *scope);
 NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *scope);
 //
+NV_ID NV_Term_assign(const NV_ID *v, const NV_ID *data);
+//
 void NV_Term_print(const NV_ID *id);
 
 // @nv_test.c

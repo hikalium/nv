@@ -1,0 +1,2 @@
+for {i = 0}{1}{i++}{print i; if{i % 3 == 0}{for{k = 0}{k < i}{k++}{print fizz}}}
+

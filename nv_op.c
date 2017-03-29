@@ -129,7 +129,9 @@ NV_BuiltinOpTag builtinOpList[] = {
 	//
 	{"+",		5001,	"NV_Op_sign_plus"},
 	{"-",		5001,	"NV_Op_sign_minus"},
-	
+	//
+	{"++",		6000,	"NV_Op_inc"},
+	{"--",		6000,	"NV_Op_dec"},
 	//
 	{"if",		10000,	"NV_Op_if"},
 	{"for",		10000,	"NV_Op_for"},
@@ -451,31 +453,29 @@ NV_ID NV_Op_assign(const NV_ID *tList, int index, const NV_ID *ctx)
 	int operandIndex[operandCount] = {-1, 1};
 	//
 	const NV_ID scope = NV_Context_getCurrentScope(ctx);
-	NV_ID v;
+	NV_ID v, retv;
 	//
 	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
 	v = operand[0];
 	operand[1] = NV_Term_getPrimNodeID(&operand[1], &scope);
 	//
-	if(NV_isTermType(&v, &NODEID_TERM_TYPE_PATH)){
-		// パスへの代入
-		NV_Path_assign(&v, &operand[1]);
-	} else{
-		// 変数への代入
-		v = NV_Term_tryReadAsVariable(&v, &scope);
-		
+	if(!NV_isTermType(&v, &NODEID_TERM_TYPE_PATH)){
+		// パスでなければ変数化可能かどうか確認
 		if(NV_Term_isAssignable(&v, &scope)){
-			// 既存変数への代入
+			// 変数化可能だったので変数化
 			v = NV_Term_getAssignableNode(&v, &scope);
-		} else if(NV_NodeID_isString(&v)){
-			// 新規変数を作成して代入
-			v = NV_Variable_createWithName(&scope, &v);
 		} else{
-			return NV_Node_createWithString(
-				"Error: Invalid Operand Type.");
+			// 変数化不能ならば、新規変数を作成
+			if(IS_DEBUG_MODE()){
+				printf("Variable created by assign op");
+			}
+			v = NV_Variable_createWithName(&scope, &v);
 		}
-		//
-		NV_Variable_assign(&v, &operand[1]);
+	}
+	retv = NV_Term_assign(&v, &operand[1]);	// 代入
+	if(!NV_NodeID_isEqual(&retv, &NODEID_NULL)){
+		// 代入に失敗
+		return retv;
 	}
 	//
 	NV_removeOperandByList(tList, index, operandIndex, operandCount);
@@ -747,6 +747,53 @@ NV_ID NV_Op_unaryPrefix(const NV_ID *tList, int index, int mod, const NV_ID *ctx
 	NV_Array_writeToIndex(tList, index, &ans);
 	return NODEID_NULL;
 }
+NV_ID NV_Op_unaryPostfixAssignable(const NV_ID *tList, int index, int mod, const NV_ID *ctx)
+{
+	NV_ID nL, nR, ans;
+	int vL, v;
+	const NV_ID scope = NV_Context_getCurrentScope(ctx);
+	//
+	nL = NV_Array_getByIndex(tList, index - 1);
+	nR = NV_Array_getByIndex(tList, index + 1);
+	if(!NV_Term_isAssignable(&nL, &scope)){
+		return NV_Node_createWithString(
+			"Error: Expected type(nL) == Assignable, but not.");
+	}
+	nL = NV_Term_getAssignableNode(&nL, &scope);
+	if(NV_Term_isInteger(&nR, &scope)){
+		return NV_Node_createWithString(
+			"Error: Expected type(nR) != Integer, but not.");
+	}
+	vL = NV_Term_getInt32(&nL, &scope);
+	//
+	NV_Array_removeIndex(tList, index);
+	//
+	switch(mod){
+		//
+		case 0:		v = vL + 1; break;
+		case 1:		v = vL - 1; break;
+/*
+		case 2:		v = vL * vR; break;
+		case 3:		v = vL / vR; break;
+		case 4:		v = vL % vR; break;
+		//
+		case 10:	v = (vL < vR); break;
+		case 11:	v = (vL >= vR); break;
+		case 12:	v = (vL <= vR); break;
+		case 13:	v = (vL > vR); break;
+		case 14:	v = (vL == vR); break;
+		case 15:	v = (vL != vR); break;
+*/
+		default:
+			return NV_Node_createWithString(
+				"Error: Invalid mod");
+	}
+	//
+	ans = NV_Node_createWithInt32(v);
+	NV_Term_assign(&nL, &ans);
+	NV_Array_writeToIndex(tList, index, &nL);
+	return NODEID_NULL;
+}
 
 NV_ID NV_Op_callArgs(const NV_ID *tList, int index, const NV_ID *ctx)
 {
@@ -945,6 +992,10 @@ void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 		r = NV_Op_swctx(tList, index, ctx);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_pathSeparator")){
 		r = NV_Op_pathSeparator(tList, index, ctx);
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_inc")){
+		r = NV_Op_unaryPostfixAssignable(tList, index, 0, ctx);
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_dec")){
+		r = NV_Op_unaryPostfixAssignable(tList, index, 1, ctx);
 	} else{
 		r = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");
