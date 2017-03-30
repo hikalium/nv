@@ -911,36 +911,47 @@ NV_ID NV_Op_callArgs(const NV_ID *tList, int index, const NV_ID *ctx)
 	NV_ID newScope;
 	// TODO: Impl return value
 	phase = NV_Op_Internal_getCurrentPhase(tList);
-	// 初めてこのOpを実行する
-	// 実行すべきコードブロックを取得
-	t = NV_Array_getByIndex(tList, index - 1);
-	t = NV_Term_tryReadAsVariableData(&t, &scope);
-	if(!NV_Term_isArray(&t, &scope)){
-		return NV_Node_createWithString("pre term is not an Array");
+	if(phase == -1){
+		NV_ID op = NV_Array_getByIndex(tList, index);
+		// 初めてこのOpを実行する
+		// 実行すべきコードブロックを取得
+		t = NV_Array_getByIndex(tList, index - 1);
+		t = NV_Term_tryReadAsVariableData(&t, &scope);
+		if(!NV_Term_isArray(&t, &scope)){
+			return NV_Node_createWithString("pre term is not an Array");
+		}
+		t = NV_Array_clone(&t);
+		// 引数ブロックをまとめてもらう
+		retv = NV_Op_codeBlock(tList, index, "(", ")");
+		if(!NV_NodeID_isEqual(&retv, &NODEID_NULL)){
+			return NV_Node_createWithString("close bracket not found");
+		}
+		argsBlock = NV_Array_getByIndex(tList, index);
+		//
+		/*
+		if(IS_DEBUG_MODE()){
+			printf("Exec block: ");
+			NV_Array_print(&t); putchar('\n');
+			NV_Array_print(&argsBlock); putchar('\n');
+		}
+		*/
+		// 問題ないので実行スタックに積む
+		// 引数をスコープに書き込んだ状態で実行する
+		newScope = NV_Context_createChildScopeWithArgs(ctx, &argsBlock);
+		NV_Context_pushToEvalStack(ctx, &t, &newScope); 
+		NV_Op_Internal_setCurrentPhase(tList, 1);
+		NV_Array_writeToIndex(tList, index, &op);
+		NV_Array_removeIndex(tList, index - 1);
+		return NODEID_NULL;
 	}
-	t = NV_Array_clone(&t);
-	// 引数ブロックをまとめてもらう
-	retv = NV_Op_codeBlock(tList, index, "(", ")");
-	if(!NV_NodeID_isEqual(&retv, &NODEID_NULL)){
-		return NV_Node_createWithString("close bracket not found");
-	}
-	argsBlock = NV_Array_getByIndex(tList, index);
+	// 実行後にここにくる
+	retv = NV_Context_getLastResult(ctx);
+	retv = NV_Array_last(&retv);
+	retv = NV_Term_getPrimNodeID(&retv, &scope);
 	//
-	/*
-	if(IS_DEBUG_MODE()){
-		printf("Exec block: ");
-		NV_Array_print(&t); putchar('\n');
-		NV_Array_print(&argsBlock); putchar('\n');
-	}
-	*/
+	NV_Array_writeToIndex(tList, index, &retv);
 	//
-	NV_Array_removeIndex(tList, index);
-	NV_Array_removeIndex(tList, index - 1);
-	// 問題ないので実行スタックに積む
-	// 引数をスコープに書き込んだ状態で実行する
-	newScope = NV_Context_createChildScopeWithArgs(ctx, &argsBlock);
-	NV_Context_pushToEvalStack(ctx, &t, &newScope); 
-	//
+	NV_Op_Internal_setCurrentPhase(tList, -1);
 	return NODEID_NULL;
 }
 
@@ -998,13 +1009,17 @@ NV_ID NV_Op_pathSeparator(const NV_ID *tList, int index, const NV_ID *ctx)
 		path = NV_Path_createWithOrigin(&NODEID_NULL);
 	} else if(NV_isTermType(&nL, &NODEID_TERM_TYPE_PATH)){
 		path = nL;
-	} else{
-		nL = NV_Dict_get(&scope, &nL);
+	} else if(NV_Term_isAssignable(&nL, &scope)){
+		// nLは代入可能オブジェクトだったので、
+		// 格納されているオブジェクトを起点にパスを作成
+		nL = NV_Term_getPrimNodeID(&nL, &scope);
 		if(!NV_NodeID_isEqual(&nL, &NODEID_NOT_FOUND)){
 			path = NV_Path_createWithOrigin(&nL);
 		} else{
-			return NV_Node_createWithString("Origin node not found");
+			return NV_Node_createWithString("Origin node was NOT_FOUND");
 		}
+	} else{
+		return NV_Node_createWithString("Origin node not found in this ctx");
 	}
 	// add right operand to path
 	NV_Path_appendRoute(&path, &nR);
@@ -1025,9 +1040,11 @@ void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 	NV_ID opStr = NV_Array_getByIndex(tList, index);
 	NV_ID opRecog = NV_Dict_getByStringKey(&opStr, "recogAsOp");
 	//
+	
 	if(IS_DEBUG_MODE()){
 		printf("begin op at index: %d ", index);
 		NV_Term_print(&opRecog);
+		putchar('\n');
 		NV_Term_print(tList);
 		putchar('\n');
 	}

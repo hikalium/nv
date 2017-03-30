@@ -49,10 +49,12 @@ NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *scope)
 		vid = NV_Variable_getNamed(scope, id);
 		if(!NV_NodeID_isEqual(&vid, &NODEID_NOT_FOUND)){
 			// 現在のスコープにあった！のでそれを返す
+			/*
 			if(IS_DEBUG_MODE()){
 				printf("Var found!\n");
 				NV_Term_print(&vid); putchar('\n');
 			}
+			*/
 			return vid;
 		}
 	}
@@ -61,15 +63,19 @@ NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *scope)
 	NV_ID pCtx = NV_Dict_getEqID(scope, &RELID_PARENT_SCOPE);
 	if(!NV_NodeID_isEqual(&pCtx, &NODEID_NOT_FOUND)){
 		// 親の検索結果を返す
+		/*
 		if(IS_DEBUG_MODE()){
 			printf("Var NOT found. Search parent.\n");
 		}
+		*/
 		return NV_Term_tryReadAsVariable(id, &pCtx);
 	}
 	// あきらめる
+	/*
 	if(IS_DEBUG_MODE()){
 		printf("Var NOT found and has no parent.\n");
 	}
+	*/
 	return *id;
 }
 
@@ -80,17 +86,21 @@ NV_ID NV_Term_getPrimNodeID(const NV_ID *id, const NV_ID *scope)
 	n = *id;
 	if(1/* TODO: Add literal string check. */){
 		n = NV_Term_tryReadAsVariableData(&n, scope);
+		/*
 		if(IS_DEBUG_MODE()){
 			printf("Var check result:\n");
 			NV_Term_print(&n); putchar('\n');
 		}
+		*/
 	}
 	if(NV_isTermType(&n, &NODEID_TERM_TYPE_PATH)){
 		n = NV_Path_getTarget(&n);
+		/*
 		if(IS_DEBUG_MODE()){
 			printf("Path check result:\n");
 			NV_Term_print(&n); putchar('\n');
 		}
+		*/
 	}
 	return n;
 }
@@ -124,9 +134,11 @@ NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *opDict)
 		if(triedPrec == -1 || NV_getOpPrec(&opID) < triedPrec) break;
 	}
 	if(!NV_NodeID_isEqual(&opID, &NODEID_NOT_FOUND)){
+		/*
 		if(IS_DEBUG_MODE()){
 			printf("op found at index: %d\n", i);
 		}
+		*/
 		return opID;
 	}
 	return *id;

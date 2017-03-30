@@ -84,10 +84,12 @@ int NV_getNextOpIndex(const NV_ID *currentBlock, const NV_ID *ctx)
 		t = NV_Term_tryReadAsOperator(&t, ctx);
 		if(!NV_isTermType(&t, &NODEID_TERM_TYPE_OP)) continue;
 		opPrec = NV_getOpPrec(&t);
+		/*
 		if(IS_DEBUG_MODE()){
 			printf("Op found. prec = %d ", opPrec);
 			NV_Term_print(&t); putchar('\n');
 		}
+		*/
 		if(lastOpPrec & 1 ? lastOpPrec <= opPrec : lastOpPrec < opPrec){
 			// continue searching
 			lastOpIndex = i;
@@ -153,8 +155,8 @@ void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx)
 		if(IS_DEBUG_MODE()){
 			printf("---- eval begin\n ");
 			//
-			printf("current evalStack: ");
-			NV_Term_print(&evalStack); putchar('\n');
+			//printf("current evalStack: ");
+			//NV_Term_print(&evalStack); putchar('\n');
 		}
 		if(NV_NodeID_isEqual(&currentBlock, &NODEID_NOT_FOUND)){
 			// evalStack is empty.
@@ -196,9 +198,9 @@ void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx)
 			continue;
 		}
 		t = NV_Node_createWithInt32(nextOpIndex);
-		if(IS_DEBUG_MODE()){
-			printf("nextOpIndex: %d\n", nextOpIndex);
-		}
+		//if(IS_DEBUG_MODE()){
+		//	printf("nextOpIndex: %d\n", nextOpIndex);
+		//}
 		NV_NodeID_createUniqueIDRelation(
 			&currentBlock, &RELID_CURRENT_TERM_INDEX, &t);
 	}
