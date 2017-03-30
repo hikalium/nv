@@ -1,1 +1,1 @@
-out"3.";loop(i 14 114 {fmt 02 i%100})print""
+out"3.";loop(i 14 113 {fmt 02 i%100})print""

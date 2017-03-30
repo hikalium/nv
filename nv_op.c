@@ -747,6 +747,7 @@ NV_ID NV_Op_fmt(const NV_ID *tList, int index, const NV_ID *ctx)
 	v = NV_Term_getInt32(&operand[1], &scope);
 	snprintf(buf, sizeof(buf), "%%%sd", widthFormat);
 	printf(buf, v);
+	fflush(stdout);
 	//
 	NV_removeOperandByList(tList, index, operandIndex, operandCount);
 	//

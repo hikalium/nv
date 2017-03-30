@@ -79,6 +79,7 @@ extern volatile sig_atomic_t NV_globalExecFlag;
 //
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
 int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *ctx);
+int NV_evalLine(const NV_ID *cTypeList, const NV_ID *ctx, const char *line);
 void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx);
 
 // @nv_array.c
