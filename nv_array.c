@@ -116,7 +116,7 @@ int32_t NV_Array_count(const NV_ID *array)
 	return NV_Array_Internal_getCount(array);
 }
 
-NV_ID NV_Array_getByIndex(const NV_ID *array, int index)
+NV_ID NV_Array_getAssignableByIndex(const NV_ID *array, int index)
 {
 	NV_ID t;
 	if(index < 0){
@@ -128,6 +128,13 @@ NV_ID NV_Array_getByIndex(const NV_ID *array, int index)
 		t = NV_NodeID_getRelatedNodeFrom(&t, &RELID_ARRAY_NEXT);
 		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
 	}
+	return t;
+}
+
+NV_ID NV_Array_getByIndex(const NV_ID *array, int index)
+{
+	NV_ID t;
+	t = NV_Array_getAssignableByIndex(array, index);
 	return NV_Variable_getData(&t);
 }
 

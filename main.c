@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 	//
 	NV_globalExecFlag |= NV_EXEC_FLAG_INTERACTIVE;
 	NV_evalLine(&cTypeList, &ctx, 
-			"loop={for{args[0]=args[1]}{args[0]<=args[2]}{args[0]++}{args[3]()}}"); 
+			"loop={for{#args[0]=args[1]}{#args[0]<=args[2]}{#args[0]++}{args[3]()}}"); 
 	for(;;){
 		NV_evalLoop(&opList, &ctx);
 		// check if context should be changed

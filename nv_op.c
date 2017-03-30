@@ -113,6 +113,7 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"fmt",		10,		"NV_Op_fmt"},
 	{"info",	10,		"NV_Op_info"},
 	{"clean",	10,		"NV_Op_clean"},
+	{"push",	10,		"NV_Op_push"},
 	//
 	{"=",		101,	"NV_Op_assign"},
 	//
@@ -138,9 +139,11 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"if",		10000,	"NV_Op_if"},
 	{"for",		10000,	"NV_Op_for"},
 	//
+	{"#",       14000,  "NV_Op_unbox"},
+	//
 	{"(",		15000,	"NV_Op_callArgs"},
 	{"[",		15000,	"NV_Op_arrayAccessor"},
-	{".",		17000,	"NV_Op_pathSeparator"},
+	{".",		15000,	"NV_Op_pathSeparator"},
 	//
 	{" ",		20000,	"NV_Op_nothing"},
 	//
@@ -486,6 +489,31 @@ NV_ID NV_Op_assign(const NV_ID *tList, int index, const NV_ID *ctx)
 	return NODEID_NULL;
 }
 
+NV_ID NV_Op_push(const NV_ID *tList, int index, const NV_ID *ctx)
+{
+	// <array> push <data>
+	const int operandCount = 2;
+	NV_ID operand[operandCount];
+	int operandIndex[operandCount] = {-1, 1};
+	//
+	const NV_ID scope = NV_Context_getCurrentScope(ctx);
+	//
+	NV_getOperandByList(tList, index, operandIndex, operand, operandCount);
+	operand[0] = NV_Term_getPrimNodeID(&operand[0], &scope);
+	operand[1] = NV_Term_getPrimNodeID(&operand[1], &scope);
+	//
+	if(!NV_isTermType(&operand[0], &NODEID_TERM_TYPE_ARRAY)){
+		return NV_Node_createWithString(
+			"Error: nL is not an Array");
+	}
+	NV_Array_push(&operand[0], &operand[1]);
+	//
+	NV_removeOperandByList(tList, index, operandIndex, operandCount);
+	//
+	NV_Array_writeToIndex(tList, index - 1, &operand[0]);
+	return NODEID_NULL;
+}
+
 NV_ID NV_Op_codeBlock
 (const NV_ID *tList, int index, const char *openTerm, const char *closeTerm)
 {
@@ -801,6 +829,31 @@ NV_ID NV_Op_unaryPrefix(const NV_ID *tList, int index, int mod, const NV_ID *ctx
 	NV_Array_writeToIndex(tList, index, &ans);
 	return NODEID_NULL;
 }
+
+NV_ID NV_Op_unbox(const NV_ID *tList, int index, const NV_ID *ctx)
+{
+	// 右辺が変数ならば、その項を変数の中身で置き換える
+	/*
+	 * a = "pqr"
+	 * のときに
+	 * a = 4
+	 * とすれば、変数aが書き換わるが
+	 * #a = 4
+	 * とすれば、
+	 * pqr = 4
+	 * と書いたのと同義になり
+	 * 変数pqrが作成される。
+	 */
+	NV_ID nR;
+	const NV_ID scope = NV_Context_getCurrentScope(ctx);
+	//
+	nR = NV_Array_getByIndex(tList, index + 1);
+	nR = NV_Term_getPrimNodeID(&nR, &scope);
+	NV_Array_removeIndex(tList, index + 1);
+	NV_Array_writeToIndex(tList, index, &nR);
+	return NODEID_NULL;
+}
+
 NV_ID NV_Op_unaryPostfixAssignable(const NV_ID *tList, int index, int mod, const NV_ID *ctx)
 {
 	NV_ID nL, nR, ans;
@@ -912,7 +965,7 @@ NV_ID NV_Op_arrayAccessor(const NV_ID *tList, int index, const NV_ID *ctx)
 	//
 	indexNode = NV_Array_getByIndex(&indexBlock, 0);
 	refIndex = NV_Term_getInt32(&indexNode, &scope);
-	v = NV_Array_getByIndex(&array, refIndex);
+	v = NV_Array_getAssignableByIndex(&array, refIndex);
 	NV_Array_writeToIndex(tList, index, &v);
 	//
 	NV_Array_removeIndex(tList, index - 1);
@@ -1055,6 +1108,10 @@ void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 		r = NV_Op_unaryPostfixAssignable(tList, index, 0, ctx);
 	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_dec")){
 		r = NV_Op_unaryPostfixAssignable(tList, index, 1, ctx);
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_push")){
+		r = NV_Op_push(tList, index, ctx);
+	} else if(NV_isBuiltinOp(&opRecog, "NV_Op_unbox")){
+		r = NV_Op_unbox(tList, index, ctx);
 	} else{
 		r = NV_Node_createWithString(
 			"Error: Op NOT found or NOT implemented.");

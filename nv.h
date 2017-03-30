@@ -89,6 +89,7 @@ NV_ID NV_Array_push(const NV_ID *array, const NV_ID *data);
 NV_ID NV_Array_pop(const NV_ID *array);
 NV_ID NV_Array_last(const NV_ID *array);
 int32_t NV_Array_count(const NV_ID *array);
+NV_ID NV_Array_getAssignableByIndex(const NV_ID *array, int index);
 NV_ID NV_Array_getByIndex(const NV_ID *array, int index);
 void NV_Array_removeIndex(const NV_ID *array, int index);
 void NV_Array_writeToIndex(const NV_ID *array, int index, const NV_ID *data);
