@@ -5,7 +5,7 @@
 
 int main(int argc, char *argv[])
 {
-	NV_ID cTypeList, opList;
+	NV_ID cTypeList, opDict;
 	int i;
 	char filename[MAX_TOKEN_LEN];
 	// set signal handler
@@ -55,14 +55,15 @@ int main(int argc, char *argv[])
 	cTypeList = NV_createCharTypeList();
 	NV_NodeID_retain(&cTypeList);
 	//
-	opList = NV_createOpList();
-	NV_NodeID_retain(&opList);
+	opDict = NV_createOpDict();
+	NV_NodeID_retain(&opDict);
 	//
 /*
 	NV_ID t;
 	t = NV_Path_createWithCStr("/var/log/httpd");
 	NV_Term_print(&t); putchar('\n');
 */
+	/*
 	NV_ID ctx = NV_Context_create();
 	NV_Context_setOpDict(&ctx, &opList);
 	if(IS_DEBUG_MODE()){
@@ -73,16 +74,21 @@ int main(int argc, char *argv[])
 	NV_globalExecFlag |= NV_EXEC_FLAG_INTERACTIVE;
 	NV_evalLine(&cTypeList, &ctx, 
 			"loop={for{#args[0]=args[1]}{#args[0]<=args[2]}{#args[0]++}{args[3]()}}"); 
+		*/
+	/*
 	for(;;){
 		NV_evalLoop(&opList, &ctx);
 		// check if context should be changed
+		
 		NV_ID nextContext = NV_Dict_getEqID(&ctx, &RELID_NEXT_CONTEXT);
 		if(!NV_NodeID_isEqual(&nextContext, &NODEID_NOT_FOUND)){
 			NV_Dict_removeUniqueIDKey(&ctx, &RELID_NEXT_CONTEXT);
 			ctx = nextContext;
 			continue;
 		}
+		
 		//
+		
 		if(NV_globalExecFlag & NV_EXEC_FLAG_INTERACTIVE){
 			// 入力を取得して継続する
 			if(NV_interactiveInput(&cTypeList, &ctx)){
@@ -91,8 +97,16 @@ int main(int argc, char *argv[])
 		} else{
 			break;
 		}
+		
+	}
+	*/
+	char line[MAX_INPUT_LEN];
+	while(NV_gets(line, sizeof(line)) != NULL){
+		NV_ID tokenList = NV_tokenize(&cTypeList, line);
+		NV_ID codeGraphRoot = NV_parseToCodeGraph(&tokenList, &cTypeList, &opDict);
 	}
 	//
 	return 0;
 }
+
 

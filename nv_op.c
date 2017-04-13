@@ -59,17 +59,17 @@ NV_ID NV_createCharTypeList()
 	return cList;
 }
 
-void NV_addOp(const NV_ID *opList, const char *token, int32_t prec, const NV_ID *func)
+void NV_addOp(const NV_ID *opDict, const char *token, int32_t prec, const NV_ID *func)
 {
 	NV_ID opDir;
 	NV_ID opEntry;
 	NV_ID ePrec;
 	// まずtokenごとに分けたDirがある
-	opDir = NV_Dict_getByStringKey(opList, token);
+	opDir = NV_Dict_getByStringKey(opDict, token);
 	if(NV_NodeID_isEqual(&opDir, &NODEID_NOT_FOUND)){
 		// このtokenは初出なので新規追加
 		opDir = NV_Array_create();
-		NV_Dict_addKeyByCStr(opList, token, &opDir);
+		NV_Dict_addKeyByCStr(opDict, token, &opDir);
 	}
 	// opEntry(ひとつのOpを表現)を作成
 	opEntry = NV_Node_create();
@@ -84,11 +84,11 @@ void NV_addOp(const NV_ID *opList, const char *token, int32_t prec, const NV_ID 
 	NV_Array_push(&opDir, &opEntry);
 }
 
-void NV_addBuiltinOp(const NV_ID *opList, const char *token, int32_t prec, const char *funcStr)
+void NV_addBuiltinOp(const NV_ID *opDict, const char *token, int32_t prec, const char *funcStr)
 {
 	NV_ID funcStrID;
 	funcStrID = NV_Node_createWithString(funcStr);
-	NV_addOp(opList, token, prec, &funcStrID);
+	NV_addOp(opDict, token, prec, &funcStrID);
 }
 
 typedef struct NV_BUILTIN_OP_TAG {
@@ -161,20 +161,20 @@ int NV_isBuiltinOp(const NV_ID *term, const char *ident)
 }
 
 
-NV_ID NV_createOpList()
+NV_ID NV_createOpDict()
 {
-	NV_ID opList = NV_Node_createWithString("NV_OpList");
+	NV_ID opDict = NV_Node_createWithString("NV_OpList");
 	//
 	int i;
 	for(i = 0; builtinOpList[i].prec >= 0; i++){
-		NV_addBuiltinOp(&opList,
+		NV_addBuiltinOp(&opDict,
 			builtinOpList[i].token, builtinOpList[i].prec, builtinOpList[i].funcStr);
 	}
 	//
 	if(IS_DEBUG_MODE()){
-		NV_Dict_print(&opList);
+		NV_Dict_print(&opDict);
 	}
-	return opList;
+	return opDict;
 }
 
 int32_t NV_getOpPrec(const NV_ID *op)

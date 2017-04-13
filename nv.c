@@ -69,7 +69,7 @@ NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input)
 // Evaluate
 //
 
-int NV_getNextOpIndex(const NV_ID *currentBlock, const NV_ID *ctx)
+int NV_getNextOpIndex(const NV_ID *currentBlock, const NV_ID *opDict)
 {
 	// 次に実行すべきオペレータを探し、そのインデックスを返す
 	int i, lastOpIndex;
@@ -81,7 +81,7 @@ int NV_getNextOpIndex(const NV_ID *currentBlock, const NV_ID *ctx)
 	for(i = 0; ; i++){
 		t = NV_Array_getByIndex(currentBlock, i);
 		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
-		t = NV_Term_tryReadAsOperator(&t, ctx);
+		t = NV_Term_tryReadAsOperator(&t, opDict);
 		if(!NV_isTermType(&t, &NODEID_TERM_TYPE_OP)) continue;
 		opPrec = NV_getOpPrec(&t);
 		/*
@@ -205,3 +205,151 @@ void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx)
 			&currentBlock, &RELID_CURRENT_TERM_INDEX, &t);
 	}
 }
+
+#define CG_BUF_SIZE	128
+int cgNodesUsed;
+NV_ID cgNodes[CG_BUF_SIZE];
+int cgRelsUsed;
+NV_ID cgRels[CG_BUF_SIZE][3];	// [from, rel, to]
+
+void NV_saveCodeGraph_trace(const NV_ID *n);
+void NV_saveCodeGraph_digForKey(const NV_ID *n, const char *key)
+{
+	NV_ID relStr;
+	NV_ID to, rel;
+	//
+	relStr = NV_Node_createWithString(key);
+	rel = NV_NodeID_getEqRelationFrom(n, &relStr);
+	if(!NV_NodeID_isEqual(&rel, &NODEID_NOT_FOUND)){
+		to = NV_NodeID_Relation_getIDLinkTo(&rel);
+		cgRels[cgRelsUsed][0] = *n;
+		cgRels[cgRelsUsed][1] = NV_NodeID_Relation_getIDLinkRel(&rel);
+		cgRels[cgRelsUsed][2] = to;
+		cgRelsUsed++;
+		NV_saveCodeGraph_trace(&to);
+	}
+}
+void NV_saveCodeGraph_trace(const NV_ID *n)
+{
+	int i;
+	//
+	for(i = 0; i < cgNodesUsed; i++){
+		if(NV_NodeID_isEqual(n, &cgNodes[i])) return;
+	}
+	//
+	cgNodes[cgNodesUsed++] = *n;
+	//
+	NV_saveCodeGraph_digForKey(n, "next");
+	NV_saveCodeGraph_digForKey(n, "op");
+	NV_saveCodeGraph_digForKey(n, "opL");
+	NV_saveCodeGraph_digForKey(n, "opR");
+	NV_saveCodeGraph_digForKey(n, "result");
+}
+void NV_saveCodeGraphForVisualization(const NV_ID *codeGraphRoot, const char *path)
+{
+	cgNodesUsed = 0;
+	cgRelsUsed = 0;
+	NV_saveCodeGraph_trace(codeGraphRoot);
+	printf("Node: %d, Rel: %d\n", cgNodesUsed, cgRelsUsed);
+	FILE *fp = fopen(path, "wb");
+	if(!fp){
+		return;
+	}
+	fprintf(fp, "digraph code {\n");
+	int i;
+	
+	fprintf(fp, "node [shape = circle] \n");
+	for(i = 0; i < cgNodesUsed; i++){
+		NV_ID *n;
+		n = &cgNodes[i];
+		//
+		fprintf(fp, "n");
+		NV_ID_dumpIDToFile(n, fp);
+		fprintf(fp, "\n");
+	}
+	fprintf(fp, ";\n");
+	
+	for(i = 0; i < cgNodesUsed; i++){
+		NV_ID *n;
+		const char *nStr;
+		n = &cgNodes[i];
+		if(NV_NodeID_isString(n)){
+			nStr = NV_NodeID_getCStr(n);
+		} else{
+			nStr = "";
+		}
+		//
+		if(nStr){
+			fprintf(fp, "n");
+			NV_ID_dumpIDToFile(n, fp);
+			fprintf(fp, " [label=\"%s\"]", nStr);
+			fprintf(fp, ";\n");
+		}
+	}
+
+	for(i = 0; i < cgRelsUsed; i++){
+		NV_ID *from, *rel, *to;
+		const char *relStr;
+		from = &cgRels[i][0];
+		rel = &cgRels[i][1];
+		to = &cgRels[i][2];
+		if(NV_NodeID_isString(rel)){
+			relStr = NV_NodeID_getCStr(rel);
+		} else{
+			relStr = "";
+		}
+		//
+		fprintf(fp, "n");
+		NV_ID_dumpIDToFile(from, fp);
+		fprintf(fp, " -> ");
+		fprintf(fp, "n");
+		NV_ID_dumpIDToFile(to, fp);
+		if(relStr){
+			fprintf(fp, " [label=\"%s\"]", relStr);
+		}
+		fprintf(fp, ";\n");
+	}
+	fprintf(fp, "}\n");
+	fclose(fp);
+}
+
+NV_ID NV_parseToCodeGraph
+(const NV_ID *tokenList, const NV_ID *cTypeList, const NV_ID *opDict)
+{
+	NV_ID codeGraphRoot = NV_Node_create();
+	NV_ID lastNode = codeGraphRoot;
+	int opIndex;
+
+	for(;;){
+		opIndex = NV_getNextOpIndex(tokenList, opDict);
+		if(opIndex == -1) break;;
+		NV_ID n = NV_Array_getByIndex(tokenList, opIndex);
+		if(NV_NodeID_isEqual(&n, &NODEID_NOT_FOUND)) break;
+		if(NV_Node_String_compareWithCStr(&n, " ") == 0){
+			NV_Array_removeIndex(tokenList, opIndex);
+			continue;
+		} else if(NV_Node_String_compareWithCStr(&n, "+") == 0){
+			NV_ID funcNode = NV_Node_create();
+			NV_ID op = NV_Node_createWithString("plus");
+			NV_ID opL = NV_Array_getByIndex(tokenList, opIndex - 1);
+			NV_ID opR = NV_Array_getByIndex(tokenList, opIndex + 1);
+			NV_ID result = NV_Variable_create();
+			//
+			NV_Dict_addUniqueEqKeyByCStr(&funcNode, "op", &op);
+			NV_Dict_addUniqueEqKeyByCStr(&funcNode, "opL", &opL);
+			NV_Dict_addUniqueEqKeyByCStr(&funcNode, "opR", &opR);
+			NV_Dict_addUniqueEqKeyByCStr(&funcNode, "result", &result);
+			//
+			NV_Array_removeIndex(tokenList, opIndex - 1);
+			NV_Array_removeIndex(tokenList, opIndex - 1);
+			NV_Array_writeToIndex(tokenList, opIndex - 1, &funcNode);
+			//
+			NV_Dict_addUniqueEqKeyByCStr(&lastNode, "next", &funcNode);
+		}
+	}
+	NV_Dict_print(&codeGraphRoot); putchar('\n');
+	NV_Array_print(tokenList); putchar('\n');
+	NV_saveCodeGraphForVisualization(&codeGraphRoot, "note/code.dot");
+	return codeGraphRoot;
+}
+

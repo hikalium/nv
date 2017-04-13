@@ -81,6 +81,7 @@ NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
 int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *ctx);
 int NV_evalLine(const NV_ID *cTypeList, const NV_ID *ctx, const char *line);
 void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx);
+NV_ID NV_parseToCodeGraph(const NV_ID *tokenList, const NV_ID *cTypeList, const NV_ID *opDict);
 
 // @nv_array.c
 NV_ID NV_Array_create();
@@ -175,6 +176,7 @@ void NV_Node_setRelation
 NV_Node *NV_NodeID_Relation_getLinkFrom(const NV_ID *relnid);
 NV_ID NV_NodeID_Relation_getIDLinkTo(const NV_ID *relnid);
 NV_Node *NV_NodeID_Relation_getLinkTo(const NV_ID *relnid);
+NV_ID NV_NodeID_Relation_getIDLinkRel(const NV_ID *relnid);
 NV_Node *NV_NodeID_Relation_getLinkRel(const NV_ID *relnid);
 void NV_NodeID_updateRelationTo(const NV_ID *relnid, const NV_ID *to);
 const NV_Node *NV_NodeID_getRelNodeFromWithCmp
@@ -205,7 +207,7 @@ int32_t NV_NodeID_getInt32(const NV_ID *id);
 int NV_Lang_getCharType(const NV_ID *cTypeList, char c);
 NV_ID NV_createCharTypeList();
 void NV_addOp(const NV_ID *opList, const char *token, int32_t prec, const NV_ID *func);
-NV_ID NV_createOpList();
+NV_ID NV_createOpDict();
 int32_t NV_getOpPrec(const NV_ID *op);
 void NV_getOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, NV_ID *idBuf, int count);
 void NV_removeOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, int count);
