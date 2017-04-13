@@ -81,6 +81,7 @@ NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
 int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *ctx);
 int NV_evalLine(const NV_ID *cTypeList, const NV_ID *ctx, const char *line);
 void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx);
+void NV_saveCodeGraphForVisualization(const NV_ID *codeGraphRoot, const char *path);
 NV_ID NV_parseToCodeGraph(const NV_ID *tokenList, const NV_ID *opDict);
 
 // @nv_array.c
@@ -213,6 +214,8 @@ void NV_getOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexL
 void NV_removeOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, int count);
 void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx);
 void NV_printOp(const NV_ID *op);
+//
+NV_ID NV_Op_codeBlock(const NV_ID *tList, int index, const char *openTerm, const char *closeTerm);
 
 // @nv_path.c
 NV_ID NV_Path_createWithOrigin(const NV_ID *origin);

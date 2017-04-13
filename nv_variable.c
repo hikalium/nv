@@ -6,7 +6,7 @@ NV_ID NV_Variable_create()
 {
 	NV_ID v;
 	//
-	v = NV_Node_create();
+	v = NV_Node_createWithString("Var");
 	//
 	NV_NodeID_createRelation(&v, &RELID_TERM_TYPE, &NODEID_TERM_TYPE_VARIABLE);
 	NV_NodeID_createRelation(&v, &RELID_VARIABLE_DATA, &NODEID_NULL);

@@ -104,6 +104,7 @@ int main(int argc, char *argv[])
 	while(NV_gets(line, sizeof(line)) != NULL){
 		NV_ID tokenList = NV_tokenize(&cTypeList, line);
 		NV_ID codeGraphRoot = NV_parseToCodeGraph(&tokenList, &opDict);
+		NV_saveCodeGraphForVisualization(&codeGraphRoot, "note/code.dot");
 	}
 	//
 	return 0;
