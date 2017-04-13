@@ -130,8 +130,8 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"/",		2000,	"NV_Op_div"},
 	{"%",		2000,	"NV_Op_mod"},
 	//
-	{"+",		5001,	"NV_Op_sign_plus"},
-	{"-",		5001,	"NV_Op_sign_minus"},
+	//{"+",		5001,	"NV_Op_sign_plus"},
+	//{"-",		5001,	"NV_Op_sign_minus"},
 	//
 	{"++",		6000,	"NV_Op_inc"},
 	{"--",		6000,	"NV_Op_dec"},
