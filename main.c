@@ -101,10 +101,18 @@ int main(int argc, char *argv[])
 	}
 	*/
 	char line[MAX_INPUT_LEN];
+	NV_ID scope = NODEID_NULL;
 	while(NV_gets(line, sizeof(line)) != NULL){
 		NV_ID tokenList = NV_tokenize(&cTypeList, line);
 		NV_ID codeGraphRoot = NV_parseToCodeGraph(&tokenList, &opDict);
 		NV_saveCodeGraphForVisualization(&codeGraphRoot, "note/code.dot");
+		NV_ID result = NV_evalGraph(&codeGraphRoot);
+		NV_saveCodeGraphForVisualization(&codeGraphRoot, "note/eval.dot");
+		//
+		printf(" = ");
+		NV_ID prim = NV_Term_getPrimNodeID(&result, &scope);
+		NV_Term_print(&prim);
+		printf("\n");
 	}
 	//
 	return 0;

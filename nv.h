@@ -83,6 +83,7 @@ int NV_evalLine(const NV_ID *cTypeList, const NV_ID *ctx, const char *line);
 void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx);
 void NV_saveCodeGraphForVisualization(const NV_ID *codeGraphRoot, const char *path);
 NV_ID NV_parseToCodeGraph(const NV_ID *tokenList, const NV_ID *opDict);
+NV_ID NV_evalGraph(const NV_ID *codeGraphRoot);
 
 // @nv_array.c
 NV_ID NV_Array_create();

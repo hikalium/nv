@@ -255,7 +255,7 @@ void NV_saveCodeGraphForVisualization(const NV_ID *codeGraphRoot, const char *pa
 	cgNodesUsed = 0;
 	cgRelsUsed = 0;
 	NV_saveCodeGraph_trace(codeGraphRoot);
-	printf("Node: %d, Rel: %d\n", cgNodesUsed, cgRelsUsed);
+	printf("Saved to %s (Node: %d, Rel: %d)\n", path, cgNodesUsed, cgRelsUsed);
 	FILE *fp = fopen(path, "wb");
 	if(!fp){
 		return;
@@ -273,25 +273,25 @@ void NV_saveCodeGraphForVisualization(const NV_ID *codeGraphRoot, const char *pa
 		fprintf(fp, "\n");
 	}
 	fprintf(fp, ";\n");
-	
+	// nodes
 	for(i = 0; i < cgNodesUsed; i++){
 		NV_ID *n;
-		const char *nStr;
+		char nStr[64];
 		n = &cgNodes[i];
 		if(NV_NodeID_isString(n)){
-			nStr = NV_NodeID_getCStr(n);
+			snprintf(nStr, sizeof(nStr), "\\\"%s\\\"", NV_NodeID_getCStr(n));
+		} else if(NV_NodeID_isInteger(n)){
+			snprintf(nStr, sizeof(nStr), "%d", NV_NodeID_getInt32(n));
 		} else{
-			nStr = "";
+			snprintf(nStr, sizeof(nStr), "");
 		}
 		//
-		if(nStr){
-			fprintf(fp, "n");
-			NV_ID_dumpIDToFile(n, fp);
-			fprintf(fp, " [label=\"%s\"]", nStr);
-			fprintf(fp, ";\n");
-		}
+		fprintf(fp, "n");
+		NV_ID_dumpIDToFile(n, fp);
+		fprintf(fp, " [label=\"%s\"]", nStr);
+		fprintf(fp, ";\n");
 	}
-
+	// rels
 	for(i = 0; i < cgRelsUsed; i++){
 		NV_ID *from, *rel, *to;
 		const char *relStr;
@@ -487,6 +487,7 @@ NV_ID NV_parseToCodeGraph_for
 
 NV_ID NV_parseToCodeGraph(const NV_ID *tokenList, const NV_ID *opDict)
 {
+	// retv: codeGraphRoot
 	NV_ID codeGraphRoot = NV_Node_createWithString("eval");
 	NV_ID lastNode = codeGraphRoot, e;
 	int opIndex;
@@ -496,13 +497,16 @@ NV_ID NV_parseToCodeGraph(const NV_ID *tokenList, const NV_ID *opDict)
 		if(opIndex == -1) break;
 		NV_ID n = NV_Array_getByIndex(tokenList, opIndex);
 		if(NV_NodeID_isEqual(&n, &NODEID_NOT_FOUND)) break;
-		fprintf(stderr, "NV_parseToCodeGraph: begin parse.\n");
-		NV_NodeID_printForDebug(&n);
+		// vvvv Nothing
 		if(NV_Node_String_compareWithCStr(&n, " ") == 0){
 			NV_Array_removeIndex(tokenList, opIndex);
 			continue;
+		} else if(NV_Node_String_compareWithCStr(&n, " ") == 0){
+			NV_Array_removeIndex(tokenList, opIndex);
+			continue;
+		// infix arithmetic
 		} else if(NV_Node_String_compareWithCStr(&n, "+") == 0){
-			NV_parseToCodeGraph_infixOp(tokenList, &lastNode, opIndex, "plus");
+			NV_parseToCodeGraph_infixOp(tokenList, &lastNode, opIndex, "add");
 		} else if(NV_Node_String_compareWithCStr(&n, "-") == 0){
 			NV_parseToCodeGraph_infixOp(tokenList, &lastNode, opIndex, "sub");
 		} else if(NV_Node_String_compareWithCStr(&n, "*") == 0){
@@ -511,6 +515,7 @@ NV_ID NV_parseToCodeGraph(const NV_ID *tokenList, const NV_ID *opDict)
 			NV_parseToCodeGraph_infixOp(tokenList, &lastNode, opIndex, "div");
 		} else if(NV_Node_String_compareWithCStr(&n, "%") == 0){
 			NV_parseToCodeGraph_infixOp(tokenList, &lastNode, opIndex, "mod");
+		// infix compare
 		} else if(NV_Node_String_compareWithCStr(&n, "<") == 0){
 			NV_parseToCodeGraph_infixOp(tokenList, &lastNode, opIndex, "cmp_lt");
 		} else if(NV_Node_String_compareWithCStr(&n, ">=") == 0){
@@ -523,12 +528,15 @@ NV_ID NV_parseToCodeGraph(const NV_ID *tokenList, const NV_ID *opDict)
 			NV_parseToCodeGraph_infixOp(tokenList, &lastNode, opIndex, "cmp_eq");
 		} else if(NV_Node_String_compareWithCStr(&n, "!=") == 0){
 			NV_parseToCodeGraph_infixOp(tokenList, &lastNode, opIndex, "cmp_neq");
+		// infix other
 		} else if(NV_Node_String_compareWithCStr(&n, "=") == 0){
 			NV_parseToCodeGraph_infixOp(tokenList, &lastNode, opIndex, "assign");
+		// prefix other
 		} else if(NV_Node_String_compareWithCStr(&n, "++") == 0){
 			NV_parseToCodeGraph_prefixOp(tokenList, &lastNode, opIndex, "inc");
 		} else if(NV_Node_String_compareWithCStr(&n, "print") == 0){
 			NV_parseToCodeGraph_prefixOp(tokenList, &lastNode, opIndex, "print");
+		// syntax structure
 		} else if(NV_Node_String_compareWithCStr(&n, "{") == 0){
 			NV_Op_codeBlock(tokenList, opIndex, "{", "}");
 		} else if(NV_Node_String_compareWithCStr(&n, "if") == 0){
@@ -545,8 +553,123 @@ NV_ID NV_parseToCodeGraph(const NV_ID *tokenList, const NV_ID *opDict)
 		}
 	}
 	//NV_Dict_print(&codeGraphRoot); putchar('\n');
-	NV_Array_print(tokenList); putchar('\n');
+	//NV_Array_print(tokenList); putchar('\n');
 	//NV_saveCodeGraphForVisualization(&codeGraphRoot, "note/code.dot");
 	return codeGraphRoot;
+}
+
+NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal)
+{
+	const NV_ID scope = NODEID_NULL;
+	//
+	NV_ID op = NV_Dict_getByStringKey(p, "op");
+	NV_ID opL = NV_Dict_getByStringKey(p, "opL");
+	NV_ID opR = NV_Dict_getByStringKey(p, "opR");
+	NV_ID result = NV_Dict_getByStringKey(p, "result");
+	//
+	const char *opStr = NV_NodeID_getCStr(&op);
+	int32_t opLVal = NV_Term_getInt32(&opL, &NODEID_NULL);
+	int32_t opRVal = NV_Term_getInt32(&opR, &NODEID_NULL);
+	int32_t ans;
+	int isAnsNotInteger = 0;
+	//
+	//printf("op: %s\n", opStr);
+	if(strcmp(opStr, "add") == 0) 		ans = opLVal + opRVal;
+	else if(strcmp(opStr, "sub") == 0)	ans = opLVal - opRVal;
+	else if(strcmp(opStr, "mul") == 0)	ans = opLVal * opRVal;
+	else if(strcmp(opStr, "div") == 0)	ans = opLVal / opRVal;
+	else if(strcmp(opStr, "mod") == 0)	ans = opLVal % opRVal;
+	//
+	else if(strcmp(opStr, "cmp_lt") == 0)	ans = opLVal < opRVal;
+	else if(strcmp(opStr, "cmp_gte") == 0)	ans = opLVal >= opRVal;
+	else if(strcmp(opStr, "cmp_lte") == 0)	ans = opLVal <= opRVal;
+	else if(strcmp(opStr, "cmp_gt") == 0)	ans = opLVal > opRVal;
+	else if(strcmp(opStr, "cmp_eq") == 0)	ans = opLVal == opRVal;
+	else if(strcmp(opStr, "cmp_neq") == 0)	ans = opLVal != opRVal;
+	//
+	else if(strcmp(opStr, "assign") == 0){
+		isAnsNotInteger = 1;
+		NV_ID v;
+		v = opL;
+		opR = NV_Term_getPrimNodeID(&opR, &scope);
+		if(NV_Term_isAssignable(&v, &scope)){
+			v = NV_Term_getAssignableNode(&v, &scope);
+		} else{
+			if(IS_DEBUG_MODE()){
+				printf("Variable created by assign op\n");
+			}
+			v = NV_Variable_createWithName(&scope, &v);
+		}
+		NV_Term_assign(&v, &opR);
+		*lastEvalVal = v;
+	} else{
+		*lastEvalVal = NV_Node_createWithStringFormat("infix: No op for %s", opStr);
+		return *lastEvalVal;
+	}
+	if(!isAnsNotInteger){
+		NV_ID ansNode = NV_Node_createWithInt32(ans);
+		NV_Variable_assign(&result, &ansNode);
+		*lastEvalVal = ansNode;
+	}
+	return NODEID_NULL;
+}
+
+NV_ID NV_Lang02_OpFunc_prefixOp(const NV_ID *p, NV_ID *lastEvalVal)
+{
+	const NV_ID scope = NODEID_NULL;
+	//
+	NV_ID op = NV_Dict_getByStringKey(p, "op");
+	NV_ID opR = NV_Dict_getByStringKey(p, "opR");
+	NV_ID result = NV_Dict_getByStringKey(p, "result");
+	//
+	const char *opStr = NV_NodeID_getCStr(&op);
+	//int32_t opRVal = NV_Term_getInt32(&opR, &NODEID_NULL);
+	int32_t ans = 0;
+	int isAnsNotInteger = 0;
+	//
+	//printf("op: %s\n", opStr);
+	//
+	if(strcmp(opStr, "print") == 0){
+		isAnsNotInteger = 1;
+		opR = NV_Term_getPrimNodeID(&opR, &scope);
+		NV_Term_print(&opR); putchar('\n');
+		*lastEvalVal = opR;
+	} else{
+		*lastEvalVal = NV_Node_createWithStringFormat("infix: No op for %s", opStr);
+		return *lastEvalVal;
+	}
+	if(!isAnsNotInteger){
+		NV_ID ansNode = NV_Node_createWithInt32(ans);
+		NV_Variable_assign(&result, &ansNode);
+		*lastEvalVal = ansNode;
+	}
+	return NODEID_NULL;
+}
+
+NV_ID NV_evalGraph(const NV_ID *codeGraphRoot)
+{
+	NV_ID lastEvalVal = NODEID_NULL;
+	NV_ID p = *codeGraphRoot;
+	const char *s;
+	//printf("BEGIN eval: \n");
+	p = NV_Dict_getByStringKey(&p, "next");
+	for(;;){
+		if(NV_NodeID_isEqual(&p, &NODEID_NOT_FOUND)) break;
+		if(!NV_NodeID_isString(&p)) break;
+		s = NV_NodeID_getCStr(&p);
+		//printf("next: %s\n", s);
+		if(strcmp(s, "infixOp") == 0){
+			NV_Lang02_OpFunc_infixOp(&p, &lastEvalVal);
+			p = NV_Dict_getByStringKey(&p, "next");
+		} else if(strcmp(s, "prefixOp") == 0){
+			NV_Lang02_OpFunc_prefixOp(&p, &lastEvalVal);
+			p = NV_Dict_getByStringKey(&p, "next");
+		} else{
+			lastEvalVal = NV_Node_createWithStringFormat(
+					"NV_evalGraph: No func for %s", s);
+			return lastEvalVal;
+		}
+	}
+	return lastEvalVal;
 }
 
