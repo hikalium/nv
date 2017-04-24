@@ -105,8 +105,6 @@ void NV_NodeID_printForDebug(const NV_ID *id);
 
 
 // @nv_op.c
-void NV_Op_Internal_setCurrentPhase(const NV_ID *opList, int32_t phase);
-int32_t NV_Op_Internal_getCurrentPhase(const NV_ID *opList);
 int NV_Lang_getCharType(const NV_ID *cTypeList, char c);
 NV_ID NV_createCharTypeList();
 void NV_addOp(const NV_ID *opDict, const char *token, int32_t prec, const NV_ID *func);
@@ -116,34 +114,8 @@ NV_ID NV_createOpDict();
 int32_t NV_getOpPrec(const NV_ID *op);
 void NV_getOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, NV_ID *idBuf, int count);
 void NV_removeOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, int count);
-NV_ID NV_Op_ExecBuiltinInfix
-(const NV_ID *tList, int index, int func, const NV_ID *ctx);
-NV_ID NV_Op_save(const NV_ID *tList, int index);
-NV_ID NV_Op_restore(const NV_ID *tList, int index);
-NV_ID NV_Op_ls(const NV_ID *tList, int index, const NV_ID *ctx);
-NV_ID NV_Op_ls2(const NV_ID *tList, int index);
-NV_ID NV_Op_lsctx(const NV_ID *tList, int index);
-NV_ID NV_Op_swctx(const NV_ID *tList, int index, const NV_ID *ctx);
-NV_ID NV_Op_last(const NV_ID *tList, int index, const NV_ID *ctx);
-NV_ID NV_Op_info(const NV_ID *tList, int index);
-NV_ID NV_Op_clean(const NV_ID *tList, int index);
-NV_ID NV_Op_assign(const NV_ID *tList, int index, const NV_ID *ctx);
-NV_ID NV_Op_push(const NV_ID *tList, int index, const NV_ID *ctx);
 NV_ID NV_Op_codeBlock
 (const NV_ID *tList, int index, const char *openTerm, const char *closeTerm);
-NV_ID NV_Op_strLiteral(const NV_ID *tList, int index);
-NV_ID NV_Op_if(const NV_ID *tList, int index, const NV_ID *ctx);
-NV_ID NV_Op_for(const NV_ID *tList, int index, const NV_ID *ctx);
-NV_ID NV_Op_print(const NV_ID *tList, int index, const NV_ID *ctx);
-NV_ID NV_Op_out(const NV_ID *tList, int index, const NV_ID *ctx);
-NV_ID NV_Op_fmt(const NV_ID *tList, int index, const NV_ID *ctx);
-NV_ID NV_Op_unaryPrefix(const NV_ID *tList, int index, int mod, const NV_ID *ctx);
-NV_ID NV_Op_unbox(const NV_ID *tList, int index, const NV_ID *ctx);
-NV_ID NV_Op_unaryPostfixAssignable(const NV_ID *tList, int index, int mod, const NV_ID *ctx);
-NV_ID NV_Op_callArgs(const NV_ID *tList, int index, const NV_ID *ctx);
-NV_ID NV_Op_arrayAccessor(const NV_ID *tList, int index, const NV_ID *ctx);
-NV_ID NV_Op_pathSeparator(const NV_ID *tList, int index, const NV_ID *ctx);
-void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx);
 void NV_printOp(const NV_ID *op);
 
 

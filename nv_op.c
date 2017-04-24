@@ -4,7 +4,7 @@
 // internal
 //
 /*
-void NV_Op_Internal_setCurrentPhase(const NV_ID *opList, int32_t phase)
+//void NV_Op_Internal_setCurrentPhase(const NV_ID *opList, int32_t phase)
 {
 	NV_ID r, n;
 	n = NV_Node_createWithInt32(phase);
@@ -18,7 +18,7 @@ void NV_Op_Internal_setCurrentPhase(const NV_ID *opList, int32_t phase)
 	}
 }
 
-int32_t NV_Op_Internal_getCurrentPhase(const NV_ID *opList)
+//int32_t NV_Op_Internal_getCurrentPhase(const NV_ID *opList)
 {
 	// if not set, returns -1
 	NV_ID n;
@@ -197,8 +197,8 @@ void NV_removeOperandByList(const NV_ID *tList, int baseIndex, const int *relInd
 
 
 /*
-NV_ID NV_Op_ExecBuiltinInfix
-(const NV_ID *tList, int index, int func, const NV_ID *ctx)
+//NV_ID NV_Op_ExecBuiltinInfix
+//(const NV_ID *tList, int index, int func, const NV_ID *ctx)
 {
 	NV_ID nL, nR, ans;
 	int vL, vR, v;
@@ -242,7 +242,7 @@ NV_ID NV_Op_ExecBuiltinInfix
 	return NODEID_NULL;
 }
 
-NV_ID NV_Op_save(const NV_ID *tList, int index)
+//NV_ID NV_Op_save(const NV_ID *tList, int index)
 {
 	const int operandCount = 1;
 	NV_ID operand[operandCount];
@@ -275,7 +275,7 @@ NV_ID NV_Op_save(const NV_ID *tList, int index)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Op_restore(const NV_ID *tList, int index)
+//NV_ID NV_Op_restore(const NV_ID *tList, int index)
 {
 	const int operandCount = 1;
 	NV_ID operand[operandCount];
@@ -311,7 +311,7 @@ NV_ID NV_Op_restore(const NV_ID *tList, int index)
 }
 */
 /*
-NV_ID NV_Op_ls(const NV_ID *tList, int index, const NV_ID *ctx)
+//NV_ID NV_Op_ls(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	NV_ID ans, path;
 	//
@@ -340,7 +340,7 @@ NV_ID NV_Op_ls(const NV_ID *tList, int index, const NV_ID *ctx)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Op_ls2(const NV_ID *tList, int index)
+//NV_ID NV_Op_ls2(const NV_ID *tList, int index)
 {
 	NV_ID ans;
 	//
@@ -351,7 +351,7 @@ NV_ID NV_Op_ls2(const NV_ID *tList, int index)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Op_lsctx(const NV_ID *tList, int index)
+//NV_ID NV_Op_lsctx(const NV_ID *tList, int index)
 {
 	NV_ID cl = NV_getContextList();
 	//
@@ -361,7 +361,7 @@ NV_ID NV_Op_lsctx(const NV_ID *tList, int index)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Op_swctx(const NV_ID *tList, int index, const NV_ID *ctx)
+//NV_ID NV_Op_swctx(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	const int operandCount = 1;
 	NV_ID operand[operandCount];
@@ -398,7 +398,7 @@ NV_ID NV_Op_swctx(const NV_ID *tList, int index, const NV_ID *ctx)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Op_last(const NV_ID *tList, int index, const NV_ID *ctx)
+//NV_ID NV_Op_last(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	NV_ID ans, n;
 	//
@@ -410,7 +410,7 @@ NV_ID NV_Op_last(const NV_ID *tList, int index, const NV_ID *ctx)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Op_info(const NV_ID *tList, int index)
+//NV_ID NV_Op_info(const NV_ID *tList, int index)
 {
 	NV_ID ans;
 	//
@@ -421,9 +421,10 @@ NV_ID NV_Op_info(const NV_ID *tList, int index)
 	return NODEID_NULL;
 }
 */
-NV_ID NV_Op_clean(const NV_ID *tList, int index)
+/*
+//NV_ID NV_Op_clean(const NV_ID *tList, int index)
 {
-	/*
+	
 	//
 	NV_Node *n;
 	int i;
@@ -442,13 +443,14 @@ NV_ID NV_Op_clean(const NV_ID *tList, int index)
 	}
 	printf("%d nodes\n", i);
 	//
-	*/
+	
 	NV_ID ans = NV_Node_createWithInt32(0);
 	NV_Array_writeToIndex(tList, index, &ans);
 	return NODEID_NULL;
 }
+*/
 /*
-NV_ID NV_Op_assign(const NV_ID *tList, int index, const NV_ID *ctx)
+//NV_ID NV_Op_assign(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	const int operandCount = 2;
 	NV_ID operand[operandCount];
@@ -486,7 +488,7 @@ NV_ID NV_Op_assign(const NV_ID *tList, int index, const NV_ID *ctx)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Op_push(const NV_ID *tList, int index, const NV_ID *ctx)
+//NV_ID NV_Op_push(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	// <array> push <data>
 	const int operandCount = 2;
@@ -543,7 +545,7 @@ NV_ID NV_Op_codeBlock
 	return NODEID_NULL;
 }
 /*
-NV_ID NV_Op_strLiteral(const NV_ID *tList, int index)
+//NV_ID NV_Op_strLiteral(const NV_ID *tList, int index)
 {
 	NV_ID v, s;
 	//
@@ -579,7 +581,7 @@ NV_ID NV_Op_strLiteral(const NV_ID *tList, int index)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Op_if(const NV_ID *tList, int index, const NV_ID *ctx)
+//NV_ID NV_Op_if(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	// if {cond} {do} [{cond} {do}] [{else}]
 	NV_ID t, tRes;
@@ -635,7 +637,7 @@ NV_ID NV_Op_if(const NV_ID *tList, int index, const NV_ID *ctx)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Op_for(const NV_ID *tList, int index, const NV_ID *ctx)
+//NV_ID NV_Op_for(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	// for {init block}{conditional block}{update block}[{statement}]
 	NV_ID t, tRes;
@@ -707,7 +709,7 @@ NV_ID NV_Op_for(const NV_ID *tList, int index, const NV_ID *ctx)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Op_print(const NV_ID *tList, int index, const NV_ID *ctx)
+//NV_ID NV_Op_print(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	const int operandCount = 1;
 	NV_ID operand[operandCount];
@@ -729,7 +731,7 @@ NV_ID NV_Op_print(const NV_ID *tList, int index, const NV_ID *ctx)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Op_out(const NV_ID *tList, int index, const NV_ID *ctx)
+//NV_ID NV_Op_out(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	const int operandCount = 1;
 	NV_ID operand[operandCount];
@@ -751,7 +753,7 @@ NV_ID NV_Op_out(const NV_ID *tList, int index, const NV_ID *ctx)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Op_fmt(const NV_ID *tList, int index, const NV_ID *ctx)
+//NV_ID NV_Op_fmt(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	// TODO: Impl properly
 	const int operandCount = 2;
@@ -782,7 +784,7 @@ NV_ID NV_Op_fmt(const NV_ID *tList, int index, const NV_ID *ctx)
 }
 */
 /*
-NV_ID NV_Op_unaryPrefix(const NV_ID *tList, int index, int mod, const NV_ID *ctx)
+//NV_ID NV_Op_unaryPrefix(const NV_ID *tList, int index, int mod, const NV_ID *ctx)
 {
 	NV_ID nL, nR, ans;
 	int vR, v;
@@ -816,21 +818,21 @@ NV_ID NV_Op_unaryPrefix(const NV_ID *tList, int index, int mod, const NV_ID *ctx
 	return NODEID_NULL;
 }
 */
-
-NV_ID NV_Op_unbox(const NV_ID *tList, int index, const NV_ID *ctx)
+/*
+//NV_ID NV_Op_unbox(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	// 右辺が変数ならば、その項を変数の中身で置き換える
-	/*
-	 * a = "pqr"
-	 * のときに
-	 * a = 4
-	 * とすれば、変数aが書き換わるが
-	 * #a = 4
-	 * とすれば、
-	 * pqr = 4
-	 * と書いたのと同義になり
-	 * 変数pqrが作成される。
-	 */
+	///
+	 // a = "pqr"
+	 // のときに
+	 // a = 4
+	 // とすれば、変数aが書き換わるが
+	 // #a = 4
+	 // とすれば、
+	 // pqr = 4
+	 // と書いたのと同義になり
+	 // 変数pqrが作成される。
+	 ///
 	NV_ID nR;
 	const NV_ID scope = NV_Context_getCurrentScope(ctx);
 	//
@@ -840,7 +842,9 @@ NV_ID NV_Op_unbox(const NV_ID *tList, int index, const NV_ID *ctx)
 	NV_Array_writeToIndex(tList, index, &nR);
 	return NODEID_NULL;
 }
-NV_ID NV_Op_unaryPostfixAssignable(const NV_ID *tList, int index, int mod, const NV_ID *ctx)
+*/
+/*
+//NV_ID NV_Op_unaryPostfixAssignable(const NV_ID *tList, int index, int mod, const NV_ID *ctx)
 {
 	NV_ID nL, nR, ans;
 	int vL, v;
@@ -865,6 +869,7 @@ NV_ID NV_Op_unaryPostfixAssignable(const NV_ID *tList, int index, int mod, const
 		//
 		case 0:		v = vL + 1; break;
 		case 1:		v = vL - 1; break;
+*/
 /*
 		case 2:		v = vL * vR; break;
 		case 3:		v = vL / vR; break;
@@ -877,6 +882,7 @@ NV_ID NV_Op_unaryPostfixAssignable(const NV_ID *tList, int index, int mod, const
 		case 14:	v = (vL == vR); break;
 		case 15:	v = (vL != vR); break;
 */
+/*
 		default:
 			return NV_Node_createWithString(
 				"Error: Invalid mod");
@@ -887,8 +893,9 @@ NV_ID NV_Op_unaryPostfixAssignable(const NV_ID *tList, int index, int mod, const
 	NV_Array_writeToIndex(tList, index, &nL);
 	return NODEID_NULL;
 }
+*/
 /*
-NV_ID NV_Op_callArgs(const NV_ID *tList, int index, const NV_ID *ctx)
+//NV_ID NV_Op_callArgs(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	// {code block}(arg1, arg2, ...)
 	NV_ID t, argsBlock, retv;
@@ -936,7 +943,7 @@ NV_ID NV_Op_callArgs(const NV_ID *tList, int index, const NV_ID *ctx)
 */
 
 /*
-NV_ID NV_Op_arrayAccessor(const NV_ID *tList, int index, const NV_ID *ctx)
+//NV_ID NV_Op_arrayAccessor(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	// {code block}(arg1, arg2, ...)
 	NV_ID array, indexBlock, indexNode, v;
@@ -965,8 +972,8 @@ NV_ID NV_Op_arrayAccessor(const NV_ID *tList, int index, const NV_ID *ctx)
 	return NODEID_NULL;
 }
 */
-
-NV_ID NV_Op_pathSeparator(const NV_ID *tList, int index, const NV_ID *ctx)
+/*
+//NV_ID NV_Op_pathSeparator(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	// {code block}(arg1, arg2, ...)
 	NV_ID nL, nR;
@@ -1016,8 +1023,9 @@ NV_ID NV_Op_pathSeparator(const NV_ID *tList, int index, const NV_ID *ctx)
 	//
 	return NODEID_NULL;
 }
+*/
 /*
-void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
+//void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	NV_ID opStr = NV_Array_getByIndex(tList, index);
 	NV_ID opRecog = NV_Dict_getByStringKey(&opStr, "recogAsOp");
