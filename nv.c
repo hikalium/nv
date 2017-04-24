@@ -551,9 +551,12 @@ NV_ID NV_parseToCodeGraph(const NV_ID *tokenList, const NV_ID *opDict)
 		// infix other
 		} else if(NV_Node_String_compareWithCStr(&n, "=") == 0){
 			NV_parseToCodeGraph_infixOp(tokenList, &lastNode, opIndex, "assign");
-		// prefix other
+		// postfix
 		} else if(NV_Node_String_compareWithCStr(&n, "++") == 0){
-			NV_parseToCodeGraph_postfixOp(tokenList, &lastNode, opIndex, "inc_post");
+			NV_parseToCodeGraph_postfixOp(tokenList, &lastNode, opIndex, "inc");
+		} else if(NV_Node_String_compareWithCStr(&n, "--") == 0){
+			NV_parseToCodeGraph_postfixOp(tokenList, &lastNode, opIndex, "dec");
+		// prefix other
 		} else if(NV_Node_String_compareWithCStr(&n, "print") == 0){
 			NV_parseToCodeGraph_prefixOp(tokenList, &lastNode, opIndex, "print");
 		// syntax structure
@@ -683,12 +686,19 @@ NV_ID NV_Lang02_OpFunc_postfixOp(const NV_ID *p, NV_ID *lastEvalVal)
 	//printf("op: %s\n", opStr);
 	//
 	if(strcmp(opStr, "inc") == 0){
-		/*
-		isAnsNotInteger = 1;
-		opR = NV_Term_getPrimNodeID(&opR, &scope);
-		NV_Term_print(&opR); putchar('\n');
-		*lastEvalVal = opR;
-		*/
+		NV_ID v, newVal;
+		v = NV_Term_getAssignableNode(&opL, &scope);
+		opL = NV_Term_getPrimNodeID(&opL, &scope);
+		ans = NV_Term_getInt32(&opL, &scope);
+		newVal = NV_Node_createWithInt32(ans + 1);
+		NV_Variable_assign(&v, &newVal);
+	} else if(strcmp(opStr, "dec") == 0){
+		NV_ID v, newVal;
+		v = NV_Term_getAssignableNode(&opL, &scope);
+		opL = NV_Term_getPrimNodeID(&opL, &scope);
+		ans = NV_Term_getInt32(&opL, &scope);
+		newVal = NV_Node_createWithInt32(ans - 1);
+		NV_Variable_assign(&v, &newVal);
 	} else{
 		*lastEvalVal = NV_Node_createWithStringFormat("infix: No op for %s", opStr);
 		return *lastEvalVal;

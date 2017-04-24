@@ -3,7 +3,7 @@
 //
 // internal
 //
-
+/*
 void NV_Op_Internal_setCurrentPhase(const NV_ID *opList, int32_t phase)
 {
 	NV_ID r, n;
@@ -25,11 +25,10 @@ int32_t NV_Op_Internal_getCurrentPhase(const NV_ID *opList)
 	n = NV_NodeID_getRelatedNodeFrom(opList, &RELID_CURRENT_TERM_PHASE);
 	return NV_NodeID_getInt32(&n);
 }
-
+*/
 //
 // public
 //
-
 #define NV_LANG_CHAR_LIST_LEN 3
 int NV_Lang_getCharType(const NV_ID *cTypeList, char c)
 {
@@ -42,8 +41,6 @@ int NV_Lang_getCharType(const NV_ID *cTypeList, char c)
 	}
 	return i;
 }
-
-
 NV_ID NV_createCharTypeList()
 {
 	NV_ID ns;
@@ -58,7 +55,6 @@ NV_ID NV_createCharTypeList()
 	//
 	return cList;
 }
-
 void NV_addOp(const NV_ID *opDict, const char *token, int32_t prec, const NV_ID *func)
 {
 	NV_ID opDir;
@@ -83,7 +79,6 @@ void NV_addOp(const NV_ID *opDict, const char *token, int32_t prec, const NV_ID 
 	// opEntryをopDirに追加
 	NV_Array_push(&opDir, &opEntry);
 }
-
 void NV_addBuiltinOp(const NV_ID *opDict, const char *token, int32_t prec, const char *funcStr)
 {
 	NV_ID funcStrID;
@@ -201,7 +196,7 @@ void NV_removeOperandByList(const NV_ID *tList, int baseIndex, const int *relInd
 }
 
 
-
+/*
 NV_ID NV_Op_ExecBuiltinInfix
 (const NV_ID *tList, int index, int func, const NV_ID *ctx)
 {
@@ -314,7 +309,8 @@ NV_ID NV_Op_restore(const NV_ID *tList, int index)
 	NV_Array_writeToIndex(tList, index, &ans);
 	return NODEID_NULL;
 }
-
+*/
+/*
 NV_ID NV_Op_ls(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	NV_ID ans, path;
@@ -324,14 +320,14 @@ NV_ID NV_Op_ls(const NV_ID *tList, int index, const NV_ID *ctx)
 	path = NV_Array_getByIndex(tList, index + 1);
 	
 	if(NV_isTermType(&path, &NODEID_TERM_TYPE_PATH)){
-		/*
-		NV_ID path = NV_Path_createAbsoluteWithCStr(NV_NodeID_getCStr(&pathStr));
-		NV_ID d;
+		
+		//NV_ID path = NV_Path_createAbsoluteWithCStr(NV_NodeID_getCStr(&pathStr));
+		//NV_ID d;
 		//NV_Dict_print(&path);
-		d = NV_Path_getTarget(&path);
-		NV_Dict_print(&d);
-		NV_Array_removeIndex(tList, index + 1);
-		*/
+		//d = NV_Path_getTarget(&path);
+		//NV_Dict_print(&d);
+		//NV_Array_removeIndex(tList, index + 1);
+		
 		NV_ID target = NV_Path_getTarget(&path);
 		NV_Dict_print(&target);
 		
@@ -424,9 +420,10 @@ NV_ID NV_Op_info(const NV_ID *tList, int index)
 	NV_Array_writeToIndex(tList, index, &ans);
 	return NODEID_NULL;
 }
-
+*/
 NV_ID NV_Op_clean(const NV_ID *tList, int index)
-{/*
+{
+	/*
 	//
 	NV_Node *n;
 	int i;
@@ -450,7 +447,7 @@ NV_ID NV_Op_clean(const NV_ID *tList, int index)
 	NV_Array_writeToIndex(tList, index, &ans);
 	return NODEID_NULL;
 }
-
+/*
 NV_ID NV_Op_assign(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	const int operandCount = 2;
@@ -513,7 +510,7 @@ NV_ID NV_Op_push(const NV_ID *tList, int index, const NV_ID *ctx)
 	NV_Array_writeToIndex(tList, index - 1, &operand[0]);
 	return NODEID_NULL;
 }
-
+*/
 NV_ID NV_Op_codeBlock
 (const NV_ID *tList, int index, const char *openTerm, const char *closeTerm)
 {
@@ -545,7 +542,7 @@ NV_ID NV_Op_codeBlock
 	NV_Array_writeToIndex(tList, index, &root);
 	return NODEID_NULL;
 }
-
+/*
 NV_ID NV_Op_strLiteral(const NV_ID *tList, int index)
 {
 	NV_ID v, s;
@@ -783,7 +780,8 @@ NV_ID NV_Op_fmt(const NV_ID *tList, int index, const NV_ID *ctx)
 	NV_Array_writeToIndex(tList, index, &ans);
 	return NODEID_NULL;
 }
-
+*/
+/*
 NV_ID NV_Op_unaryPrefix(const NV_ID *tList, int index, int mod, const NV_ID *ctx)
 {
 	NV_ID nL, nR, ans;
@@ -808,18 +806,6 @@ NV_ID NV_Op_unaryPrefix(const NV_ID *tList, int index, int mod, const NV_ID *ctx
 		//
 		case 0:		v = vR; break;
 		case 1:		v = -vR; break;
-/*
-		case 2:		v = vL * vR; break;
-		case 3:		v = vL / vR; break;
-		case 4:		v = vL % vR; break;
-		//
-		case 10:	v = (vL < vR); break;
-		case 11:	v = (vL >= vR); break;
-		case 12:	v = (vL <= vR); break;
-		case 13:	v = (vL > vR); break;
-		case 14:	v = (vL == vR); break;
-		case 15:	v = (vL != vR); break;
-*/
 		default:
 			return NV_Node_createWithString(
 				"Error: Invalid mod");
@@ -829,6 +815,7 @@ NV_ID NV_Op_unaryPrefix(const NV_ID *tList, int index, int mod, const NV_ID *ctx
 	NV_Array_writeToIndex(tList, index, &ans);
 	return NODEID_NULL;
 }
+*/
 
 NV_ID NV_Op_unbox(const NV_ID *tList, int index, const NV_ID *ctx)
 {
@@ -853,7 +840,6 @@ NV_ID NV_Op_unbox(const NV_ID *tList, int index, const NV_ID *ctx)
 	NV_Array_writeToIndex(tList, index, &nR);
 	return NODEID_NULL;
 }
-
 NV_ID NV_Op_unaryPostfixAssignable(const NV_ID *tList, int index, int mod, const NV_ID *ctx)
 {
 	NV_ID nL, nR, ans;
@@ -901,7 +887,7 @@ NV_ID NV_Op_unaryPostfixAssignable(const NV_ID *tList, int index, int mod, const
 	NV_Array_writeToIndex(tList, index, &nL);
 	return NODEID_NULL;
 }
-
+/*
 NV_ID NV_Op_callArgs(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	// {code block}(arg1, arg2, ...)
@@ -928,13 +914,6 @@ NV_ID NV_Op_callArgs(const NV_ID *tList, int index, const NV_ID *ctx)
 		}
 		argsBlock = NV_Array_getByIndex(tList, index);
 		//
-		/*
-		if(IS_DEBUG_MODE()){
-			printf("Exec block: ");
-			NV_Array_print(&t); putchar('\n');
-			NV_Array_print(&argsBlock); putchar('\n');
-		}
-		*/
 		// 問題ないので実行スタックに積む
 		// 引数をスコープに書き込んだ状態で実行する
 		newScope = NV_Context_createChildScopeWithArgs(ctx, &argsBlock);
@@ -954,7 +933,9 @@ NV_ID NV_Op_callArgs(const NV_ID *tList, int index, const NV_ID *ctx)
 	NV_Op_Internal_setCurrentPhase(tList, -1);
 	return NODEID_NULL;
 }
+*/
 
+/*
 NV_ID NV_Op_arrayAccessor(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	// {code block}(arg1, arg2, ...)
@@ -983,6 +964,7 @@ NV_ID NV_Op_arrayAccessor(const NV_ID *tList, int index, const NV_ID *ctx)
 	//
 	return NODEID_NULL;
 }
+*/
 
 NV_ID NV_Op_pathSeparator(const NV_ID *tList, int index, const NV_ID *ctx)
 {
@@ -1034,7 +1016,7 @@ NV_ID NV_Op_pathSeparator(const NV_ID *tList, int index, const NV_ID *ctx)
 	//
 	return NODEID_NULL;
 }
-
+/*
 void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 {
 	NV_ID opStr = NV_Array_getByIndex(tList, index);
@@ -1154,7 +1136,7 @@ void NV_tryExecOpAt(const NV_ID *tList, int index, const NV_ID *ctx)
 		putchar('\n');
 	}
 }
-
+*/
 void NV_printOp(const NV_ID *op)
 {
 	NV_ID eFunc;
