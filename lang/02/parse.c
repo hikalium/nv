@@ -51,7 +51,6 @@ NV_ID NV_parseToCodeGraph_prefixOp
 	NV_ID opL = NV_Array_getByIndex(tokenList, p->index - 1);
 	NV_ID result = NV_Variable_create();
 	//
-	NV_NodeID_printForDebug(&opL);
 	if(!NV_Term_isNotFound(&opL) && !NV_Term_canBeOperator(&opL, &p->dict)){
 		return NV_Node_createWithString("Expected opL is not a value");
 	}
@@ -265,17 +264,6 @@ NV_ID NV_parseToCodeGraph(const NV_ID *tokenList, const NV_ID *opDict)
 			if(!NV_Term_isNull(&retv)){
 				NV_ID triedPrec = NV_Node_createWithInt32(p.prec);
 				NV_Dict_addUniqueEqKeyByCStr(&n, "triedPrec", &triedPrec);
-				/*
-				fprintf(stderr, "NV_parseToCodeGraph: ");
-				NV_NodeID_printForDebug(&n);
-				NV_NodeID_printForDebug(&retv);
-				putchar('\n');
-				return NODEID_NULL;
-				*/
-				printf("term at %d was failed to match.\n", p.index);
-				NV_NodeID_printForDebug(&retv);
-			} else{
-				printf("term at %d was recog as %s.\n", p.index, reqFuncName);
 			}
 		} else{
 			fprintf(stderr, "NV_parseToCodeGraph: op not implemented for");

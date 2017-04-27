@@ -78,9 +78,12 @@ struct NV_OP_POINTER {
 };
 
 // @nv.c
-#define NV_EXEC_FLAG_VERBOSE		0x01
-#define NV_EXEC_FLAG_INTERRUPT		0x02
-#define NV_EXEC_FLAG_INTERACTIVE	0x04
+#define NV_EXEC_FLAG_VERBOSE			0x01
+#define NV_EXEC_FLAG_INTERRUPT			0x02
+#define NV_EXEC_FLAG_INTERACTIVE		0x04
+#define NV_EXEC_FLAG_SAVECODEGRAPH		0x08
+#define NV_EXEC_FLAG_SUPRESS_AUTOPRINT	0x10
+
 extern volatile sig_atomic_t NV_globalExecFlag;
 
 // @nv_node.c

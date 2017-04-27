@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
 	for(i = 1; i < argc; i++){
 		if(argv[i][0] == '-'){
 			if(argv[i][1] == 'v') NV_globalExecFlag |= NV_EXEC_FLAG_VERBOSE;
+			if(argv[i][1] == 'g') NV_globalExecFlag |= NV_EXEC_FLAG_SAVECODEGRAPH;
 			if(argv[i][1] == 's'){
 				i++;
 				NV_strncpy(filename, argv[i], MAX_TOKEN_LEN, strlen(argv[i]));
@@ -74,45 +75,28 @@ int main(int argc, char *argv[])
 	NV_globalExecFlag |= NV_EXEC_FLAG_INTERACTIVE;
 	NV_evalLine(&cTypeList, &ctx, 
 			"loop={for{#args[0]=args[1]}{#args[0]<=args[2]}{#args[0]++}{args[3]()}}"); 
-		*/
-	/*
-	for(;;){
-		NV_evalLoop(&opList, &ctx);
-		// check if context should be changed
-		
-		NV_ID nextContext = NV_Dict_getEqID(&ctx, &RELID_NEXT_CONTEXT);
-		if(!NV_NodeID_isEqual(&nextContext, &NODEID_NOT_FOUND)){
-			NV_Dict_removeUniqueIDKey(&ctx, &RELID_NEXT_CONTEXT);
-			ctx = nextContext;
-			continue;
-		}
-		
-		//
-		
-		if(NV_globalExecFlag & NV_EXEC_FLAG_INTERACTIVE){
-			// 入力を取得して継続する
-			if(NV_interactiveInput(&cTypeList, &ctx)){
-				break;
-			}
-		} else{
-			break;
-		}
-		
-	}
 	*/
 	char line[MAX_INPUT_LEN];
 	NV_ID scope = NODEID_NULL;
 	while(NV_gets(line, sizeof(line)) != NULL){
 		NV_ID tokenList = NV_tokenize(&cTypeList, line);
 		NV_ID codeGraphRoot = NV_parseToCodeGraph(&tokenList, &opDict);
-		NV_saveCodeGraphForVisualization(&codeGraphRoot, "note/code.dot");
+		if(NV_globalExecFlag & NV_EXEC_FLAG_SAVECODEGRAPH){
+			NV_saveCodeGraphForVisualization(&codeGraphRoot, "note/code.dot");
+		}
 		NV_ID result = NV_evalGraph(&codeGraphRoot);
-		NV_saveCodeGraphForVisualization(&codeGraphRoot, "note/eval.dot");
+		if(NV_globalExecFlag & NV_EXEC_FLAG_SAVECODEGRAPH){
+			NV_saveCodeGraphForVisualization(&codeGraphRoot, "note/eval.dot");
+		}
 		//
-		printf(" = ");
-		NV_ID prim = NV_Term_getPrimNodeID(&result, &scope);
-		NV_Term_print(&prim);
-		printf("\n");
+		if(!(NV_globalExecFlag & NV_EXEC_FLAG_SUPRESS_AUTOPRINT)){
+			printf(" = ");
+			NV_ID prim = NV_Term_getPrimNodeID(&result, &scope);
+			NV_Term_print(&prim);
+			printf("\n");
+		} else{
+			NV_globalExecFlag &= ~NV_EXEC_FLAG_SUPRESS_AUTOPRINT;
+		}
 	}
 	//
 	return 0;

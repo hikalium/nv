@@ -76,6 +76,7 @@ NV_ID NV_Lang02_OpFunc_prefixOp(const NV_ID *p, NV_ID *lastEvalVal)
 		opR = NV_Term_getPrimNodeID(&opR, &scope);
 		NV_Term_print(&opR); putchar('\n');
 		*lastEvalVal = opR;
+		NV_globalExecFlag |= NV_EXEC_FLAG_SUPRESS_AUTOPRINT;
 	} else if(strcmp(opStr, "ls") == 0){
 		isAnsNotInteger = 1;
 		NV_Dict_print(&scope);
