@@ -20,9 +20,11 @@ NV_ID NV_parseToCodeGraph_infixOp
 	NV_ID result = NV_Variable_create();
 	//
 	if(NV_Term_canBeOperator(&opL, &p->dict)){
+		puts("canBeOp!");
 		return NV_Node_createWithString("Expected opL is a value");
 	}
 	if(NV_Term_canBeOperator(&opR, &p->dict)){
+		puts("canBeOp!");
 		return NV_Node_createWithString("Expected opR is a value");
 	}
 	NV_Dict_addUniqueEqKeyByCStr(&funcNode, "op", &op);
@@ -42,14 +44,15 @@ NV_ID NV_parseToCodeGraph_infixOp
 NV_ID NV_parseToCodeGraph_prefixOp
 (const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident)
 {
-	puts("parse: prefix: begin");
+	//puts("parse: prefix: begin");
 	NV_ID funcNode = NV_Node_createWithString("prefixOp");
 	NV_ID op = NV_Node_createWithString(ident);
 	NV_ID opR = NV_Array_getByIndex(tokenList, p->index + 1);
 	NV_ID opL = NV_Array_getByIndex(tokenList, p->index - 1);
 	NV_ID result = NV_Variable_create();
 	//
-	if(NV_Term_isNotFound(&opL) && !NV_Term_canBeOperator(&opL, &p->dict)){
+	NV_NodeID_printForDebug(&opL);
+	if(!NV_Term_isNotFound(&opL) && !NV_Term_canBeOperator(&opL, &p->dict)){
 		return NV_Node_createWithString("Expected opL is not a value");
 	}
 	NV_Dict_addUniqueEqKeyByCStr(&funcNode, "op", &op);
@@ -269,6 +272,10 @@ NV_ID NV_parseToCodeGraph(const NV_ID *tokenList, const NV_ID *opDict)
 				putchar('\n');
 				return NODEID_NULL;
 				*/
+				printf("term at %d was failed to match.\n", p.index);
+				NV_NodeID_printForDebug(&retv);
+			} else{
+				printf("term at %d was recog as %s.\n", p.index, reqFuncName);
 			}
 		} else{
 			fprintf(stderr, "NV_parseToCodeGraph: op not implemented for");

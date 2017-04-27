@@ -10,12 +10,12 @@ NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal)
 	NV_ID result = NV_Dict_getByStringKey(p, "result");
 	//
 	const char *opStr = NV_NodeID_getCStr(&op);
-	int32_t opLVal = NV_Term_getInt32(&opL, &NODEID_NULL);
-	int32_t opRVal = NV_Term_getInt32(&opR, &NODEID_NULL);
+	int32_t opLVal = NV_Term_getInt32(&opL, &scope);
+	int32_t opRVal = NV_Term_getInt32(&opR, &scope);
 	int32_t ans;
 	int isAnsNotInteger = 0;
 	//
-	//printf("op: %s\n", opStr);
+	//printf("op: %s, opLv: %d, opRv: %d\n", opStr, opLVal, opRVal);
 	if(strcmp(opStr, "+") == 0) 		ans = opLVal + opRVal;
 	else if(strcmp(opStr, "-") == 0)	ans = opLVal - opRVal;
 	else if(strcmp(opStr, "*") == 0)	ans = opLVal * opRVal;
@@ -76,6 +76,10 @@ NV_ID NV_Lang02_OpFunc_prefixOp(const NV_ID *p, NV_ID *lastEvalVal)
 		opR = NV_Term_getPrimNodeID(&opR, &scope);
 		NV_Term_print(&opR); putchar('\n');
 		*lastEvalVal = opR;
+	} else if(strcmp(opStr, "ls") == 0){
+		isAnsNotInteger = 1;
+		NV_Dict_print(&scope);
+		*lastEvalVal = NODEID_NULL;
 	} else if(strcmp(opStr, "+") == 0){
 		opR = NV_Term_getPrimNodeID(&opR, &scope);
 		ans = NV_Term_getInt32(&opR ,&scope);

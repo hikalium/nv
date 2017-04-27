@@ -120,7 +120,7 @@ NV_ID NV_Array_getAssignableByIndex(const NV_ID *array, int index)
 {
 	NV_ID t;
 	if(index < 0){
-		index =  NV_Array_count(array) - 1;
+		return NODEID_NOT_FOUND;
 	}
 	t = NV_NodeID_getRelatedNodeFrom(array, &RELID_ARRAY_NEXT);
 	for(; index; index--){
