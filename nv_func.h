@@ -7,7 +7,7 @@ int main(int argc, char *argv[]);
 int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *ctx);
 int NV_evalLine(const NV_ID *cTypeList, const NV_ID *ctx, const char *line);
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
-int NV_getNextOpIndex(const NV_ID *currentBlock, const NV_ID *opDict);
+NV_OpPointer NV_getNextOp(const NV_ID *currentBlock, const NV_ID *opDict);
 int NV_checkAndPrintErrorOfCodeBlock(const NV_ID *code);
 void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx);
 void NV_saveCodeGraph_digForKey(const NV_ID *n, const char *key);
@@ -110,6 +110,7 @@ NV_ID NV_createCharTypeList();
 void NV_addOp(const NV_ID *opDict, const char *token, int32_t prec, const NV_ID *func);
 void NV_addBuiltinOp(const NV_ID *opDict, const char *token, int32_t prec, const char *funcStr);
 int NV_isBuiltinOp(const NV_ID *term, const char *ident);
+const char *NV_Op_getOpFuncNameCStr(const NV_ID *op);
 NV_ID NV_createOpDict();
 int32_t NV_getOpPrec(const NV_ID *op);
 void NV_getOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, NV_ID *idBuf, int count);
@@ -231,16 +232,20 @@ NV_ID NV_Context_getOpDict(const NV_ID *ctx);
 
 
 // @lang/02/parse.c
-void NV_parseToCodeGraph_infixOp
-(const NV_ID *tokenList, NV_ID *lastNode, int opIndex, const char *opName);
-void NV_parseToCodeGraph_prefixOp
-(const NV_ID *tokenList, NV_ID *lastNode, int opIndex, const char *opName);
-void NV_parseToCodeGraph_postfixOp
-(const NV_ID *tokenList, NV_ID *lastNode, int opIndex, const char *opName);
-void NV_parseToCodeGraph_if
-(const NV_ID *tokenList, NV_ID *lastNode, int opIndex, const NV_ID *opDict);
+NV_ID NV_parseToCodeGraph_nothing
+(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
+NV_ID NV_parseToCodeGraph_infixOp
+(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
+NV_ID NV_parseToCodeGraph_prefixOp
+(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
+NV_ID NV_parseToCodeGraph_postfixOp
+(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
+NV_ID NV_parseToCodeGraph_codeblock
+(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
+NV_ID NV_parseToCodeGraph_if
+(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
 NV_ID NV_parseToCodeGraph_for
-(const NV_ID *tokenList, NV_ID *lastNode, int opIndex, const NV_ID *opDict);
+(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
 NV_ID NV_parseToCodeGraph(const NV_ID *tokenList, const NV_ID *opDict);
 
 

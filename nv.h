@@ -48,8 +48,8 @@
 typedef struct NV_NODE NV_Node;
 typedef enum NV_NODE_TYPE NV_NodeType;
 typedef struct NV_ELEMENT_ID NV_ID;
-
 typedef struct NV_RELATION NV_Relation;
+typedef struct NV_OP_POINTER NV_OpPointer;
 
 enum NV_NODE_TYPE {
 	kNone,
@@ -69,6 +69,12 @@ struct NV_RELATION {
 	NV_ID from;
 	NV_ID rel;
 	NV_ID to;
+};
+
+struct NV_OP_POINTER {
+	NV_ID op;
+	int index;
+	NV_ID dict;
 };
 
 // @nv.c

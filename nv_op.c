@@ -90,11 +90,14 @@ typedef struct NV_BUILTIN_OP_TAG {
 	const char *token;
 	int prec;
 	const char *funcStr;
+	//int (*parser)(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
 } NV_BuiltinOpTag;
 
 NV_BuiltinOpTag builtinOpList[] = {
-	{";",		0,		"NV_Op_nothing"},
+	{";",		0,		"nothing"},
 	//
+	{"print",	10,		"prefix"},
+	/*
 	{"}",		10,		"NV_Op_codeBlockClose"},
 	{"ls",		10,		"NV_Op_ls"},
 	{"ls2",		10,		"NV_Op_ls2"},
@@ -103,48 +106,48 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"last",	10,		"NV_Op_last"},
 	{"save",	10,		"NV_Op_save"},
 	{"restore",	10,		"NV_Op_restore"},
-	{"print",	10,		"NV_Op_print"},
 	{"out",		10,		"NV_Op_out"},
 	{"fmt",		10,		"NV_Op_fmt"},
 	{"info",	10,		"NV_Op_info"},
 	{"clean",	10,		"NV_Op_clean"},
 	{"push",	10,		"NV_Op_push"},
+	*/
 	//
-	{"=",		101,	"NV_Op_assign"},
+	{"=",		101,	"infix"},
 	//
-	{"<",		500,	"NV_Op_lt"},
-	{">=",		500,	"NV_Op_gte"},
-	{"<=",		500,	"NV_Op_lte"},
-	{">",		500,	"NV_Op_gt"},
-	{"==",		500,	"NV_Op_eq"},
-	{"!=",		500,	"NV_Op_neq"},
+	{"<",		500,	"infix"},
+	{">=",		500,	"infix"},
+	{"<=",		500,	"infix"},
+	{">",		500,	"infix"},
+	{"==",		500,	"infix"},
+	{"!=",		500,	"infix"},
 	//
-	{"+",		1000,	"NV_Op_add"},
-	{"-",		1000,	"NV_Op_sub"},
-	{"*",		2000,	"NV_Op_mul"},
-	{"/",		2000,	"NV_Op_div"},
-	{"%",		2000,	"NV_Op_mod"},
+	{"+",		1000,	"infix"},
+	{"-",		1000,	"infix"},
+	{"*",		2000,	"infix"},
+	{"/",		2000,	"infix"},
+	{"%",		2000,	"infix"},
 	//
 	//{"+",		5001,	"NV_Op_sign_plus"},
 	//{"-",		5001,	"NV_Op_sign_minus"},
 	//
-	{"++",		6000,	"NV_Op_inc"},
-	{"--",		6000,	"NV_Op_dec"},
+	{"++",		6000,	"postfix"},
+	{"--",		6000,	"postfix"},
 	//
-	{"if",		10000,	"NV_Op_if"},
-	{"for",		10000,	"NV_Op_for"},
+	{"if",		10000,	"if"},
+	{"for",		10000,	"for"},
 	//
-	{"#",       14000,  "NV_Op_unbox"},
+	//{"#",       14000,  "NV_Op_unbox"},
 	//
-	{"(",		15000,	"NV_Op_callArgs"},
-	{"[",		15000,	"NV_Op_arrayAccessor"},
-	{".",		15000,	"NV_Op_pathSeparator"},
+	//{"(",		15000,	"NV_Op_callArgs"},
+	//{"[",		15000,	"NV_Op_arrayAccessor"},
+	//{".",		15000,	"NV_Op_pathSeparator"},
 	//
-	{" ",		20000,	"NV_Op_nothing"},
+	{" ",		20000,	"nothing"},
 	//
-	{"{",		30000,	"NV_Op_codeBlock"},
+	{"{",		30000,	"codeblock"},
 	//
-	{"\"",		100000,	"NV_Op_strLiteral"},
+	//{"\"",		100000,	"NV_Op_strLiteral"},
 	//
 	{"", -1, ""}	// terminate tag
 };
@@ -155,6 +158,11 @@ int NV_isBuiltinOp(const NV_ID *term, const char *ident)
 	return NV_Node_String_compareWithCStr(&func, ident) == 0;
 }
 
+const char *NV_Op_getOpFuncNameCStr(const NV_ID *op)
+{
+	NV_ID func = NV_NodeID_getRelatedNodeFrom(op, &RELID_OP_FUNC);
+	return NV_NodeID_getCStr(&func);
+}
 
 NV_ID NV_createOpDict()
 {

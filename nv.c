@@ -69,13 +69,15 @@ NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input)
 // Evaluate
 //
 
-int NV_getNextOpIndex(const NV_ID *currentBlock, const NV_ID *opDict)
+NV_OpPointer NV_getNextOp(const NV_ID *currentBlock, const NV_ID *opDict)
 {
 	// 次に実行すべきオペレータを探し、そのインデックスを返す
 	int i, lastOpIndex;
 	int32_t lastOpPrec, opPrec;
 	NV_ID t, lastOp, org;
+	NV_OpPointer p;
 	//
+	p.index = -1;
 	lastOpPrec = -1;
 	lastOpIndex = -1;
 	for(i = 0; ; i++){
@@ -103,8 +105,12 @@ int NV_getNextOpIndex(const NV_ID *currentBlock, const NV_ID *opDict)
 	if(lastOpIndex != -1){
 		org = NV_Array_getByIndex(currentBlock, lastOpIndex);
 		NV_Dict_addUniqueEqKeyByCStr(&org, "recogAsOp", &lastOp);
+		//
+		p.op = lastOp;
+		p.index = lastOpIndex;
+		p.dict = *opDict;
 	}
-	return lastOpIndex;
+	return p;
 }
 /*
 int NV_checkAndPrintErrorOfCodeBlock(const NV_ID *code)
