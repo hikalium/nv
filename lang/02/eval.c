@@ -76,6 +76,12 @@ NV_ID NV_Lang02_OpFunc_prefixOp(const NV_ID *p, NV_ID *lastEvalVal)
 		opR = NV_Term_getPrimNodeID(&opR, &scope);
 		NV_Term_print(&opR); putchar('\n');
 		*lastEvalVal = opR;
+	} else if(strcmp(opStr, "+") == 0){
+		opR = NV_Term_getPrimNodeID(&opR, &scope);
+		ans = NV_Term_getInt32(&opR ,&scope);
+	} else if(strcmp(opStr, "-") == 0){
+		opR = NV_Term_getPrimNodeID(&opR, &scope);
+		ans = -NV_Term_getInt32(&opR, &scope);
 	} else{
 		*lastEvalVal = NV_Node_createWithStringFormat("prefix: No op for %s", opStr);
 		return *lastEvalVal;

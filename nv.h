@@ -73,7 +73,7 @@ struct NV_RELATION {
 
 struct NV_OP_POINTER {
 	NV_ID op;
-	int index;
+	int index, prec;
 	NV_ID dict;
 };
 

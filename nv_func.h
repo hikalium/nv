@@ -137,6 +137,10 @@ void NV_Variable_printPrimVal(const NV_ID *vid);
 
 
 // @nv_term.c
+int NV_Term_isNotFound(const NV_ID *id);
+int NV_Term_isNull(const NV_ID *id);
+int NV_Term_isOperator(const NV_ID *id);
+int NV_Term_canBeOperator(const NV_ID *id, const NV_ID *opDict);
 int NV_isTermType(const NV_ID *node, const NV_ID *tType);
 NV_ID NV_Term_tryReadAsVariableData(const NV_ID *id, const NV_ID *scope);
 NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *scope);

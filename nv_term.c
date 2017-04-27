@@ -4,6 +4,27 @@
 //	Type checks
 //
 
+int NV_Term_isNotFound(const NV_ID *id)
+{
+	return NV_NodeID_isEqual(id, &NODEID_NOT_FOUND);
+}
+
+int NV_Term_isNull(const NV_ID *id)
+{
+	return NV_NodeID_isEqual(id, &NODEID_NULL);
+}
+
+int NV_Term_isOperator(const NV_ID *id)
+{
+	return NV_isTermType(id, &NODEID_TERM_TYPE_OP);
+}
+
+int NV_Term_canBeOperator(const NV_ID *id, const NV_ID *opDict)
+{
+	NV_ID op = NV_Term_tryReadAsOperator(id, opDict);
+	return NV_Term_isOperator(&op);
+}
+
 int NV_isTermType(const NV_ID *node, const NV_ID *tType)
 {
 	NV_ID typeID = NV_NodeID_getRelatedNodeFrom(node, &RELID_TERM_TYPE);
@@ -116,7 +137,7 @@ NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *opDict)
 	// <id>: String であることを想定
 	// <id>/triedPrec が設定されているならば、それ未満のPrecのものの中で
 	// 最大のものを返す。
-	// なければ、NOT_FOUND
+	// なければもとのidを返す。
 	NV_ID opID, opList, triedPrecNode;
 	int i;
 	int32_t triedPrec;

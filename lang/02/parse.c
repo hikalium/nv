@@ -19,6 +19,12 @@ NV_ID NV_parseToCodeGraph_infixOp
 	NV_ID opR = NV_Array_getByIndex(tokenList, p->index + 1);
 	NV_ID result = NV_Variable_create();
 	//
+	if(NV_Term_canBeOperator(&opL, &p->dict)){
+		return NV_Node_createWithString("Expected opL is a value");
+	}
+	if(NV_Term_canBeOperator(&opR, &p->dict)){
+		return NV_Node_createWithString("Expected opR is a value");
+	}
 	NV_Dict_addUniqueEqKeyByCStr(&funcNode, "op", &op);
 	NV_Dict_addUniqueEqKeyByCStr(&funcNode, "opL", &opL);
 	NV_Dict_addUniqueEqKeyByCStr(&funcNode, "opR", &opR);
@@ -36,11 +42,16 @@ NV_ID NV_parseToCodeGraph_infixOp
 NV_ID NV_parseToCodeGraph_prefixOp
 (const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident)
 {
+	puts("parse: prefix: begin");
 	NV_ID funcNode = NV_Node_createWithString("prefixOp");
 	NV_ID op = NV_Node_createWithString(ident);
 	NV_ID opR = NV_Array_getByIndex(tokenList, p->index + 1);
+	NV_ID opL = NV_Array_getByIndex(tokenList, p->index - 1);
 	NV_ID result = NV_Variable_create();
 	//
+	if(NV_Term_isNotFound(&opL) && !NV_Term_canBeOperator(&opL, &p->dict)){
+		return NV_Node_createWithString("Expected opL is not a value");
+	}
 	NV_Dict_addUniqueEqKeyByCStr(&funcNode, "op", &op);
 	NV_Dict_addUniqueEqKeyByCStr(&funcNode, "opR", &opR);
 	NV_Dict_addUniqueEqKeyByCStr(&funcNode, "result", &result);
@@ -248,6 +259,17 @@ NV_ID NV_parseToCodeGraph(const NV_ID *tokenList, const NV_ID *opDict)
 		if(builtinFuncList[i].name){
 			retv = builtinFuncList[i].parser(
 					tokenList, &lastNode, &p, NV_NodeID_getCStr(&n));
+			if(!NV_Term_isNull(&retv)){
+				NV_ID triedPrec = NV_Node_createWithInt32(p.prec);
+				NV_Dict_addUniqueEqKeyByCStr(&n, "triedPrec", &triedPrec);
+				/*
+				fprintf(stderr, "NV_parseToCodeGraph: ");
+				NV_NodeID_printForDebug(&n);
+				NV_NodeID_printForDebug(&retv);
+				putchar('\n');
+				return NODEID_NULL;
+				*/
+			}
 		} else{
 			fprintf(stderr, "NV_parseToCodeGraph: op not implemented for");
 			NV_NodeID_printForDebug(&n);

@@ -109,6 +109,7 @@ NV_OpPointer NV_getNextOp(const NV_ID *currentBlock, const NV_ID *opDict)
 		p.op = lastOp;
 		p.index = lastOpIndex;
 		p.dict = *opDict;
+		p.prec = lastOpPrec;
 	}
 	return p;
 }

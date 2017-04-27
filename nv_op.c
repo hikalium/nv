@@ -128,8 +128,8 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"/",		2000,	"infix"},
 	{"%",		2000,	"infix"},
 	//
-	//{"+",		5001,	"NV_Op_sign_plus"},
-	//{"-",		5001,	"NV_Op_sign_minus"},
+	{"+",		5001,	"prefix"},
+	{"-",		5001,	"prefix"},
 	//
 	{"++",		6000,	"postfix"},
 	{"--",		6000,	"postfix"},
