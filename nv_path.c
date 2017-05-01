@@ -2,8 +2,8 @@
 // パスは、経路となるエッジ(Relation)IDもしくは値を要素にもつリストである。
 // 始点ノードとパスを指定することで、パスの到達点となるノードを取得できる。
 // 値がエッジとして指定されている場合には、その値と等価なエッジが選択される。
-
-NV_ID NV_Path_createWithOrigin(const NV_ID *origin)
+/*
+//NV_ID NV_Path_createWithOrigin(const NV_ID *origin)
 {
 	NV_ID newArray, path;
 	//
@@ -16,7 +16,7 @@ NV_ID NV_Path_createWithOrigin(const NV_ID *origin)
 	return path;
 }
 
-NV_ID NV_Path_createAbsoluteWithCodeBlock(NV_ID *code)
+//NV_ID NV_Path_createAbsoluteWithCodeBlock(NV_ID *code)
 {
 	// 単に元の配列からパス区切りとなる記号を除去した配列を生成する。
 	NV_ID newArray, t, path;
@@ -34,7 +34,7 @@ NV_ID NV_Path_createAbsoluteWithCodeBlock(NV_ID *code)
 	return path;
 }
 
-NV_ID NV_Path_createAbsoluteWithCStr(const char *pathStr)
+//NV_ID NV_Path_createAbsoluteWithCStr(const char *pathStr)
 {
 	NV_ID cTypeList, tokenList, path;
 	//
@@ -44,14 +44,14 @@ NV_ID NV_Path_createAbsoluteWithCStr(const char *pathStr)
 	return path;
 }
 
-void NV_Path_appendRoute(const NV_ID *path, const NV_ID *r)
+//void NV_Path_appendRoute(const NV_ID *path, const NV_ID *r)
 {
 	NV_ID route;
 	route = NV_Dict_getByStringKey(path, "route");
 	NV_Array_push(&route, r);
 }
 
-NV_ID NV_Path_getTarget(const NV_ID *path)
+//NV_ID NV_Path_getTarget(const NV_ID *path)
 {
 	NV_ID t, route, p;
 	int i;
@@ -70,7 +70,7 @@ NV_ID NV_Path_getTarget(const NV_ID *path)
 	return p;
 }
 
-int NV_Path_statTarget(const NV_ID *path)
+//int NV_Path_statTarget(const NV_ID *path)
 {
 	// 0: not existed, 1: existed
 	NV_ID t, route, p;
@@ -89,8 +89,9 @@ int NV_Path_statTarget(const NV_ID *path)
 	return 1;
 }
 
-void NV_Path_assign(const NV_ID *path, const NV_ID *data)
+//void NV_Path_assign(const NV_ID *path, const NV_ID *data)
 {
+	printf("Path Assign!!!!!!!!!!!!\n");
 	NV_ID rel, route, p, q, relNode;
 	int i;
 	//
@@ -114,7 +115,7 @@ void NV_Path_assign(const NV_ID *path, const NV_ID *data)
 	}
 }
 
-NV_ID NV_Path_print(const NV_ID *path)
+//NV_ID NV_Path_print(const NV_ID *path)
 {
 	NV_ID t, route, p;
 	int i;
@@ -132,4 +133,4 @@ NV_ID NV_Path_print(const NV_ID *path)
 	printf(")");
 	return p;
 }
-
+*/

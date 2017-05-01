@@ -139,9 +139,9 @@ NV_BuiltinOpTag builtinOpList[] = {
 	//
 	//{"#",       14000,  "NV_Op_unbox"},
 	//
-	//{"(",		15000,	"NV_Op_callArgs"},
+	{"(",		15000,	"parentheses"},
 	//{"[",		15000,	"NV_Op_arrayAccessor"},
-	//{".",		15000,	"NV_Op_pathSeparator"},
+	{".",		15000,	"infix"},
 	//
 	{" ",		20000,	"nothing"},
 	//

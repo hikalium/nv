@@ -4,8 +4,6 @@ int main(int argc, char *argv[]);
 
 
 // @nv.c
-int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *ctx);
-int NV_evalLine(const NV_ID *cTypeList, const NV_ID *ctx, const char *line);
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input);
 NV_OpPointer NV_getNextOp(const NV_ID *currentBlock, const NV_ID *opDict);
 int NV_checkAndPrintErrorOfCodeBlock(const NV_ID *code);
@@ -161,17 +159,6 @@ void NV_Term_print(const NV_ID *id);
 void NV_signalHandler(int signum);
 
 
-// @nv_path.c
-NV_ID NV_Path_createWithOrigin(const NV_ID *origin);
-NV_ID NV_Path_createAbsoluteWithCodeBlock(NV_ID *code);
-NV_ID NV_Path_createAbsoluteWithCStr(const char *pathStr);
-void NV_Path_appendRoute(const NV_ID *path, const NV_ID *r);
-NV_ID NV_Path_getTarget(const NV_ID *path);
-int NV_Path_statTarget(const NV_ID *path);
-void NV_Path_assign(const NV_ID *path, const NV_ID *data);
-NV_ID NV_Path_print(const NV_ID *path);
-
-
 // @nv_integer.c
 void NV_Node_Internal_setInt32ToID(const NV_ID *id, int32_t v);
 int NV_NodeID_isInteger(const NV_ID *id);
@@ -246,6 +233,8 @@ NV_ID NV_parseToCodeGraph_postfixOp
 (const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
 NV_ID NV_parseToCodeGraph_codeblock
 (const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
+NV_ID NV_parseToCodeGraph_parentheses
+(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
 NV_ID NV_parseToCodeGraph_if
 (const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
 NV_ID NV_parseToCodeGraph_for
@@ -259,5 +248,6 @@ NV_ID NV_Lang02_OpFunc_prefixOp(const NV_ID *p, NV_ID *lastEvalVal);
 NV_ID NV_Lang02_OpFunc_postfixOp(const NV_ID *p, NV_ID *lastEvalVal);
 NV_ID NV_Lang02_OpFunc_cond(NV_ID *p, NV_ID *lastEvalVal);
 NV_ID NV_Lang02_OpFunc_do(NV_ID *p, NV_ID *lastEvalVal);
+NV_ID NV_Lang02_OpFunc_parentheses(NV_ID *p, NV_ID *lastEvalVal);
 NV_ID NV_evalGraph(const NV_ID *codeGraphRoot);
 

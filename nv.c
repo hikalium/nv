@@ -3,8 +3,8 @@
 // main
 //
 volatile sig_atomic_t NV_globalExecFlag;
-
-int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *ctx)
+/*
+// int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *ctx)
 {
 	char line[MAX_INPUT_LEN];
 	//
@@ -14,8 +14,9 @@ int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *ctx)
 	}
 	return 1;
 }
-
-int NV_evalLine(const NV_ID *cTypeList, const NV_ID *ctx, const char *line)
+*/
+/*
+// int NV_evalLine(const NV_ID *cTypeList, const NV_ID *ctx, const char *line)
 {
 	NV_ID tokenList;
 	tokenList = NV_tokenize(cTypeList, line);
@@ -28,7 +29,7 @@ int NV_evalLine(const NV_ID *cTypeList, const NV_ID *ctx, const char *line)
 	}
 	return 0;
 }
-
+*/
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input)
 {
 	// retv: tokenized str array
@@ -256,6 +257,7 @@ void NV_saveCodeGraph_trace(const NV_ID *n)
 	NV_saveCodeGraph_digForKey(n, "truePath");
 	NV_saveCodeGraph_digForKey(n, "flag");
 	NV_saveCodeGraph_digForKey(n, "call");
+	NV_saveCodeGraph_digForKey(n, "inner");
 	//NV_saveCodeGraph_digForKey(n, "type");
 }
 void NV_saveCodeGraphForVisualization(const NV_ID *codeGraphRoot, const char *path)

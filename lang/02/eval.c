@@ -30,6 +30,7 @@ NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal)
 	else if(strcmp(opStr, "!=") == 0)	ans = opLVal != opRVal;
 	//
 	else if(strcmp(opStr, "=") == 0){
+		// 
 		isAnsNotInteger = 1;
 		NV_ID v;
 		v = opL;
@@ -44,6 +45,50 @@ NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal)
 		}
 		NV_Term_assign(&v, &opR);
 		*lastEvalVal = v;
+	} else if(strcmp(opStr, ".") == 0){
+		// 変数, 名前 -> 名前withスコープ
+		//NV_ID path;
+		//int isLeftOpIrrelevant;
+		if(NV_Term_isAssignable(&opL, &scope)){
+			opL = NV_Term_getAssignableNode(&opL, &scope);
+		} else{
+			return NV_Node_createWithString("Origin node was NOT_FOUND");
+		}
+		
+		//
+		// Check left operands
+		/*
+		nL = NV_Term_tryReadAsOperator(&nL, &opDict);
+		isLeftOpIrrelevant = NV_NodeID_isEqual(&nL, &NODEID_NOT_FOUND) || 
+			NV_isTermType(&nL, &NODEID_TERM_TYPE_OP);
+		*/
+		/*
+		isLeftOpIrrelevant = 0;
+		if(isLeftOpIrrelevant){
+			path = NV_Path_createWithOrigin(&NODEID_NULL);
+		} else if(NV_isTermType(&opL, &NODEID_TERM_TYPE_PATH)){
+			path = opL;
+		} else if(NV_Term_isAssignable(&opL, &scope)){
+			// nLは代入可能オブジェクトだったので、
+			// 格納されているオブジェクトを起点にパスを作成
+			opL = NV_Term_getPrimNodeID(&opL, &scope);
+			if(!NV_NodeID_isEqual(&opL, &NODEID_NOT_FOUND)){
+				path = NV_Path_createWithOrigin(&opL);
+			} else{
+				return NV_Node_createWithString("Origin node was NOT_FOUND");
+			}
+		} else{
+			return NV_Node_createWithString("Origin node not found in this ctx");
+		}
+		// add right operand to path
+		NV_Path_appendRoute(&path, &opR);
+		//
+		NV_Dict_print(&path);
+		//
+		isAnsNotInteger = 1;
+		NV_Variable_assign(&result, &path);
+		*lastEvalVal = result;
+		*/
 	} else{
 		*lastEvalVal = NV_Node_createWithStringFormat("infix: No op for %s", opStr);
 		return *lastEvalVal;
@@ -168,10 +213,25 @@ NV_ID NV_Lang02_OpFunc_do(NV_ID *p, NV_ID *lastEvalVal)
 	return NODEID_NULL;
 }
 
+NV_ID NV_Lang02_OpFunc_parentheses(NV_ID *p, NV_ID *lastEvalVal)
+{
+	//const NV_ID scope = NODEID_NULL;
+	NV_ID inner = NV_Dict_getByStringKey(p, "inner");
+	NV_ID opL = NV_Dict_getByStringKey(p, "opL");
+	NV_ID result = NV_Dict_getByStringKey(p, "result");
+	NV_ID ansNode = NV_evalGraph(&inner);
+	//
+	NV_Variable_assign(&result, &ansNode);
+	//
+	*p = NV_Dict_getByStringKey(p, "next");
+	*lastEvalVal = result;
+	return NODEID_NULL;
+}
+
 NV_ID NV_evalGraph(const NV_ID *codeGraphRoot)
 {
 	NV_ID lastEvalVal = NODEID_NULL;
-	NV_ID p = *codeGraphRoot;
+	NV_ID p = *codeGraphRoot, r;
 	const char *s;
 	//printf("BEGIN eval: \n");
 	p = NV_Dict_getByStringKey(&p, "next");
@@ -201,6 +261,11 @@ NV_ID NV_evalGraph(const NV_ID *codeGraphRoot)
 			NV_Lang02_OpFunc_do(&p, &lastEvalVal);
 		} else if(strcmp(s, "endif") == 0){
 			p = NV_Dict_getByStringKey(&p, "next");
+		} else if(strcmp(s, "()") == 0){
+			r = NV_Lang02_OpFunc_parentheses(&p, &lastEvalVal);
+			if(!NV_Term_isNull(&r)){
+				return r;
+			}
 		} else{
 			lastEvalVal = NV_Node_createWithStringFormat(
 					"NV_evalGraph: No func for %s", s);

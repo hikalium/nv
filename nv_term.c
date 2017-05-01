@@ -102,26 +102,16 @@ NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *scope)
 
 NV_ID NV_Term_getPrimNodeID(const NV_ID *id, const NV_ID *scope)
 {
+	// 変数がネストされている場合は、一番外側の変数のみが展開される。
 	NV_ID n;
 	if(!id) return NODEID_NOT_FOUND;
 	n = *id;
 	if(1/* TODO: Add literal string check. */){
 		n = NV_Term_tryReadAsVariableData(&n, scope);
-		/*
 		if(IS_DEBUG_MODE()){
 			printf("Var check result:\n");
 			NV_Term_print(&n); putchar('\n');
 		}
-		*/
-	}
-	if(NV_isTermType(&n, &NODEID_TERM_TYPE_PATH)){
-		n = NV_Path_getTarget(&n);
-		/*
-		if(IS_DEBUG_MODE()){
-			printf("Path check result:\n");
-			NV_Term_print(&n); putchar('\n');
-		}
-		*/
 	}
 	return n;
 }
@@ -255,9 +245,12 @@ NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *scope)
 NV_ID NV_Term_assign(const NV_ID *v, const NV_ID *data)
 {
 	// v: Path or Variable
+	/*
 	if(NV_isTermType(v, &NODEID_TERM_TYPE_PATH)){
 		NV_Path_assign(v, data);
-	} else if(NV_isTermType(v, &NODEID_TERM_TYPE_VARIABLE)){
+	} else 
+	*/
+	if(NV_isTermType(v, &NODEID_TERM_TYPE_VARIABLE)){
 		NV_Variable_assign(v, data);
 	} else{
 		return NV_Node_createWithString("NV_Term_assign:Not assignable");
@@ -277,8 +270,10 @@ void NV_Term_print(const NV_ID *id)
 		NV_Variable_print(id);
 	} else if(NV_isTermType(id, &NODEID_TERM_TYPE_OP)){
 		NV_printOp(id);
+		/*
 	} else if(NV_isTermType(id, &NODEID_TERM_TYPE_PATH)){
 		NV_Path_print(id);
+		*/
 	} else{
 		NV_Node_printPrimVal(id);
 	}

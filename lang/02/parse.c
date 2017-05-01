@@ -71,11 +71,11 @@ NV_ID NV_parseToCodeGraph_postfixOp
 {
 	NV_ID funcNode = NV_Node_createWithString("postfixOp");
 	NV_ID op = NV_Node_createWithString(ident);
-	NV_ID opR = NV_Array_getByIndex(tokenList, p->index - 1);
+	NV_ID opL = NV_Array_getByIndex(tokenList, p->index - 1);
 	NV_ID result = NV_Variable_create();
 	//
 	NV_Dict_addUniqueEqKeyByCStr(&funcNode, "op", &op);
-	NV_Dict_addUniqueEqKeyByCStr(&funcNode, "opL", &opR);
+	NV_Dict_addUniqueEqKeyByCStr(&funcNode, "opL", &opL);
 	NV_Dict_addUniqueEqKeyByCStr(&funcNode, "result", &result);
 	//
 	NV_Array_removeIndex(tokenList, p->index - 1);
@@ -92,6 +92,33 @@ NV_ID NV_parseToCodeGraph_codeblock
 	PARAM_UNUSED(lastNode);
 	PARAM_UNUSED(ident);
 	NV_Op_codeBlock(tokenList, p->index, "{", "}");
+	return NODEID_NULL;
+}
+
+NV_ID NV_parseToCodeGraph_parentheses
+(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident)
+{
+	PARAM_UNUSED(ident);
+	NV_ID *opDict = &p->dict;
+	NV_Op_codeBlock(tokenList, p->index, "(", ")");
+	NV_ID funcNode = NV_Node_createWithString("()");
+	NV_ID opL = NV_Array_getByIndex(tokenList, p->index - 1);
+	NV_ID inner = NV_Array_getByIndex(tokenList, p->index);
+	NV_ID result = NV_Variable_create();
+	//
+	inner = NV_parseToCodeGraph(&inner, opDict);
+	//
+	NV_Dict_addUniqueEqKeyByCStr(&funcNode, "opL", &opL);
+	NV_Dict_addUniqueEqKeyByCStr(&funcNode, "inner", &inner);
+	NV_Dict_addUniqueEqKeyByCStr(&funcNode, "result", &result);
+	//
+	NV_Array_writeToIndex(tokenList, p->index, &result);
+	if(!NV_Term_isNotFound(&opL) && !NV_Term_canBeOperator(&opL, &p->dict)){
+		NV_Array_removeIndex(tokenList, p->index - 1);
+	}
+	//
+	NV_Dict_addUniqueEqKeyByCStr(lastNode, "next", &funcNode);
+	*lastNode = funcNode;
 	return NODEID_NULL;
 }
 
@@ -234,6 +261,7 @@ NV_Lang02_BuiltinFunctionTag builtinFuncList[] = {
 	{"prefix", NV_parseToCodeGraph_prefixOp},
 	{"postfix", NV_parseToCodeGraph_postfixOp},
 	{"codeblock", NV_parseToCodeGraph_codeblock},
+	{"parentheses", NV_parseToCodeGraph_parentheses},
 	{"if", NV_parseToCodeGraph_if},
 	{"for", NV_parseToCodeGraph_for},
 	{NULL, NULL},	// terminate tag
