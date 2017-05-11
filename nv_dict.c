@@ -110,7 +110,7 @@ void NV_Dict_print(const NV_ID *root)
 				printf("  |--- ");
 				NV_Node_printPrimVal(&reld->rel);
 				printf(": ");
-				NV_Term_print(&reld->to);
+				NV_Node_printPrimVal(&reld->to);
 				printf("\n");
 				cnt++;
 			}

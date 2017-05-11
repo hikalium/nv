@@ -90,30 +90,7 @@ extern volatile sig_atomic_t NV_globalExecFlag;
 extern NV_Node nodeRoot;
 
 // @nv_static.c
-extern const NV_ID NODEID_NV_STATIC_ROOT;
-extern const NV_ID NODEID_NULL;
-extern const NV_ID NODEID_NOT_FOUND;
-extern const NV_ID NODEID_TERM_TYPE_ARRAY;
-extern const NV_ID NODEID_TERM_TYPE_VARIABLE;
-extern const NV_ID NODEID_TERM_TYPE_OP;
-extern const NV_ID NODEID_TERM_TYPE_PATH;
-//
-extern const NV_ID RELID_ARRAY_NEXT;
-extern const NV_ID RELID_ARRAY_COUNT;
-extern const NV_ID RELID_VARIABLE_DATA;
-extern const NV_ID RELID_POINTER_TARGET;
-extern const NV_ID RELID_OP_PRECEDENCE;
-extern const NV_ID RELID_OP_FUNC;
-extern const NV_ID RELID_TERM_TYPE;
-extern const NV_ID RELID_EVAL_STACK;
-extern const NV_ID RELID_LAST_RESULT;
-extern const NV_ID RELID_CURRENT_TERM_INDEX;
-extern const NV_ID RELID_CURRENT_TERM_PHASE;
-extern const NV_ID RELID_CURRENT_SCOPE;
-extern const NV_ID RELID_PARENT_SCOPE;
-extern const NV_ID RELID_CONTEXT_LIST;
-extern const NV_ID RELID_NEXT_CONTEXT;
-extern const NV_ID RELID_OP_DICT;
+#include "nv_static.h"
 //
 const char *NV_NodeTypeList[kNodeTypeCount];
 const char c2hexTable[0x100];

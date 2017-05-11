@@ -44,6 +44,11 @@ NV_ID NV_Term_tryReadAsVariableData(const NV_ID *id, const NV_ID *scope)
 	vid = NV_Term_tryReadAsVariable(id, scope);
 	if(NV_isTermType(&vid, &NODEID_TERM_TYPE_VARIABLE)){
 		vid = NV_Variable_getData(&vid);
+		/*
+		printf("NV_Term_tryReadAsVariableData: variable!\n");
+		NV_Term_print(&vid);
+		printf("\n");
+		*/
 		if(!NV_NodeID_isEqual(&vid, &NODEID_NOT_FOUND)){
 			return vid;
 		}
@@ -60,24 +65,19 @@ NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *scope)
 	//   - TermType === Variable
 	// 無理ならば、もとのidを返す
 	//
+
 	if(NV_isTermType(id, &NODEID_TERM_TYPE_VARIABLE)){
 		// もともと変数オブジェクトだった
+		printf("Already val obj\n");
 		return *id;
 	}
-	if(NV_NodeID_isString(id)){
-		// 文字列だったので現在のスコープを検索
-		NV_ID vid;
-		vid = NV_Variable_getNamed(scope, id);
-		if(!NV_NodeID_isEqual(&vid, &NODEID_NOT_FOUND)){
-			// 現在のスコープにあった！のでそれを返す
-			/*
-			if(IS_DEBUG_MODE()){
-				printf("Var found!\n");
-				NV_Term_print(&vid); putchar('\n');
-			}
-			*/
-			return vid;
-		}
+	if(NV_NodeID_isString(id) && NV_Variable_statByName(scope, id)){
+		// 文字列でかつ現在のscopeに存在するのでその変数を返す
+		/*
+		printf("name \"%s\" found in context.\n", 
+				NV_NodeID_getCStr(id));
+				*/
+		return NV_Variable_createWithName(scope, id);
 	}
 
 	// このコンテキスト階層では見つからなかったので、親があればたどる
@@ -109,8 +109,11 @@ NV_ID NV_Term_getPrimNodeID(const NV_ID *id, const NV_ID *scope)
 	if(1/* TODO: Add literal string check. */){
 		n = NV_Term_tryReadAsVariableData(&n, scope);
 		if(IS_DEBUG_MODE()){
-			printf("Var check result:\n");
-			NV_Term_print(&n); putchar('\n');
+			printf("Var check result: ");
+			NV_Term_print(id);
+			printf(" -> ");
+			NV_Term_print(&n);
+			putchar('\n');
 		}
 	}
 	return n;
@@ -231,8 +234,9 @@ int32_t NV_Term_getInt32(const NV_ID *id, const NV_ID *scope)
 NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *scope)
 {
 	NV_ID vid;
-	if(NV_NodeID_isString(id)){
-		vid = NV_Variable_getNamed(scope, id);
+	if(NV_NodeID_isString(id) && NV_Variable_statByName(scope, id)){
+		// idが文字列でしかもそれに相当する変数が存在するなら変換
+		vid = NV_Variable_createWithName(scope, id);
 		id = &vid;
 	}
 	if(!NV_isTermType(id, &NODEID_TERM_TYPE_VARIABLE)) return NODEID_NOT_FOUND;

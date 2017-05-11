@@ -54,8 +54,8 @@ NV_ID NV_Array_push(const NV_ID *array, const NV_ID *data)
 {
 	NV_ID v, t, next;
 	//
-	v = NV_Variable_create();
-	NV_Variable_assign(&v, data);
+	v = NV_Node_create();
+	NV_NodeID_createUniqueIDRelation(&v, &RELID_ARRAY_DATA, data);
 	//
 	t = *array;
 	for(;;){
@@ -90,7 +90,7 @@ NV_ID NV_Array_pop(const NV_ID *array)
 		NV_Array_Internal_updateCountRel(array, -1);
 	}
 	//
-	return NV_Variable_getData(&t);
+	return NV_NodeID_getRelatedNodeFrom(&t, &RELID_ARRAY_DATA);
 }
 
 NV_ID NV_Array_last(const NV_ID *array)
@@ -106,7 +106,7 @@ NV_ID NV_Array_last(const NV_ID *array)
 		t = NV_NodeID_getRelatedNodeFrom(&t, &RELID_ARRAY_NEXT);
 	}
 	// t is retv.
-	return NV_Variable_getData(&t);
+	return NV_NodeID_getRelatedNodeFrom(&t, &RELID_ARRAY_DATA);
 }
 
 int32_t NV_Array_count(const NV_ID *array)
@@ -118,24 +118,25 @@ int32_t NV_Array_count(const NV_ID *array)
 
 NV_ID NV_Array_getAssignableByIndex(const NV_ID *array, int index)
 {
+	// indexが範囲外ならばNOT_FOUND
 	NV_ID t;
 	if(index < 0){
 		return NODEID_NOT_FOUND;
 	}
 	t = NV_NodeID_getRelatedNodeFrom(array, &RELID_ARRAY_NEXT);
-	for(; index; index--){
-		if(index == 0) break;
+	for(; index > 0; index--){
 		t = NV_NodeID_getRelatedNodeFrom(&t, &RELID_ARRAY_NEXT);
-		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
+		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) return NODEID_NOT_FOUND;
 	}
-	return t;
+	return NV_Variable_createWithName(&t, &RELID_ARRAY_DATA);
 }
 
 NV_ID NV_Array_getByIndex(const NV_ID *array, int index)
 {
-	NV_ID t;
-	t = NV_Array_getAssignableByIndex(array, index);
-	return NV_Variable_getData(&t);
+	NV_ID v;
+	v = NV_Array_getAssignableByIndex(array, index);
+	if(NV_Term_isNotFound(&v)) return NODEID_NOT_FOUND;
+	return NV_Variable_getData(&v);
 }
 
 void NV_Array_removeIndex(const NV_ID *array, int index)
@@ -162,18 +163,12 @@ void NV_Array_removeIndex(const NV_ID *array, int index)
 
 void NV_Array_writeToIndex(const NV_ID *array, int index, const NV_ID *data)
 {
-	NV_ID t;
-	if(index < 0) return;
-	t = NV_NodeID_getRelatedNodeFrom(array, &RELID_ARRAY_NEXT);
-	for(; index; index--){
-		if(index == 0) break;
-		t = NV_NodeID_getRelatedNodeFrom(&t, &RELID_ARRAY_NEXT);
-		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) return;
-	}
-	NV_Variable_assign(&t, data);
+	NV_ID v;
+	v = NV_Array_getAssignableByIndex(array, index);
+	NV_Variable_assign(&v, data);
 }
-
-NV_ID NV_Array_joinWithCStr(const NV_ID *array, const char *sep)
+/*
+// NV_ID NV_Array_joinWithCStr(const NV_ID *array, const char *sep)
 {
 	size_t sumLen = 1;
 	NV_ID t;
@@ -205,6 +200,7 @@ NV_ID NV_Array_joinWithCStr(const NV_ID *array, const char *sep)
 	NV_free(buf);
 	return t;
 }
+*/
 
 NV_ID NV_Array_getSorted(const NV_ID *array, int (*f)(const void *n1, const void *n2))
 {

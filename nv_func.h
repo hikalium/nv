@@ -14,9 +14,6 @@ void NV_saveCodeGraphForVisualization(const NV_ID *codeGraphRoot, const char *pa
 
 
 // @nv_array.c
-void NV_Array_Internal_setCount(const NV_ID *array, int32_t count);
-int32_t NV_Array_Internal_getCount(const NV_ID *array);
-void NV_Array_Internal_updateCountRel(const NV_ID *array, int32_t diff);
 NV_ID NV_Array_create();
 NV_ID NV_Array_clone(const NV_ID *base);
 NV_ID NV_Array_push(const NV_ID *array, const NV_ID *data);
@@ -27,7 +24,6 @@ NV_ID NV_Array_getAssignableByIndex(const NV_ID *array, int index);
 NV_ID NV_Array_getByIndex(const NV_ID *array, int index);
 void NV_Array_removeIndex(const NV_ID *array, int index);
 void NV_Array_writeToIndex(const NV_ID *array, int index, const NV_ID *data);
-NV_ID NV_Array_joinWithCStr(const NV_ID *array, const char *sep);
 NV_ID NV_Array_getSorted(const NV_ID *array, int (*f)(const void *n1, const void *n2));
 void NV_Array_print(const NV_ID *array);
 
@@ -73,10 +69,6 @@ void NV_ID_dumpIDToFile(const NV_ID *id, FILE *fp);
 
 // @nv_node.c
 NV_ID NV_NodeID_createNew(const NV_ID *id);
-void NV_Node_Internal_resetData(NV_Node *n);
-void NV_Node_Internal_remove(NV_Node *n);
-void NV_Node_Internal_removeAllRelationFrom(const NV_ID *from);
-int NV_Node_Internal_isEqualInValue(const NV_Node *na, const NV_Node *nb);
 void NV_Node_initRoot();
 int NV_Node_getNodeCount();
 NV_ID NV_NodeID_create(const NV_ID *id);
@@ -127,11 +119,10 @@ void NV_insertInitialNode();
 // @nv_variable.c
 NV_ID NV_Variable_create();
 NV_ID NV_Variable_createWithName(const NV_ID *parentNode, const NV_ID *nameNode);
-NV_ID NV_Variable_getNamed(const NV_ID *parentNode, const NV_ID *nameNode);
-void NV_Variable_assign(const NV_ID *vid, const NV_ID *data);
-NV_ID NV_Variable_getData(const NV_ID *vid);
-void NV_Variable_print(const NV_ID *vid);
-void NV_Variable_printPrimVal(const NV_ID *vid);
+void NV_Variable_assign(const NV_ID *v, const NV_ID *data);
+int NV_Variable_statByName(const NV_ID *parentNode, const NV_ID *nameNode);
+NV_ID NV_Variable_getData(const NV_ID *v);
+void NV_Variable_print(const NV_ID *v);
 
 
 // @nv_term.c
@@ -160,15 +151,12 @@ void NV_signalHandler(int signum);
 
 
 // @nv_integer.c
-void NV_Node_Internal_setInt32ToID(const NV_ID *id, int32_t v);
 int NV_NodeID_isInteger(const NV_ID *id);
 NV_ID NV_Node_createWithInt32(int32_t v);
 int32_t NV_NodeID_getInt32(const NV_ID *id);
 
 
 // @nv_string.c
-void NV_Node_Internal_setStrToID(const NV_ID *id, const char *s);
-long NV_Node_String_Internal_strtol(const NV_Node *ns, int *endptrindex, int base);
 int NV_NodeID_isString(const NV_ID *id);
 NV_ID NV_Node_createWithString(const char *s);
 NV_ID NV_Node_createWithStringFormat(const char *fmt, ...);

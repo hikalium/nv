@@ -78,6 +78,7 @@ int main(int argc, char *argv[])
 	*/
 	char line[MAX_INPUT_LEN];
 	NV_ID scope = NODEID_NULL;
+	//
 	while(NV_gets(line, sizeof(line)) != NULL){
 		NV_ID tokenList = NV_tokenize(&cTypeList, line);
 		NV_ID codeGraphRoot = NV_parseToCodeGraph(&tokenList, &opDict);

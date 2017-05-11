@@ -8,7 +8,7 @@ SRCS= 	main.c \
 		nv_variable.c nv_term.c nv_signal.c \
 		nv_integer.c nv_string.c nv_relation.c nv_context.c \
 		lang/02/parse.c lang/02/eval.c
-HEADERS=nv.h nv_node.h nv_func.h
+HEADERS=nv.h nv_node.h nv_func.h nv_static.h
 CFLAGS=-Wall -Wextra -lncurses -Wunused-function
 CFLAGS += -DGIT_COMMIT_ID="\"$(GIT_COMMIT_ID)\"" \
 			-DGIT_COMMIT_DATE="\"$(GIT_COMMIT_DATE)\""
@@ -17,6 +17,9 @@ nv : $(SRCS) $(HEADERS) Makefile
 	cc $(CFLAGS) -Os -o nv  $(SRCS)
 	strip nv
 	upx -9 nv
+
+run : ./nv Makefile
+	./nv
 
 fastbin : $(SRCS) $(HEADERS) Makefile
 	cc $(CFLAGS) -Ofast -O3 -o nv  $(SRCS)
@@ -57,4 +60,7 @@ header:
 
 nv_func.h: $(SRCS) Makefile makeheadersub.sh
 	make header > nv_func.h
+
+nv_static.h : nv_static.c Makefile
+	cat nv_static.c | grep -e '^const NV_ID NODEID' -e '^const NV_ID RELID' | sed -e 's/$$/;/g' | sed -e 's/^/extern /g' > nv_static.h
 
