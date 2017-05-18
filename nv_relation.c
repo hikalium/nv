@@ -242,6 +242,10 @@ NV_ID NV_NodeID_getEqRelatedNodeFrom(const NV_ID *from, const NV_ID *rel)
 {
 	const NV_Node *n;
 	const NV_Relation *reld;
+	/*
+	printf("\nNV_NodeID_getEqRelatedNodeFrom: find from #%08X, rel #%08X\n",
+			from->d[0], rel->d[0]);
+			*/
 	//
 	n = NV_NodeID_getRelNodeFromWithCmp(from, rel, NV_NodeID_isEqualInValue);
 	if(n){

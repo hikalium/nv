@@ -75,6 +75,7 @@ void NV_Node_Internal_removeAllRelationFrom(const NV_ID *from)
 int NV_Node_Internal_isEqualInValue(const NV_Node *na, const NV_Node *nb)
 {
 	// 2つのNodeが値として等しいか否かを返す。
+	// nodei
 	if(!na || !nb) return 0;
 	if(na->type != nb->type) return 0;
 	if(NV_NodeID_isEqual(&na->id, &nb->id)) return 1;
@@ -142,6 +143,7 @@ int NV_NodeID_isEqual(const NV_ID *a, const NV_ID *b)
 
 int NV_NodeID_isEqualInValue(const NV_ID *a, const NV_ID *b)
 {
+	if(NV_NodeID_isEqual(a, b)) return 1;	// 等しいidのNode同士の値は常に等しい
 	NV_Node *na, *nb;
 	na = NV_NodeID_getNode(a);
 	nb = NV_NodeID_getNode(b);
@@ -422,7 +424,7 @@ void NV_Node_printPrimVal(const NV_ID *id)
 {
 	const NV_Node *n = NV_NodeID_getNode(id);
 	if(!n){
-		printf("(null)");
+		printf("(null)#%08X", id->d[0]);
 		return;
 	}
 	if(n->type == kString){

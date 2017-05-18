@@ -94,8 +94,10 @@ NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal)
 		return *lastEvalVal;
 	}
 	if(!isAnsNotInteger){
+		//printf("Ans integer = %d\n", ans);
 		NV_ID ansNode = NV_Node_createWithInt32(ans);
 		NV_Variable_assign(&result, &ansNode);
+		//NV_Variable_print(&result);
 		*lastEvalVal = ansNode;
 	}
 	return NODEID_NULL;

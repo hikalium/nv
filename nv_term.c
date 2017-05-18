@@ -68,7 +68,7 @@ NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *scope)
 
 	if(NV_isTermType(id, &NODEID_TERM_TYPE_VARIABLE)){
 		// もともと変数オブジェクトだった
-		printf("Already val obj\n");
+		//printf("Already val obj\n");
 		return *id;
 	}
 	if(NV_NodeID_isString(id) && NV_Variable_statByName(scope, id)){

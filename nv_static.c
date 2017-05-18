@@ -91,7 +91,7 @@ NV_StaticNodeNameTag staticNodeNameList[] = {
 	{&RELID_TERM_TYPE, "type"},
 	{&RELID_ARRAY_NEXT, "next"},
 	{&RELID_ARRAY_DATA, "data"},
-	{&RELID_VARIABLE_NAME, "name"},
+	//{&RELID_VARIABLE_NAME, "name"},
 	{&RELID_OP_PRECEDENCE, "precedence"},
 	{&RELID_OP_FUNC, "func"},
 	{&RELID_EVAL_STACK, "evalStack"},
@@ -101,7 +101,7 @@ NV_StaticNodeNameTag staticNodeNameList[] = {
 	{&RELID_CURRENT_SCOPE, "currentScope"},
 	{&RELID_PARENT_SCOPE, "parentScope"},
 	{&RELID_CONTEXT_LIST, "contextList"},
-	{&RELID_VARIABLE_ANONYMOUS, "anonymous"},
+	//{&RELID_VARIABLE_ANONYMOUS, "anonymous"},
 	//
 	{NULL, NULL}
 };

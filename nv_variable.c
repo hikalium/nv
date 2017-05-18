@@ -31,10 +31,10 @@ NV_Variable_Info NV_Variable_Internal_getInfo(const NV_ID *v)
 				NV_NodeID_getCStr(&info.name));
 		return info;
 	}
-	/*
+/*	
 	printf("Valid variable. %s@%s\n",
 			NV_NodeID_getCStr(&info.name), NV_NodeID_getCStr(&info.scope));
-			*/
+*/			
 	info.isAssignable = 1;
 	return info;
 }
@@ -70,6 +70,11 @@ void NV_Variable_assign(const NV_ID *v, const NV_ID *data)
 	NV_Variable_Info info = NV_Variable_Internal_getInfo(v);
 	if(info.isAssignable){
 		NV_NodeID_createUniqueEqRelation(&info.scope, &info.name, data);
+		/*
+		NV_Dict_print(&info.scope);
+		printf("Assigned: #%08X(name: %08X) = #%08X\n",
+				v->d[0], info.name.d[0], data->d[0]);
+				*/
 	}
 }
 
@@ -91,9 +96,11 @@ int NV_Variable_statByName(const NV_ID *parentNode, const NV_ID *nameNode)
 NV_ID NV_Variable_getData(const NV_ID *v)
 {
 	NV_Variable_Info info = NV_Variable_Internal_getInfo(v);
-	//NV_Dict_print(&info.scope);
+	/*
+	printf("Find: #%08X(name: %08X)\n",
+			v->d[0], info.name.d[0]);
+			*/
 	NV_ID data = NV_NodeID_getEqRelatedNodeFrom(&info.scope, &info.name);
-	//NV_Node_printPrimVal(&data);
 	return data;
 }
 
@@ -115,9 +122,7 @@ void NV_Variable_print(const NV_ID *v)
 	data = NV_Variable_getData(v);
 	printf("(Var ");
 	NV_Term_print(&info.name);
-	printf("@");
-	NV_ID_dumpIDToFile(&info.scope, stdout);
-	printf(" = ");
+	printf("@%08X = ", info.scope.d[0]);
 	NV_Term_print(&data);
 	printf(")");
 }
