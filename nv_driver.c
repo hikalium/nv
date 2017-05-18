@@ -1,7 +1,7 @@
 #include "nv.h"
 
-//#define NV_ENV_TERM_STDC
-#define NV_ENV_TERM_UNIX
+#define NV_ENV_TERM_STDC
+//#define NV_ENV_TERM_UNIX
 
 
 #ifdef NV_ENV_TERM_STDC
