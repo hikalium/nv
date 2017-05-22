@@ -288,6 +288,9 @@ NV_ID NV_parseToCodeGraph(const NV_ID *baseTokenList, const NV_ID *opDict)
 			if(strcmp(reqFuncName, builtinFuncList[i].name) == 0) break;
 		}
 		if(builtinFuncList[i].name){
+			if(IS_DEBUG_MODE()){
+				printf("parse: %s\n", builtinFuncList[i].name);
+			}
 			retv = builtinFuncList[i].parser(
 					&tokenList, &lastNode, &p, NV_NodeID_getCStr(&n));
 			if(!NV_Term_isNull(&retv)){

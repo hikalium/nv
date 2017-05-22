@@ -117,6 +117,7 @@ void NV_insertInitialNode();
 
 
 // @nv_variable.c
+int NV_Variable_isVariable(const NV_ID *id);
 NV_ID NV_Variable_create();
 NV_ID NV_Variable_createWithName(const NV_ID *parentNode, const NV_ID *nameNode);
 NV_ID NV_Variable_createWithNameCStr(const NV_ID *parentNode, const char *name);

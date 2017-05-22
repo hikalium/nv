@@ -9,6 +9,17 @@ NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal)
 	NV_ID opR = NV_Dict_getByStringKey(p, "opR");
 	NV_ID result = NV_Dict_getByStringKey(p, "result");
 	//
+	if(NV_Variable_isVariable(&opL)){
+		// 元々変換無しでVariableだった場合は、単に戻り値を格納しているVariable
+		// なので中身をとりだす。
+		opL = NV_Variable_getData(&opL);
+	}
+	if(NV_Variable_isVariable(&opR)){
+		// 元々変換無しでVariableだった場合は、単に戻り値を格納しているVariable
+		// なので中身をとりだす。
+		opR = NV_Variable_getData(&opR);
+	}
+	//
 	const char *opStr = NV_NodeID_getCStr(&op);
 	int32_t opLVal = NV_Term_getInt32(&opL, &scope);
 	int32_t opRVal = NV_Term_getInt32(&opR, &scope);
@@ -37,6 +48,10 @@ NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal)
 		opR = NV_Term_getPrimNodeID(&opR, &scope);
 		if(NV_Term_isAssignable(&v, &scope)){
 			v = NV_Term_getAssignableNode(&v, &scope);
+			if(IS_DEBUG_MODE()){
+				printf("Assign to ");
+				NV_Variable_print(&v); putchar('\n');
+			}
 		} else{
 			if(IS_DEBUG_MODE()){
 				printf("Variable created by assign op\n");
@@ -47,14 +62,35 @@ NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal)
 		*lastEvalVal = v;
 	} else if(strcmp(opStr, ".") == 0){
 		// 変数, 名前 -> 名前withスコープ
+		// 左オペランドの変数の値に相当するノードをスコープとし、
+		// 名前をキーとする変数を作成して返す。
 		//NV_ID path;
 		//int isLeftOpIrrelevant;
-		if(NV_Term_isAssignable(&opL, &scope)){
-			opL = NV_Term_getAssignableNode(&opL, &scope);
-		} else{
+		isAnsNotInteger = 1;
+		if(IS_DEBUG_MODE()){
+			printf("opL: ");
+			NV_NodeID_printForDebug(&opL); putchar('\n');
+		}
+		if(!NV_Term_isAssignable(&opL, &scope)){
 			return NV_Node_createWithString("Origin node was NOT_FOUND");
 		}
-		
+		opL = NV_Term_getAssignableNode(&opL, &scope);
+		NV_ID v;
+		if(IS_DEBUG_MODE()){
+			printf("Assignable!!\n");
+			NV_Variable_print(&v); putchar('\n');
+		}
+		NV_ID baseScope = NV_Variable_getData(&opL);
+		if(NV_Term_isNotFound(&baseScope)){
+			return NV_Node_createWithString("parent scope not found.");
+		}
+		v = NV_Variable_createWithName(&baseScope, &opR);
+		if(IS_DEBUG_MODE()){
+			printf("Created scoped var:");
+			NV_Variable_print(&v); putchar('\n');
+		}
+		*lastEvalVal = v;
+		NV_Variable_assign(&result, &v);
 		//
 		// Check left operands
 		/*
@@ -115,6 +151,12 @@ NV_ID NV_Lang02_OpFunc_prefixOp(const NV_ID *p, NV_ID *lastEvalVal)
 	//int32_t opRVal = NV_Term_getInt32(&opR, &NODEID_NULL);
 	int32_t ans = 0;
 	int isAnsNotInteger = 0;
+	//
+	if(NV_Variable_isVariable(&opR)){
+		// 元々変換無しでVariableだった場合は、単に戻り値を格納しているVariable
+		// なので中身をとりだす。
+		opR = NV_Variable_getData(&opR);
+	}
 	//
 	//printf("op: %s\n", opStr);
 	//
@@ -250,12 +292,14 @@ NV_ID NV_evalGraph(const NV_ID *codeGraphRoot)
 	NV_ID lastEvalVal = NODEID_NULL;
 	NV_ID p = *codeGraphRoot, r;
 	const char *s;
-	//printf("BEGIN eval: \n");
 	p = NV_Dict_getByStringKey(&p, "next");
 	for(;;){
 		if(NV_NodeID_isEqual(&p, &NODEID_NOT_FOUND)) break;
 		if(!NV_NodeID_isString(&p)) break;
 		s = NV_NodeID_getCStr(&p);
+		if(IS_DEBUG_MODE()){
+			printf("NV_evalGraph: %s\n", s);
+		}
 		//printf("next: %s\n", s);
 		if(strcmp(s, "infixOp") == 0){
 			NV_Lang02_OpFunc_infixOp(&p, &lastEvalVal);

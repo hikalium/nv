@@ -23,12 +23,16 @@ NV_Variable_Info NV_Variable_Internal_getInfo(const NV_ID *v)
 	info.name = NV_NodeID_getRelatedNodeFrom(v, &RELID_VARIABLE_NAME);
 	//
 	if(NV_NodeID_isEqual(&info.name, &NODEID_NOT_FOUND)){
-		printf("Attempt to access invalid name.\n");
+		if(IS_DEBUG_MODE()){
+			printf("Attempt to access invalid name.\n");
+		}
 		return info;
 	}
 	if(NV_NodeID_isEqual(&info.scope, &NODEID_NOT_FOUND)){
-		printf("Attempt to access invalid scope. name = %s\n",
-				NV_NodeID_getCStr(&info.name));
+		if(IS_DEBUG_MODE()){
+			printf("Attempt to access invalid scope. name = %s\n",
+					NV_NodeID_getCStr(&info.name));
+		}
 		return info;
 	}
 /*	
@@ -37,6 +41,11 @@ NV_Variable_Info NV_Variable_Internal_getInfo(const NV_ID *v)
 */			
 	info.isAssignable = 1;
 	return info;
+}
+
+int NV_Variable_isVariable(const NV_ID *id)
+{
+	return NV_isTermType(id, &NODEID_TERM_TYPE_VARIABLE);
 }
 
 NV_ID NV_Variable_create()
