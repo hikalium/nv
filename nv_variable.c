@@ -65,6 +65,16 @@ NV_ID NV_Variable_createWithName(const NV_ID *parentNode, const NV_ID *nameNode)
 	return v;
 }
 
+NV_ID NV_Variable_createWithNameCStr(const NV_ID *parentNode, const char *name)
+{
+	if(!parentNode || !name) return NODEID_NULL;
+	NV_ID nameNode = NV_Node_createWithString(name);
+	NV_ID v = NV_Variable_create();
+	NV_NodeID_createUniqueIDRelation(&v, &RELID_VARIABLE_SCOPE, parentNode);
+	NV_NodeID_createUniqueIDRelation(&v, &RELID_VARIABLE_NAME, &nameNode);
+	return v;
+}
+
 void NV_Variable_assign(const NV_ID *v, const NV_ID *data)
 {
 	NV_Variable_Info info = NV_Variable_Internal_getInfo(v);
@@ -104,6 +114,18 @@ NV_ID NV_Variable_getData(const NV_ID *v)
 	return data;
 }
 
+NV_ID NV_Variable_findByNameCStr(const char *name, const NV_ID *ctx)
+{
+	NV_ID nameNode = NV_Node_createWithString(name);
+	return NV_Variable_findByName(&nameNode, ctx);
+}
+
+NV_ID NV_Variable_findByName(const NV_ID *nameNode, const NV_ID *ctx)
+{
+	// TODO: Impl recursive find
+	NV_ID data = NV_NodeID_getEqRelatedNodeFrom(ctx, nameNode);
+	return data;
+}
 
 /*
 //NV_ID NV_Variable_getData(const NV_ID *vid)

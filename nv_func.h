@@ -119,9 +119,12 @@ void NV_insertInitialNode();
 // @nv_variable.c
 NV_ID NV_Variable_create();
 NV_ID NV_Variable_createWithName(const NV_ID *parentNode, const NV_ID *nameNode);
+NV_ID NV_Variable_createWithNameCStr(const NV_ID *parentNode, const char *name);
 void NV_Variable_assign(const NV_ID *v, const NV_ID *data);
 int NV_Variable_statByName(const NV_ID *parentNode, const NV_ID *nameNode);
 NV_ID NV_Variable_getData(const NV_ID *v);
+NV_ID NV_Variable_findByNameCStr(const char *name, const NV_ID *ctx);
+NV_ID NV_Variable_findByName(const NV_ID *nameNode, const NV_ID *ctx);
 void NV_Variable_print(const NV_ID *v);
 
 
@@ -227,7 +230,7 @@ NV_ID NV_parseToCodeGraph_if
 (const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
 NV_ID NV_parseToCodeGraph_for
 (const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
-NV_ID NV_parseToCodeGraph(const NV_ID *tokenList, const NV_ID *opDict);
+NV_ID NV_parseToCodeGraph(const NV_ID *baseTokenList, const NV_ID *opDict);
 
 
 // @lang/02/eval.c

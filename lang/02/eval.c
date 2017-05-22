@@ -217,13 +217,28 @@ NV_ID NV_Lang02_OpFunc_do(NV_ID *p, NV_ID *lastEvalVal)
 
 NV_ID NV_Lang02_OpFunc_parentheses(NV_ID *p, NV_ID *lastEvalVal)
 {
-	//const NV_ID scope = NODEID_NULL;
+	const NV_ID scope = NODEID_NULL;
 	NV_ID inner = NV_Dict_getByStringKey(p, "inner");
 	NV_ID opL = NV_Dict_getByStringKey(p, "opL");
 	NV_ID result = NV_Dict_getByStringKey(p, "result");
-	NV_ID ansNode = NV_evalGraph(&inner);
 	//
-	NV_Variable_assign(&result, &ansNode);
+	if(!NV_Term_isNotFound(&opL)){
+		// exec code block of opL
+		// 演算子は、実行時のコンテキストで評価する
+		//printf("NV_Lang02_OpFunc_parentheses: Call func\n");
+		NV_ID opDict = NV_Variable_findByNameCStr("opDict", &scope);
+		//NV_ID codeBlock = NV_Term_getPrimNodeID(&opL, &scope);
+		NV_ID codeBlock = NV_Term_getPrimNodeID(&opL, &scope);
+		//NV_Term_print(&codeBlock); putchar('\n');
+		NV_ID parsedBlock = NV_parseToCodeGraph(&codeBlock, &opDict);
+		//
+		NV_ID ansNode = NV_evalGraph(&parsedBlock);
+		NV_Variable_assign(&result, &ansNode); 
+	} else{
+		// simply eval inner and set result of it
+		NV_ID ansNode = NV_evalGraph(&inner);
+		NV_Variable_assign(&result, &ansNode);
+	}
 	//
 	*p = NV_Dict_getByStringKey(p, "next");
 	*lastEvalVal = result;

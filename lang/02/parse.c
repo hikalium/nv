@@ -267,9 +267,10 @@ NV_Lang02_BuiltinFunctionTag builtinFuncList[] = {
 	{NULL, NULL},	// terminate tag
 };
 
-NV_ID NV_parseToCodeGraph(const NV_ID *tokenList, const NV_ID *opDict)
+NV_ID NV_parseToCodeGraph(const NV_ID *baseTokenList, const NV_ID *opDict)
 {
 	// retv: codeGraphRoot
+	NV_ID tokenList = NV_Array_clone(baseTokenList);
 	NV_ID codeGraphRoot = NV_Node_createWithString("eval");
 	NV_ID lastNode = codeGraphRoot;
 	NV_OpPointer p;
@@ -278,9 +279,9 @@ NV_ID NV_parseToCodeGraph(const NV_ID *tokenList, const NV_ID *opDict)
 	NV_ID retv;
 
 	for(;;){
-		p = NV_getNextOp(tokenList, opDict);
+		p = NV_getNextOp(&tokenList, opDict);
 		if(p.index == -1) break;
-		NV_ID n = NV_Array_getByIndex(tokenList, p.index);
+		NV_ID n = NV_Array_getByIndex(&tokenList, p.index);
 		if(NV_NodeID_isEqual(&n, &NODEID_NOT_FOUND)) break;
 		reqFuncName = NV_Op_getOpFuncNameCStr(&p.op);
 		for(i = 0; builtinFuncList[i].name; i++){
@@ -288,7 +289,7 @@ NV_ID NV_parseToCodeGraph(const NV_ID *tokenList, const NV_ID *opDict)
 		}
 		if(builtinFuncList[i].name){
 			retv = builtinFuncList[i].parser(
-					tokenList, &lastNode, &p, NV_NodeID_getCStr(&n));
+					&tokenList, &lastNode, &p, NV_NodeID_getCStr(&n));
 			if(!NV_Term_isNull(&retv)){
 				NV_ID triedPrec = NV_Node_createWithInt32(p.prec);
 				NV_Dict_addUniqueEqKeyByCStr(&n, "triedPrec", &triedPrec);

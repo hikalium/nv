@@ -53,11 +53,19 @@ int main(int argc, char *argv[])
 	//
 	NV_insertInitialNode();
 	//
+	NV_ID scope = NODEID_NULL;
+	//
 	cTypeList = NV_createCharTypeList();
 	NV_NodeID_retain(&cTypeList);
 	//
 	opDict = NV_createOpDict();
 	NV_NodeID_retain(&opDict);
+	//
+	{
+		NV_ID opDictName = NV_Node_createWithString("opDict");
+		NV_ID opDictVar = NV_Variable_createWithName(&scope, &opDictName);
+		NV_Variable_assign(&opDictVar, &opDict);
+	}
 	//
 /*
 	NV_ID t;
@@ -77,7 +85,6 @@ int main(int argc, char *argv[])
 			"loop={for{#args[0]=args[1]}{#args[0]<=args[2]}{#args[0]++}{args[3]()}}"); 
 	*/
 	char line[MAX_INPUT_LEN];
-	NV_ID scope = NODEID_NULL;
 	//
 	while(NV_gets(line, sizeof(line)) != NULL){
 		NV_ID tokenList = NV_tokenize(&cTypeList, line);

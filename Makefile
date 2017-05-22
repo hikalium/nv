@@ -19,7 +19,7 @@ nv : $(SRCS) $(HEADERS) Makefile
 	upx -9 nv
 
 run : ./nv Makefile
-	./nv
+	rlwrap ./nv
 
 fastbin : $(SRCS) $(HEADERS) Makefile
 	cc $(CFLAGS) -Ofast -O3 -o nv  $(SRCS)
