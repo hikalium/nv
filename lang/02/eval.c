@@ -64,8 +64,6 @@ NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal)
 		// 変数, 名前 -> 名前withスコープ
 		// 左オペランドの変数の値に相当するノードをスコープとし、
 		// 名前をキーとする変数を作成して返す。
-		//NV_ID path;
-		//int isLeftOpIrrelevant;
 		isAnsNotInteger = 1;
 		if(IS_DEBUG_MODE()){
 			printf("opL: ");
@@ -91,40 +89,24 @@ NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal)
 		}
 		*lastEvalVal = v;
 		NV_Variable_assign(&result, &v);
-		//
-		// Check left operands
-		/*
-		nL = NV_Term_tryReadAsOperator(&nL, &opDict);
-		isLeftOpIrrelevant = NV_NodeID_isEqual(&nL, &NODEID_NOT_FOUND) || 
-			NV_isTermType(&nL, &NODEID_TERM_TYPE_OP);
-		*/
-		/*
-		isLeftOpIrrelevant = 0;
-		if(isLeftOpIrrelevant){
-			path = NV_Path_createWithOrigin(&NODEID_NULL);
-		} else if(NV_isTermType(&opL, &NODEID_TERM_TYPE_PATH)){
-			path = opL;
-		} else if(NV_Term_isAssignable(&opL, &scope)){
-			// nLは代入可能オブジェクトだったので、
-			// 格納されているオブジェクトを起点にパスを作成
-			opL = NV_Term_getPrimNodeID(&opL, &scope);
-			if(!NV_NodeID_isEqual(&opL, &NODEID_NOT_FOUND)){
-				path = NV_Path_createWithOrigin(&opL);
-			} else{
-				return NV_Node_createWithString("Origin node was NOT_FOUND");
-			}
-		} else{
-			return NV_Node_createWithString("Origin node not found in this ctx");
-		}
-		// add right operand to path
-		NV_Path_appendRoute(&path, &opR);
-		//
-		NV_Dict_print(&path);
-		//
+	} else if(strcmp(opStr, ":") == 0){
+		// 左辺をキー、右辺を値とするオブジェクトを生成する
+		// key : val -> obj
 		isAnsNotInteger = 1;
-		NV_Variable_assign(&result, &path);
-		*lastEvalVal = result;
-		*/
+		opR = NV_Term_getPrimNodeID(&opR, &scope);
+		NV_ID obj = NV_Node_create();
+		NV_Dict_addKey(&obj, &opL, &opR);
+		*lastEvalVal = obj;
+		NV_Variable_assign(&result, &obj);
+	} else if(strcmp(opStr, ",") == 0){
+		// 両辺のオブジェクトを統合した新しいオブジェクトを返す。
+		// つまり、両辺のオブジェクトを起点とするようなエッジをすべてもつ
+		// 新しい起点ノードを生成し返す。
+		// 衝突するキーが存在する場合は、右辺のものが採用される。
+		isAnsNotInteger = 1;
+		opL = NV_Term_getPrimNodeID(&opL, &scope);
+		opR = NV_Term_getPrimNodeID(&opR, &scope);
+		
 	} else{
 		*lastEvalVal = NV_Node_createWithStringFormat("infix: No op for %s", opStr);
 		return *lastEvalVal;

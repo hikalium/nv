@@ -89,6 +89,24 @@ NV_ID NV_Dict_getAll(const NV_ID *root, const NV_ID *key)
 }
 */
 
+int NV_Dict_foreach
+(const NV_ID *dict, void *d, int (*f)(void *d, const NV_ID *rel, const NV_ID *to))
+{
+	// fの戻り値がfalseの場合はそこでループを中止する。
+	// 戻り値は、最後のに実行したfの戻り値である。
+	const NV_Node *n;
+	const NV_Relation *reld;
+	for(n = nodeRoot.next; n; n = n->next){
+		if(n->type == kRelation){
+			reld = n->data;
+			if(NV_NodeID_isEqual(&reld->from, dict)){
+				if(!f(d, &reld->rel, &reld->to)) return 0;
+			}
+		}
+	}
+	return 1;
+}
+
 NV_ID NV_Dict_getByStringKey
 (const NV_ID *root, const char *key)
 {
@@ -96,25 +114,22 @@ NV_ID NV_Dict_getByStringKey
 	return NV_Dict_get(root, &strid);
 }
 
+int NV_Dict_Internal_printSub(void *d, const NV_ID *rel, const NV_ID *to)
+{
+	printf("  |--- ");
+	NV_Node_printPrimVal(rel);
+	printf(": ");
+	NV_Node_printPrimVal(to);
+	printf("\n");
+	(*(int *)d)++;
+	return 1;
+}
+
 void NV_Dict_print(const NV_ID *root)
 {
-	const NV_Node *n;
-	const NV_Relation *reld;
 	int cnt = 0;
 	NV_Node_printPrimVal(root);
 	printf(":\n");
-	for(n = nodeRoot.next; n; n = n->next){
-		if(n->type == kRelation){
-			reld = n->data;
-			if(NV_NodeID_isEqual(&reld->from, root)){
-				printf("  |--- ");
-				NV_Node_printPrimVal(&reld->rel);
-				printf(": ");
-				NV_Node_printPrimVal(&reld->to);
-				printf("\n");
-				cnt++;
-			}
-		}
-	}
+	NV_Dict_foreach(root, &cnt, NV_Dict_Internal_printSub);
 	printf("(%d items)\n", cnt);
 }

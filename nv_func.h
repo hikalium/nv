@@ -42,6 +42,8 @@ NV_ID NV_Dict_removeUniqueEqKeyByCStr(const NV_ID *root, const char *key);
 NV_ID NV_Dict_get(const NV_ID *root, const NV_ID *key);
 NV_ID NV_Dict_getEqID(const NV_ID *root, const NV_ID *key);
 NV_ID NV_Dict_getAll(const NV_ID *root, const NV_ID *key);
+int NV_Dict_foreach
+(const NV_ID *dict, void *d, int (*f)(void *d, const NV_ID *rel, const NV_ID *to));
 NV_ID NV_Dict_getByStringKey
 (const NV_ID *root, const char *key);
 void NV_Dict_print(const NV_ID *root);

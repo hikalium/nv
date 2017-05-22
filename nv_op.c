@@ -112,6 +112,8 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"clean",	10,		"NV_Op_clean"},
 	{"push",	10,		"NV_Op_push"},
 	*/
+	{",",		40,		"infix"},
+	{":",		50,		"infix"},
 	//
 	{"=",		101,	"infix"},
 	//
