@@ -96,6 +96,7 @@ NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal)
 		opR = NV_Term_getPrimNodeID(&opR, &scope);
 		NV_ID obj = NV_Node_create();
 		NV_Dict_addKey(&obj, &opL, &opR);
+		//
 		*lastEvalVal = obj;
 		NV_Variable_assign(&result, &obj);
 	} else if(strcmp(opStr, ",") == 0){
@@ -106,7 +107,10 @@ NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal)
 		isAnsNotInteger = 1;
 		opL = NV_Term_getPrimNodeID(&opL, &scope);
 		opR = NV_Term_getPrimNodeID(&opR, &scope);
-		
+		NV_ID merged = NV_Dict_createMergedNode(&opL, &opR);
+		//
+		*lastEvalVal = merged;
+		NV_Variable_assign(&result, &merged);
 	} else{
 		*lastEvalVal = NV_Node_createWithStringFormat("infix: No op for %s", opStr);
 		return *lastEvalVal;

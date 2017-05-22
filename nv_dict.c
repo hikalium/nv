@@ -64,6 +64,20 @@ NV_ID NV_Dict_getEqID(const NV_ID *root, const NV_ID *key)
 	return NV_NodeID_getRelatedNodeFrom(root, key);
 }
 
+int NV_Dict_Internal_merge(void *d, const NV_ID *rel, const NV_ID *to)
+{
+	NV_Dict_addUniqueIDKey((const NV_ID *)d, rel, to);
+	return 1;
+}
+
+NV_ID NV_Dict_createMergedNode(const NV_ID *a, const NV_ID *b)
+{
+	NV_ID m = NV_Node_create();
+	NV_Dict_foreach(a, &m, NV_Dict_Internal_merge);
+	NV_Dict_foreach(b, &m, NV_Dict_Internal_merge);
+	return m;
+}
+
 /*
 NV_ID NV_Dict_getAll(const NV_ID *root, const NV_ID *key)
 {

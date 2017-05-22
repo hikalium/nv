@@ -41,6 +41,7 @@ NV_ID NV_Dict_removeUniqueIDKey(const NV_ID *root, const NV_ID *key);
 NV_ID NV_Dict_removeUniqueEqKeyByCStr(const NV_ID *root, const char *key);
 NV_ID NV_Dict_get(const NV_ID *root, const NV_ID *key);
 NV_ID NV_Dict_getEqID(const NV_ID *root, const NV_ID *key);
+NV_ID NV_Dict_createMergedNode(const NV_ID *a, const NV_ID *b);
 NV_ID NV_Dict_getAll(const NV_ID *root, const NV_ID *key);
 int NV_Dict_foreach
 (const NV_ID *dict, void *d, int (*f)(void *d, const NV_ID *rel, const NV_ID *to));
