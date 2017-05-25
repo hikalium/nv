@@ -101,7 +101,7 @@ NV_StaticNodeNameTag staticNodeNameList[] = {
 	{&RELID_CURRENT_SCOPE, "currentScope"},
 	{&RELID_PARENT_SCOPE, "parentScope"},
 	{&RELID_CONTEXT_LIST, "contextList"},
-	//{&RELID_VARIABLE_ANONYMOUS, "anonymous"},
+	{&RELID_VARIABLE_ANONYMOUS, "anonymous"},
 	//
 	{NULL, NULL}
 };

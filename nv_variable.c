@@ -62,7 +62,8 @@ NV_ID NV_Variable_create()
 
 NV_ID NV_Variable_createSubScopeOf(const NV_ID *parentNode)
 {
-	NV_ID subScope = NV_Node_createWithString("scope");
+	NV_ID subScope = 
+		NV_Node_createWithStringFormat("%s/scope", NV_NodeID_getCStr(parentNode));
 	NV_ID v = NV_Variable_createWithName(&subScope, &RELID_PARENT_SCOPE);
 	NV_Variable_assign(&v, parentNode);
 	return subScope;

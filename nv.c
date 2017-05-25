@@ -260,8 +260,11 @@ void NV_saveCodeGraph_trace(const NV_ID *n)
 	NV_saveCodeGraph_digForKey(n, "inner");
 	//NV_saveCodeGraph_digForKey(n, "type");
 }
-void NV_saveCodeGraphForVisualization(const NV_ID *codeGraphRoot, const char *path)
+void NV_saveCodeGraphForVisualization
+(const NV_ID *codeGraphRoot, const char *path_prefix)
 {
+	char path[256];
+	snprintf(path, sizeof(path), "%s%08X.dot", path_prefix, codeGraphRoot->d[0]);
 	cgNodesUsed = 0;
 	cgRelsUsed = 0;
 	NV_saveCodeGraph_trace(codeGraphRoot);

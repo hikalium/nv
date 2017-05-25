@@ -119,6 +119,12 @@ NV_ID NV_Term_getPrimNodeID(const NV_ID *id, const NV_ID *scope)
 	return n;
 }
 
+NV_ID NV_Term_getPrimNodeIDByCStr(const char *s, const NV_ID *scope)
+{
+	NV_ID str = NV_Node_createWithString(s);
+	return NV_Term_getPrimNodeID(&str, scope);
+}
+
 int NV_Term_f_OpPrec_Dec(const void *n1, const void *n2)
 {
 	const NV_ID *e1 = n1, *e2 = n2;

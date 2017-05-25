@@ -234,8 +234,8 @@ NV_ID NV_Lang02_OpFunc_do
 (NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope)
 {
 	NV_ID callBlock = NV_Dict_getByStringKey(p, "call");
-	NV_ID subScope = NV_Variable_createSubScopeOf(scope);
-	NV_ID result = NV_evalGraph(&callBlock, &subScope);
+	//NV_ID subScope = NV_Variable_createSubScopeOf(scope);
+	NV_ID result = NV_evalGraph(&callBlock, scope);
 	*p = NV_Dict_getByStringKey(p, "next");
 	*lastEvalVal = result;
 	return NODEID_NULL;
@@ -252,8 +252,11 @@ NV_ID NV_Lang02_OpFunc_parentheses
 	if(!NV_Term_isNotFound(&opL)){
 		// exec code block of opL
 		// 演算子は、実行時のコンテキストで評価する
-		NV_ID opDict = NV_Variable_findByNameCStr("opDict", scope);
+
+		NV_ID opDict = NV_Term_getPrimNodeIDByCStr("opDict", scope);
+		//NV_NodeID_printForDebug(&opL);
 		NV_ID codeBlock = NV_Term_getPrimNodeID(&opL, scope);
+		//NV_Array_print(&codeBlock); putchar('\n');
 		NV_ID parsedBlock = NV_parseToCodeGraph(&codeBlock, &opDict);
 		//
 		NV_ID ansNode;
@@ -311,13 +314,17 @@ NV_ID NV_evalGraph(const NV_ID *codeGraphRoot, const NV_ID *scope)
 		} else if(strcmp(s, "()") == 0){
 			r = NV_Lang02_OpFunc_parentheses(&p, &lastEvalVal, scope);
 			if(!NV_Term_isNull(&r)){
-				return r;
+				lastEvalVal = r;
+				break;
 			}
 		} else{
 			lastEvalVal = NV_Node_createWithStringFormat(
 					"NV_evalGraph: No func for %s", s);
-			return lastEvalVal;
+			break;
 		}
+	}
+	if(NV_globalExecFlag & NV_EXEC_FLAG_SAVECODEGRAPH){
+		NV_saveCodeGraphForVisualization(codeGraphRoot, "note/eval");
 	}
 	return lastEvalVal;
 }

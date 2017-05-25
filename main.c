@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 	//
 	NV_insertInitialNode();
 	//
-	NV_ID topLevelScope = NODEID_NULL;
+	NV_ID topLevelScope = NV_Node_createWithString("root");
 	//
 	cTypeList = NV_createCharTypeList();
 	NV_NodeID_retain(&cTypeList);
@@ -89,13 +89,7 @@ int main(int argc, char *argv[])
 	while(NV_gets(line, sizeof(line)) != NULL){
 		NV_ID tokenList = NV_tokenize(&cTypeList, line);
 		NV_ID codeGraphRoot = NV_parseToCodeGraph(&tokenList, &opDict);
-		if(NV_globalExecFlag & NV_EXEC_FLAG_SAVECODEGRAPH){
-			NV_saveCodeGraphForVisualization(&codeGraphRoot, "note/code.dot");
-		}
 		NV_ID result = NV_evalGraph(&codeGraphRoot, &topLevelScope);
-		if(NV_globalExecFlag & NV_EXEC_FLAG_SAVECODEGRAPH){
-			NV_saveCodeGraphForVisualization(&codeGraphRoot, "note/eval.dot");
-		}
 		//
 		if(!(NV_globalExecFlag & NV_EXEC_FLAG_SUPRESS_AUTOPRINT)){
 			printf(" = ");

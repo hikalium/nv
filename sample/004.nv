@@ -1,0 +1,1 @@
+f = {print hello}; g = {f()}; g();

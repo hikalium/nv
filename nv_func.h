@@ -10,7 +10,8 @@ int NV_checkAndPrintErrorOfCodeBlock(const NV_ID *code);
 void NV_evalLoop(const NV_ID *opList, const NV_ID *ctx);
 void NV_saveCodeGraph_digForKey(const NV_ID *n, const char *key);
 void NV_saveCodeGraph_trace(const NV_ID *n);
-void NV_saveCodeGraphForVisualization(const NV_ID *codeGraphRoot, const char *path);
+void NV_saveCodeGraphForVisualization
+(const NV_ID *codeGraphRoot, const char *path_prefix);
 
 
 // @nv_array.c
@@ -142,6 +143,7 @@ int NV_isTermType(const NV_ID *node, const NV_ID *tType);
 NV_ID NV_Term_tryReadAsVariableData(const NV_ID *id, const NV_ID *scope);
 NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *scope);
 NV_ID NV_Term_getPrimNodeID(const NV_ID *id, const NV_ID *scope);
+NV_ID NV_Term_getPrimNodeIDByCStr(const char *s, const NV_ID *scope);
 int NV_Term_f_OpPrec_Dec(const void *n1, const void *n2);
 NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *opDict);
 int NV_Term_isIntegerNotVal(const NV_ID *id);

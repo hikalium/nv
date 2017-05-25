@@ -145,10 +145,15 @@ NV_ID NV_parseToCodeGraph_if
 		} else{
 			// 偶数：実行部分
 			if(!NV_isTermType(&t, &NODEID_TERM_TYPE_ARRAY)){
-				// 直前の節(condT)はelseだった。
+				// もうブロックがない
 				if(!NV_NodeID_isEqual(&condT, &NODEID_NOT_FOUND)){
-					NV_Dict_addUniqueEqKeyByCStr(lastNode, "next", &condT);
-					*lastNode = condT;
+					// 直前の節(condT)はelseだった。
+					condT = NV_parseToCodeGraph(&condT, opDict);
+					NV_ID doFunc = NV_Node_createWithString("do");
+					NV_Dict_addUniqueEqKeyByCStr(&doFunc, "call", &condT);
+					//
+					NV_Dict_addUniqueEqKeyByCStr(lastNode, "next", &doFunc);
+					*lastNode = doFunc;
 				}
 				break;
 			}
@@ -271,12 +276,18 @@ NV_ID NV_parseToCodeGraph(const NV_ID *baseTokenList, const NV_ID *opDict)
 {
 	// retv: codeGraphRoot
 	NV_ID tokenList = NV_Array_clone(baseTokenList);
+	/*
+	printf("parsing tokens: ");
+	NV_Array_print(&tokenList); putchar('\n');
+	*/
 	NV_ID codeGraphRoot = NV_Node_createWithString("eval");
 	NV_ID lastNode = codeGraphRoot;
 	NV_OpPointer p;
 	const char *reqFuncName = NULL;
 	int i;
 	NV_ID retv;
+
+	//NV_Dict_print(opDict);
 
 	for(;;){
 		p = NV_getNextOp(&tokenList, opDict);
@@ -303,6 +314,9 @@ NV_ID NV_parseToCodeGraph(const NV_ID *baseTokenList, const NV_ID *opDict)
 			putchar('\n');
 			return NODEID_NULL;
 		}
+	}
+	if(NV_globalExecFlag & NV_EXEC_FLAG_SAVECODEGRAPH){
+		NV_saveCodeGraphForVisualization(&codeGraphRoot, "note/code");
 	}
 	return codeGraphRoot;
 }
