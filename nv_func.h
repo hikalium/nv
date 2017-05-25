@@ -122,6 +122,7 @@ void NV_insertInitialNode();
 // @nv_variable.c
 int NV_Variable_isVariable(const NV_ID *id);
 NV_ID NV_Variable_create();
+NV_ID NV_Variable_createSubScopeOf(const NV_ID *parentNode);
 NV_ID NV_Variable_createWithName(const NV_ID *parentNode, const NV_ID *nameNode);
 NV_ID NV_Variable_createWithNameCStr(const NV_ID *parentNode, const char *name);
 void NV_Variable_assign(const NV_ID *v, const NV_ID *data);
@@ -238,11 +239,17 @@ NV_ID NV_parseToCodeGraph(const NV_ID *baseTokenList, const NV_ID *opDict);
 
 
 // @lang/02/eval.c
-NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal);
-NV_ID NV_Lang02_OpFunc_prefixOp(const NV_ID *p, NV_ID *lastEvalVal);
-NV_ID NV_Lang02_OpFunc_postfixOp(const NV_ID *p, NV_ID *lastEvalVal);
-NV_ID NV_Lang02_OpFunc_cond(NV_ID *p, NV_ID *lastEvalVal);
-NV_ID NV_Lang02_OpFunc_do(NV_ID *p, NV_ID *lastEvalVal);
-NV_ID NV_Lang02_OpFunc_parentheses(NV_ID *p, NV_ID *lastEvalVal);
-NV_ID NV_evalGraph(const NV_ID *codeGraphRoot);
+NV_ID NV_Lang02_OpFunc_infixOp
+(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
+NV_ID NV_Lang02_OpFunc_prefixOp
+(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
+NV_ID NV_Lang02_OpFunc_postfixOp
+(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
+NV_ID NV_Lang02_OpFunc_cond
+(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
+NV_ID NV_Lang02_OpFunc_do
+(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
+NV_ID NV_Lang02_OpFunc_parentheses
+(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
+NV_ID NV_evalGraph(const NV_ID *codeGraphRoot, const NV_ID *scope);
 

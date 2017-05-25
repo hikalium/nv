@@ -1,9 +1,8 @@
 #include "../../nv.h"
 
-NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal)
+NV_ID NV_Lang02_OpFunc_infixOp
+(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope)
 {
-	const NV_ID scope = NODEID_NULL;
-	//
 	NV_ID op = NV_Dict_getByStringKey(p, "op");
 	NV_ID opL = NV_Dict_getByStringKey(p, "opL");
 	NV_ID opR = NV_Dict_getByStringKey(p, "opR");
@@ -21,8 +20,8 @@ NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal)
 	}
 	//
 	const char *opStr = NV_NodeID_getCStr(&op);
-	int32_t opLVal = NV_Term_getInt32(&opL, &scope);
-	int32_t opRVal = NV_Term_getInt32(&opR, &scope);
+	int32_t opLVal = NV_Term_getInt32(&opL, scope);
+	int32_t opRVal = NV_Term_getInt32(&opR, scope);
 	int32_t ans;
 	int isAnsNotInteger = 0;
 	//
@@ -45,9 +44,9 @@ NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal)
 		isAnsNotInteger = 1;
 		NV_ID v;
 		v = opL;
-		opR = NV_Term_getPrimNodeID(&opR, &scope);
-		if(NV_Term_isAssignable(&v, &scope)){
-			v = NV_Term_getAssignableNode(&v, &scope);
+		opR = NV_Term_getPrimNodeID(&opR, scope);
+		if(NV_Term_isAssignable(&v, scope)){
+			v = NV_Term_getAssignableNode(&v, scope);
 			if(IS_DEBUG_MODE()){
 				printf("Assign to ");
 				NV_Variable_print(&v); putchar('\n');
@@ -56,7 +55,7 @@ NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal)
 			if(IS_DEBUG_MODE()){
 				printf("Variable created by assign op\n");
 			}
-			v = NV_Variable_createWithName(&scope, &v);
+			v = NV_Variable_createWithName(scope, &v);
 		}
 		NV_Term_assign(&v, &opR);
 		*lastEvalVal = v;
@@ -69,10 +68,10 @@ NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal)
 			printf("opL: ");
 			NV_NodeID_printForDebug(&opL); putchar('\n');
 		}
-		if(!NV_Term_isAssignable(&opL, &scope)){
+		if(!NV_Term_isAssignable(&opL, scope)){
 			return NV_Node_createWithString("Origin node was NOT_FOUND");
 		}
-		opL = NV_Term_getAssignableNode(&opL, &scope);
+		opL = NV_Term_getAssignableNode(&opL, scope);
 		NV_ID v;
 		if(IS_DEBUG_MODE()){
 			printf("Assignable!!\n");
@@ -93,7 +92,7 @@ NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal)
 		// 左辺をキー、右辺を値とするオブジェクトを生成する
 		// key : val -> obj
 		isAnsNotInteger = 1;
-		opR = NV_Term_getPrimNodeID(&opR, &scope);
+		opR = NV_Term_getPrimNodeID(&opR, scope);
 		NV_ID obj = NV_Node_create();
 		NV_Dict_addKey(&obj, &opL, &opR);
 		//
@@ -105,8 +104,8 @@ NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal)
 		// 新しい起点ノードを生成し返す。
 		// 衝突するキーが存在する場合は、右辺のものが採用される。
 		isAnsNotInteger = 1;
-		opL = NV_Term_getPrimNodeID(&opL, &scope);
-		opR = NV_Term_getPrimNodeID(&opR, &scope);
+		opL = NV_Term_getPrimNodeID(&opL, scope);
+		opR = NV_Term_getPrimNodeID(&opR, scope);
 		NV_ID merged = NV_Dict_createMergedNode(&opL, &opR);
 		//
 		*lastEvalVal = merged;
@@ -125,10 +124,9 @@ NV_ID NV_Lang02_OpFunc_infixOp(const NV_ID *p, NV_ID *lastEvalVal)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Lang02_OpFunc_prefixOp(const NV_ID *p, NV_ID *lastEvalVal)
+NV_ID NV_Lang02_OpFunc_prefixOp
+(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope)
 {
-	const NV_ID scope = NODEID_NULL;
-	//
 	NV_ID op = NV_Dict_getByStringKey(p, "op");
 	NV_ID opR = NV_Dict_getByStringKey(p, "opR");
 	NV_ID result = NV_Dict_getByStringKey(p, "result");
@@ -148,20 +146,20 @@ NV_ID NV_Lang02_OpFunc_prefixOp(const NV_ID *p, NV_ID *lastEvalVal)
 	//
 	if(strcmp(opStr, "print") == 0){
 		isAnsNotInteger = 1;
-		opR = NV_Term_getPrimNodeID(&opR, &scope);
+		opR = NV_Term_getPrimNodeID(&opR, scope);
 		NV_Term_print(&opR); putchar('\n');
 		*lastEvalVal = opR;
 		NV_globalExecFlag |= NV_EXEC_FLAG_SUPRESS_AUTOPRINT;
 	} else if(strcmp(opStr, "ls") == 0){
 		isAnsNotInteger = 1;
-		NV_Dict_print(&scope);
+		NV_Dict_print(scope);
 		*lastEvalVal = NODEID_NULL;
 	} else if(strcmp(opStr, "+") == 0){
-		opR = NV_Term_getPrimNodeID(&opR, &scope);
-		ans = NV_Term_getInt32(&opR ,&scope);
+		opR = NV_Term_getPrimNodeID(&opR, scope);
+		ans = NV_Term_getInt32(&opR ,scope);
 	} else if(strcmp(opStr, "-") == 0){
-		opR = NV_Term_getPrimNodeID(&opR, &scope);
-		ans = -NV_Term_getInt32(&opR, &scope);
+		opR = NV_Term_getPrimNodeID(&opR, scope);
+		ans = -NV_Term_getInt32(&opR, scope);
 	} else{
 		*lastEvalVal = NV_Node_createWithStringFormat("prefix: No op for %s", opStr);
 		return *lastEvalVal;
@@ -174,10 +172,9 @@ NV_ID NV_Lang02_OpFunc_prefixOp(const NV_ID *p, NV_ID *lastEvalVal)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Lang02_OpFunc_postfixOp(const NV_ID *p, NV_ID *lastEvalVal)
+NV_ID NV_Lang02_OpFunc_postfixOp
+(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope)
 {
-	const NV_ID scope = NODEID_NULL;
-	//
 	NV_ID op = NV_Dict_getByStringKey(p, "op");
 	NV_ID opL = NV_Dict_getByStringKey(p, "opL");
 	NV_ID result = NV_Dict_getByStringKey(p, "result");
@@ -191,16 +188,16 @@ NV_ID NV_Lang02_OpFunc_postfixOp(const NV_ID *p, NV_ID *lastEvalVal)
 	//
 	if(strcmp(opStr, "++") == 0){
 		NV_ID v, newVal;
-		v = NV_Term_getAssignableNode(&opL, &scope);
-		opL = NV_Term_getPrimNodeID(&opL, &scope);
-		ans = NV_Term_getInt32(&opL, &scope);
+		v = NV_Term_getAssignableNode(&opL, scope);
+		opL = NV_Term_getPrimNodeID(&opL, scope);
+		ans = NV_Term_getInt32(&opL, scope);
 		newVal = NV_Node_createWithInt32(ans + 1);
 		NV_Variable_assign(&v, &newVal);
 	} else if(strcmp(opStr, "--") == 0){
 		NV_ID v, newVal;
-		v = NV_Term_getAssignableNode(&opL, &scope);
-		opL = NV_Term_getPrimNodeID(&opL, &scope);
-		ans = NV_Term_getInt32(&opL, &scope);
+		v = NV_Term_getAssignableNode(&opL, scope);
+		opL = NV_Term_getPrimNodeID(&opL, scope);
+		ans = NV_Term_getInt32(&opL, scope);
 		newVal = NV_Node_createWithInt32(ans - 1);
 		NV_Variable_assign(&v, &newVal);
 	} else{
@@ -215,12 +212,12 @@ NV_ID NV_Lang02_OpFunc_postfixOp(const NV_ID *p, NV_ID *lastEvalVal)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Lang02_OpFunc_cond(NV_ID *p, NV_ID *lastEvalVal)
+NV_ID NV_Lang02_OpFunc_cond
+(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope)
 {
-	const NV_ID scope = NODEID_NULL;
 	NV_ID callBlock = NV_Dict_getByStringKey(p, "flag");
-	NV_ID result = NV_evalGraph(&callBlock);
-	int32_t resultVal = NV_Term_getInt32(&result, &scope);
+	NV_ID result = NV_evalGraph(&callBlock, scope);
+	int32_t resultVal = NV_Term_getInt32(&result, scope);
 	if(IS_DEBUG_MODE()){
 		printf("cond: resultVal = %d\n", resultVal);
 	}
@@ -233,37 +230,38 @@ NV_ID NV_Lang02_OpFunc_cond(NV_ID *p, NV_ID *lastEvalVal)
 	return NODEID_NULL;
 }
 
-NV_ID NV_Lang02_OpFunc_do(NV_ID *p, NV_ID *lastEvalVal)
+NV_ID NV_Lang02_OpFunc_do
+(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope)
 {
-	//const NV_ID scope = NODEID_NULL;
 	NV_ID callBlock = NV_Dict_getByStringKey(p, "call");
-	NV_ID result = NV_evalGraph(&callBlock);
+	NV_ID subScope = NV_Variable_createSubScopeOf(scope);
+	NV_ID result = NV_evalGraph(&callBlock, &subScope);
 	*p = NV_Dict_getByStringKey(p, "next");
 	*lastEvalVal = result;
 	return NODEID_NULL;
 }
 
-NV_ID NV_Lang02_OpFunc_parentheses(NV_ID *p, NV_ID *lastEvalVal)
+NV_ID NV_Lang02_OpFunc_parentheses
+(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope)
 {
-	const NV_ID scope = NODEID_NULL;
 	NV_ID inner = NV_Dict_getByStringKey(p, "inner");
 	NV_ID opL = NV_Dict_getByStringKey(p, "opL");
 	NV_ID result = NV_Dict_getByStringKey(p, "result");
 	//
-	NV_ID innerResult = NV_evalGraph(&inner);
+	NV_ID innerResult = NV_evalGraph(&inner, scope);	// same scope
 	if(!NV_Term_isNotFound(&opL)){
 		// exec code block of opL
 		// 演算子は、実行時のコンテキストで評価する
-		//printf("NV_Lang02_OpFunc_parentheses: Call func\n");
-		NV_ID opDict = NV_Variable_findByNameCStr("opDict", &scope);
-		//NV_ID codeBlock = NV_Term_getPrimNodeID(&opL, &scope);
-		NV_ID codeBlock = NV_Term_getPrimNodeID(&opL, &scope);
-		//NV_Term_print(&codeBlock); putchar('\n');
+		NV_ID opDict = NV_Variable_findByNameCStr("opDict", scope);
+		NV_ID codeBlock = NV_Term_getPrimNodeID(&opL, scope);
 		NV_ID parsedBlock = NV_parseToCodeGraph(&codeBlock, &opDict);
-		// TODO: append innerResult for new context
-		NV_Dict_addKeyByCStr(&scope, "args", &innerResult);
 		//
-		NV_ID ansNode = NV_evalGraph(&parsedBlock);
+		NV_ID ansNode;
+		{
+			NV_ID subScope = NV_Variable_createSubScopeOf(scope);
+			NV_Dict_addKeyByCStr(&subScope, "args", &innerResult);
+			ansNode = NV_evalGraph(&parsedBlock, &subScope);	// new scope
+		}
 		NV_Variable_assign(&result, &ansNode); 
 	} else{
 		// simply set result of inner
@@ -275,7 +273,7 @@ NV_ID NV_Lang02_OpFunc_parentheses(NV_ID *p, NV_ID *lastEvalVal)
 	return NODEID_NULL;
 }
 
-NV_ID NV_evalGraph(const NV_ID *codeGraphRoot)
+NV_ID NV_evalGraph(const NV_ID *codeGraphRoot, const NV_ID *scope)
 {
 	NV_ID lastEvalVal = NODEID_NULL;
 	NV_ID p = *codeGraphRoot, r;
@@ -290,28 +288,28 @@ NV_ID NV_evalGraph(const NV_ID *codeGraphRoot)
 		}
 		//printf("next: %s\n", s);
 		if(strcmp(s, "infixOp") == 0){
-			NV_Lang02_OpFunc_infixOp(&p, &lastEvalVal);
+			NV_Lang02_OpFunc_infixOp(&p, &lastEvalVal, scope);
 			p = NV_Dict_getByStringKey(&p, "next");
 		} else if(strcmp(s, "prefixOp") == 0){
-			NV_Lang02_OpFunc_prefixOp(&p, &lastEvalVal);
+			NV_Lang02_OpFunc_prefixOp(&p, &lastEvalVal, scope);
 			p = NV_Dict_getByStringKey(&p, "next");
 		} else if(strcmp(s, "postfixOp") == 0){
-			NV_Lang02_OpFunc_postfixOp(&p, &lastEvalVal);
+			NV_Lang02_OpFunc_postfixOp(&p, &lastEvalVal, scope);
 			p = NV_Dict_getByStringKey(&p, "next");
 		} else if(strcmp(s, "cond") == 0){
-			NV_Lang02_OpFunc_cond(&p, &lastEvalVal);
+			NV_Lang02_OpFunc_cond(&p, &lastEvalVal, scope);
 		} else if(strcmp(s, "do") == 0){
-			NV_Lang02_OpFunc_do(&p, &lastEvalVal);
+			NV_Lang02_OpFunc_do(&p, &lastEvalVal, scope);
 		} else if(strcmp(s, "updt") == 0){
-			NV_Lang02_OpFunc_do(&p, &lastEvalVal);
+			NV_Lang02_OpFunc_do(&p, &lastEvalVal, scope);
 		} else if(strcmp(s, "init") == 0){
-			NV_Lang02_OpFunc_do(&p, &lastEvalVal);
+			NV_Lang02_OpFunc_do(&p, &lastEvalVal, scope);
 		} else if(strcmp(s, "endfor") == 0){
-			NV_Lang02_OpFunc_do(&p, &lastEvalVal);
+			NV_Lang02_OpFunc_do(&p, &lastEvalVal, scope);
 		} else if(strcmp(s, "endif") == 0){
 			p = NV_Dict_getByStringKey(&p, "next");
 		} else if(strcmp(s, "()") == 0){
-			r = NV_Lang02_OpFunc_parentheses(&p, &lastEvalVal);
+			r = NV_Lang02_OpFunc_parentheses(&p, &lastEvalVal, scope);
 			if(!NV_Term_isNull(&r)){
 				return r;
 			}

@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 	//
 	NV_insertInitialNode();
 	//
-	NV_ID scope = NODEID_NULL;
+	NV_ID topLevelScope = NODEID_NULL;
 	//
 	cTypeList = NV_createCharTypeList();
 	NV_NodeID_retain(&cTypeList);
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 	//
 	{
 		NV_ID opDictName = NV_Node_createWithString("opDict");
-		NV_ID opDictVar = NV_Variable_createWithName(&scope, &opDictName);
+		NV_ID opDictVar = NV_Variable_createWithName(&topLevelScope, &opDictName);
 		NV_Variable_assign(&opDictVar, &opDict);
 	}
 	//
@@ -92,14 +92,14 @@ int main(int argc, char *argv[])
 		if(NV_globalExecFlag & NV_EXEC_FLAG_SAVECODEGRAPH){
 			NV_saveCodeGraphForVisualization(&codeGraphRoot, "note/code.dot");
 		}
-		NV_ID result = NV_evalGraph(&codeGraphRoot);
+		NV_ID result = NV_evalGraph(&codeGraphRoot, &topLevelScope);
 		if(NV_globalExecFlag & NV_EXEC_FLAG_SAVECODEGRAPH){
 			NV_saveCodeGraphForVisualization(&codeGraphRoot, "note/eval.dot");
 		}
 		//
 		if(!(NV_globalExecFlag & NV_EXEC_FLAG_SUPRESS_AUTOPRINT)){
 			printf(" = ");
-			NV_ID prim = NV_Term_getPrimNodeID(&result, &scope);
+			NV_ID prim = NV_Term_getPrimNodeID(&result, &topLevelScope);
 			NV_Term_print(&prim);
 			printf("\n");
 		} else{

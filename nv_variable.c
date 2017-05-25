@@ -60,6 +60,14 @@ NV_ID NV_Variable_create()
 	return v;
 }
 
+NV_ID NV_Variable_createSubScopeOf(const NV_ID *parentNode)
+{
+	NV_ID subScope = NV_Node_createWithString("scope");
+	NV_ID v = NV_Variable_createWithName(&subScope, &RELID_PARENT_SCOPE);
+	NV_Variable_assign(&v, parentNode);
+	return subScope;
+}
+
 NV_ID NV_Variable_createWithName(const NV_ID *parentNode, const NV_ID *nameNode)
 {
 	if(!parentNode || !nameNode) return NODEID_NULL;
