@@ -107,18 +107,20 @@ int NV_Dict_foreach
 (const NV_ID *dict, void *d, int (*f)(void *d, const NV_ID *rel, const NV_ID *to))
 {
 	// fの戻り値がfalseの場合はそこでループを中止する。
-	// 戻り値は、最後のに実行したfの戻り値である。
+	// 戻り値は、fを呼んだ回数である。
 	const NV_Node *n;
 	const NV_Relation *reld;
+	int count = 0;
 	for(n = nodeRoot.next; n; n = n->next){
 		if(n->type == kRelation){
 			reld = n->data;
 			if(NV_NodeID_isEqual(&reld->from, dict)){
-				if(!f(d, &reld->rel, &reld->to)) return 0;
+				count++;
+				if(!f(d, &reld->rel, &reld->to)) break;
 			}
 		}
 	}
-	return 1;
+	return count;
 }
 
 NV_ID NV_Dict_getByStringKey
@@ -130,7 +132,7 @@ NV_ID NV_Dict_getByStringKey
 
 int NV_Dict_Internal_printSub(void *d, const NV_ID *rel, const NV_ID *to)
 {
-	printf("  |--- ");
+	printf("├─── ");
 	NV_Node_printPrimVal(rel);
 	printf(": ");
 	NV_Node_printPrimVal(to);
@@ -147,3 +149,35 @@ void NV_Dict_print(const NV_ID *root)
 	NV_Dict_foreach(root, &cnt, NV_Dict_Internal_printSub);
 	printf("(%d items)\n", cnt);
 }
+
+typedef struct {
+	int depth;
+	int current;
+} NV_Dict_DepthInfo;
+
+int NV_Dict_Internal_printWithDepthSub(void *d, const NV_ID *rel, const NV_ID *to)
+{
+	NV_Dict_DepthInfo *info = d;
+	int i;
+	for(i = 0; i < info->current; i++){
+		printf("│   ");
+	}
+	printf("├── ");
+	NV_Node_printPrimVal(rel);
+	printf(": ");
+	NV_Dict_printWithDepth(to, info->depth, info->current + 1);
+	
+	return 1;
+}
+
+void NV_Dict_printWithDepth(const NV_ID *root, int depth, int current)
+{
+
+	NV_Node_printPrimVal(root); printf("\n");
+	if(depth <= current) return;
+	NV_Dict_DepthInfo info;
+	info.depth = depth;
+	info.current = current;
+	NV_Dict_foreach(root, &info, NV_Dict_Internal_printWithDepthSub);
+}
+

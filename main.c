@@ -84,6 +84,21 @@ int main(int argc, char *argv[])
 	NV_evalLine(&cTypeList, &ctx, 
 			"loop={for{#args[0]=args[1]}{#args[0]<=args[2]}{#args[0]++}{args[3]()}}"); 
 	*/
+	// TEST CODE BEGIN vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+	NV_ID list = NV_Array_create();
+	NV_ID e;
+	e = NV_Node_createWithString("test1");
+	NV_Array_push(&list, &e);
+	e = NV_Node_createWithString("hello");
+	NV_Array_push(&list, &e);
+
+	NV_Array_print(&list); putchar('\n');
+	NV_Dict_printWithDepth(&opDict, 6, 0);
+
+
+	return 0;
+	// TEST CODE END ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 	char line[MAX_INPUT_LEN];
 	//
 	while(NV_gets(line, sizeof(line)) != NULL){

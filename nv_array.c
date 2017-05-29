@@ -1,6 +1,6 @@
 #include "nv.h"
 //
-// TermType: Array
+// Internal
 //
 
 void NV_Array_Internal_setCount(const NV_ID *array, int32_t count)
@@ -23,6 +23,15 @@ void NV_Array_Internal_updateCountRel(const NV_ID *array, int32_t diff)
 	int32_t count;
 	count = NV_Array_Internal_getCount(array);
 	NV_Array_Internal_setCount(array, count + diff);
+}
+
+//
+// 
+//
+
+int NV_Array_isArray(const NV_ID *id)
+{
+	return NV_isTermType(id, &NODEID_TERM_TYPE_ARRAY);
 }
 
 NV_ID NV_Array_create()

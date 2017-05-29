@@ -249,6 +249,11 @@ NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *scope)
 	return *id;
 }
 
+int64_t NV_Term_getHash(const NV_ID *id)
+{
+	
+}
+
 //
 // Assign to term
 //

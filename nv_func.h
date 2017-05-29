@@ -15,6 +15,7 @@ void NV_saveCodeGraphForVisualization
 
 
 // @nv_array.c
+int NV_Array_isArray(const NV_ID *id);
 NV_ID NV_Array_create();
 NV_ID NV_Array_clone(const NV_ID *base);
 NV_ID NV_Array_push(const NV_ID *array, const NV_ID *data);
@@ -49,6 +50,7 @@ int NV_Dict_foreach
 NV_ID NV_Dict_getByStringKey
 (const NV_ID *root, const char *key);
 void NV_Dict_print(const NV_ID *root);
+void NV_Dict_printWithDepth(const NV_ID *root, int depth, int current);
 
 
 // @nv_driver.c
@@ -152,6 +154,7 @@ int NV_Term_isAssignable(const NV_ID *id, const NV_ID *scope);
 int NV_Term_isArray(const NV_ID *id, const NV_ID *scope);
 int32_t NV_Term_getInt32(const NV_ID *id, const NV_ID *scope);
 NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *scope);
+int64_t NV_Term_getHash(const NV_ID *id);
 NV_ID NV_Term_assign(const NV_ID *v, const NV_ID *data);
 void NV_Term_print(const NV_ID *id);
 
@@ -218,6 +221,11 @@ NV_ID NV_Context_getCurrentScope(const NV_ID *ctx);
 NV_ID NV_Context_getLastResult(const NV_ID *ctx);
 void NV_Context_setOpDict(const NV_ID *ctx, const NV_ID *opDict);
 NV_ID NV_Context_getOpDict(const NV_ID *ctx);
+
+
+// @fnv1.c
+uint32_t fnv_1_hash_32(uint8_t *bytes, size_t length);
+uint64_t fnv_1_hash_64(uint8_t *bytes, size_t length);
 
 
 // @lang/02/parse.c
