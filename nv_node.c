@@ -15,7 +15,6 @@ NV_ID NV_NodeID_createNew(const NV_ID *id)
 	n->type = kNone;
 	n->data = NULL;
 	n->size = 0;
-	n->refCount = 0;
 	n->relCache = NULL;
 	//
 	n->next = nodeRoot.next;
@@ -25,8 +24,8 @@ NV_ID NV_NodeID_createNew(const NV_ID *id)
 	//
 	return n->id;
 }
-
-void NV_Node_Internal_resetData(NV_Node *n)
+/*
+//void NV_Node_Internal_resetData(NV_Node *n)
 {
 	if(n){
 		if(n->data){
@@ -42,8 +41,9 @@ void NV_Node_Internal_resetData(NV_Node *n)
 		n->type = kNone;
 	}
 }
-
-void NV_Node_Internal_remove(NV_Node *n)
+*/
+/*
+//void NV_Node_Internal_remove(NV_Node *n)
 {
 	if(n){
 		NV_DbgInfo_mem(n, "free");
@@ -55,23 +55,7 @@ void NV_Node_Internal_remove(NV_Node *n)
 	}
 	NV_Node_Internal_removeAllRelationFrom(&n->id);
 }
-
-void NV_Node_Internal_removeAllRelationFrom(const NV_ID *from)
-{
-	NV_Node *n;
-	const NV_Relation *reld;
-	for(n = &nodeRoot; n->next; n = n->next){
-		if(n->next->type == kRelation){
-			reld = n->next->data;
-			//NV_DbgInfo_mem(n->next, "check");
-			if(	NV_NodeID_isEqual(&reld->from, from)){
-				// 削除とマーク
-				n->next->refCount = 0;
-			}
-		}
-	}
-}
-
+*/
 int NV_Node_Internal_isEqualInValue(const NV_Node *na, const NV_Node *nb)
 {
 	// 2つのNodeが値として等しいか否かを返す。
@@ -114,12 +98,11 @@ int NV_Node_getNodeCount()
 
 NV_ID NV_NodeID_create(const NV_ID *id)
 {
-	// すでに存在するIDについては，新たに確保せず，既存の内容をリセットする．
 	NV_Node *n;
 	n = NV_NodeID_getNode(id);
 	if(n){
-		NV_Node_Internal_resetData(n);
-		return n->id;
+		printf("NodeID collision detected. abort.\n");
+		exit(1);
 	}
 	// 新規作成
 	return NV_NodeID_createNew(id);
@@ -240,14 +223,14 @@ void NV_Node_restoreFromFile(FILE *fp)
 	}
 }
 
-
-void NV_NodeID_remove(const NV_ID *baseID)
+/*
+//void NV_NodeID_remove(const NV_ID *baseID)
 {
 	NV_Node *n;
 	n = NV_NodeID_getNode(baseID);
 	if(n) NV_Node_Internal_remove(n);
 }
-
+*/
 NV_ID NV_NodeID_clone(const NV_ID *baseID)
 {
 	NV_Node *base, *new;
@@ -263,6 +246,9 @@ NV_ID NV_NodeID_clone(const NV_ID *baseID)
 	return newID;
 }
 
+
+void NV_Node_Internal_setInt32ToID(const NV_ID *id, int32_t v);
+void NV_Node_Internal_setStrToID(const NV_ID *id, const char *s);
 NV_ID NV_Node_restoreFromString(const char *s)
 {
 	const char *p;
@@ -275,8 +261,6 @@ NV_ID NV_Node_restoreFromString(const char *s)
 		printf("Invalid id format.\n");
 		return NODEID_NULL;
 	}
-	// NV_ID_dumpIDToFile(&id, stdout);
-	// putchar(' ');
 	NV_NodeID_create(&id);
 	//
 	p = &s[32];
@@ -322,78 +306,6 @@ NV_ID NV_Node_restoreFromString(const char *s)
 			break;
 	}
 	return id;
-}
-
-void NV_NodeID_retain(const NV_ID *id)
-{
-	NV_Node *n;
-	//
-	n = NV_NodeID_getNode(id);
-	if(n){
-		n->refCount++;
-		//NV_DbgInfo_mem(n, "retain");
-/*
-		NV_DbgInfo("retain type: %s, refCount becomes: %d",
-			NV_NodeTypeList[n->type],
-			n->refCount);
-*/
-	}
-}
-
-void NV_NodeID_release(const NV_ID *id)
-{
-	NV_Node *n;
-	//
-	n = NV_NodeID_getNode(id);
-	if(n){
-		n->refCount--;
-		//NV_DbgInfo_mem(n, "release");
-/*
-		NV_DbgInfo("release type: %s, refCount becomes: %d",
-			NV_NodeTypeList[n->type],
-			n->refCount);
-*/
-	}
-}
-
-void NV_Node_cleanup()
-{
-	// メモリ解放戦略：
-	// そのNodeがRelationで、
-	//		どちらか片方でもNodeが見つからなかった場合、解放する。
-	//	それ以外の場合で、
-	//		参照カウントが0になった場合は、解放する。
-	NV_Node **n, *p, *q, *r;
-	//
-	for(n = &nodeRoot.next; *n; n = &(*n)->next){
-		(*n)->refCount = ((*n)->type == kRelation);
-	}
-	for(n = &nodeRoot.next; *n; n = &(*n)->next){
-		if((*n)->type == kRelation){
-			p = NV_NodeID_Relation_getLinkFrom(&(*n)->id);
-			if(!p){
-				(*n)->refCount = 0;
-				continue;
-			}
-			//
-			q = NV_NodeID_Relation_getLinkTo(&(*n)->id);
-			if(!q){
-				(*n)->refCount = 0;
-				continue;
-			}
-			//
-			r = NV_NodeID_Relation_getLinkRel(&(*n)->id);
-			//
-			p->refCount = 1;
-			q->refCount = 1;
-			r->refCount = 1;
-		}
-	}
-	for(n = &nodeRoot.next; *n; n = &(*n)->next){
-		if((*n)->refCount) continue;
-		NV_NodeID_printForDebug(&(*n)->id); putchar('\n');
-		NV_Node_Internal_remove(*n);
-	}
 }
 
 void NV_Node_fdump(FILE *fp, const NV_ID *id)

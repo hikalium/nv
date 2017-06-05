@@ -91,12 +91,8 @@ void *NV_Node_getDataAsType(const NV_ID *id, NV_NodeType type);
 void NV_Node_dumpAll();
 void NV_Node_dumpAllToFile(FILE *fp);
 void NV_Node_restoreFromFile(FILE *fp);
-void NV_NodeID_remove(const NV_ID *baseID);
 NV_ID NV_NodeID_clone(const NV_ID *baseID);
 NV_ID NV_Node_restoreFromString(const char *s);
-void NV_NodeID_retain(const NV_ID *id);
-void NV_NodeID_release(const NV_ID *id);
-void NV_Node_cleanup();
 void NV_Node_fdump(FILE *fp, const NV_ID *id);
 void NV_Node_dump(const NV_ID *id);
 void NV_Node_printPrimVal(const NV_ID *id);
@@ -189,7 +185,6 @@ size_t NV_Node_String_strlen(const NV_ID *id);
 NV_ID NV_NodeID_createRel_OnDupUpdate
 (const NV_ID *from, const NV_ID *rel, const NV_ID *to, 
 NV_ID (*find)(const NV_ID *from, const NV_ID *rel));
-int NV_Node_isLiveRelation(const NV_ID *relnid);
 NV_ID NV_NodeID_createRelation
 (const NV_ID *from, const NV_ID *rel, const NV_ID *to);
 NV_ID NV_NodeID_createUniqueIDRelation

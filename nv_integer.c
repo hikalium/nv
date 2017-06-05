@@ -11,13 +11,18 @@ void NV_Node_Internal_setInt32ToID(const NV_ID *id, int32_t v)
 	//
 	n = NV_NodeID_getNode(id);
 	if(n){
-		if(n->type != kNone) NV_Node_Internal_resetData(n);
+		if(n->type != kNone){
+			// NV_Node_Internal_resetData(n);
+			printf("Try to modify data existed. abort.");
+			exit(EXIT_FAILURE);
+		}
 		n->type = kInteger;
 		n->size = sizeof(int32_t);
 		n->data = NV_malloc(n->size);
 		*((int32_t *)n->data) = v;
 	}
 }
+
 
 //
 // Integer

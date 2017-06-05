@@ -119,7 +119,6 @@ void NV_Graph_addStaticNode(const NV_ID *id, const char *s)
 void NV_Graph_initStaticNodes()
 {
 	NV_NodeID_createAndString(&NODEID_NV_STATIC_ROOT, "NV_StaticRoot");
-	NV_NodeID_retain(&NODEID_NV_STATIC_ROOT);
 	//
 	NV_StaticNodeNameTag *t;
 	int i;

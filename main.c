@@ -56,10 +56,8 @@ int main(int argc, char *argv[])
 	NV_ID topLevelScope = NV_Node_createWithString("root");
 	//
 	cTypeList = NV_createCharTypeList();
-	NV_NodeID_retain(&cTypeList);
 	//
 	opDict = NV_createOpDict();
-	NV_NodeID_retain(&opDict);
 	//
 	{
 		NV_ID opDictName = NV_Node_createWithString("opDict");

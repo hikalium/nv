@@ -93,7 +93,7 @@ NV_ID NV_Array_pop(const NV_ID *array)
 	// t is retv.
 	NV_ID relnid;
 	relnid = NV_NodeID_getRelationFrom(&prev, &RELID_ARRAY_NEXT);
-	NV_NodeID_remove(&relnid);
+	//NV_NodeID_remove(&relnid);
 	//
 	if(!NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)){
 		NV_Array_Internal_updateCountRel(array, -1);

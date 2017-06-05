@@ -23,19 +23,6 @@ NV_ID (*find)(const NV_ID *from, const NV_ID *rel))
 //
 // Relation
 //
-/*
-int NV_Node_isLiveRelation(const NV_ID *relnid)
-{
-	NV_Node *n;
-	NV_Relation *reld;
-	//
-	n = NV_NodeID_getNode(relnid);
-	if(n){
-		reld = n->data;
-	}
-	
-}
-*/
 NV_ID NV_NodeID_createRelation
 (const NV_ID *from, const NV_ID *rel, const NV_ID *to)
 {
@@ -77,7 +64,10 @@ void NV_Node_setRelation
 	//
 	n = NV_NodeID_getNode(relnid);
 	if(n){
-		if(n->type != kNone) NV_Node_Internal_resetData(n);
+		if(n->type != kNone){
+			printf("Try to modify rel existed. abort.\n");
+			exit(EXIT_FAILURE);
+		}
 		n->type = kRelation;
 		n->size = sizeof(NV_Relation);
 		n->data = NV_malloc(n->size);
@@ -87,9 +77,6 @@ void NV_Node_setRelation
 		reld->rel = *rel;
 		reld->to = *to;
 		//
-		NV_NodeID_retain(to);
-		//
-		n->refCount++;
 	}
 }
 
@@ -150,10 +137,7 @@ void NV_NodeID_updateRelationTo(const NV_ID *relnid, const NV_ID *to)
 		if(n->type != kRelation) return;
 		reld = n->data;
 		//
-		NV_NodeID_release(&reld->to);
-		//
 		reld->to = *to;
-		NV_NodeID_retain(&reld->to);
 	}
 }
 
