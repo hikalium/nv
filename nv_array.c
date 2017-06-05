@@ -233,6 +233,19 @@ NV_ID NV_Array_getSorted(const NV_ID *array, int (*f)(const void *n1, const void
 	return new;
 }
 
+int32_t NV_Array_calcHash(const NV_ID *array)
+{
+	int32_t hash = 0;
+	NV_ID t;
+	int i;
+	for(i = 0; ; i++){
+		t = NV_Array_getByIndex(array, i);
+		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
+		hash ^= NV_Term_calcHash(&t);
+	}
+	return hash;
+}
+
 void NV_Array_print(const NV_ID *array)
 {
 	NV_ID t;

@@ -249,11 +249,6 @@ NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *scope)
 	return *id;
 }
 
-int64_t NV_Term_getHash(const NV_ID *id)
-{
-	
-}
-
 //
 // Assign to term
 //
@@ -285,11 +280,20 @@ void NV_Term_print(const NV_ID *id)
 		NV_Variable_print(id);
 	} else if(NV_isTermType(id, &NODEID_TERM_TYPE_OP)){
 		NV_printOp(id);
-		/*
-	} else if(NV_isTermType(id, &NODEID_TERM_TYPE_PATH)){
-		NV_Path_print(id);
-		*/
 	} else{
 		NV_Node_printPrimVal(id);
 	}
+}
+
+int32_t NV_Term_calcHash(const NV_ID *id)
+{
+	
+	if(NV_isTermType(id, &NODEID_TERM_TYPE_ARRAY)){
+		return NV_Array_calcHash(id);
+	/*} else if(NV_isTermType(id, &NODEID_TERM_TYPE_VARIABLE)){
+		NV_Variable_print(id);
+	} else if(NV_isTermType(id, &NODEID_TERM_TYPE_OP)){
+		NV_printOp(id);*/
+	}
+	return NV_NodeID_calcHash(id);
 }

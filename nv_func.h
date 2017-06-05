@@ -27,6 +27,7 @@ NV_ID NV_Array_getByIndex(const NV_ID *array, int index);
 void NV_Array_removeIndex(const NV_ID *array, int index);
 void NV_Array_writeToIndex(const NV_ID *array, int index, const NV_ID *data);
 NV_ID NV_Array_getSorted(const NV_ID *array, int (*f)(const void *n1, const void *n2));
+int32_t NV_Array_calcHash(const NV_ID *array);
 void NV_Array_print(const NV_ID *array);
 
 
@@ -84,6 +85,8 @@ int NV_NodeID_isEqualInValue(const NV_ID *a, const NV_ID *b);
 int NV_NodeID_exists(const NV_ID *id);
 NV_Node *NV_NodeID_getNode(const NV_ID *id);
 NV_NodeType NV_Node_getType(const NV_ID *id);
+int32_t NV_Node_calcHash(const NV_Node *n);
+int32_t NV_NodeID_calcHash(const NV_ID *id);
 void *NV_Node_getDataAsType(const NV_ID *id, NV_NodeType type);
 void NV_Node_dumpAll();
 void NV_Node_dumpAllToFile(FILE *fp);
@@ -154,9 +157,9 @@ int NV_Term_isAssignable(const NV_ID *id, const NV_ID *scope);
 int NV_Term_isArray(const NV_ID *id, const NV_ID *scope);
 int32_t NV_Term_getInt32(const NV_ID *id, const NV_ID *scope);
 NV_ID NV_Term_getAssignableNode(const NV_ID *id, const NV_ID *scope);
-int64_t NV_Term_getHash(const NV_ID *id);
 NV_ID NV_Term_assign(const NV_ID *v, const NV_ID *data);
 void NV_Term_print(const NV_ID *id);
+int32_t NV_Term_calcHash(const NV_ID *id);
 
 
 // @nv_signal.c

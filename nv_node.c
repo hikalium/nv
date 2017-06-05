@@ -192,6 +192,19 @@ NV_NodeType NV_Node_getType(const NV_ID *id)
 	return -1;
 }
 
+int32_t NV_Node_calcHash(const NV_Node *n)
+{
+	if(!n || !n->data) return 0;
+	return fnv_1_hash_32(n->data, n->size);
+}
+
+int32_t NV_NodeID_calcHash(const NV_ID *id)
+{
+	NV_Node *n;
+	n = NV_NodeID_getNode(id);
+	return NV_Node_calcHash(n);
+}
+
 void *NV_Node_getDataAsType(const NV_ID *id, NV_NodeType type)
 {
 	NV_Node *n;
