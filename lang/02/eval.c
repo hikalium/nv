@@ -154,6 +154,18 @@ NV_ID NV_Lang02_OpFunc_prefixOp
 		isAnsNotInteger = 1;
 		NV_Dict_print(scope);
 		*lastEvalVal = NODEID_NULL;
+	} else if(strcmp(opStr, "lsdep") == 0){
+		isAnsNotInteger = 1;
+		NV_Node_printDependencyTree(&rootScope, 0);
+		*lastEvalVal = NODEID_NULL;
+	} else if(strcmp(opStr, "dump") == 0){
+		isAnsNotInteger = 1;
+		FILE *fp = fopen("dump.txt", "w");
+		if(fp){
+			NV_Node_dumpAllToFile(fp);
+			fclose(fp);
+		}
+		*lastEvalVal = NODEID_NULL;
 	} else if(strcmp(opStr, "+") == 0){
 		opR = NV_Term_getPrimNodeID(&opR, scope);
 		ans = NV_Term_getInt32(&opR ,scope);

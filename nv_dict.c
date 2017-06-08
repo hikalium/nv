@@ -106,6 +106,7 @@ NV_ID NV_Dict_getAll(const NV_ID *root, const NV_ID *key)
 int NV_Dict_foreach
 (const NV_ID *dict, void *d, int (*f)(void *d, const NV_ID *rel, const NV_ID *to))
 {
+	// ノードdictを起点とするすべての関係をたどって。そのrelationとtoをfに引き渡す。
 	// fの戻り値がfalseの場合はそこでループを中止する。
 	// 戻り値は、fを呼んだ回数である。
 	const NV_Node *n;
@@ -115,6 +116,28 @@ int NV_Dict_foreach
 		if(n->type == kRelation){
 			reld = n->data;
 			if(NV_NodeID_isEqual(&reld->from, dict)){
+				count++;
+				if(!f(d, &reld->rel, &reld->to)) break;
+			}
+		}
+	}
+	return count;
+}
+
+int NV_Dict_foreachWithRelFilter
+(const NV_ID *dict, void *d, int (*f)(void *d, const NV_ID *rel, const NV_ID *to), int (*filter)(const NV_ID *rel))
+{
+	// ノードdictを起点とするすべての関係をたどって。そのrelationとtoをfに引き渡す。
+	// filterがtrueを返す関係のノードのみたどる。
+	// fの戻り値がfalseの場合はそこでループを中止する。
+	// 戻り値は、fを呼んだ回数である。
+	const NV_Node *n;
+	const NV_Relation *reld;
+	int count = 0;
+	for(n = nodeRoot.next; n; n = n->next){
+		if(n->type == kRelation){
+			reld = n->data;
+			if(NV_NodeID_isEqual(&reld->from, dict) && filter(&n->id)){
 				count++;
 				if(!f(d, &reld->rel, &reld->to)) break;
 			}

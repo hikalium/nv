@@ -98,6 +98,8 @@ NV_BuiltinOpTag builtinOpList[] = {
 	//
 	{"print",	10,		"prefix"},
 	{"ls",		10,		"prefix"},
+	{"lsdep",	10,		"prefix"},
+	{"dump",	10,		"prefix"},
 	/*
 	{"}",		10,		"NV_Op_codeBlockClose"},
 	{"ls2",		10,		"NV_Op_ls2"},

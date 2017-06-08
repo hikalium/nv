@@ -3,6 +3,8 @@
 // main
 //
 
+NV_ID rootScope;
+
 int main(int argc, char *argv[])
 {
 	NV_ID cTypeList, opDict;
@@ -35,6 +37,7 @@ int main(int argc, char *argv[])
 	//
 	NV_Node_initRoot();
 	//
+	/*
 	if(filename[0]){
 		// restore savedata
 		printf("Restoring from %s ...\n", filename);
@@ -50,10 +53,11 @@ int main(int argc, char *argv[])
 			printf("fopen failed.\n");
 		}
 	}
+	*/
 	//
 	NV_insertInitialNode();
 	//
-	NV_ID topLevelScope = NV_Node_createWithString("root");
+	rootScope = NV_Node_createWithString("root");
 	//
 	cTypeList = NV_createCharTypeList();
 	//
@@ -61,7 +65,7 @@ int main(int argc, char *argv[])
 	//
 	{
 		NV_ID opDictName = NV_Node_createWithString("opDict");
-		NV_ID opDictVar = NV_Variable_createWithName(&topLevelScope, &opDictName);
+		NV_ID opDictVar = NV_Variable_createWithName(&rootScope, &opDictName);
 		NV_Variable_assign(&opDictVar, &opDict);
 	}
 	//
@@ -83,7 +87,9 @@ int main(int argc, char *argv[])
 			"loop={for{#args[0]=args[1]}{#args[0]<=args[2]}{#args[0]++}{args[3]()}}"); 
 	*/
 	// TEST CODE BEGIN vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-	/*
+/*
+	NV_ID rootAnchor = NV_Anchor_createWithName("root");
+
 	NV_ID list1 = NV_Array_create();
 	NV_ID e;
 	e = NV_Node_createWithString("test1");
@@ -96,8 +102,13 @@ int main(int argc, char *argv[])
 	printf("Hash: %08X\n", NV_Term_calcHash(&list1));
 	printf("Hash: %08X\n", NV_Term_calcHash(&opDict));
 
+	FILE *fp = fopen("dump.txt", "w");
+	if(fp){
+		NV_Node_dumpAllToFile(fp);
+		fclose(fp);
+	}
 
-	return 0;
+	return 0;	
 	*/
 	// TEST CODE END ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -106,11 +117,11 @@ int main(int argc, char *argv[])
 	while(NV_gets(line, sizeof(line)) != NULL){
 		NV_ID tokenList = NV_tokenize(&cTypeList, line);
 		NV_ID codeGraphRoot = NV_parseToCodeGraph(&tokenList, &opDict);
-		NV_ID result = NV_evalGraph(&codeGraphRoot, &topLevelScope);
+		NV_ID result = NV_evalGraph(&codeGraphRoot, &rootScope);
 		//
 		if(!(NV_globalExecFlag & NV_EXEC_FLAG_SUPRESS_AUTOPRINT)){
 			printf(" = ");
-			NV_ID prim = NV_Term_getPrimNodeID(&result, &topLevelScope);
+			NV_ID prim = NV_Term_getPrimNodeID(&result, &rootScope);
 			NV_Term_print(&prim);
 			printf("\n");
 		} else{

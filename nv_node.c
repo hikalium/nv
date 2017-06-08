@@ -24,15 +24,16 @@ NV_ID NV_NodeID_createNew(const NV_ID *id)
 	//
 	return n->id;
 }
-/*
-//void NV_Node_Internal_resetData(NV_Node *n)
+void NV_Node_Internal_resetData(NV_Node *n)
 {
 	if(n){
 		if(n->data){
+			/*
 			if(n->type == kRelation){
 				NV_Relation *reld = n->data;
-				NV_NodeID_release(&reld->to);
+				//NV_NodeID_release(&reld->to);
 			}
+			*/
 			NV_DbgInfo("Free Data type: %s", NV_NodeTypeList[n->type]);
 			NV_free(n->data);
 			n->data = NULL;
@@ -41,9 +42,8 @@ NV_ID NV_NodeID_createNew(const NV_ID *id)
 		n->type = kNone;
 	}
 }
-*/
-/*
-//void NV_Node_Internal_remove(NV_Node *n)
+
+void NV_Node_Internal_remove(NV_Node *n)
 {
 	if(n){
 		NV_DbgInfo_mem(n, "free");
@@ -53,9 +53,9 @@ NV_ID NV_NodeID_createNew(const NV_ID *id)
 		if(n->next) n->next->prev = n->prev;
 		NV_free(n);
 	}
-	NV_Node_Internal_removeAllRelationFrom(&n->id);
+	//NV_Node_Internal_removeAllRelationFrom(&n->id);
 }
-*/
+
 int NV_Node_Internal_isEqualInValue(const NV_Node *na, const NV_Node *nb)
 {
 	// 2つのNodeが値として等しいか否かを返す。
@@ -82,6 +82,12 @@ void NV_Node_initRoot()
 	nodeRoot.next = NULL;
 	nodeRoot.data = NULL;
 	nodeRoot.type = kNone;
+}
+
+NV_Node *NV_Node_getNextNode(const NV_Node *n)
+{
+	if(!n) return NULL;
+	return n->next;
 }
 
 int NV_Node_getNodeCount()
@@ -114,7 +120,31 @@ NV_ID NV_Node_create()
 	return NV_NodeID_createNew(&id);
 }
 
-
+NV_ID NV_Node_createWithTypeAndData(NV_NodeType type, void *data, int32_t size)
+{
+	NV_ID id;
+	NV_Node *n;
+	id = NV_Node_create();
+	n = NV_NodeID_getNode(&id);
+	n->type = type;
+	n->size = size;
+	n->data = data;
+	return id;
+}
+/*
+//NV_ID NV_Node_createWith_ID_Type_Data
+//(NV_ID *id, NV_NodeType type, void *data, int32_t size)
+{
+	NV_ID id;
+	NV_Node *n;
+	id = NV_Node_create();
+	n = NV_NodeID_getNode(&id);
+	n->type = type;
+	n->size = size;
+	n->data = data;
+	return id;
+}
+*/
 int NV_NodeID_isEqual(const NV_ID *a, const NV_ID *b)
 {
 	int i;
@@ -175,6 +205,18 @@ NV_NodeType NV_Node_getType(const NV_ID *id)
 	return -1;
 }
 
+const NV_Node *NV_Node_getRelCache(const NV_Node *n)
+{
+	if(!n) return NULL;
+	return n->relCache;
+}
+
+void NV_Node_setRelCache(NV_Node *n, const NV_Node *rel)
+{
+	if(!n) return;
+	n->relCache = rel;
+}
+
 int32_t NV_Node_calcHash(const NV_Node *n)
 {
 	if(!n || !n->data) return 0;
@@ -187,13 +229,35 @@ int32_t NV_NodeID_calcHash(const NV_ID *id)
 	n = NV_NodeID_getNode(id);
 	return NV_Node_calcHash(n);
 }
+/*
+// void NV_Node_setDataAsType(const NV_Node *n, NV_NodeType type, void *data)
+{
+	// If .data has been set already, this func will fail.
+	if(!n || n->type != type) return;
+	if(n->data){
+		printf("Try to overwrite existed data. abort.\n");
+		return;
+	}
+	n->data = data;
+}
+*/
+void *NV_Node_getDataAsType(const NV_Node *n, NV_NodeType type)
+{
+	if(!n || n->type != type) return NULL;
+	return n->data;
+}
 
-void *NV_Node_getDataAsType(const NV_ID *id, NV_NodeType type)
+void *NV_NodeID_getDataAsType(const NV_ID *id, NV_NodeType type)
 {
 	NV_Node *n;
 	n = NV_NodeID_getNode(id);
-	if(!n || n->type != type) return NULL;
-	return n->data;
+	return NV_Node_getDataAsType(n, type);
+}
+
+NV_ID NV_Node_getID(const NV_Node *n)
+{
+	if(!n) return NODEID_NOT_FOUND;
+	return n->id;
 }
 
 void NV_Node_dumpAll()
@@ -213,7 +277,7 @@ void NV_Node_dumpAllToFile(FILE *fp)
 		NV_Node_fdump(fp, &n->id); fputc('\n', fp);
 	}
 }
-
+/*
 void NV_Node_restoreFromFile(FILE *fp)
 {
 	char s[MAX_SAVE_DATA_ENTRY_SIZE];
@@ -222,15 +286,14 @@ void NV_Node_restoreFromFile(FILE *fp)
 		NV_Node_restoreFromString(s);
 	}
 }
-
-/*
-//void NV_NodeID_remove(const NV_ID *baseID)
+*/
+void NV_NodeID_remove(const NV_ID *baseID)
 {
 	NV_Node *n;
 	n = NV_NodeID_getNode(baseID);
 	if(n) NV_Node_Internal_remove(n);
 }
-*/
+
 NV_ID NV_NodeID_clone(const NV_ID *baseID)
 {
 	NV_Node *base, *new;
@@ -247,9 +310,10 @@ NV_ID NV_NodeID_clone(const NV_ID *baseID)
 }
 
 
-void NV_Node_Internal_setInt32ToID(const NV_ID *id, int32_t v);
-void NV_Node_Internal_setStrToID(const NV_ID *id, const char *s);
-NV_ID NV_Node_restoreFromString(const char *s)
+//void NV_Node_Internal_setInt32ToID(const NV_ID *id, int32_t v);
+//void NV_Node_Internal_setStrToID(const NV_ID *id, const char *s);
+/*
+//NV_ID NV_Node_restoreFromString(const char *s)
 {
 	const char *p;
 	int n, i;
@@ -292,22 +356,12 @@ NV_ID NV_Node_restoreFromString(const char *s)
 			NV_ID_setFromString(&from, &p[1]);
 			NV_ID_setFromString(&rel, &p[ 1 + 32 + 1]);
 			NV_ID_setFromString(&to, &p[1 + 32 + 1 + 32 + 1]);
-/*
-			printf("rel ");
-			printf(" ");
-			NV_ID_dumpIDToFile(&from, stdout);
-			printf(" ");
-			NV_ID_dumpIDToFile(&rel, stdout);
-			printf(" ");
-			NV_ID_dumpIDToFile(&to, stdout);
-			printf("\n");
-*/
 			NV_Node_setRelation(&id, &from, &rel, &to);
 			break;
 	}
 	return id;
 }
-
+*/
 void NV_Node_fdump(FILE *fp, const NV_ID *id)
 {
 	const NV_Node *n = NV_NodeID_getNode(id);
@@ -387,5 +441,44 @@ void NV_NodeID_printForDebug(const NV_ID *id)
 		NV_ID_dumpIDToFile(&e->to, stdout);
 	}
 	
+}
+
+typedef struct {
+	int currentDepth;
+} NV_Node_DepthInfo;
+
+int NV_Node_printDependencyTreeFilter(const NV_ID *rel)
+{
+	if(NV_NodeID_isEqual(rel, &RELID_TERM_TYPE)){
+		return 1;
+	}
+	return 0;
+}
+
+int NV_Node_printDependencyTreeSub(void *d, const NV_ID *rel, const NV_ID *to)
+{
+	NV_Node_DepthInfo *info = d;
+	int i;
+	for(i = 0; i < info->currentDepth; i++){
+		printf("│   ");
+	}
+	printf("├── ");
+	NV_Node_printPrimVal(rel);
+	printf(": ");
+	NV_Node_printDependencyTree(to, info->currentDepth + 1);
+	
+	return 1;
+}
+
+void NV_Node_printDependencyTree(const NV_ID *root, int currentDepth)
+{
+
+	NV_Node_printPrimVal(root); printf("\n");
+	NV_Node_DepthInfo info;
+	info.currentDepth = currentDepth;
+	NV_Dict_foreachWithRelFilter(
+			root, &info,
+			NV_Node_printDependencyTreeSub,
+			NV_Node_printDependencyTreeFilter);
 }
 

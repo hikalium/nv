@@ -48,6 +48,8 @@ NV_ID NV_Dict_createMergedNode(const NV_ID *a, const NV_ID *b);
 NV_ID NV_Dict_getAll(const NV_ID *root, const NV_ID *key);
 int NV_Dict_foreach
 (const NV_ID *dict, void *d, int (*f)(void *d, const NV_ID *rel, const NV_ID *to));
+int NV_Dict_foreachWithRelFilter
+(const NV_ID *dict, void *d, int (*f)(void *d, const NV_ID *rel, const NV_ID *to), int (*filter)(const NV_ID *rel));
 NV_ID NV_Dict_getByStringKey
 (const NV_ID *root, const char *key);
 void NV_Dict_print(const NV_ID *root);
@@ -77,26 +79,35 @@ void NV_ID_dumpIDToFile(const NV_ID *id, FILE *fp);
 // @nv_node.c
 NV_ID NV_NodeID_createNew(const NV_ID *id);
 void NV_Node_initRoot();
+NV_Node *NV_Node_getNextNode(const NV_Node *n);
 int NV_Node_getNodeCount();
 NV_ID NV_NodeID_create(const NV_ID *id);
 NV_ID NV_Node_create();
+NV_ID NV_Node_createWithTypeAndData(NV_NodeType type, void *data, int32_t size);
 int NV_NodeID_isEqual(const NV_ID *a, const NV_ID *b);
 int NV_NodeID_isEqualInValue(const NV_ID *a, const NV_ID *b);
 int NV_NodeID_exists(const NV_ID *id);
 NV_Node *NV_NodeID_getNode(const NV_ID *id);
 NV_NodeType NV_Node_getType(const NV_ID *id);
+const NV_Node *NV_Node_getRelCache(const NV_Node *n);
+void NV_Node_setRelCache(NV_Node *n, const NV_Node *rel);
 int32_t NV_Node_calcHash(const NV_Node *n);
 int32_t NV_NodeID_calcHash(const NV_ID *id);
-void *NV_Node_getDataAsType(const NV_ID *id, NV_NodeType type);
+void *NV_Node_getDataAsType(const NV_Node *n, NV_NodeType type);
+void *NV_NodeID_getDataAsType(const NV_ID *id, NV_NodeType type);
+NV_ID NV_Node_getID(const NV_Node *n);
 void NV_Node_dumpAll();
 void NV_Node_dumpAllToFile(FILE *fp);
 void NV_Node_restoreFromFile(FILE *fp);
+void NV_NodeID_remove(const NV_ID *baseID);
 NV_ID NV_NodeID_clone(const NV_ID *baseID);
-NV_ID NV_Node_restoreFromString(const char *s);
 void NV_Node_fdump(FILE *fp, const NV_ID *id);
 void NV_Node_dump(const NV_ID *id);
 void NV_Node_printPrimVal(const NV_ID *id);
 void NV_NodeID_printForDebug(const NV_ID *id);
+int NV_Node_printDependencyTreeFilter(const NV_ID *rel);
+int NV_Node_printDependencyTreeSub(void *d, const NV_ID *rel, const NV_ID *to);
+void NV_Node_printDependencyTree(const NV_ID *root, int currentDepth);
 
 
 // @nv_op.c
@@ -191,34 +202,18 @@ NV_ID NV_NodeID_createUniqueIDRelation
 (const NV_ID *from, const NV_ID *rel, const NV_ID *to);
 NV_ID NV_NodeID_createUniqueEqRelation
 (const NV_ID *from, const NV_ID *rel, const NV_ID *to);
-void NV_Node_setRelation
-(const NV_ID *relnid, const NV_ID *from, const NV_ID *rel, const NV_ID *to);
 NV_Node *NV_NodeID_Relation_getLinkFrom(const NV_ID *relnid);
 NV_ID NV_NodeID_Relation_getIDLinkTo(const NV_ID *relnid);
 NV_Node *NV_NodeID_Relation_getLinkTo(const NV_ID *relnid);
 NV_ID NV_NodeID_Relation_getIDLinkRel(const NV_ID *relnid);
 NV_Node *NV_NodeID_Relation_getLinkRel(const NV_ID *relnid);
-void NV_NodeID_updateRelationTo(const NV_ID *relnid, const NV_ID *to);
+NV_ID NV_NodeID_updateRelationTo(const NV_ID *relnid, const NV_ID *to);
 const NV_Node *NV_NodeID_getRelNodeFromWithCmp
 (const NV_ID *from, const NV_ID *rel, int (*cmp)(const NV_ID *p, const NV_ID *q));
 NV_ID NV_NodeID_getRelationFrom(const NV_ID *from, const NV_ID *rel);
 NV_ID NV_NodeID_getRelatedNodeFrom(const NV_ID *from, const NV_ID *rel);
 NV_ID NV_NodeID_getEqRelationFrom(const NV_ID *from, const NV_ID *rel);
 NV_ID NV_NodeID_getEqRelatedNodeFrom(const NV_ID *from, const NV_ID *rel);
-
-
-// @nv_context.c
-NV_ID NV_getContextList();
-NV_ID NV_Context_create();
-NV_ID NV_Context_getEvalStack(const NV_ID *ctx);
-NV_ID NV_Context_createChildScopeWithArgs(const NV_ID *ctx, const NV_ID *argsBlock);
-void NV_Context_pushToEvalStack
-(const NV_ID *ctx, const NV_ID *code, const NV_ID *newScope);
-NV_ID NV_Context_getCurrentCode(const NV_ID *ctx);
-NV_ID NV_Context_getCurrentScope(const NV_ID *ctx);
-NV_ID NV_Context_getLastResult(const NV_ID *ctx);
-void NV_Context_setOpDict(const NV_ID *ctx, const NV_ID *opDict);
-NV_ID NV_Context_getOpDict(const NV_ID *ctx);
 
 
 // @fnv1.c
@@ -260,4 +255,9 @@ NV_ID NV_Lang02_OpFunc_do
 NV_ID NV_Lang02_OpFunc_parentheses
 (NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
 NV_ID NV_evalGraph(const NV_ID *codeGraphRoot, const NV_ID *scope);
+
+
+// @nv_anchor.c
+int NV_Anchor_isAnchor(const NV_ID *id);
+NV_ID NV_Anchor_createWithName(const char *s);
 

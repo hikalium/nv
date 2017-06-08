@@ -77,6 +77,9 @@ struct NV_OP_POINTER {
 	NV_ID dict;
 };
 
+// @main.c
+extern NV_ID rootScope;
+
 // @nv.c
 #define NV_EXEC_FLAG_VERBOSE			0x01
 #define NV_EXEC_FLAG_INTERRUPT			0x02

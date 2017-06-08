@@ -6,9 +6,10 @@ SRCS= 	main.c \
 		nv.c nv_array.c nv_dict.c nv_driver.c \
 		nv_fix.c nv_id.c nv_node.c nv_op.c nv_static.c \
 		nv_variable.c nv_term.c nv_signal.c \
-		nv_integer.c nv_string.c nv_relation.c nv_context.c \
+		nv_integer.c nv_string.c nv_relation.c \
 		fnv1.c \
-		lang/02/parse.c lang/02/eval.c
+		lang/02/parse.c lang/02/eval.c \
+		nv_anchor.c
 HEADERS=nv.h nv_node.h nv_func.h nv_static.h
 CFLAGS=-Wall -Wextra -lncurses -Wunused-function
 CFLAGS += -DGIT_COMMIT_ID="\"$(GIT_COMMIT_ID)\"" \

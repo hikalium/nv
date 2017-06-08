@@ -1,5 +1,5 @@
 #include "nv.h"
-#include "nv_node.h"
+//#include "nv_node.h"
 
 //
 // Internal
@@ -26,9 +26,15 @@ NV_ID (*find)(const NV_ID *from, const NV_ID *rel))
 NV_ID NV_NodeID_createRelation
 (const NV_ID *from, const NV_ID *rel, const NV_ID *to)
 {
-	NV_ID r = NV_Node_create();
-	NV_Node_setRelation(&r, from, rel, to);
-	return r;
+	NV_Relation *reld;
+	int32_t size = sizeof(NV_Relation);
+	//
+	reld = NV_malloc(size);
+	reld->from = *from;
+	reld->rel = *rel;
+	reld->to = *to;
+
+	return NV_Node_createWithTypeAndData(kRelation, reld, size);
 }
 
 NV_ID NV_NodeID_createUniqueIDRelation
@@ -52,9 +58,9 @@ NV_ID NV_NodeID_createUniqueEqRelation
 	return NV_NodeID_createRel_OnDupUpdate(
 		from, rel, to, NV_NodeID_getEqRelationFrom);
 }
-
-void NV_Node_setRelation
-(const NV_ID *relnid, const NV_ID *from, const NV_ID *rel, const NV_ID *to)
+/*
+//void NV_Node_setRelation
+//(const NV_ID *relnid, const NV_ID *from, const NV_ID *rel, const NV_ID *to)
 {
 	// retains to.
 	// Relationはtoを保持し、
@@ -79,26 +85,22 @@ void NV_Node_setRelation
 		//
 	}
 }
-
+*/
 NV_Node *NV_NodeID_Relation_getLinkFrom(const NV_ID *relnid)
 {
-	NV_Node *n;
 	NV_Relation *reld;
 	//
-	n = NV_NodeID_getNode(relnid);
-	if(!n || n->type != kRelation) return NULL;
-	reld = n->data;
+	reld = NV_NodeID_getDataAsType(relnid, kRelation);
+	if(!reld) return NULL;
 	return NV_NodeID_getNode(&reld->from);
 }
 
 NV_ID NV_NodeID_Relation_getIDLinkTo(const NV_ID *relnid)
 {
-	NV_Node *n;
 	NV_Relation *reld;
 	//
-	n = NV_NodeID_getNode(relnid);
-	if(!n || n->type != kRelation) return NODEID_NOT_FOUND;
-	reld = n->data;
+	reld = NV_NodeID_getDataAsType(relnid, kRelation);
+	if(!reld) return NODEID_NOT_FOUND;
 	return reld->to;
 }
 
@@ -111,12 +113,9 @@ NV_Node *NV_NodeID_Relation_getLinkTo(const NV_ID *relnid)
 
 NV_ID NV_NodeID_Relation_getIDLinkRel(const NV_ID *relnid)
 {
-	NV_Node *n;
 	NV_Relation *reld;
 	//
-	n = NV_NodeID_getNode(relnid);
-	if(!n || n->type != kRelation) return NODEID_NOT_FOUND;
-	reld = n->data;
+	reld = NV_NodeID_getDataAsType(relnid, kRelation);
 	return reld->rel;
 }
 
@@ -127,18 +126,24 @@ NV_Node *NV_NodeID_Relation_getLinkRel(const NV_ID *relnid)
 	return NV_NodeID_getNode(&id);
 }
 
-void NV_NodeID_updateRelationTo(const NV_ID *relnid, const NV_ID *to)
+NV_ID NV_NodeID_updateRelationTo(const NV_ID *relnid, const NV_ID *to)
 {
+	// Updateとは言っているが、内容はImmutableにしたいので、
+	// 既存のものを削除して、新しいノードを生成し、以前と同一の関係性を持たせる。
+	NV_ID from, rel;
 	NV_Node *n;
 	NV_Relation *reld;
 	//
 	n = NV_NodeID_getNode(relnid);
-	if(n){
-		if(n->type != kRelation) return;
-		reld = n->data;
-		//
-		reld->to = *to;
-	}
+	reld = NV_Node_getDataAsType(n, kRelation);
+	if(!reld || !to) return NODEID_NOT_FOUND;
+	// 以前の関係性を取り出す
+	from = reld->from;
+	rel = reld->rel;
+	// 古い関係を除去
+	NV_NodeID_remove(relnid);
+	// 新しい関係を作成して返す
+	return NV_NodeID_createRelation(&from, &rel, to);
 }
 
 #define REL_CACHE_MASK 0xFF
@@ -155,9 +160,8 @@ const NV_Node *NV_NodeID_getRelNodeFromWithCmp
 	// check cache
 	n = relCache[HASH_REL(from)][HASH_REL(rel)];
 	if(n){
-		reld = n->data;
-		if(n->type == kRelation && reld &&
-			NV_NodeID_isEqual(&reld->from, from) && cmp(&reld->rel, rel)){
+		reld = NV_Node_getDataAsType(n, kRelation);
+		if(reld && NV_NodeID_isEqual(&reld->from, from) && cmp(&reld->rel, rel)){
 			// hit!
 			return n;
 		}
@@ -165,24 +169,22 @@ const NV_Node *NV_NodeID_getRelNodeFromWithCmp
 	// check relCache
 	n = NV_NodeID_getNode(from);
 	if(n){
-		n = n->relCache;
-		if(n && n->type == kRelation){
-			reld = n->data;
-			if(NV_NodeID_isEqual(&reld->from, from) && cmp(&reld->rel, rel)){
-				return n;
-			}
+		n = NV_Node_getRelCache(n);
+		reld = NV_Node_getDataAsType(n, kRelation);
+		if(reld && NV_NodeID_isEqual(&reld->from, from) && cmp(&reld->rel, rel)){
+			return n;
 		}
 	}
 	//
-	for(n = nodeRoot.next; n; n = n->next){
-		if(n->type != kRelation) continue;
-		reld = n->data;
+	for(n = NV_Node_getNextNode(&nodeRoot); n; n = NV_Node_getNextNode(n)){
+		reld = NV_Node_getDataAsType(n, kRelation);
+		if(!reld) continue;
 		if(NV_NodeID_isEqual(&reld->from, from) && cmp(&reld->rel, rel)){
 			//
 			relCache[HASH_REL(from)][HASH_REL(rel)] = n;
 			NV_Node *fn = NV_NodeID_getNode(from);
 			if(fn){
-				fn->relCache = n;
+				NV_Node_setRelCache(fn, n);
 			}
 			//
 			return n;
@@ -196,7 +198,7 @@ NV_ID NV_NodeID_getRelationFrom(const NV_ID *from, const NV_ID *rel)
 	const NV_Node *n;
 	//
 	n = NV_NodeID_getRelNodeFromWithCmp(from, rel, NV_NodeID_isEqual);
-	if(n) return n->id;
+	if(n) return NV_Node_getID(n);
 	return NODEID_NOT_FOUND;
 }
 
@@ -207,7 +209,7 @@ NV_ID NV_NodeID_getRelatedNodeFrom(const NV_ID *from, const NV_ID *rel)
 	//
 	n = NV_NodeID_getRelNodeFromWithCmp(from, rel, NV_NodeID_isEqual);
 	if(n){
-		reld = n->data;
+		reld = NV_Node_getDataAsType(n, kRelation);
 		return reld->to;
 	}
 	return NODEID_NOT_FOUND;
@@ -218,7 +220,7 @@ NV_ID NV_NodeID_getEqRelationFrom(const NV_ID *from, const NV_ID *rel)
 	const NV_Node *n;
 	//
 	n = NV_NodeID_getRelNodeFromWithCmp(from, rel, NV_NodeID_isEqualInValue);
-	if(n) return n->id;
+	if(n) return NV_Node_getID(n);
 	return NODEID_NOT_FOUND;
 }
 
@@ -233,7 +235,7 @@ NV_ID NV_NodeID_getEqRelatedNodeFrom(const NV_ID *from, const NV_ID *rel)
 	//
 	n = NV_NodeID_getRelNodeFromWithCmp(from, rel, NV_NodeID_isEqualInValue);
 	if(n){
-		reld = n->data;
+		reld = NV_Node_getDataAsType(n, kRelation);
 		return reld->to;
 	}	
 	return NODEID_NOT_FOUND;
