@@ -16,7 +16,7 @@ static const uint64_t FNV_PRIME_64 = 1099511628211LLU;
 /*
  * FNV Hash Algorithm
  */
-uint32_t fnv_1_hash_32(uint8_t *bytes, size_t length)
+uint32_t fnv_1_hash_32(const uint8_t *bytes, size_t length)
 {
 	uint32_t hash;
 	size_t i;
@@ -28,7 +28,7 @@ uint32_t fnv_1_hash_32(uint8_t *bytes, size_t length)
 
 	return hash;
 }
-uint64_t fnv_1_hash_64(uint8_t *bytes, size_t length)
+uint64_t fnv_1_hash_64(const uint8_t *bytes, size_t length)
 {
 	uint64_t hash;
 	size_t i;

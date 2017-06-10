@@ -4,7 +4,7 @@
 
 struct NV_NODE {
 	NV_ID id;
-	void *data;
+	const void *data;
 	NV_Node *prev;
 	NV_Node *next;
 	NV_NodeType type;

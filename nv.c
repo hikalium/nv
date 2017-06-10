@@ -3,33 +3,7 @@
 // main
 //
 volatile sig_atomic_t NV_globalExecFlag;
-/*
-// int NV_interactiveInput(const NV_ID *cTypeList, const NV_ID *ctx)
-{
-	char line[MAX_INPUT_LEN];
-	//
-	if(NV_gets(line, sizeof(line)) != NULL){
-		NV_evalLine(cTypeList, ctx, line);
-		return 0;
-	}
-	return 1;
-}
-*/
-/*
-// int NV_evalLine(const NV_ID *cTypeList, const NV_ID *ctx, const char *line)
-{
-	NV_ID tokenList;
-	tokenList = NV_tokenize(cTypeList, line);
-	if(IS_DEBUG_MODE()){
-		NV_Term_print(&tokenList); putchar('\n');
-	}
-	NV_Context_pushToEvalStack(ctx, &tokenList, &NODEID_NULL);
-	if(IS_DEBUG_MODE()){
-		NV_Term_print(&tokenList); putchar('\n');
-	}
-	return 0;
-}
-*/
+
 NV_ID NV_tokenize(const NV_ID *cTypeList, const char *input)
 {
 	// retv: tokenized str array

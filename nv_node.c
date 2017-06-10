@@ -35,7 +35,7 @@ void NV_Node_Internal_resetData(NV_Node *n)
 			}
 			*/
 			NV_DbgInfo("Free Data type: %s", NV_NodeTypeList[n->type]);
-			NV_free(n->data);
+			NV_free((void *)n->data);
 			n->data = NULL;
 			n->size = 0;
 		}
@@ -67,6 +67,15 @@ int NV_Node_Internal_isEqualInValue(const NV_Node *na, const NV_Node *nb)
 		return (NV_Node_String_compare(&na->id, &nb->id) == 0);
 	}
 	return 0;
+}
+
+void NV_Node_Internal_set_Type_Data_Size(const NV_ID *id, NV_NodeType type, const void *data, int32_t size)
+{
+	NV_Node *n;
+	n = NV_NodeID_getNode(id);
+	n->type = type;
+	n->size = size;
+	n->data = data;
 }
 
 //
@@ -120,31 +129,22 @@ NV_ID NV_Node_create()
 	return NV_NodeID_createNew(&id);
 }
 
-NV_ID NV_Node_createWithTypeAndData(NV_NodeType type, void *data, int32_t size)
+NV_ID NV_Node_createWithTypeAndData
+(NV_NodeType type, const void *data, int32_t size)
 {
-	NV_ID id;
-	NV_Node *n;
-	id = NV_Node_create();
-	n = NV_NodeID_getNode(&id);
-	n->type = type;
-	n->size = size;
-	n->data = data;
+	NV_ID id = NV_Node_create();
+	NV_Node_Internal_set_Type_Data_Size(&id, type, data, size);
 	return id;
 }
-/*
-//NV_ID NV_Node_createWith_ID_Type_Data
-//(NV_ID *id, NV_NodeType type, void *data, int32_t size)
+
+NV_ID NV_Node_createWith_ID_Type_Data_Size
+(const NV_ID *id, NV_NodeType type, const void *data, int32_t size)
 {
-	NV_ID id;
-	NV_Node *n;
-	id = NV_Node_create();
-	n = NV_NodeID_getNode(&id);
-	n->type = type;
-	n->size = size;
-	n->data = data;
-	return id;
+	NV_NodeID_create(id);
+	NV_Node_Internal_set_Type_Data_Size(id, type, data, size);
+	return *id;
 }
-*/
+
 int NV_NodeID_isEqual(const NV_ID *a, const NV_ID *b)
 {
 	int i;
@@ -241,13 +241,13 @@ int32_t NV_NodeID_calcHash(const NV_ID *id)
 	n->data = data;
 }
 */
-void *NV_Node_getDataAsType(const NV_Node *n, NV_NodeType type)
+const void *NV_Node_getDataAsType(const NV_Node *n, NV_NodeType type)
 {
 	if(!n || n->type != type) return NULL;
 	return n->data;
 }
 
-void *NV_NodeID_getDataAsType(const NV_ID *id, NV_NodeType type)
+const void *NV_NodeID_getDataAsType(const NV_ID *id, NV_NodeType type)
 {
 	NV_Node *n;
 	n = NV_NodeID_getNode(id);
@@ -296,17 +296,14 @@ void NV_NodeID_remove(const NV_ID *baseID)
 
 NV_ID NV_NodeID_clone(const NV_ID *baseID)
 {
-	NV_Node *base, *new;
-	NV_ID newID = NV_Node_create();
-	new = NV_NodeID_getNode(&newID);
+	NV_Node *base;
 	base = NV_NodeID_getNode(baseID);
-	new->type = base->type;
+	void *data = NULL;
 	if(base->data){
-		new->data = NV_malloc(base->size);
-		new->size = base->size;
-		memcpy(new->data, base->data, new->size);
+		data = NV_malloc(base->size);
+		memcpy(data, base->data, base->size);
 	}
-	return newID;
+	return NV_Node_createWithTypeAndData(base->type, data, base->size);
 }
 
 

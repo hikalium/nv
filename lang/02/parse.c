@@ -280,7 +280,7 @@ NV_ID NV_parseToCodeGraph(const NV_ID *baseTokenList, const NV_ID *opDict)
 	printf("parsing tokens: ");
 	NV_Array_print(&tokenList); putchar('\n');
 	*/
-	printf("tokenList hash = %08X\n", NV_Term_calcHash(baseTokenList));
+	//printf("tokenList hash = %08X\n", NV_Term_calcHash(baseTokenList));
 	NV_ID codeGraphRoot = NV_Node_createWithString("eval");
 	NV_ID lastNode = codeGraphRoot;
 	NV_OpPointer p;

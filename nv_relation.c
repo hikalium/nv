@@ -34,6 +34,14 @@ NV_ID NV_NodeID_createRelation
 	reld->rel = *rel;
 	reld->to = *to;
 
+	if(IS_DEBUG_MODE()){
+		printf("Rel created: ");
+		NV_NodeID_printForDebug(from);
+		NV_NodeID_printForDebug(rel);
+		NV_NodeID_printForDebug(to);
+		printf("\n");
+	}
+
 	return NV_Node_createWithTypeAndData(kRelation, reld, size);
 }
 
@@ -88,7 +96,7 @@ NV_ID NV_NodeID_createUniqueEqRelation
 */
 NV_Node *NV_NodeID_Relation_getLinkFrom(const NV_ID *relnid)
 {
-	NV_Relation *reld;
+	const NV_Relation *reld;
 	//
 	reld = NV_NodeID_getDataAsType(relnid, kRelation);
 	if(!reld) return NULL;
@@ -97,7 +105,7 @@ NV_Node *NV_NodeID_Relation_getLinkFrom(const NV_ID *relnid)
 
 NV_ID NV_NodeID_Relation_getIDLinkTo(const NV_ID *relnid)
 {
-	NV_Relation *reld;
+	const NV_Relation *reld;
 	//
 	reld = NV_NodeID_getDataAsType(relnid, kRelation);
 	if(!reld) return NODEID_NOT_FOUND;
@@ -113,7 +121,7 @@ NV_Node *NV_NodeID_Relation_getLinkTo(const NV_ID *relnid)
 
 NV_ID NV_NodeID_Relation_getIDLinkRel(const NV_ID *relnid)
 {
-	NV_Relation *reld;
+	const NV_Relation *reld;
 	//
 	reld = NV_NodeID_getDataAsType(relnid, kRelation);
 	return reld->rel;
@@ -132,7 +140,7 @@ NV_ID NV_NodeID_updateRelationTo(const NV_ID *relnid, const NV_ID *to)
 	// 既存のものを削除して、新しいノードを生成し、以前と同一の関係性を持たせる。
 	NV_ID from, rel;
 	NV_Node *n;
-	NV_Relation *reld;
+	const NV_Relation *reld;
 	//
 	n = NV_NodeID_getNode(relnid);
 	reld = NV_Node_getDataAsType(n, kRelation);

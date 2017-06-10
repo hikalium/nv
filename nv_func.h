@@ -83,7 +83,10 @@ NV_Node *NV_Node_getNextNode(const NV_Node *n);
 int NV_Node_getNodeCount();
 NV_ID NV_NodeID_create(const NV_ID *id);
 NV_ID NV_Node_create();
-NV_ID NV_Node_createWithTypeAndData(NV_NodeType type, void *data, int32_t size);
+NV_ID NV_Node_createWithTypeAndData
+(NV_NodeType type, const void *data, int32_t size);
+NV_ID NV_Node_createWith_ID_Type_Data_Size
+(const NV_ID *id, NV_NodeType type, const void *data, int32_t size);
 int NV_NodeID_isEqual(const NV_ID *a, const NV_ID *b);
 int NV_NodeID_isEqualInValue(const NV_ID *a, const NV_ID *b);
 int NV_NodeID_exists(const NV_ID *id);
@@ -93,8 +96,8 @@ const NV_Node *NV_Node_getRelCache(const NV_Node *n);
 void NV_Node_setRelCache(NV_Node *n, const NV_Node *rel);
 int32_t NV_Node_calcHash(const NV_Node *n);
 int32_t NV_NodeID_calcHash(const NV_ID *id);
-void *NV_Node_getDataAsType(const NV_Node *n, NV_NodeType type);
-void *NV_NodeID_getDataAsType(const NV_ID *id, NV_NodeType type);
+const void *NV_Node_getDataAsType(const NV_Node *n, NV_NodeType type);
+const void *NV_NodeID_getDataAsType(const NV_ID *id, NV_NodeType type);
 NV_ID NV_Node_getID(const NV_Node *n);
 void NV_Node_dumpAll();
 void NV_Node_dumpAllToFile(FILE *fp);
@@ -182,8 +185,8 @@ int32_t NV_NodeID_getInt32(const NV_ID *id);
 // @nv_string.c
 int NV_NodeID_isString(const NV_ID *id);
 NV_ID NV_Node_createWithString(const char *s);
+NV_ID NV_Node_createWith_ID_String(const NV_ID *id, const char *s);
 NV_ID NV_Node_createWithStringFormat(const char *fmt, ...);
-void NV_NodeID_createAndString(const NV_ID *id, const char *s);
 const char *NV_NodeID_getCStr(const NV_ID *id);
 int NV_Node_String_compare(const NV_ID *ida, const NV_ID *idb);
 int NV_Node_String_compareWithCStr(const NV_ID *ida, const char *s);
@@ -217,8 +220,8 @@ NV_ID NV_NodeID_getEqRelatedNodeFrom(const NV_ID *from, const NV_ID *rel);
 
 
 // @fnv1.c
-uint32_t fnv_1_hash_32(uint8_t *bytes, size_t length);
-uint64_t fnv_1_hash_64(uint8_t *bytes, size_t length);
+uint32_t fnv_1_hash_32(const uint8_t *bytes, size_t length);
+uint64_t fnv_1_hash_64(const uint8_t *bytes, size_t length);
 
 
 // @lang/02/parse.c
@@ -255,9 +258,4 @@ NV_ID NV_Lang02_OpFunc_do
 NV_ID NV_Lang02_OpFunc_parentheses
 (NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
 NV_ID NV_evalGraph(const NV_ID *codeGraphRoot, const NV_ID *scope);
-
-
-// @nv_anchor.c
-int NV_Anchor_isAnchor(const NV_ID *id);
-NV_ID NV_Anchor_createWithName(const char *s);
 
