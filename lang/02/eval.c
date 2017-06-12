@@ -158,6 +158,10 @@ NV_ID NV_Lang02_OpFunc_prefixOp
 		isAnsNotInteger = 1;
 		NV_Node_printDependencyTree(&rootScope, 0);
 		*lastEvalVal = NODEID_NULL;
+	} else if(strcmp(opStr, "clean") == 0){
+		isAnsNotInteger = 1;
+		NV_Node_cleanup();
+		*lastEvalVal = NODEID_NULL;
 	} else if(strcmp(opStr, "dump") == 0){
 		isAnsNotInteger = 1;
 		FILE *fp = fopen("dump.txt", "w");

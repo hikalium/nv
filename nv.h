@@ -70,13 +70,11 @@ struct NV_RELATION {
 	NV_ID rel;
 	NV_ID to;
 };
-
 struct NV_OP_POINTER {
 	NV_ID op;
 	int index, prec;
 	NV_ID dict;
 };
-
 // @main.c
 extern NV_ID rootScope;
 

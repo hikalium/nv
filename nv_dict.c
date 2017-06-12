@@ -62,8 +62,9 @@ NV_ID NV_Dict_getEqID(const NV_ID *root, const NV_ID *key)
 	return NV_NodeID_getRelatedNodeFrom(root, key);
 }
 
-int NV_Dict_Internal_merge(void *d, const NV_ID *rel, const NV_ID *to)
+int NV_Dict_Internal_merge(void *d, const NV_ID *reln, const NV_ID *rel, const NV_ID *to)
 {
+	PARAM_UNUSED(reln);
 	NV_Dict_addUniqueIDKey((const NV_ID *)d, rel, to);
 	return 1;
 }
@@ -102,7 +103,7 @@ NV_ID NV_Dict_getAll(const NV_ID *root, const NV_ID *key)
 */
 
 int NV_Dict_foreach
-(const NV_ID *dict, void *d, int (*f)(void *d, const NV_ID *rel, const NV_ID *to))
+(const NV_ID *dict, void *d, int (*f)(void *d, const NV_ID *reln, const NV_ID *rel, const NV_ID *to))
 {
 	// ノードdictを起点とするすべての関係をたどって。そのrelationとtoをfに引き渡す。
 	// fの戻り値がfalseの場合はそこでループを中止する。
@@ -114,14 +115,15 @@ int NV_Dict_foreach
 		reld = NV_Node_getDataAsType(n, kRelation);
 		if(reld && NV_NodeID_isEqual(&reld->from, dict)){
 			count++;
-			if(!f(d, &reld->rel, &reld->to)) break;
+			NV_ID id = NV_Node_getID(n);
+			if(!f(d, &id, &reld->rel, &reld->to)) break;
 		}
 	}
 	return count;
 }
 
 int NV_Dict_foreachWithRelFilter
-(const NV_ID *dict, void *d, int (*f)(void *d, const NV_ID *rel, const NV_ID *to), int (*filter)(const NV_ID *rel))
+(const NV_ID *dict, void *d, int (*f)(void *d, const NV_ID *reln, const NV_ID *rel, const NV_ID *to), int (*filter)(const NV_ID *rel))
 {
 	// ノードdictを起点とするすべての関係をたどって。そのrelationとtoをfに引き渡す。
 	// filterがtrueを返す関係のノードのみたどる。
@@ -136,7 +138,8 @@ int NV_Dict_foreachWithRelFilter
 		id = NV_Node_getID(n);
 		if(reld && NV_NodeID_isEqual(&reld->from, dict) && filter(&id)){
 			count++;
-			if(!f(d, &reld->rel, &reld->to)) break;
+			NV_ID id = NV_Node_getID(n);
+			if(!f(d, &id, &reld->rel, &reld->to)) break;
 		}
 	}
 	return count;
@@ -149,8 +152,9 @@ NV_ID NV_Dict_getByStringKey
 	return NV_Dict_get(root, &strid);
 }
 
-int NV_Dict_Internal_printSub(void *d, const NV_ID *rel, const NV_ID *to)
+int NV_Dict_Internal_printSub(void *d, const NV_ID *reln, const NV_ID *rel, const NV_ID *to)
 {
+	PARAM_UNUSED(reln);
 	printf("├─── ");
 	NV_Node_printPrimVal(rel);
 	printf(": ");
@@ -174,8 +178,9 @@ typedef struct {
 	int current;
 } NV_Dict_DepthInfo;
 
-int NV_Dict_Internal_printWithDepthSub(void *d, const NV_ID *rel, const NV_ID *to)
+int NV_Dict_Internal_printWithDepthSub(void *d, const NV_ID *reln, const NV_ID *rel, const NV_ID *to)
 {
+	PARAM_UNUSED(reln);
 	NV_Dict_DepthInfo *info = d;
 	int i;
 	for(i = 0; i < info->current; i++){

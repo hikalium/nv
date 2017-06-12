@@ -1,32 +1,6 @@
 #include "nv.h"
 
 //
-// internal
-//
-/*
-//void NV_Op_Internal_setCurrentPhase(const NV_ID *opList, int32_t phase)
-{
-	NV_ID r, n;
-	n = NV_Node_createWithInt32(phase);
-	r = NV_NodeID_getRelationFrom(opList, &RELID_CURRENT_TERM_PHASE);
-	if(NV_NodeID_isEqual(&r, &NODEID_NOT_FOUND)){
-		// create new one
-		NV_NodeID_createRelation(opList, &RELID_CURRENT_TERM_PHASE, &n);
-	} else{
-		// update old link
-		NV_NodeID_updateRelationTo(&r, &n);
-	}
-}
-
-//int32_t NV_Op_Internal_getCurrentPhase(const NV_ID *opList)
-{
-	// if not set, returns -1
-	NV_ID n;
-	n = NV_NodeID_getRelatedNodeFrom(opList, &RELID_CURRENT_TERM_PHASE);
-	return NV_NodeID_getInt32(&n);
-}
-*/
-//
 // public
 //
 #define NV_LANG_CHAR_LIST_LEN 3
@@ -100,6 +74,7 @@ NV_BuiltinOpTag builtinOpList[] = {
 	{"ls",		10,		"prefix"},
 	{"lsdep",	10,		"prefix"},
 	{"dump",	10,		"prefix"},
+	{"clean",	10,		"prefix"},
 	/*
 	{"}",		10,		"NV_Op_codeBlockClose"},
 	{"ls2",		10,		"NV_Op_ls2"},

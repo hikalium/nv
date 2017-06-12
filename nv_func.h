@@ -48,9 +48,9 @@ NV_ID NV_Dict_getEqID(const NV_ID *root, const NV_ID *key);
 NV_ID NV_Dict_createMergedNode(const NV_ID *a, const NV_ID *b);
 NV_ID NV_Dict_getAll(const NV_ID *root, const NV_ID *key);
 int NV_Dict_foreach
-(const NV_ID *dict, void *d, int (*f)(void *d, const NV_ID *rel, const NV_ID *to));
+(const NV_ID *dict, void *d, int (*f)(void *d, const NV_ID *reln, const NV_ID *rel, const NV_ID *to));
 int NV_Dict_foreachWithRelFilter
-(const NV_ID *dict, void *d, int (*f)(void *d, const NV_ID *rel, const NV_ID *to), int (*filter)(const NV_ID *rel));
+(const NV_ID *dict, void *d, int (*f)(void *d, const NV_ID *reln, const NV_ID *rel, const NV_ID *to), int (*filter)(const NV_ID *rel));
 NV_ID NV_Dict_getByStringKey
 (const NV_ID *root, const char *key);
 void NV_Dict_print(const NV_ID *root);
@@ -109,9 +109,13 @@ void NV_Node_fdump(FILE *fp, const NV_ID *id);
 void NV_Node_dump(const NV_ID *id);
 void NV_Node_printPrimVal(const NV_ID *id);
 void NV_NodeID_printForDebug(const NV_ID *id);
-int NV_Node_printDependencyTreeFilter(const NV_ID *rel);
-int NV_Node_printDependencyTreeSub(void *d, const NV_ID *rel, const NV_ID *to);
+int NV_Node_printDependencyTreeSub(void *d, const NV_ID *reln, const NV_ID *rel, const NV_ID *to);
+void NV_Node_setOwner(const NV_ID *id, const NV_ID *owner);
+int NV_Node_hasOwner(const NV_ID *id);
 void NV_Node_printDependencyTree(const NV_ID *root, int currentDepth);
+void NV_Node_cleanup();
+int NV_Node_cleanDepTreeSub(void *d, const NV_ID *reln, const NV_ID *rel, const NV_ID *to);
+void NV_Node_cleanDepTree(const NV_ID *root, int currentDepth);
 
 
 // @nv_op.c

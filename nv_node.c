@@ -12,6 +12,7 @@ struct NV_NODE {
 	int size;	// size of data, bytes.
 	//
 	const NV_Node *relCache; // link from this node. recently referenced.
+	NV_ID owner;
 };
 
 NV_ID NV_NodeID_createNew(const NV_ID *id)
@@ -452,17 +453,10 @@ void NV_NodeID_printForDebug(const NV_ID *id)
 
 typedef struct {
 	int currentDepth;
+	NV_ID owner;
 } NV_Node_DepthInfo;
 
-int NV_Node_printDependencyTreeFilter(const NV_ID *rel)
-{
-	if(NV_NodeID_isEqual(rel, &RELID_TERM_TYPE)){
-		return 1;
-	}
-	return 0;
-}
-
-int NV_Node_printDependencyTreeSub(void *d, const NV_ID *rel, const NV_ID *to)
+int NV_Node_printDependencyTreeSub(void *d, const NV_ID *reln, const NV_ID *rel, const NV_ID *to)
 {
 	NV_Node_DepthInfo *info = d;
 	int i;
@@ -472,20 +466,109 @@ int NV_Node_printDependencyTreeSub(void *d, const NV_ID *rel, const NV_ID *to)
 	printf("├── ");
 	NV_Node_printPrimVal(rel);
 	printf(": ");
+	//
+	if(!NV_Node_hasOwner(reln)) NV_Node_setOwner(reln, &info->owner);
+	if(!NV_Node_hasOwner(rel)) NV_Node_setOwner(rel, &info->owner);
+	if(!NV_Node_hasOwner(to)) NV_Node_setOwner(to, &info->owner);
+	//
 	NV_Node_printDependencyTree(to, info->currentDepth + 1);
-	
+	return 1;
+}
+
+void NV_Node_setOwner(const NV_ID *id, const NV_ID *owner)
+{
+	NV_Node *n = NV_NodeID_getNode(id);
+	if(n){
+		n->owner = *owner;
+	}
+}
+
+int NV_Node_hasOwner(const NV_ID *id)
+{
+	NV_Node *n = NV_NodeID_getNode(id);
+	if(n){
+		return !NV_NodeID_isEqual(&n->owner, &NODEID_NOT_FOUND);
+	}
 	return 1;
 }
 
 void NV_Node_printDependencyTree(const NV_ID *root, int currentDepth)
 {
-
-	NV_Node_printPrimVal(root); printf("\n");
+	if(currentDepth == 0){
+		NV_Node *n;
+		for(n = nodeRoot.next; n; n = n->next){
+			n->owner = NODEID_NOT_FOUND;
+		}
+		NV_Node_setOwner(root, root);
+	}
+	NV_Node_printPrimVal(root);printf("\n");
+	//NV_NodeID_printForDebug(root);printf("\n");
+	//if(currentDepth && NV_Node_hasOwner(root)) return;
 	NV_Node_DepthInfo info;
 	info.currentDepth = currentDepth;
-	NV_Dict_foreachWithRelFilter(
+	info.owner = *root;
+	NV_Dict_foreach(
 			root, &info,
-			NV_Node_printDependencyTreeSub,
-			NV_Node_printDependencyTreeFilter);
+			NV_Node_printDependencyTreeSub);
+
+	if(currentDepth == 0){
+		int count = 0;
+		NV_Node *n;
+		//printf("nodes to be removed:\n");
+		for(n = nodeRoot.next; n; n = n->next){
+			if(!NV_Node_hasOwner(&n->id)){
+				//NV_NodeID_printForDebug(&n->id); NV_NodeID_printForDebug(&n->owner); putchar('\n');
+				//NV_NodeID_remove(&n->id);
+				count++;
+			}
+		}
+		printf("%d nodes have no owner.\n", count);
+	}
 }
 
+void NV_Node_cleanup()
+{
+	NV_Node_cleanDepTree(&rootScope, 0);
+}
+
+int NV_Node_cleanDepTreeSub(void *d, const NV_ID *reln, const NV_ID *rel, const NV_ID *to)
+{
+	NV_Node_DepthInfo *info = d;
+	//
+	if(!NV_Node_hasOwner(reln)) NV_Node_setOwner(reln, &info->owner);
+	if(!NV_Node_hasOwner(rel)) NV_Node_setOwner(rel, &info->owner);
+	if(!NV_Node_hasOwner(to)) NV_Node_setOwner(to, &info->owner);
+	//
+	NV_Node_cleanDepTree(to, info->currentDepth + 1);
+	return 1;
+}
+
+void NV_Node_cleanDepTree(const NV_ID *root, int currentDepth)
+{
+	if(currentDepth == 0){
+		NV_Node *n;
+		for(n = nodeRoot.next; n; n = n->next){
+			n->owner = NODEID_NOT_FOUND;
+		}
+		NV_Node_setOwner(root, root);
+	}
+	NV_Node_DepthInfo info;
+	info.currentDepth = currentDepth;
+	info.owner = *root;
+	NV_Dict_foreach(
+			root, &info,
+			NV_Node_cleanDepTreeSub);
+
+	if(currentDepth == 0){
+		int count = 0;
+		NV_Node *n;
+		for(n = nodeRoot.next; n; n = n->next){
+			if(!NV_Node_hasOwner(&n->id)){
+				NV_NodeID_remove(&n->id);
+				count++;
+			}
+		}
+		printf("Removed %d nodes.\n", count);
+	}
+
+}

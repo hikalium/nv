@@ -117,14 +117,23 @@ int main(int argc, char *argv[])
 	}
 	*/
 	//
-	NV_insertInitialNode();
-	//
 	rootScope = NV_Node_createWithString("root");
 	//
+	NV_insertInitialNode();
+	{
+		NV_ID key = NV_Node_createWithString("static");
+		NV_ID var = NV_Variable_createWithName(&rootScope, &key);
+		NV_Variable_assign(&var, &NODEID_NV_STATIC_ROOT);
+	}
+	//
 	cTypeList = NV_createCharTypeList();
+	{
+		NV_ID key = NV_Node_createWithString("cTypeList");
+		NV_ID var = NV_Variable_createWithName(&rootScope, &key);
+		NV_Variable_assign(&var, &cTypeList);
+	}
 	//
 	opDict = NV_createOpDict();
-	//
 	{
 		NV_ID opDictName = NV_Node_createWithString("opDict");
 		NV_ID opDictVar = NV_Variable_createWithName(&rootScope, &opDictName);
