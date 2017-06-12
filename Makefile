@@ -9,7 +9,7 @@ SRCS= 	main.c \
 		nv_integer.c nv_string.c nv_relation.c \
 		fnv1.c \
 		lang/02/parse.c lang/02/eval.c
-HEADERS=nv.h nv_node.h nv_func.h nv_static.h
+HEADERS=nv.h nv_func.h nv_static.h
 CFLAGS=-Wall -Wextra -lncurses -Wunused-function
 CFLAGS += -DGIT_COMMIT_ID="\"$(GIT_COMMIT_ID)\"" \
 			-DGIT_COMMIT_DATE="\"$(GIT_COMMIT_DATE)\""

@@ -1,9 +1,19 @@
 #include "nv.h"
-#include "nv_node.h"
 
 //
 // Node Internal
 //
+struct NV_NODE {
+	NV_ID id;
+	const void *data;
+	NV_Node *prev;
+	NV_Node *next;
+	NV_NodeType type;
+	int size;	// size of data, bytes.
+	//
+	const NV_Node *relCache; // link from this node. recently referenced.
+};
+
 NV_ID NV_NodeID_createNew(const NV_ID *id)
 {
 	NV_Node *n;

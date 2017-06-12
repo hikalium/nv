@@ -1,6 +1,4 @@
 #include "nv.h"
-#include "nv_node.h"
-
 /*
 	このシステム上では、あらゆるオブジェクトがDictとみなせる。
 	Relationのrelをキーとし、与えられたキーと同値なrelをもつRelationの
@@ -112,13 +110,11 @@ int NV_Dict_foreach
 	const NV_Node *n;
 	const NV_Relation *reld;
 	int count = 0;
-	for(n = nodeRoot.next; n; n = n->next){
-		if(n->type == kRelation){
-			reld = n->data;
-			if(NV_NodeID_isEqual(&reld->from, dict)){
-				count++;
-				if(!f(d, &reld->rel, &reld->to)) break;
-			}
+	for(n = NV_Node_getNextNode(&nodeRoot); n; n = NV_Node_getNextNode(n)){
+		reld = NV_Node_getDataAsType(n, kRelation);
+		if(reld && NV_NodeID_isEqual(&reld->from, dict)){
+			count++;
+			if(!f(d, &reld->rel, &reld->to)) break;
 		}
 	}
 	return count;
@@ -134,13 +130,13 @@ int NV_Dict_foreachWithRelFilter
 	const NV_Node *n;
 	const NV_Relation *reld;
 	int count = 0;
-	for(n = nodeRoot.next; n; n = n->next){
-		if(n->type == kRelation){
-			reld = n->data;
-			if(NV_NodeID_isEqual(&reld->from, dict) && filter(&n->id)){
-				count++;
-				if(!f(d, &reld->rel, &reld->to)) break;
-			}
+	NV_ID id;
+	for(n = NV_Node_getNextNode(&nodeRoot); n; n = NV_Node_getNextNode(n)){
+		reld = NV_Node_getDataAsType(n, kRelation);
+		id = NV_Node_getID(n);
+		if(reld && NV_NodeID_isEqual(&reld->from, dict) && filter(&id)){
+			count++;
+			if(!f(d, &reld->rel, &reld->to)) break;
 		}
 	}
 	return count;
