@@ -3,26 +3,6 @@
 //
 // Internal
 //
-/*
-//void NV_Node_Internal_setStrToID(const NV_ID *id, const char *s)
-{
-	NV_Node *n;
-	//
-	n = NV_NodeID_getNode(id);
-	if(n){
-		if(n->type != kNone){
-			//NV_Node_Internal_resetData(n)
-			printf("Try to modify data existed. abort.");
-			exit(EXIT_FAILURE);
-		};
-		n->type = kString;
-		n->size = strlen(s) + 1;
-		n->data = NV_malloc(n->size);
-		NV_strncpy(n->data, s, n->size, strlen(s));
-		((char *)n->data)[n->size - 1] = 0;
-	}
-}
-*/
 long NV_Node_String_Internal_strtol(const NV_Node *ns, int *endptrindex, int base)
 {
 	long v;
@@ -36,7 +16,6 @@ long NV_Node_String_Internal_strtol(const NV_Node *ns, int *endptrindex, int bas
 	if(endptrindex) *endptrindex = ep - str;
 	return v;
 }
-
 
 //
 // String

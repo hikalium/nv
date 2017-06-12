@@ -1,5 +1,6 @@
 
 // @main.c
+void test();
 int main(int argc, char *argv[]);
 
 
@@ -179,6 +180,7 @@ void NV_signalHandler(int signum);
 // @nv_integer.c
 int NV_NodeID_isInteger(const NV_ID *id);
 NV_ID NV_Node_createWithInt32(int32_t v);
+NV_ID NV_Node_createWith_ID_Int32(const NV_ID *id, int32_t v);
 int32_t NV_NodeID_getInt32(const NV_ID *id);
 
 

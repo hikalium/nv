@@ -5,6 +5,68 @@
 
 NV_ID rootScope;
 
+void test()
+{
+	NV_ID nodeA = NV_Node_createWithString("A");
+	NV_ID nodeB = NV_Node_createWithString("B");
+	NV_ID nodeC = NV_Node_createWithString("C");
+	NV_ID nodeD = NV_Node_createWithString("D");
+	NV_ID nodeE = NV_Node_createWithString("E");
+	NV_NodeID_createRelation(&nodeA, &nodeB, &nodeC);
+
+	{
+		NV_ID r = NV_NodeID_getRelatedNodeFrom(&nodeA, &nodeB);
+		NV_NodeID_printForDebug(&r);
+		if(NV_NodeID_isEqual(&nodeC, &r)){
+			printf("OK");
+		} else{
+			printf("BAD");
+		}
+	}
+
+	NV_Dict_addUniqueIDKey(&nodeA, &nodeB, &nodeD);
+	{
+		NV_ID r = NV_NodeID_getRelatedNodeFrom(&nodeA, &nodeB);
+		NV_NodeID_printForDebug(&r);
+		if(NV_NodeID_isEqual(&nodeD, &r)){
+			printf("OK");
+		} else{
+			printf("BAD");
+		}
+	}
+
+	NV_Dict_addUniqueIDKey(&nodeA, &nodeB, &nodeE);
+	{
+		NV_ID r = NV_NodeID_getRelatedNodeFrom(&nodeA, &nodeB);
+		NV_NodeID_printForDebug(&r);
+		if(NV_NodeID_isEqual(&nodeE, &r)){
+			printf("OK");
+		} else{
+			printf("BAD");
+		}
+	}
+	{
+		NV_ID ary = NV_Array_create();
+		NV_ID nodeA = NV_Node_createWithString("A");
+		NV_ID nodeB = NV_Node_createWithString("B");
+		NV_Array_push(&ary, &nodeA);
+		NV_Array_push(&ary, &nodeB);
+		{
+			NV_ID r0 = NV_Array_getByIndex(&ary, 0);
+			NV_ID r1 = NV_Array_getByIndex(&ary, 1);
+			NV_NodeID_printForDebug(&r0);
+			NV_NodeID_printForDebug(&r1);
+			if(NV_NodeID_isEqual(&nodeA, &r0) && NV_NodeID_isEqual(&nodeB, &r1)){
+				printf("OK");
+			} else{
+				printf("BAD");
+			}
+		}
+		NV_Array_print(&ary);
+	}
+	exit(0);
+}
+
 int main(int argc, char *argv[])
 {
 	NV_ID cTypeList, opDict;
@@ -69,87 +131,13 @@ int main(int argc, char *argv[])
 		NV_Variable_assign(&opDictVar, &opDict);
 	}
 	//
-/*
-	NV_ID t;
-	t = NV_Path_createWithCStr("/var/log/httpd");
-	NV_Term_print(&t); putchar('\n');
-*/
 	/*
-	NV_ID ctx = NV_Context_create();
-	NV_Context_setOpDict(&ctx, &opList);
-	if(IS_DEBUG_MODE()){
-		NV_ID ctxList = NV_getContextList();
-		NV_Array_print(&ctxList);
-	}
-	//
 	NV_globalExecFlag |= NV_EXEC_FLAG_INTERACTIVE;
 	NV_evalLine(&cTypeList, &ctx, 
 			"loop={for{#args[0]=args[1]}{#args[0]<=args[2]}{#args[0]++}{args[3]()}}"); 
 	*/
-	// TEST CODE BEGIN vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-/*
-	NV_ID nodeA = NV_Node_createWithString("A");
-	NV_ID nodeB = NV_Node_createWithString("B");
-	NV_ID nodeC = NV_Node_createWithString("C");
-	NV_ID nodeD = NV_Node_createWithString("D");
-	NV_ID nodeE = NV_Node_createWithString("E");
-	NV_NodeID_createRelation(&nodeA, &nodeB, &nodeC);
 
-	{
-		NV_ID r = NV_NodeID_getRelatedNodeFrom(&nodeA, &nodeB);
-		NV_NodeID_printForDebug(&r);
-		if(NV_NodeID_isEqual(&nodeC, &r)){
-			printf("OK");
-		} else{
-			printf("BAD");
-		}
-	}
-
-	NV_Dict_addUniqueIDKey(&nodeA, &nodeB, &nodeD);
-	{
-		NV_ID r = NV_NodeID_getRelatedNodeFrom(&nodeA, &nodeB);
-		NV_NodeID_printForDebug(&r);
-		if(NV_NodeID_isEqual(&nodeD, &r)){
-			printf("OK");
-		} else{
-			printf("BAD");
-		}
-	}
-
-	NV_Dict_addUniqueIDKey(&nodeA, &nodeB, &nodeE);
-	{
-		NV_ID r = NV_NodeID_getRelatedNodeFrom(&nodeA, &nodeB);
-		NV_NodeID_printForDebug(&r);
-		if(NV_NodeID_isEqual(&nodeE, &r)){
-			printf("OK");
-		} else{
-			printf("BAD");
-		}
-	}
-*/
-	/*
-	{
-		NV_ID ary = NV_Array_create();
-		NV_ID nodeA = NV_Node_createWithString("A");
-		NV_ID nodeB = NV_Node_createWithString("B");
-		NV_Array_push(&ary, &nodeA);
-		NV_Array_push(&ary, &nodeB);
-		{
-			NV_ID r0 = NV_Array_getByIndex(&ary, 0);
-			NV_ID r1 = NV_Array_getByIndex(&ary, 1);
-			NV_NodeID_printForDebug(&r0);
-			NV_NodeID_printForDebug(&r1);
-			if(NV_NodeID_isEqual(&nodeA, &r0) && NV_NodeID_isEqual(&nodeB, &r1)){
-				printf("OK");
-			} else{
-				printf("BAD");
-			}
-		}
-		NV_Array_print(&ary);
-	}
-*/
-//	return 0;	
-	// TEST CODE END ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	//test();
 
 	char line[MAX_INPUT_LEN];
 	//
