@@ -1,5 +1,108 @@
 #include "../../nv.h"
 
+NV_ID NV_createCharTypeList()
+{
+	NV_ID ns;
+	NV_ID cList = NV_Array_create();
+	//
+	ns = NV_Node_createWithString(" \t\r\n");
+	NV_Array_push(&cList, &ns);
+	ns = NV_Node_createWithString("#!%&-=^~|+*:.<>/$");
+	NV_Array_push(&cList, &ns);
+	ns = NV_Node_createWithString("(){}[],;\"`\\");
+	NV_Array_push(&cList, &ns);
+	//
+	return cList;
+}
+
+typedef struct NV_BUILTIN_OP_TAG {
+	const char *token;
+	int prec;
+	const char *funcStr;
+	//int (*parser)(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
+} NV_BuiltinOpTag;
+
+NV_BuiltinOpTag builtinOpList[] = {
+	{";",		0,		"nothing"},
+	//
+	{"print",	10,		"prefix"},
+	{"ls",		10,		"prefix"},
+	{"lsdep",	10,		"prefix"},
+	{"dump",	10,		"prefix"},
+	{"clean",	10,		"prefix"},
+	/*
+	{"}",		10,		"NV_Op_codeBlockClose"},
+	{"ls2",		10,		"NV_Op_ls2"},
+	{"lsctx",	10,		"NV_Op_lsctx"},
+	{"swctx",	10,		"NV_Op_swctx"},
+	{"last",	10,		"NV_Op_last"},
+	{"save",	10,		"NV_Op_save"},
+	{"restore",	10,		"NV_Op_restore"},
+	{"out",		10,		"NV_Op_out"},
+	{"fmt",		10,		"NV_Op_fmt"},
+	{"info",	10,		"NV_Op_info"},
+	{"clean",	10,		"NV_Op_clean"},
+	{"push",	10,		"NV_Op_push"},
+	*/
+	{",",		40,		"infix"},
+	{":",		50,		"infix"},
+	//
+	{"=",		101,	"infix"},
+	//
+	{"<",		500,	"infix"},
+	{">=",		500,	"infix"},
+	{"<=",		500,	"infix"},
+	{">",		500,	"infix"},
+	{"==",		500,	"infix"},
+	{"!=",		500,	"infix"},
+	//
+	{"+",		1000,	"infix"},
+	{"-",		1000,	"infix"},
+	{"*",		2000,	"infix"},
+	{"/",		2000,	"infix"},
+	{"%",		2000,	"infix"},
+	//
+	{"+",		5001,	"prefix"},
+	{"-",		5001,	"prefix"},
+	//
+	{"++",		6000,	"postfix"},
+	{"--",		6000,	"postfix"},
+	//
+	{"if",		10000,	"if"},
+	{"for",		10000,	"for"},
+	//
+	//{"#",       14000,  "NV_Op_unbox"},
+	//
+	{"(",		15000,	"parentheses"},
+	//{"[",		15000,	"NV_Op_arrayAccessor"},
+	{".",		15000,	"infix"},
+	//
+	{" ",		20000,	"nothing"},
+	//
+	{"{",		30000,	"codeblock"},
+	{"\"",		40000,	"strliteral"},
+	//
+	//{"\"",		100000,	"NV_Op_strLiteral"},
+	//
+	{"", -1, ""}	// terminate tag
+};
+
+NV_ID NV_createOpDict()
+{
+	NV_ID opDict = NV_Node_createWithString("NV_OpList");
+	//
+	int i;
+	for(i = 0; builtinOpList[i].prec >= 0; i++){
+		NV_addBuiltinOp(&opDict,
+			builtinOpList[i].token, builtinOpList[i].prec, builtinOpList[i].funcStr);
+	}
+	//
+	if(IS_DEBUG_MODE()){
+		NV_Dict_print(&opDict);
+	}
+	return opDict;
+}
+
 NV_ID NV_parseToCodeGraph_nothing
 (const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident)
 {
@@ -92,6 +195,15 @@ NV_ID NV_parseToCodeGraph_codeblock
 	PARAM_UNUSED(lastNode);
 	PARAM_UNUSED(ident);
 	NV_Op_codeBlock(tokenList, p->index, "{", "}");
+	return NODEID_NULL;
+}
+
+NV_ID NV_parseToCodeGraph_strLiteral
+(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident)
+{
+	PARAM_UNUSED(lastNode);
+	PARAM_UNUSED(ident);
+	NV_Op_strLiteral(tokenList, p->index);
 	return NODEID_NULL;
 }
 
@@ -266,6 +378,7 @@ NV_Lang02_BuiltinFunctionTag builtinFuncList[] = {
 	{"prefix", NV_parseToCodeGraph_prefixOp},
 	{"postfix", NV_parseToCodeGraph_postfixOp},
 	{"codeblock", NV_parseToCodeGraph_codeblock},
+	{"strliteral", NV_parseToCodeGraph_strLiteral},
 	{"parentheses", NV_parseToCodeGraph_parentheses},
 	{"if", NV_parseToCodeGraph_if},
 	{"for", NV_parseToCodeGraph_for},

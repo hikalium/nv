@@ -176,8 +176,8 @@ void NV_Array_writeToIndex(const NV_ID *array, int index, const NV_ID *data)
 	v = NV_Array_getAssignableByIndex(array, index);
 	NV_Variable_assign(&v, data);
 }
-/*
-// NV_ID NV_Array_joinWithCStr(const NV_ID *array, const char *sep)
+
+NV_ID NV_Array_joinWithCStr(const NV_ID *array, const char *sep)
 {
 	size_t sumLen = 1;
 	NV_ID t;
@@ -209,7 +209,7 @@ void NV_Array_writeToIndex(const NV_ID *array, int index, const NV_ID *data)
 	NV_free(buf);
 	return t;
 }
-*/
+
 
 NV_ID NV_Array_getSorted(const NV_ID *array, int (*f)(const void *n1, const void *n2))
 {
