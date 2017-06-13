@@ -12,6 +12,19 @@ NV_ID NV_ID_generateRandom()
 	id.d[3] = rand();
 	return id;
 }
+/*
+//int idnum = 1;
+//NV_ID NV_ID_generateRandom()
+{
+	NV_ID id;
+	id.d[0] = idnum++;
+	id.d[1] = 0;
+	id.d[2] = 0;
+	id.d[3] = 0;
+	return id;
+}
+*/
+
 
 int NV_ID_setFromString(NV_ID *id, const char *s)
 {

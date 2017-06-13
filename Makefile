@@ -26,7 +26,7 @@ fastbin : $(SRCS) $(HEADERS) Makefile
 	cc $(CFLAGS) -Ofast -O3 -o nv  $(SRCS)
 
 debugbin : $(SRCS) $(HEADERS) Makefile
-	cc $(CFLAGS) -g3 -o nv  $(SRCS)
+	cc $(CFLAGS) -g3 -o nv -DDEBUG  $(SRCS)
 
 debug: $(SRCS) $(HEADERS) Makefile
 	make debugbin

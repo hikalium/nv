@@ -120,25 +120,13 @@ int main(int argc, char *argv[])
 	rootScope = NV_Node_createWithString("root");
 	//
 	NV_insertInitialNode();
-	{
-		NV_ID key = NV_Node_createWithString("static");
-		NV_ID var = NV_Variable_createWithName(&rootScope, &key);
-		NV_Variable_assign(&var, &NODEID_NV_STATIC_ROOT);
-	}
+	NV_Dict_addUniqueEqKeyByCStr(&rootScope, "static", &NODEID_NV_STATIC_ROOT);
 	//
 	cTypeList = NV_createCharTypeList();
-	{
-		NV_ID key = NV_Node_createWithString("cTypeList");
-		NV_ID var = NV_Variable_createWithName(&rootScope, &key);
-		NV_Variable_assign(&var, &cTypeList);
-	}
+	NV_Dict_addUniqueEqKeyByCStr(&rootScope, "cTypeList", &cTypeList);
 	//
 	opDict = NV_createOpDict();
-	{
-		NV_ID opDictName = NV_Node_createWithString("opDict");
-		NV_ID opDictVar = NV_Variable_createWithName(&rootScope, &opDictName);
-		NV_Variable_assign(&opDictVar, &opDict);
-	}
+	NV_Dict_addUniqueEqKeyByCStr(&rootScope, "opDict", &opDict);
 	//
 	/*
 	NV_globalExecFlag |= NV_EXEC_FLAG_INTERACTIVE;
@@ -152,7 +140,11 @@ int main(int argc, char *argv[])
 	//
 	while(NV_gets(line, sizeof(line)) != NULL){
 		NV_ID tokenList = NV_tokenize(&cTypeList, line);
+		NV_Dict_addUniqueEqKeyByCStr(&rootScope, "currentTokenList", &tokenList);
+		//
 		NV_ID codeGraphRoot = NV_parseToCodeGraph(&tokenList, &opDict);
+		NV_Dict_addUniqueEqKeyByCStr(&rootScope, "currentCodeGraph", &codeGraphRoot);
+		//
 		NV_ID result = NV_evalGraph(&codeGraphRoot, &rootScope);
 		//
 		if(!(NV_globalExecFlag & NV_EXEC_FLAG_SUPRESS_AUTOPRINT)){

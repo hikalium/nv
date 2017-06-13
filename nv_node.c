@@ -15,6 +15,29 @@ struct NV_NODE {
 	NV_ID owner;
 };
 
+#define NODE_CACHE_MASK	0xFFFF
+
+NV_Node *nodeIDCache[NODE_CACHE_MASK + 1];
+
+int NV_Node_Internal_getCacheIndex(const NV_ID *id)
+{
+	if(nodeIDCache[id->d[0] & NODE_CACHE_MASK]){
+		if(NV_NodeID_isEqual(&nodeIDCache[id->d[0] & NODE_CACHE_MASK]->id, id)){
+			// hit!
+			//printf("Chache hit! %08X\n", id->d[0]);
+			return id->d[0] & NODE_CACHE_MASK;
+		}
+	}
+	return -1;
+}
+
+void NV_Node_Internal_invalidateCache(const NV_ID *id)
+{
+	int cacheIndex = NV_Node_Internal_getCacheIndex(id);
+	if(~cacheIndex) nodeIDCache[cacheIndex] = NULL;
+}
+
+
 NV_ID NV_NodeID_createNew(const NV_ID *id)
 {
 	NV_Node *n;
@@ -39,12 +62,6 @@ void NV_Node_Internal_resetData(NV_Node *n)
 {
 	if(n){
 		if(n->data){
-			/*
-			if(n->type == kRelation){
-				NV_Relation *reld = n->data;
-				//NV_NodeID_release(&reld->to);
-			}
-			*/
 			NV_DbgInfo("Free Data type: %s", NV_NodeTypeList[n->type]);
 			NV_free((void *)n->data);
 			n->data = NULL;
@@ -62,9 +79,9 @@ void NV_Node_Internal_remove(NV_Node *n)
 		if(n->type != kNone) NV_Node_Internal_resetData(n);
 		if(n->prev) n->prev->next = n->next;
 		if(n->next) n->next->prev = n->prev;
+		NV_Node_Internal_invalidateCache(&n->id);
 		NV_free(n);
 	}
-	//NV_Node_Internal_removeAllRelationFrom(&n->id);
 }
 
 int NV_Node_Internal_isEqualInValue(const NV_Node *na, const NV_Node *nb)
@@ -179,22 +196,23 @@ int NV_NodeID_exists(const NV_ID *id)
 	return NV_NodeID_getNode(id) != NULL;
 }
 
-#define NODE_CACHE_MASK	0xFFFF
-
-NV_Node *nodeIDCache[NODE_CACHE_MASK + 1];
-
 NV_Node *NV_NodeID_getNode(const NV_ID *id)
 {
 	NV_Node *n;
 	//
 	if(!id) return NULL;
 	// check cache
+	int cacheIndex = NV_Node_Internal_getCacheIndex(id);
+	if(~cacheIndex) return nodeIDCache[cacheIndex];
+/*
 	if(nodeIDCache[id->d[0] & NODE_CACHE_MASK]){
 		if(NV_NodeID_isEqual(&nodeIDCache[id->d[0] & NODE_CACHE_MASK]->id, id)){
 			// hit!
+			printf("Chache hit! %08X\n", id->d[0]);
 			return nodeIDCache[id->d[0] & NODE_CACHE_MASK];
 		}
 	}
+	*/
 	//
 	for(n = nodeRoot.next; n; n = n->next){
 		if(NV_NodeID_isEqual(&n->id, id)){
@@ -469,9 +487,12 @@ int NV_Node_printDependencyTreeSub(void *d, const NV_ID *reln, const NV_ID *rel,
 	//
 	if(!NV_Node_hasOwner(reln)) NV_Node_setOwner(reln, &info->owner);
 	if(!NV_Node_hasOwner(rel)) NV_Node_setOwner(rel, &info->owner);
-	if(!NV_Node_hasOwner(to)) NV_Node_setOwner(to, &info->owner);
-	//
-	NV_Node_printDependencyTree(to, info->currentDepth + 1);
+	if(!NV_Node_hasOwner(to)){
+		NV_Node_setOwner(to, &info->owner);
+		NV_Node_printDependencyTree(to, info->currentDepth + 1);
+	} else{
+		NV_Node_printPrimVal(to);printf("\n");
+	}
 	return 1;
 }
 
@@ -537,9 +558,10 @@ int NV_Node_cleanDepTreeSub(void *d, const NV_ID *reln, const NV_ID *rel, const 
 	//
 	if(!NV_Node_hasOwner(reln)) NV_Node_setOwner(reln, &info->owner);
 	if(!NV_Node_hasOwner(rel)) NV_Node_setOwner(rel, &info->owner);
-	if(!NV_Node_hasOwner(to)) NV_Node_setOwner(to, &info->owner);
-	//
-	NV_Node_cleanDepTree(to, info->currentDepth + 1);
+	if(!NV_Node_hasOwner(to)){
+		NV_Node_setOwner(to, &info->owner);
+		NV_Node_cleanDepTree(to, info->currentDepth + 1);
+	}
 	return 1;
 }
 
@@ -552,6 +574,7 @@ void NV_Node_cleanDepTree(const NV_ID *root, int currentDepth)
 		}
 		NV_Node_setOwner(root, root);
 	}
+	//if(currentDepth && NV_Node_hasOwner(root)) return;
 	NV_Node_DepthInfo info;
 	info.currentDepth = currentDepth;
 	info.owner = *root;
@@ -568,7 +591,7 @@ void NV_Node_cleanDepTree(const NV_ID *root, int currentDepth)
 				count++;
 			}
 		}
-		printf("Removed %d nodes.\n", count);
+		//printf("Removed %d nodes.\n", count);
 	}
 
 }

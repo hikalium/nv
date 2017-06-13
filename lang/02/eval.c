@@ -278,7 +278,8 @@ NV_ID NV_Lang02_OpFunc_parentheses
 		NV_ID ansNode;
 		{
 			NV_ID subScope = NV_Variable_createSubScopeOf(scope);
-			NV_Dict_addKeyByCStr(&subScope, "args", &innerResult);
+			NV_Dict_addUniqueEqKeyByCStr(&subScope, "args", &innerResult);
+			NV_Dict_addUniqueEqKeyByCStr(&subScope, "codeGraph", &parsedBlock);
 			ansNode = NV_evalGraph(&parsedBlock, &subScope);	// new scope
 		}
 		NV_Variable_assign(&result, &ansNode); 
