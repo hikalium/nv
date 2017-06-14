@@ -122,10 +122,10 @@ int main(int argc, char *argv[])
 	NV_insertInitialNode();
 	NV_Dict_addUniqueEqKeyByCStr(&rootScope, "static", &NODEID_NV_STATIC_ROOT);
 	//
-	cTypeList = NV_createCharTypeList();
+	cTypeList = NV_Lang_createCharTypeList(NV_Lang02_charTypeList);
 	NV_Dict_addUniqueEqKeyByCStr(&rootScope, "cTypeList", &cTypeList);
 	//
-	opDict = NV_createOpDict();
+	opDict = NV_Lang_createOpDict(NV_Lang02_opList);
 	NV_Dict_addUniqueEqKeyByCStr(&rootScope, "opDict", &opDict);
 	//
 	/*

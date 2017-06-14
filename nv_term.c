@@ -128,7 +128,7 @@ NV_ID NV_Term_getPrimNodeIDByCStr(const char *s, const NV_ID *scope)
 int NV_Term_f_OpPrec_Dec(const void *n1, const void *n2)
 {
 	const NV_ID *e1 = n1, *e2 = n2;
-	return NV_getOpPrec(e2) - NV_getOpPrec(e1);
+	return NV_Lang_getOpPrec(e2) - NV_Lang_getOpPrec(e1);
 }
 
 NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *opDict)
@@ -151,7 +151,7 @@ NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *opDict)
 	//
 	for(i = 0; ; i++){
 		opID = NV_Array_getByIndex(&opList, i);
-		if(triedPrec == -1 || NV_getOpPrec(&opID) < triedPrec) break;
+		if(triedPrec == -1 || NV_Lang_getOpPrec(&opID) < triedPrec) break;
 	}
 	if(!NV_NodeID_isEqual(&opID, &NODEID_NOT_FOUND)){
 		/*
@@ -279,7 +279,7 @@ void NV_Term_print(const NV_ID *id)
 	} else if(NV_isTermType(id, &NODEID_TERM_TYPE_VARIABLE)){
 		NV_Variable_print(id);
 	} else if(NV_isTermType(id, &NODEID_TERM_TYPE_OP)){
-		NV_printOp(id);
+		NV_Lang_printOp(id);
 	} else{
 		NV_Node_printPrimVal(id);
 	}

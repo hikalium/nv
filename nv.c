@@ -60,7 +60,7 @@ NV_OpPointer NV_getNextOp(const NV_ID *currentBlock, const NV_ID *opDict)
 		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
 		t = NV_Term_tryReadAsOperator(&t, opDict);
 		if(!NV_isTermType(&t, &NODEID_TERM_TYPE_OP)) continue;
-		opPrec = NV_getOpPrec(&t);
+		opPrec = NV_Lang_getOpPrec(&t);
 		/*
 		if(IS_DEBUG_MODE()){
 			printf("Op found. prec = %d ", opPrec);

@@ -75,6 +75,12 @@ struct NV_OP_POINTER {
 	int index, prec;
 	NV_ID dict;
 };
+typedef struct NV_LANG_OP_TAG {
+	const char *token;
+	int prec;
+	const char *funcStr;
+} NV_Lang_OpTag;
+
 // @main.c
 extern NV_ID rootScope;
 
@@ -89,6 +95,13 @@ extern volatile sig_atomic_t NV_globalExecFlag;
 
 // @nv_node.c
 extern NV_Node nodeRoot;
+
+// @nv_lang.c
+#define NV_LANG_CHAR_TYPE_LIST_LEN 3
+
+// @lang/02/parse.c
+extern const char *NV_Lang02_charTypeList[NV_LANG_CHAR_TYPE_LIST_LEN];
+extern NV_Lang_OpTag NV_Lang02_opList[];
 
 // @nv_static.c
 #include "nv_static.h"

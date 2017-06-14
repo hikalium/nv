@@ -3,20 +3,54 @@
 //
 // public
 //
-#define NV_LANG_CHAR_LIST_LEN 3
+
+NV_ID NV_Lang_createCharTypeList(const char *cTypeList[])
+{
+	NV_ID ns;
+	NV_ID cList = NV_Array_create();
+	//
+	ns = NV_Node_createWithString(cTypeList[0]);
+	NV_Array_push(&cList, &ns);
+	ns = NV_Node_createWithString(cTypeList[1]);
+	NV_Array_push(&cList, &ns);
+	ns = NV_Node_createWithString(cTypeList[2]);
+	NV_Array_push(&cList, &ns);
+	//
+	return cList;
+}
+
+NV_ID NV_Lang_createOpDict(NV_Lang_OpTag *opList)
+{
+	// opList should be terminated with 
+	// {"", -1, ""}
+	NV_ID opDict = NV_Node_createWithString("NV_OpList");
+	//
+	int i;
+	for(i = 0; opList[i].prec >= 0; i++){
+		NV_Lang_addOpWithFuncStr(&opDict,
+			opList[i].token, opList[i].prec, opList[i].funcStr);
+	}
+	//
+	if(IS_DEBUG_MODE()){
+		NV_Dict_print(&opDict);
+	}
+	return opDict;
+}
+
 int NV_Lang_getCharType(const NV_ID *cTypeList, char c)
 {
 	NV_ID t;
 	int i;
 	if(c == '\0') return -1;
-	for(i = 0; i < NV_LANG_CHAR_LIST_LEN; i++){
+	for(i = 0; i < NV_LANG_CHAR_TYPE_LIST_LEN; i++){
 		t = NV_Array_getByIndex(cTypeList, i);
 		if(NV_Node_String_strchr(&t, c)) break;
 	}
 	return i;
 }
 
-void NV_addOp(const NV_ID *opDict, const char *token, int32_t prec, const NV_ID *func)
+void NV_Lang_addOp
+(const NV_ID *opDict, const char *token, int32_t prec, const NV_ID *func)
 {
 	NV_ID opDir;
 	NV_ID opEntry;
@@ -41,33 +75,34 @@ void NV_addOp(const NV_ID *opDict, const char *token, int32_t prec, const NV_ID 
 	NV_Array_push(&opDir, &opEntry);
 }
 
-void NV_addBuiltinOp(const NV_ID *opDict, const char *token, int32_t prec, const char *funcStr)
+void NV_Lang_addOpWithFuncStr
+(const NV_ID *opDict, const char *token, int32_t prec, const char *funcStr)
 {
 	NV_ID funcStrID;
 	funcStrID = NV_Node_createWithString(funcStr);
-	NV_addOp(opDict, token, prec, &funcStrID);
+	NV_Lang_addOp(opDict, token, prec, &funcStrID);
 }
 
 
-int NV_isBuiltinOp(const NV_ID *term, const char *ident)
+int NV_Lang_isOp(const NV_ID *term, const char *ident)
 {
 	NV_ID func = NV_NodeID_getRelatedNodeFrom(term, &RELID_OP_FUNC);
 	return NV_Node_String_compareWithCStr(&func, ident) == 0;
 }
 
-const char *NV_Op_getOpFuncNameCStr(const NV_ID *op)
+const char *NV_Lang_getOpFuncNameCStr(const NV_ID *op)
 {
 	NV_ID func = NV_NodeID_getRelatedNodeFrom(op, &RELID_OP_FUNC);
 	return NV_NodeID_getCStr(&func);
 }
 
-int32_t NV_getOpPrec(const NV_ID *op)
+int32_t NV_Lang_getOpPrec(const NV_ID *op)
 {
 	NV_ID ePrec = NV_NodeID_getRelatedNodeFrom(op, &RELID_OP_PRECEDENCE);
 	return NV_NodeID_getInt32(&ePrec);
 }
 
-void NV_getOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, NV_ID *idBuf, int count)
+void NV_Lang_getOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, NV_ID *idBuf, int count)
 {
 	int i;
 	for(i = 0; i < count; i++){
@@ -75,7 +110,7 @@ void NV_getOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexL
 	}
 }
 
-void NV_removeOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, int count)
+void NV_Lang_removeOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, int count)
 {
 	// relIndexListが昇順にソートされていると仮定している．
 	int i;
@@ -84,7 +119,7 @@ void NV_removeOperandByList(const NV_ID *tList, int baseIndex, const int *relInd
 	}
 }
 
-NV_ID NV_Op_codeBlock
+NV_ID NV_Lang_parseCodeBlock
 (const NV_ID *tList, int index, const char *openTerm, const char *closeTerm)
 {
 	NV_ID v;
@@ -117,7 +152,7 @@ NV_ID NV_Op_codeBlock
 }
 
 
-NV_ID NV_Op_strLiteral(const NV_ID *tList, int index)
+NV_ID NV_Lang_parseStrLiteral(const NV_ID *tList, int index)
 {
 	NV_ID v, s;
 	//
@@ -153,7 +188,7 @@ NV_ID NV_Op_strLiteral(const NV_ID *tList, int index)
 	return NODEID_NULL;
 }
 
-void NV_printOp(const NV_ID *op)
+void NV_Lang_printOp(const NV_ID *op)
 {
 	NV_ID eFunc;
 	NV_ID ePrec;

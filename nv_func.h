@@ -119,19 +119,23 @@ int NV_Node_cleanDepTreeSub(void *d, const NV_ID *reln, const NV_ID *rel, const 
 void NV_Node_cleanDepTree(const NV_ID *root, int currentDepth);
 
 
-// @nv_op.c
+// @nv_lang.c
+NV_ID NV_Lang_createCharTypeList(const char *cTypeList[]);
+NV_ID NV_Lang_createOpDict(NV_Lang_OpTag *opList);
 int NV_Lang_getCharType(const NV_ID *cTypeList, char c);
-void NV_addOp(const NV_ID *opDict, const char *token, int32_t prec, const NV_ID *func);
-void NV_addBuiltinOp(const NV_ID *opDict, const char *token, int32_t prec, const char *funcStr);
-int NV_isBuiltinOp(const NV_ID *term, const char *ident);
-const char *NV_Op_getOpFuncNameCStr(const NV_ID *op);
-int32_t NV_getOpPrec(const NV_ID *op);
-void NV_getOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, NV_ID *idBuf, int count);
-void NV_removeOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, int count);
-NV_ID NV_Op_codeBlock
+void NV_Lang_addOp
+(const NV_ID *opDict, const char *token, int32_t prec, const NV_ID *func);
+void NV_Lang_addOpWithFuncStr
+(const NV_ID *opDict, const char *token, int32_t prec, const char *funcStr);
+int NV_Lang_isOp(const NV_ID *term, const char *ident);
+const char *NV_Lang_getOpFuncNameCStr(const NV_ID *op);
+int32_t NV_Lang_getOpPrec(const NV_ID *op);
+void NV_Lang_getOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, NV_ID *idBuf, int count);
+void NV_Lang_removeOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, int count);
+NV_ID NV_Lang_parseCodeBlock
 (const NV_ID *tList, int index, const char *openTerm, const char *closeTerm);
-NV_ID NV_Op_strLiteral(const NV_ID *tList, int index);
-void NV_printOp(const NV_ID *op);
+NV_ID NV_Lang_parseStrLiteral(const NV_ID *tList, int index);
+void NV_Lang_printOp(const NV_ID *op);
 
 
 // @nv_static.c
@@ -231,8 +235,6 @@ uint64_t fnv_1_hash_64(const uint8_t *bytes, size_t length);
 
 
 // @lang/02/parse.c
-NV_ID NV_createCharTypeList();
-NV_ID NV_createOpDict();
 NV_ID NV_parseToCodeGraph_nothing
 (const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
 NV_ID NV_parseToCodeGraph_infixOp

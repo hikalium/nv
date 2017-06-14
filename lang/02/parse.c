@@ -1,28 +1,12 @@
 #include "../../nv.h"
 
-NV_ID NV_createCharTypeList()
-{
-	NV_ID ns;
-	NV_ID cList = NV_Array_create();
-	//
-	ns = NV_Node_createWithString(" \t\r\n");
-	NV_Array_push(&cList, &ns);
-	ns = NV_Node_createWithString("#!%&-=^~|+*:.<>/$");
-	NV_Array_push(&cList, &ns);
-	ns = NV_Node_createWithString("(){}[],;\"`\\");
-	NV_Array_push(&cList, &ns);
-	//
-	return cList;
-}
+const char *NV_Lang02_charTypeList[NV_LANG_CHAR_TYPE_LIST_LEN] = {
+	" \t\r\n",
+	"#!%&-=^~|+*:.<>/$",
+	"(){}[],;\"`\\",
+};
 
-typedef struct NV_BUILTIN_OP_TAG {
-	const char *token;
-	int prec;
-	const char *funcStr;
-	//int (*parser)(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
-} NV_BuiltinOpTag;
-
-NV_BuiltinOpTag builtinOpList[] = {
+NV_Lang_OpTag NV_Lang02_opList[] = {
 	{";",		0,		"nothing"},
 	//
 	{"print",	10,		"prefix"},
@@ -86,22 +70,6 @@ NV_BuiltinOpTag builtinOpList[] = {
 	//
 	{"", -1, ""}	// terminate tag
 };
-
-NV_ID NV_createOpDict()
-{
-	NV_ID opDict = NV_Node_createWithString("NV_OpList");
-	//
-	int i;
-	for(i = 0; builtinOpList[i].prec >= 0; i++){
-		NV_addBuiltinOp(&opDict,
-			builtinOpList[i].token, builtinOpList[i].prec, builtinOpList[i].funcStr);
-	}
-	//
-	if(IS_DEBUG_MODE()){
-		NV_Dict_print(&opDict);
-	}
-	return opDict;
-}
 
 NV_ID NV_parseToCodeGraph_nothing
 (const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident)
@@ -194,7 +162,7 @@ NV_ID NV_parseToCodeGraph_codeblock
 {
 	PARAM_UNUSED(lastNode);
 	PARAM_UNUSED(ident);
-	NV_Op_codeBlock(tokenList, p->index, "{", "}");
+	NV_Lang_parseCodeBlock(tokenList, p->index, "{", "}");
 	return NODEID_NULL;
 }
 
@@ -203,7 +171,7 @@ NV_ID NV_parseToCodeGraph_strLiteral
 {
 	PARAM_UNUSED(lastNode);
 	PARAM_UNUSED(ident);
-	NV_Op_strLiteral(tokenList, p->index);
+	NV_Lang_parseStrLiteral(tokenList, p->index);
 	return NODEID_NULL;
 }
 
@@ -212,7 +180,7 @@ NV_ID NV_parseToCodeGraph_parentheses
 {
 	PARAM_UNUSED(ident);
 	NV_ID *opDict = &p->dict;
-	NV_Op_codeBlock(tokenList, p->index, "(", ")");
+	NV_Lang_parseCodeBlock(tokenList, p->index, "(", ")");
 	NV_ID funcNode = NV_Node_createWithString("()");
 	NV_ID opL = NV_Array_getByIndex(tokenList, p->index - 1);
 	NV_ID inner = NV_Array_getByIndex(tokenList, p->index);
@@ -408,7 +376,7 @@ NV_ID NV_parseToCodeGraph(const NV_ID *baseTokenList, const NV_ID *opDict)
 		if(p.index == -1) break;
 		NV_ID n = NV_Array_getByIndex(&tokenList, p.index);
 		if(NV_NodeID_isEqual(&n, &NODEID_NOT_FOUND)) break;
-		reqFuncName = NV_Op_getOpFuncNameCStr(&p.op);
+		reqFuncName = NV_Lang_getOpFuncNameCStr(&p.op);
 		for(i = 0; builtinFuncList[i].name; i++){
 			if(strcmp(reqFuncName, builtinFuncList[i].name) == 0) break;
 		}
