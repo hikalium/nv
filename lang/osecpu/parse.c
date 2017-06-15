@@ -1,5 +1,5 @@
 #include "../../nv.h"
-
+/*
 NV_ID NV_parseToCodeGraph_nothing
 (const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident)
 {
@@ -260,4 +260,4 @@ NV_ID NV_parseToCodeGraph_for
 	*lastNode = terminateF;
 	return *lastNode;
 }
-
+*/

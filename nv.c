@@ -232,7 +232,6 @@ void NV_saveCodeGraph_trace(const NV_ID *n)
 	NV_saveCodeGraph_digForKey(n, "flag");
 	NV_saveCodeGraph_digForKey(n, "call");
 	NV_saveCodeGraph_digForKey(n, "inner");
-	//NV_saveCodeGraph_digForKey(n, "type");
 }
 void NV_saveCodeGraphForVisualization
 (const NV_ID *codeGraphRoot, const char *path_prefix)
@@ -265,7 +264,9 @@ void NV_saveCodeGraphForVisualization
 		NV_ID *n;
 		char nStr[64];
 		n = &cgNodes[i];
-		if(NV_NodeID_isString(n)){
+		if(NV_Variable_isVariable(n)){
+			NV_Variable_snprintf(nStr, sizeof(nStr), n);
+		} else if(NV_NodeID_isString(n)){
 			snprintf(nStr, sizeof(nStr), "\\\"%s\\\"", NV_NodeID_getCStr(n));
 		} else if(NV_NodeID_isInteger(n)){
 			snprintf(nStr, sizeof(nStr), "%d", NV_NodeID_getInt32(n));

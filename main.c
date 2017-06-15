@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
 			NV_Lang_parseToCodeGraph(&tokenList, &opDict, NV_Lang02_funcList);
 		NV_Dict_addUniqueEqKeyByCStr(&rootScope, "currentCodeGraph", &codeGraphRoot);
 		//
-		NV_ID result = NV_evalGraph(&codeGraphRoot, &rootScope);
+		NV_ID result = NV_evalGraph(&codeGraphRoot, &rootScope, NV_Lang02_evalList);
 		//
 		if(!(NV_globalExecFlag & NV_EXEC_FLAG_SUPRESS_AUTOPRINT)){
 			printf(" = ");

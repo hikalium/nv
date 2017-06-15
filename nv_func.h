@@ -137,7 +137,9 @@ NV_ID NV_Lang_parseCodeBlock
 NV_ID NV_Lang_parseStrLiteral(const NV_ID *tList, int index);
 void NV_Lang_printOp(const NV_ID *op);
 NV_ID NV_Lang_parseToCodeGraph
-(const NV_ID *baseTokenList, const NV_ID *opDict, const NV_Lang_FuncTag funcList[]);
+(const NV_ID *baseTokenList, const NV_ID *opDict, const NV_Lang_ParseTag funcList[]);
+NV_ID NV_evalGraph
+(const NV_ID *codeGraphRoot, const NV_ID *scope, NV_Lang_EvalTag *evalList);
 
 
 // @nv_static.c
@@ -158,6 +160,7 @@ NV_ID NV_Variable_getData(const NV_ID *v);
 NV_ID NV_Variable_findByNameCStr(const char *name, const NV_ID *ctx);
 NV_ID NV_Variable_findByName(const NV_ID *nameNode, const NV_ID *ctx);
 void NV_Variable_print(const NV_ID *v);
+void NV_Variable_snprintf(char *s, size_t size, const NV_ID *v);
 
 
 // @nv_term.c
@@ -270,15 +273,47 @@ NV_ID NV_Lang02_OpFunc_do
 (NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
 NV_ID NV_Lang02_OpFunc_parentheses
 (NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
-NV_ID NV_evalGraph(const NV_ID *codeGraphRoot, const NV_ID *scope);
+NV_ID NV_Lang02_OpFunc_doNothing
+(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
+
+
+// @lang/02/table.c
 
 
 // @lang/osecpu/parse.c
+NV_ID NV_parseToCodeGraph_nothing
+(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
+NV_ID NV_parseToCodeGraph_infixOp
+(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
+NV_ID NV_parseToCodeGraph_prefixOp
+(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
+NV_ID NV_parseToCodeGraph_postfixOp
+(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
+NV_ID NV_parseToCodeGraph_codeblock
+(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
+NV_ID NV_parseToCodeGraph_strLiteral
+(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
+NV_ID NV_parseToCodeGraph_parentheses
+(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
+NV_ID NV_parseToCodeGraph_if
+(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
+NV_ID NV_parseToCodeGraph_for
+(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
 
 
 // @lang/osecpu/eval.c
-NV_ID NV_LangOSECPU_OpFunc_infixOp
+NV_ID NV_Lang02_OpFunc_infixOp
 (NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
-NV_ID NV_LangOSECPU_OpFunc_prefixOp
+NV_ID NV_Lang02_OpFunc_prefixOp
+(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
+NV_ID NV_Lang02_OpFunc_postfixOp
+(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
+NV_ID NV_Lang02_OpFunc_cond
+(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
+NV_ID NV_Lang02_OpFunc_do
+(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
+NV_ID NV_Lang02_OpFunc_parentheses
+(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
+NV_ID NV_Lang02_OpFunc_doNothing
 (NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
 

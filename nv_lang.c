@@ -202,7 +202,7 @@ void NV_Lang_printOp(const NV_ID *op)
 }
 
 NV_ID NV_Lang_parseToCodeGraph
-(const NV_ID *baseTokenList, const NV_ID *opDict, const NV_Lang_FuncTag funcList[])
+(const NV_ID *baseTokenList, const NV_ID *opDict, const NV_Lang_ParseTag funcList[])
 {
 	// retv: codeGraphRoot
 	NV_ID tokenList = NV_Array_clone(baseTokenList);
@@ -251,3 +251,37 @@ NV_ID NV_Lang_parseToCodeGraph
 	}
 	return codeGraphRoot;
 }
+
+NV_ID NV_evalGraph
+(const NV_ID *codeGraphRoot, const NV_ID *scope, NV_Lang_EvalTag *evalList)
+{
+	NV_ID lastEvalVal = NODEID_NULL;
+	NV_ID p = *codeGraphRoot;
+	const char *s;
+	int i;
+	p = NV_Dict_getByStringKey(&p, "next");
+	for(;;){
+		if(NV_NodeID_isEqual(&p, &NODEID_NOT_FOUND)) break;
+		if(!NV_NodeID_isString(&p)) break;
+		s = NV_NodeID_getCStr(&p);
+		if(IS_DEBUG_MODE()){
+			printf("NV_evalGraph: %s\n", s);
+		}
+		//printf("next: %s\n", s);
+		for(i = 0; evalList[i].name; i++){
+			if(strcmp(s, evalList[i].name) == 0) break;
+		}
+		if(evalList[i].name){
+			evalList[i].evaluator(&p, &lastEvalVal, scope);
+		} else{
+			lastEvalVal = NV_Node_createWithStringFormat(
+					"NV_evalGraph: No func for %s", s);
+			break;
+		}
+	}
+	if(NV_globalExecFlag & NV_EXEC_FLAG_SAVECODEGRAPH){
+		NV_saveCodeGraphForVisualization(codeGraphRoot, "note/eval");
+	}
+	return lastEvalVal;
+}
+

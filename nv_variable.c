@@ -166,6 +166,21 @@ void NV_Variable_print(const NV_ID *v)
 	NV_Term_print(&data);
 	printf(")");
 }
+
+void NV_Variable_snprintf(char *s, size_t size, const NV_ID *v)
+{
+	NV_ID data;
+	if(!NV_isTermType(v, &NODEID_TERM_TYPE_VARIABLE)){
+		printf("id: %08X is not Variable.", v->d[0]);
+		return;
+	}
+	data = NV_Variable_getData(v);
+	if(NV_NodeID_isInteger(&data)){
+		snprintf(s, size, "(Var = %d)", NV_NodeID_getInt32(&data));
+	} else{
+		snprintf(s, size, "(Var = )");
+	}
+}
 /*
 //void NV_Variable_printPrimVal(const NV_ID *vid)
 {

@@ -1,5 +1,5 @@
 #include "../../nv.h"
-
+/*
 NV_ID NV_Lang02_OpFunc_infixOp
 (NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope)
 {
@@ -309,4 +309,4 @@ NV_ID NV_Lang02_OpFunc_doNothing
 }
 
 
-
+*/

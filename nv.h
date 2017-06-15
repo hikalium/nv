@@ -102,13 +102,20 @@ typedef struct {
 	const char *name;
 	NV_ID (*parser)
 		(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
-} NV_Lang_FuncTag;
+} NV_Lang_ParseTag;
+
+typedef struct {
+	const char *name;
+	NV_ID (*evaluator)
+		(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
+} NV_Lang_EvalTag;
 
 
 // @lang/02/parse.c
 extern const char *NV_Lang02_charTypeList[NV_LANG_CHAR_TYPE_LIST_LEN];
 extern NV_Lang_OpTag NV_Lang02_opList[];
-extern NV_Lang_FuncTag NV_Lang02_funcList[];
+extern NV_Lang_ParseTag NV_Lang02_funcList[];
+extern NV_Lang_EvalTag NV_Lang02_evalList[];
 // @nv_static.c
 #include "nv_static.h"
 //
