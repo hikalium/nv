@@ -5,7 +5,7 @@ GIT_COMMIT_DATE := $(shell git log -1 --format='%ad')
 SRCS= 	main.c \
 		nv.c nv_array.c nv_dict.c nv_driver.c \
 		nv_fix.c nv_id.c nv_node.c nv_lang.c nv_static.c \
-		nv_variable.c nv_term.c nv_signal.c \
+		nv_variable.c nv_term.c nv_signal.c nv_op.c \
 		nv_integer.c nv_string.c nv_relation.c \
 		fnv1.c \
 		lang/02/parse.c lang/02/eval.c lang/02/table.c \

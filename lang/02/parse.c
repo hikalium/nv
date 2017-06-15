@@ -19,12 +19,14 @@ NV_ID NV_parseToCodeGraph_infixOp
 	NV_ID opR = NV_Array_getByIndex(tokenList, p->index + 1);
 	NV_ID result = NV_Variable_create();
 	//
-	if(NV_Term_canBeOperator(&opL, &p->dict)){
-		puts("canBeOp!");
+	if(NV_Term_isNotFound(&opL)){
+		puts("$$$$$$$$$");
+		return NV_Node_createWithString("Unexpected opL == NOT_FOUND");
+	}
+	if(NV_Op_canBeOperator(&opL, &p->dict)){
 		return NV_Node_createWithString("Expected opL is a value");
 	}
-	if(NV_Term_canBeOperator(&opR, &p->dict)){
-		puts("canBeOp!");
+	if(NV_Op_canBeOperator(&opR, &p->dict)){
 		return NV_Node_createWithString("Expected opR is a value");
 	}
 	NV_Dict_addUniqueEqKeyByCStr(&funcNode, "op", &op);
@@ -51,8 +53,12 @@ NV_ID NV_parseToCodeGraph_prefixOp
 	NV_ID opL = NV_Array_getByIndex(tokenList, p->index - 1);
 	NV_ID result = NV_Variable_create();
 	//
-	if(!NV_Term_isNotFound(&opL) && !NV_Term_canBeOperator(&opL, &p->dict)){
+	if(!NV_Term_isNotFound(&opL) && !NV_Op_canBeOperator(&opL, &p->dict)){
 		return NV_Node_createWithString("Expected opL is not a value");
+	}
+	if(NV_Op_canBeOperator(&opR, &p->dict)){
+		puts("###################");
+		return NV_Node_createWithString("Expected opR is NOT an operator");
 	}
 	NV_Dict_addUniqueEqKeyByCStr(&funcNode, "op", &op);
 	NV_Dict_addUniqueEqKeyByCStr(&funcNode, "opR", &opR);
@@ -122,7 +128,7 @@ NV_ID NV_parseToCodeGraph_parentheses
 	NV_Dict_addUniqueEqKeyByCStr(&funcNode, "result", &result);
 	//
 	NV_Array_writeToIndex(tokenList, p->index, &result);
-	if(!NV_Term_isNotFound(&opL) && !NV_Term_canBeOperator(&opL, &p->dict)){
+	if(!NV_Term_isNotFound(&opL) && !NV_Op_canBeOperator(&opL, &p->dict)){
 		NV_Array_removeIndex(tokenList, p->index - 1);
 	}
 	//

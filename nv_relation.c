@@ -32,7 +32,7 @@ NV_ID NV_NodeID_createRelation
 	reld->from = *from;
 	reld->rel = *rel;
 	reld->to = *to;
-
+/*
 	if(IS_DEBUG_MODE()){
 		printf("Rel created: ");
 		NV_NodeID_printForDebug(from);
@@ -40,7 +40,7 @@ NV_ID NV_NodeID_createRelation
 		NV_NodeID_printForDebug(to);
 		printf("\n");
 	}
-
+*/
 	return NV_Node_createWithTypeAndData(kRelation, reld, size);
 }
 

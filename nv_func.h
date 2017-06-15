@@ -166,15 +166,11 @@ void NV_Variable_snprintf(char *s, size_t size, const NV_ID *v);
 // @nv_term.c
 int NV_Term_isNotFound(const NV_ID *id);
 int NV_Term_isNull(const NV_ID *id);
-int NV_Term_isOperator(const NV_ID *id);
-int NV_Term_canBeOperator(const NV_ID *id, const NV_ID *opDict);
 int NV_isTermType(const NV_ID *node, const NV_ID *tType);
 NV_ID NV_Term_tryReadAsVariableData(const NV_ID *id, const NV_ID *scope);
 NV_ID NV_Term_tryReadAsVariable(const NV_ID *id, const NV_ID *scope);
 NV_ID NV_Term_getPrimNodeID(const NV_ID *id, const NV_ID *scope);
 NV_ID NV_Term_getPrimNodeIDByCStr(const char *s, const NV_ID *scope);
-int NV_Term_f_OpPrec_Dec(const void *n1, const void *n2);
-NV_ID NV_Term_tryReadAsOperator(const NV_ID *id, const NV_ID *opDict);
 int NV_Term_isIntegerNotVal(const NV_ID *id);
 int NV_Term_isInteger(const NV_ID *id, const NV_ID *scope);
 int NV_Term_isAssignable(const NV_ID *id, const NV_ID *scope);
@@ -188,6 +184,13 @@ int32_t NV_Term_calcHash(const NV_ID *id);
 
 // @nv_signal.c
 void NV_signalHandler(int signum);
+
+
+// @nv_op.c
+int NV_Op_isOperator(const NV_ID *id);
+int NV_Op_canBeOperator(const NV_ID *ident, const NV_ID *opDict);
+int NV_Op_f_OpPrec_Dec(const void *n1, const void *n2);
+NV_ID NV_Op_findOpNamed(const NV_ID *id, const NV_ID *opDict);
 
 
 // @nv_integer.c
@@ -302,7 +305,7 @@ NV_ID NV_parseToCodeGraph_for
 
 
 // @lang/osecpu/eval.c
-NV_ID NV_Lang02_OpFunc_infixOp
+NV_ID NV_LangOSECPU_OpFunc_infixOp
 (NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
 NV_ID NV_Lang02_OpFunc_prefixOp
 (NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);

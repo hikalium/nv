@@ -1,6 +1,6 @@
 #include "../../nv.h"
-/*
-NV_ID NV_Lang02_OpFunc_infixOp
+
+NV_ID NV_LangOSECPU_OpFunc_infixOp
 (NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope)
 {
 	NV_ID op = NV_Dict_getByStringKey(p, "op");
@@ -124,7 +124,7 @@ NV_ID NV_Lang02_OpFunc_infixOp
 	*p = NV_Dict_getByStringKey(p, "next");
 	return NODEID_NULL;
 }
-
+/*
 NV_ID NV_Lang02_OpFunc_prefixOp
 (NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope)
 {
