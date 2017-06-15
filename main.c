@@ -142,7 +142,8 @@ int main(int argc, char *argv[])
 		NV_ID tokenList = NV_tokenize(&cTypeList, line);
 		NV_Dict_addUniqueEqKeyByCStr(&rootScope, "currentTokenList", &tokenList);
 		//
-		NV_ID codeGraphRoot = NV_parseToCodeGraph(&tokenList, &opDict);
+		NV_ID codeGraphRoot = 
+			NV_Lang_parseToCodeGraph(&tokenList, &opDict, NV_Lang02_funcList);
 		NV_Dict_addUniqueEqKeyByCStr(&rootScope, "currentCodeGraph", &codeGraphRoot);
 		//
 		NV_ID result = NV_evalGraph(&codeGraphRoot, &rootScope);

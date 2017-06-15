@@ -273,7 +273,7 @@ NV_ID NV_Lang02_OpFunc_parentheses
 		//NV_NodeID_printForDebug(&opL);
 		NV_ID codeBlock = NV_Term_getPrimNodeID(&opL, scope);
 		//NV_Array_print(&codeBlock); putchar('\n');
-		NV_ID parsedBlock = NV_parseToCodeGraph(&codeBlock, &opDict);
+		NV_ID parsedBlock = NV_Lang_parseToCodeGraph(&codeBlock, &opDict, NV_Lang02_funcList);
 		//
 		NV_ID ansNode;
 		{

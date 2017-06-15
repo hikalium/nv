@@ -200,3 +200,54 @@ void NV_Lang_printOp(const NV_ID *op)
 	NV_Term_print(&ePrec);
 	printf(")");
 }
+
+NV_ID NV_Lang_parseToCodeGraph
+(const NV_ID *baseTokenList, const NV_ID *opDict, const NV_Lang_FuncTag funcList[])
+{
+	// retv: codeGraphRoot
+	NV_ID tokenList = NV_Array_clone(baseTokenList);
+	/*
+	printf("parsing tokens: ");
+	NV_Array_print(&tokenList); putchar('\n');
+	*/
+	//printf("tokenList hash = %08X\n", NV_Term_calcHash(baseTokenList));
+	NV_ID codeGraphRoot = NV_Node_createWithString("eval");
+	NV_ID lastNode = codeGraphRoot;
+	NV_OpPointer p;
+	const char *reqFuncName = NULL;
+	int i;
+	NV_ID retv;
+
+	//NV_Dict_print(opDict);
+
+	for(;;){
+		p = NV_getNextOp(&tokenList, opDict);
+		if(p.index == -1) break;
+		NV_ID n = NV_Array_getByIndex(&tokenList, p.index);
+		if(NV_NodeID_isEqual(&n, &NODEID_NOT_FOUND)) break;
+		reqFuncName = NV_Lang_getOpFuncNameCStr(&p.op);
+		for(i = 0; funcList[i].name; i++){
+			if(strcmp(reqFuncName, funcList[i].name) == 0) break;
+		}
+		if(funcList[i].name){
+			if(IS_DEBUG_MODE()){
+				printf("parse: %s\n", funcList[i].name);
+			}
+			retv = funcList[i].parser(
+					&tokenList, &lastNode, &p, NV_NodeID_getCStr(&n));
+			if(!NV_Term_isNull(&retv)){
+				NV_ID triedPrec = NV_Node_createWithInt32(p.prec);
+				NV_Dict_addUniqueEqKeyByCStr(&n, "triedPrec", &triedPrec);
+			}
+		} else{
+			fprintf(stderr, "NV_parseToCodeGraph: op not implemented for");
+			NV_NodeID_printForDebug(&n);
+			putchar('\n');
+			return NODEID_NULL;
+		}
+	}
+	if(NV_globalExecFlag & NV_EXEC_FLAG_SAVECODEGRAPH){
+		NV_saveCodeGraphForVisualization(&codeGraphRoot, "note/code");
+	}
+	return codeGraphRoot;
+}

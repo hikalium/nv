@@ -98,11 +98,17 @@ extern NV_Node nodeRoot;
 
 // @nv_lang.c
 #define NV_LANG_CHAR_TYPE_LIST_LEN 3
+typedef struct {
+	const char *name;
+	NV_ID (*parser)
+		(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
+} NV_Lang_FuncTag;
+
 
 // @lang/02/parse.c
 extern const char *NV_Lang02_charTypeList[NV_LANG_CHAR_TYPE_LIST_LEN];
 extern NV_Lang_OpTag NV_Lang02_opList[];
-
+extern NV_Lang_FuncTag NV_Lang02_funcList[];
 // @nv_static.c
 #include "nv_static.h"
 //
