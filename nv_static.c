@@ -27,6 +27,8 @@ const NV_ID RELID_VARIABLE_SCOPE
 	= {{0xEDB792C8, 0x94F04565, 0x8D43FDB1, 0xB086C655}};
 const NV_ID RELID_VARIABLE_ANONYMOUS
 	= {{0xED5B6B24, 0x1F924A57, 0xBB756E64, 0xDC92684E}};
+const NV_ID RELID_OP_IDENT
+	= {{0x7C57971C, 0xB1974D72, 0x8E7B9ACE, 0x86543D8B}};
 const NV_ID RELID_OP_PRECEDENCE
 	= {{0x46452917, 0x15084D12, 0xAB03F07E, 0xA0D58BC7}};
 const NV_ID RELID_OP_FUNC
@@ -88,14 +90,16 @@ NV_StaticNodeNameTag staticNodeNameList[] = {
 	//
 	{&NODEID_TERM_TYPE_ARRAY, "Type(Array)"},
 	{&NODEID_TERM_TYPE_VARIABLE, "Type(Variable)"},
+	//
 	{&NODEID_TERM_TYPE_OP, "Type(Op)"},
+	{&RELID_OP_IDENT, "ident"},
+	{&RELID_OP_PRECEDENCE, "precedence"},
+	{&RELID_OP_FUNC, "func"},
 	//
 	{&RELID_TERM_TYPE, "type"},
 	{&RELID_ARRAY_NEXT, "next"},
 	{&RELID_ARRAY_DATA, "data"},
 	//{&RELID_VARIABLE_NAME, "name"},
-	{&RELID_OP_PRECEDENCE, "precedence"},
-	{&RELID_OP_FUNC, "func"},
 	{&RELID_EVAL_STACK, "evalStack"},
 	{&RELID_LAST_RESULT, "lastResult"},
 	{&RELID_CURRENT_TERM_INDEX, "currentTermIndex"},

@@ -124,12 +124,9 @@ NV_ID NV_Lang_createCharTypeList(const char *cTypeList[]);
 NV_ID NV_Lang_createOpDict(NV_Lang_OpTag *opList);
 int NV_Lang_getCharType(const NV_ID *cTypeList, char c);
 void NV_Lang_addOp
-(const NV_ID *opDict, const char *token, int32_t prec, const NV_ID *func);
+(const NV_ID *opDict, const char *ident, int32_t prec, const NV_ID *func);
 void NV_Lang_addOpWithFuncStr
 (const NV_ID *opDict, const char *token, int32_t prec, const char *funcStr);
-int NV_Lang_isOp(const NV_ID *term, const char *ident);
-const char *NV_Lang_getOpFuncNameCStr(const NV_ID *op);
-int32_t NV_Lang_getOpPrec(const NV_ID *op);
 void NV_Lang_getOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, NV_ID *idBuf, int count);
 void NV_Lang_removeOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, int count);
 NV_ID NV_Lang_parseCodeBlock
@@ -189,6 +186,9 @@ void NV_signalHandler(int signum);
 // @nv_op.c
 int NV_Op_isOperator(const NV_ID *id);
 int NV_Op_canBeOperator(const NV_ID *ident, const NV_ID *opDict);
+NV_ID NV_Op_create(const char *ident, int32_t prec, const NV_ID *func);
+const char *NV_Op_getFuncAsCStr(const NV_ID *op);
+int32_t NV_Op_getPrec(const NV_ID *op);
 int NV_Op_f_OpPrec_Dec(const void *n1, const void *n2);
 NV_ID NV_Op_findOpNamed(const NV_ID *id, const NV_ID *opDict);
 

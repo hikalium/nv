@@ -11,10 +11,43 @@ int NV_Op_canBeOperator(const NV_ID *ident, const NV_ID *opDict)
 	return NV_Op_isOperator(&op);
 }
 
+NV_ID NV_Op_create(const char *ident, int32_t prec, const NV_ID *func)
+{
+	NV_ID op = NV_Node_create();
+	NV_NodeID_createRelation(&op, &RELID_TERM_TYPE, &NODEID_TERM_TYPE_OP);
+	//
+	NV_ID precNode = NV_Node_createWithInt32(prec);
+	NV_ID identNode = NV_Node_createWithString(ident);
+	//
+	NV_NodeID_createRelation(&op, &RELID_OP_IDENT, &identNode);
+	NV_NodeID_createRelation(&op, &RELID_OP_PRECEDENCE, &precNode);
+	NV_NodeID_createRelation(&op, &RELID_OP_FUNC, func);
+	//
+	return op;
+}
+/*
+// NV_ID NV_Op_getFunc(const NV_ID *op)
+{
+	return NV_NodeID_getRelatedNodeFrom(op, &RELID_OP_FUNC);
+}
+*/
+
+const char *NV_Op_getFuncAsCStr(const NV_ID *op)
+{
+	NV_ID func = NV_NodeID_getRelatedNodeFrom(op, &RELID_OP_FUNC);
+	return NV_NodeID_getCStr(&func);
+}
+
+int32_t NV_Op_getPrec(const NV_ID *op)
+{
+	NV_ID prec = NV_NodeID_getRelatedNodeFrom(op, &RELID_OP_PRECEDENCE);
+	return NV_NodeID_getInt32(&prec);
+}
+
 int NV_Op_f_OpPrec_Dec(const void *n1, const void *n2)
 {
 	const NV_ID *e1 = n1, *e2 = n2;
-	return NV_Lang_getOpPrec(e2) - NV_Lang_getOpPrec(e1);
+	return NV_Op_getPrec(e2) - NV_Op_getPrec(e1);
 }
 
 NV_ID NV_Op_findOpNamed(const NV_ID *id, const NV_ID *opDict)
@@ -37,7 +70,7 @@ NV_ID NV_Op_findOpNamed(const NV_ID *id, const NV_ID *opDict)
 	//
 	for(i = 0; ; i++){
 		opID = NV_Array_getByIndex(&opList, i);
-		if(triedPrec == -1 || NV_Lang_getOpPrec(&opID) < triedPrec) break;
+		if(triedPrec == -1 || NV_Op_getPrec(&opID) < triedPrec) break;
 	}
 	if(!NV_NodeID_isEqual(&opID, &NODEID_NOT_FOUND)){
 		/*

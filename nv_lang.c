@@ -50,27 +50,19 @@ int NV_Lang_getCharType(const NV_ID *cTypeList, char c)
 }
 
 void NV_Lang_addOp
-(const NV_ID *opDict, const char *token, int32_t prec, const NV_ID *func)
+(const NV_ID *opDict, const char *ident, int32_t prec, const NV_ID *func)
 {
 	NV_ID opDir;
 	NV_ID opEntry;
-	NV_ID ePrec;
 	// まずtokenごとに分けたDirがある
-	opDir = NV_Dict_getByStringKey(opDict, token);
+	opDir = NV_Dict_getByStringKey(opDict, ident);
 	if(NV_NodeID_isEqual(&opDir, &NODEID_NOT_FOUND)){
 		// このtokenは初出なので新規追加
 		opDir = NV_Array_create();
-		NV_Dict_addKeyByCStr(opDict, token, &opDir);
+		NV_Dict_addKeyByCStr(opDict, ident, &opDir);
 	}
 	// opEntry(ひとつのOpを表現)を作成
-	opEntry = NV_Node_create();
-	NV_NodeID_createRelation(
-		&opEntry, &RELID_TERM_TYPE, &NODEID_TERM_TYPE_OP);
-	ePrec = NV_Node_createWithInt32(prec);
-	NV_NodeID_createRelation(
-		&opEntry, &RELID_OP_PRECEDENCE, &ePrec);
-	NV_NodeID_createRelation(
-		&opEntry, &RELID_OP_FUNC, func);
+	opEntry = NV_Op_create(ident, prec, func);
 	// opEntryをopDirに追加
 	NV_Array_push(&opDir, &opEntry);
 }
@@ -81,25 +73,6 @@ void NV_Lang_addOpWithFuncStr
 	NV_ID funcStrID;
 	funcStrID = NV_Node_createWithString(funcStr);
 	NV_Lang_addOp(opDict, token, prec, &funcStrID);
-}
-
-
-int NV_Lang_isOp(const NV_ID *term, const char *ident)
-{
-	NV_ID func = NV_NodeID_getRelatedNodeFrom(term, &RELID_OP_FUNC);
-	return NV_Node_String_compareWithCStr(&func, ident) == 0;
-}
-
-const char *NV_Lang_getOpFuncNameCStr(const NV_ID *op)
-{
-	NV_ID func = NV_NodeID_getRelatedNodeFrom(op, &RELID_OP_FUNC);
-	return NV_NodeID_getCStr(&func);
-}
-
-int32_t NV_Lang_getOpPrec(const NV_ID *op)
-{
-	NV_ID ePrec = NV_NodeID_getRelatedNodeFrom(op, &RELID_OP_PRECEDENCE);
-	return NV_NodeID_getInt32(&ePrec);
 }
 
 void NV_Lang_getOperandByList(const NV_ID *tList, int baseIndex, const int *relIndexList, NV_ID *idBuf, int count)
@@ -225,7 +198,7 @@ NV_ID NV_Lang_parseToCodeGraph
 		if(p.index == -1) break;
 		NV_ID n = NV_Array_getByIndex(&tokenList, p.index);
 		if(NV_NodeID_isEqual(&n, &NODEID_NOT_FOUND)) break;
-		reqFuncName = NV_Lang_getOpFuncNameCStr(&p.op);
+		reqFuncName = NV_Op_getFuncAsCStr(&p.op);
 		for(i = 0; funcList[i].name; i++){
 			if(strcmp(reqFuncName, funcList[i].name) == 0) break;
 		}

@@ -11,6 +11,7 @@ extern const NV_ID RELID_ARRAY_DATA;
 extern const NV_ID RELID_VARIABLE_NAME;
 extern const NV_ID RELID_VARIABLE_SCOPE;
 extern const NV_ID RELID_VARIABLE_ANONYMOUS;
+extern const NV_ID RELID_OP_IDENT;
 extern const NV_ID RELID_OP_PRECEDENCE;
 extern const NV_ID RELID_OP_FUNC;
 extern const NV_ID RELID_TERM_TYPE;
