@@ -58,7 +58,7 @@ NV_OpPointer NV_getNextOp(const NV_ID *currentBlock, const NV_ID *opDict)
 	for(i = 0; ; i++){
 		t = NV_Array_getByIndex(currentBlock, i);
 		if(NV_NodeID_isEqual(&t, &NODEID_NOT_FOUND)) break;
-		t = NV_Op_findOpNamed(&t, opDict);
+		t = NV_Lang_findOpNamed(&t, opDict);
 		if(!NV_isTermType(&t, &NODEID_TERM_TYPE_OP)) continue;
 		opPrec = NV_Op_getPrec(&t);
 		/*

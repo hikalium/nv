@@ -92,6 +92,52 @@ void NV_Lang_removeOperandByList(const NV_ID *tList, int baseIndex, const int *r
 	}
 }
 
+int NV_Lang_f_OpPrec_Dec(const void *n1, const void *n2)
+{
+	const NV_ID *e1 = n1, *e2 = n2;
+	return NV_Op_getPrec(e2) - NV_Op_getPrec(e1);
+}
+
+
+NV_ID NV_Lang_findOpNamed(const NV_ID *id, const NV_ID *opDict)
+{
+	// <id>: String であることを想定
+	// <id>/triedPrec が設定されているならば、それ未満のPrecのものの中で
+	// 最大のものを返す。
+	// なければもとのidを返す。
+	NV_ID opID, opList, triedPrecNode;
+	int i;
+	int32_t triedPrec;
+	//
+	opList = NV_Dict_get(opDict, id);
+	if(NV_NodeID_isEqual(&opList, &NODEID_NOT_FOUND)){
+		return *id;
+	}
+	opList = NV_Array_getSorted(&opList, NV_Lang_f_OpPrec_Dec);
+	triedPrecNode = NV_Dict_getByStringKey(id, "triedPrec");
+	triedPrec = NV_NodeID_getInt32(&triedPrecNode);
+	//
+	for(i = 0; ; i++){
+		opID = NV_Array_getByIndex(&opList, i);
+		if(triedPrec == -1 || NV_Op_getPrec(&opID) < triedPrec) break;
+	}
+	if(!NV_NodeID_isEqual(&opID, &NODEID_NOT_FOUND)){
+		/*
+		if(IS_DEBUG_MODE()){
+			printf("op found at index: %d\n", i);
+		}
+		*/
+		return opID;
+	}
+	return *id;
+}
+
+int NV_Lang_canBeOperator(const NV_ID *ident, const NV_ID *opDict)
+{
+	NV_ID op = NV_Lang_findOpNamed(ident, opDict);
+	return NV_Op_isOperator(&op);
+}
+
 NV_ID NV_Lang_parseCodeBlock
 (const NV_ID *tList, int index, const char *openTerm, const char *closeTerm)
 {
@@ -159,19 +205,6 @@ NV_ID NV_Lang_parseStrLiteral(const NV_ID *tList, int index)
 	s = NV_Array_joinWithCStr(&root, "");
 	NV_Array_writeToIndex(tList, index, &s);
 	return NODEID_NULL;
-}
-
-void NV_Lang_printOp(const NV_ID *op)
-{
-	NV_ID eFunc;
-	NV_ID ePrec;
-	eFunc = NV_NodeID_getRelatedNodeFrom(op, &RELID_OP_FUNC);
-	ePrec = NV_NodeID_getRelatedNodeFrom(op, &RELID_OP_PRECEDENCE);
-	printf("(op ");
-	NV_Term_print(&eFunc);
-	printf("/");
-	NV_Term_print(&ePrec);
-	printf(")");
 }
 
 NV_ID NV_Lang_parseToCodeGraph
