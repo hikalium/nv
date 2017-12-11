@@ -11,14 +11,14 @@ SRCS= 	main.c \
 		lang/02/parse.c lang/02/eval.c lang/02/table.c \
 		lang/osecpu/parse.c lang/osecpu/eval.c
 HEADERS=nv.h nv_func.h nv_static.h
-CFLAGS=-Wall -Wextra -lncurses -Wunused-function
+CFLAGS=-Wall -Wpedantic -Wextra -lncurses -Wunused-function
 CFLAGS += -DGIT_COMMIT_ID="\"$(GIT_COMMIT_ID)\"" \
 			-DGIT_COMMIT_DATE="\"$(GIT_COMMIT_DATE)\""
 
 nv : $(SRCS) $(HEADERS) Makefile
 	cc $(CFLAGS) -Os -o nv  $(SRCS)
 	strip nv
-	upx -9 nv
+	-upx -9 nv
 
 run : ./nv Makefile
 	rlwrap ./nv $(NV_ARGS)
@@ -41,8 +41,6 @@ perf:
 clean:
 	-rm nv
 	-rm -rf ./nv.dSYM
-	-rm *.c-e
-	-rm *.h-e
 
 log:
 	git log --pretty=format:" - %s %n   http://github.com/hikalium/nv/commit/%H" --since=10hour
@@ -55,14 +53,18 @@ sc:
 id:
 	@uuidgen | tr "[:lower:]" "[:upper:]" | sed -E "s/(.{8})-(.{4})-(.{4})-(.{4})-(.{4})(.{8})/\{{0x\1, 0x\2\3, 0x\4\5, 0x\6\}}/"
 
-header:
+mkheader: Makefile tokenizer.c
+	@echo "Generating $@..."
+	@$(CC) $(CFLAGS) -Ofast -O3 -o mkheader tokenizer.c
+
+nv_func.h: $(SRCS) Makefile mkheader
+	@echo "Generating $@..."
+	@echo "" > $@
 	@for filename in $(SRCS); do \
-		(./makeheadersub.sh $$filename) \
+		(./mkheader $$filename | grep -v Internal >> $@)\
 	done
 
-nv_func.h: $(SRCS) Makefile makeheadersub.sh
-	make header > nv_func.h
-
 nv_static.h : nv_static.c Makefile
-	cat nv_static.c | grep -e '^const NV_ID NODEID' -e '^const NV_ID RELID' | sed -e 's/$$/;/g' | sed -e 's/^/extern /g' > nv_static.h
+	@echo "Generating $@..."
+	@cat nv_static.c | grep -e '^const NV_ID NODEID' -e '^const NV_ID RELID' | sed -e 's/$$/;/g' | sed -e 's/^/extern /g' > nv_static.h
 

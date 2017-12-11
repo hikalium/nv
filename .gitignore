@@ -10,3 +10,5 @@ latex/
 *.dtps/
 note/
 *.txt
+mkheader
+
