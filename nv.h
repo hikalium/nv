@@ -7,6 +7,13 @@
 #include <string.h>
 #include <time.h>
 
+#ifndef GIT_COMMIT_ID
+#define GIT_COMMIT_ID "undefined"
+#endif
+#ifndef GIT_COMMIT_DATE
+#define GIT_COMMIT_DATE "undefined"
+#endif
+
 #define MAX_INPUT_LEN 1024
 #define MAX_TOKEN_LEN 256
 #define MAX_SAVE_DATA_ENTRY_SIZE 4096
