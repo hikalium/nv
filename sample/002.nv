@@ -1,1 +1,0 @@
-for {i = 0}{i < 1000}{i = i + 1}{print i; if{i % 3 == 0}{ for{k = 0}{k <= i / 3}{k = k + 1}{print c}}}

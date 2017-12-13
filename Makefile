@@ -15,6 +15,8 @@ CFLAGS=-Wall -Wpedantic -Wextra -lncurses -Wunused-function
 CFLAGS += -DGIT_COMMIT_ID="\"$(GIT_COMMIT_ID)\"" \
 			-DGIT_COMMIT_DATE="\"$(GIT_COMMIT_DATE)\""
 
+.PHONY: test
+
 nv : $(SRCS) $(HEADERS) Makefile
 	cc $(CFLAGS) -Os -o nv  $(SRCS)
 	strip nv
@@ -44,6 +46,9 @@ clean:
 
 log:
 	git log --pretty=format:" - %s %n   http://github.com/hikalium/nv/commit/%H" --since=10hour
+
+test:
+	make -C test/
 
 sc:
 	~/Desktop/LocalProjects/hdp/scsc/scsc $(SRCS) $(HEADERS)

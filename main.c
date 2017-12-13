@@ -98,13 +98,6 @@ int main(int argc, char *argv[]) {
   // set signal handler
   if (signal(SIGINT, NV_signalHandler) == SIG_ERR) return 1;
   //
-  printf(
-      "# nv interpreter\n"
-      "# repo:   https://github.com/hikalium/nv \n"
-      "# commit: %s\n"
-      "# date:   %s\n",
-      GIT_COMMIT_ID, GIT_COMMIT_DATE);
-  //
   NV_Args *args = NV_malloc(sizeof(NV_Args));
   Internal_ParseArgument(args, argc, argv);
   NV_Node_initRoot();
@@ -146,6 +139,10 @@ int main(int argc, char *argv[]) {
 
   if (args->filePath[0]) {
     FILE *fp = fopen(args->filePath, "rb");
+    if (!fp) {
+      printf("file not found: %s\n", args->filePath);
+      exit(EXIT_FAILURE);
+    }
     char *buf = NV_malloc(4096 * 1024);
     fread(buf, 1, 4096 * 1024, fp);
     NV_ID tokenList = NV_tokenize(&cTypeList, buf);
@@ -168,6 +165,13 @@ int main(int argc, char *argv[]) {
     }
 
   } else {
+    printf(
+        "# nv interpreter\n"
+        "# repo:   https://github.com/hikalium/nv \n"
+        "# commit: %s\n"
+        "# date:   %s\n",
+        GIT_COMMIT_ID, GIT_COMMIT_DATE);
+    //
     char line[MAX_INPUT_LEN];
     //
     while (NV_gets(line, sizeof(line)) != NULL) {

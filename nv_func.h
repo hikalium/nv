@@ -172,11 +172,11 @@ NV_ID NV_parseToCodeGraph_strLiteral(const NV_ID *tokenList, NV_ID *lastNode, NV
 NV_ID NV_parseToCodeGraph_parentheses(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
 NV_ID NV_parseToCodeGraph_if(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
 NV_ID NV_parseToCodeGraph_for(const NV_ID *tokenList, NV_ID *lastNode, NV_OpPointer *p, const char *ident);
-NV_ID NV_Lang02_OpFunc_infixOp(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
-NV_ID NV_Lang02_OpFunc_prefixOp(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
-NV_ID NV_Lang02_OpFunc_postfixOp(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
-NV_ID NV_Lang02_OpFunc_cond(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
-NV_ID NV_Lang02_OpFunc_do(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
-NV_ID NV_Lang02_OpFunc_parentheses(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
-NV_ID NV_Lang02_OpFunc_doNothing(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
+NV_ID NV_Lang02_OpFunc_infixOp(NV_ID *const p, NV_ID *const lastEvalVal, const NV_ID *scope);
+NV_ID NV_Lang02_OpFunc_prefixOp(NV_ID *const p, NV_ID *const lastEvalVal, const NV_ID *scope);
+NV_ID NV_Lang02_OpFunc_postfixOp(NV_ID *const p, NV_ID *const lastEvalVal, const NV_ID *scope);
+NV_ID NV_Lang02_OpFunc_cond(NV_ID *const p, NV_ID *const lastEvalVal, const NV_ID *scope);
+NV_ID NV_Lang02_OpFunc_do(NV_ID *const p, NV_ID *const lastEvalVal, const NV_ID *scope);
+NV_ID NV_Lang02_OpFunc_parentheses(NV_ID *const p, NV_ID *const lastEvalVal, const NV_ID *scope);
+NV_ID NV_Lang02_OpFunc_doNothing(NV_ID *const p, NV_ID *const lastEvalVal, const NV_ID *scope);
 NV_ID NV_LangOSECPU_OpFunc_infixOp(NV_ID * const p, NV_ID * const lastEvalVal, const NV_ID *scope);
