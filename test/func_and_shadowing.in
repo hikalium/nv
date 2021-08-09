@@ -1,0 +1,10 @@
+a = 3;
+f = {
+	println a;
+	ls;
+	b = 32;
+	println b;
+	ls;
+};
+f();
+ls;
